@@ -29,6 +29,22 @@ const BEHAVIOR_PATH = 'std/behaviors/std-dashboard';
 const ALIAS = 'Dashboard';
 
 /**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdDashboardListenKey = 'BrowseItemLoaded';
+
+/**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdDashboardConfig {
+  metrics?: unknown;
+}
+
+/**
  * Params for the std-dashboard descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -52,8 +68,8 @@ export interface StdDashboardParams {
   listens?: unknown[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdDashboardConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
@@ -65,11 +81,11 @@ export function stdDashboardDashboardSummaryTrait(params: StdDashboardParams): T
     ref: `${ALIAS}.traits.DashboardSummary`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -80,11 +96,11 @@ export function stdDashboardDashboardCategoryChartTrait(params: StdDashboardPara
     ref: `${ALIAS}.traits.DashboardCategoryChart`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -95,11 +111,11 @@ export function stdDashboardDashboardStatusChartTrait(params: StdDashboardParams
     ref: `${ALIAS}.traits.DashboardStatusChart`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -110,11 +126,11 @@ export function stdDashboardDashboardItemBrowseTrait(params: StdDashboardParams)
     ref: `${ALIAS}.traits.DashboardItemBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -125,11 +141,11 @@ export function stdDashboardDashboardLayoutTrait(params: StdDashboardParams): Tr
     ref: `${ALIAS}.traits.DashboardLayout`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

@@ -21,20 +21,41 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string"
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
                 },
                 "value": {
                   "name": "value",
                   "type": "number"
                 },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string"
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string"
+                },
                 "trend": {
                   "name": "trend",
                   "type": "number"
                 },
-                "suffix": {
-                  "name": "suffix",
+                "max": {
+                  "name": "max",
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "type": "string"
                 },
                 "variant": {
@@ -48,27 +69,6 @@
                     "error",
                     "info"
                   ]
-                },
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string"
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number"
                 },
                 "target": {
                   "name": "target",
@@ -127,21 +127,21 @@
                     "main",
                     {
                       "entity": "@entity.cards",
+                      "type": "data-grid",
                       "fields": [],
                       "renderItem": [
                         "fn",
                         "card",
                         {
-                          "icon": "@card.icon",
-                          "type": "stat-display",
+                          "label": "@card.label",
                           "format": "@card.format",
-                          "value": "@card.value",
-                          "max": "@card.max",
                           "variant": "@card.variant",
-                          "label": "@card.label"
+                          "max": "@card.max",
+                          "type": "stat-display",
+                          "value": "@card.value",
+                          "icon": "@card.icon"
                         }
-                      ],
-                      "type": "data-grid"
+                      ]
                     }
                   ]
                 ]
@@ -161,6 +161,59 @@
                         "fn",
                         "metric",
                         {
+                          "format": [
+                            "object/get",
+                            "@metric",
+                            "format",
+                            "number"
+                          ],
+                          "variant": [
+                            "object/get",
+                            "@metric",
+                            "variant",
+                            "default"
+                          ],
+                          "target": [
+                            "object/get",
+                            "@metric",
+                            "target",
+                            0.0
+                          ],
+                          "max": [
+                            "object/get",
+                            "@metric",
+                            "max",
+                            0.0
+                          ],
+                          "trend": [
+                            "object/get",
+                            "@metric",
+                            "trend",
+                            0.0
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@metric",
+                            "icon",
+                            ""
+                          ],
+                          "prefix": [
+                            "object/get",
+                            "@metric",
+                            "prefix",
+                            ""
+                          ],
+                          "suffix": [
+                            "object/get",
+                            "@metric",
+                            "suffix",
+                            ""
+                          ],
+                          "label": [
+                            "object/get",
+                            "@metric",
+                            "label"
+                          ],
                           "value": [
                             "if",
                             [
@@ -301,59 +354,6 @@
                                 ]
                               ]
                             ]
-                          ],
-                          "suffix": [
-                            "object/get",
-                            "@metric",
-                            "suffix",
-                            ""
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@metric",
-                            "variant",
-                            "default"
-                          ],
-                          "label": [
-                            "object/get",
-                            "@metric",
-                            "label"
-                          ],
-                          "max": [
-                            "object/get",
-                            "@metric",
-                            "max",
-                            0.0
-                          ],
-                          "trend": [
-                            "object/get",
-                            "@metric",
-                            "trend",
-                            0.0
-                          ],
-                          "format": [
-                            "object/get",
-                            "@metric",
-                            "format",
-                            "number"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@metric",
-                            "icon",
-                            ""
-                          ],
-                          "target": [
-                            "object/get",
-                            "@metric",
-                            "target",
-                            0.0
-                          ],
-                          "prefix": [
-                            "object/get",
-                            "@metric",
-                            "prefix",
-                            ""
                           ]
                         }
                       ]
@@ -363,26 +363,26 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "@entity.cards",
-                      "type": "data-list",
-                      "fields": [],
                       "renderItem": [
                         "fn",
                         "card",
                         {
-                          "target": "@card.target",
-                          "label": "@card.label",
-                          "suffix": "@card.suffix",
                           "max": "@card.max",
+                          "label": "@card.label",
                           "prefix": "@card.prefix",
                           "type": "stat-display",
+                          "target": "@card.target",
                           "icon": "@card.icon",
+                          "format": "@card.format",
+                          "value": "@card.value",
                           "trend": "@card.trend",
                           "variant": "@card.variant",
-                          "format": "@card.format",
-                          "value": "@card.value"
+                          "suffix": "@card.suffix"
                         }
-                      ]
+                      ],
+                      "entity": "@entity.cards",
+                      "fields": [],
+                      "type": "data-list"
                     }
                   ]
                 ]
@@ -390,13 +390,13 @@
             ]
           },
           "config": {
-            "metrics": {
-              "type": "[object]",
-              "default": []
-            },
             "title": {
               "type": "string",
               "default": ""
+            },
+            "metrics": {
+              "type": "[object]",
+              "default": []
             }
           },
           "scope": "instance"

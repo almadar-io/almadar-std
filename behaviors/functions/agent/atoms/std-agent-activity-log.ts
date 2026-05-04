@@ -23,6 +23,59 @@ const BEHAVIOR_PATH = 'std/behaviors/std-agent-activity-log';
 const ALIAS = 'AgentActivityLog';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdAgentActivityLogEventKey = 'AgentActivityLogDeleteFailed' | 'AgentActivityLogDeleted' | 'AgentActivityLogLoadFailed' | 'AgentActivityLogLoaded' | 'AgentActivityLogSaveFailed' | 'AgentActivityLogSaved' | 'CLEAR' | 'INIT' | 'LOG_ENTRY';
+
+/**
+ * Payload shape for the `AgentActivityLogLoaded` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `AgentActivityLogLoadFailed` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentActivityLogSaved` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentActivityLogSaveFailed` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentActivityLogDeleted` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentActivityLogDeleteFailed` event.
+ */
+export interface StdAgentActivityLogAgentActivityLogDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-agent-activity-log descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +91,8 @@ export interface StdAgentActivityLogParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdAgentActivityLogEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +112,11 @@ export function stdAgentActivityLogTrait(params: StdAgentActivityLogParams): Tra
     ref: `${ALIAS}.traits.AgentActivityLogLog`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

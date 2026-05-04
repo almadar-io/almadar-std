@@ -23,6 +23,150 @@ const BEHAVIOR_PATH = 'std/behaviors/std-helpdesk';
 const ALIAS = 'Helpdesk';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdHelpdeskEventKey = 'ASSIGN' | 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'ResponseSaveFailed' | 'ResponseSaved' | 'TicketDeleteFailed' | 'TicketDeleted' | 'TicketLoadFailed' | 'TicketLoaded' | 'TicketSaveFailed' | 'TicketSaved' | 'TicketUpdateFailed' | 'TicketUpdated' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdHelpdeskListenKey = 'TICKET_CREATED' | 'TICKET_UPDATED' | 'TICKET_DELETED';
+
+/**
+ * Payload shape for the `ASSIGN` event.
+ */
+export interface StdHelpdeskAssignPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdHelpdeskViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    subject?: string;
+    description?: string;
+    priority?: string;
+    status?: string;
+    assignee?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdHelpdeskEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    subject?: string;
+    description?: string;
+    priority?: string;
+    status?: string;
+    assignee?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdHelpdeskDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    subject?: string;
+    description?: string;
+    priority?: string;
+    status?: string;
+    assignee?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `TicketLoaded` event.
+ */
+export interface StdHelpdeskTicketLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `TicketLoadFailed` event.
+ */
+export interface StdHelpdeskTicketLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TicketSaved` event.
+ */
+export interface StdHelpdeskTicketSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TicketSaveFailed` event.
+ */
+export interface StdHelpdeskTicketSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TicketUpdated` event.
+ */
+export interface StdHelpdeskTicketUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TicketUpdateFailed` event.
+ */
+export interface StdHelpdeskTicketUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TicketDeleted` event.
+ */
+export interface StdHelpdeskTicketDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TicketDeleteFailed` event.
+ */
+export interface StdHelpdeskTicketDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ResponseSaved` event.
+ */
+export interface StdHelpdeskResponseSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ResponseSaveFailed` event.
+ */
+export interface StdHelpdeskResponseSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-helpdesk descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +182,8 @@ export interface StdHelpdeskParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdHelpdeskEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +203,11 @@ export function stdHelpdeskTicketBrowseTrait(params: StdHelpdeskParams): TraitRe
     ref: `${ALIAS}.traits.TicketBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +218,11 @@ export function stdHelpdeskTicketCreateTrait(params: StdHelpdeskParams): TraitRe
     ref: `${ALIAS}.traits.TicketCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +233,11 @@ export function stdHelpdeskTicketEditTrait(params: StdHelpdeskParams): TraitRefe
     ref: `${ALIAS}.traits.TicketEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +248,11 @@ export function stdHelpdeskTicketViewTrait(params: StdHelpdeskParams): TraitRefe
     ref: `${ALIAS}.traits.TicketView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +263,11 @@ export function stdHelpdeskTicketDeleteTrait(params: StdHelpdeskParams): TraitRe
     ref: `${ALIAS}.traits.TicketDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -699,22 +843,22 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'type': 'stack',
                       'className': 'py-12',
-                      'gap': 'md',
                       'align': 'center',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'type': 'typography',
                           'color': 'muted',
-                          'variant': 'caption',
+                          'type': 'typography',
                           'content': 'Loading…',
+                          'variant': 'caption',
                         },
                       ],
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -728,67 +872,70 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'appName': 'Helpdesk',
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'inbox',
                           'label': 'Tickets',
                           'href': '/tickets',
+                          'icon': 'inbox',
                         },
                         {
+                          'href': '/responses',
                           'label': 'Responses',
                           'icon': 'message-circle',
-                          'href': '/responses',
                         },
                         {
-                          'label': 'Metrics',
-                          'icon': 'layout-list',
                           'href': '/metrics',
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
                         },
                       ],
                       'children': [
                         {
+                          'className': 'max-w-5xl mx-auto w-full',
                           'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'type': 'stack',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'name': 'inbox',
                                       'type': 'icon',
+                                      'name': 'inbox',
                                     },
                                     {
-                                      'type': 'typography',
-                                      'content': 'Tickets',
                                       'variant': 'h2',
+                                      'content': 'Tickets',
+                                      'type': 'typography',
                                     },
                                   ],
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'align': 'center',
                                 },
                                 {
-                                  'direction': 'horizontal',
                                   'type': 'stack',
-                                  'gap': 'sm',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'label': 'New Ticket',
-                                      'variant': 'primary',
-                                      'type': 'button',
                                       'icon': 'plus',
+                                      'label': 'New Ticket',
+                                      'type': 'button',
                                       'action': 'CREATE',
+                                      'variant': 'primary',
                                     },
                                   ],
+                                  'gap': 'sm',
                                 },
                               ],
                               'direction': 'horizontal',
-                              'justify': 'between',
-                              'align': 'center',
                               'gap': 'md',
+                              'justify': 'between',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
@@ -796,14 +943,14 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                             {
                               'children': [
                                 {
-                                  'value': '@payload.data.length',
-                                  'type': 'stat-display',
-                                  'label': 'Open Tickets',
                                   'icon': 'inbox',
+                                  'type': 'stat-display',
+                                  'value': '@payload.data.length',
+                                  'label': 'Open Tickets',
                                 },
                               ],
-                              'cols': 1,
                               'type': 'simple-grid',
+                              'cols': 1,
                             },
                             {
                               'type': 'divider',
@@ -812,16 +959,16 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                               'fields': [
                                 {
                                   'icon': 'inbox',
-                                  'variant': 'h3',
                                   'name': 'subject',
+                                  'variant': 'h3',
                                 },
                                 {
+                                  'variant': 'badge',
                                   'name': 'priority',
-                                  'variant': 'badge',
                                 },
                                 {
-                                  'name': 'status',
                                   'variant': 'badge',
+                                  'name': 'status',
                                 },
                                 {
                                   'name': 'assignee',
@@ -832,11 +979,11 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   'variant': 'caption',
                                 },
                               ],
-                              'type': 'data-list',
+                              'gap': 'sm',
                               'itemActions': [
                                 {
-                                  'event': 'VIEW',
                                   'variant': 'ghost',
+                                  'event': 'VIEW',
                                   'label': 'View',
                                 },
                                 {
@@ -845,22 +992,19 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   'event': 'EDIT',
                                 },
                                 {
+                                  'label': 'Delete',
                                   'event': 'DELETE',
                                   'variant': 'danger',
-                                  'label': 'Delete',
                                 },
                               ],
-                              'entity': '@payload.data',
-                              'gap': 'sm',
                               'variant': 'card',
+                              'type': 'data-list',
+                              'entity': '@payload.data',
                             },
                           ],
-                          'direction': 'vertical',
-                          'className': 'max-w-5xl mx-auto w-full',
                           'gap': 'lg',
                         },
                       ],
-                      'appName': 'Helpdesk',
                     },
                   ],
                 ],
@@ -874,36 +1018,36 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'align': 'center',
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
+                      'align': 'center',
+                      'className': 'py-12',
                       'children': [
                         {
+                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
-                          'type': 'icon',
                         },
                         {
                           'type': 'typography',
-                          'variant': 'h3',
                           'content': 'Failed to load ticket',
+                          'variant': 'h3',
                         },
                         {
+                          'color': 'muted',
                           'content': '@payload.error',
                           'variant': 'body',
                           'type': 'typography',
-                          'color': 'muted',
                         },
                         {
-                          'icon': 'rotate-ccw',
+                          'type': 'button',
                           'variant': 'primary',
                           'label': 'Retry',
-                          'type': 'button',
+                          'icon': 'rotate-ccw',
                           'action': 'INIT',
                         },
                       ],
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -1117,25 +1261,29 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                       'gap': 'md',
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'plus-circle',
                               'type': 'icon',
                             },
                             {
-                              'type': 'typography',
-                              'content': 'Create Ticket',
                               'variant': 'h3',
+                              'content': 'Create Ticket',
+                              'type': 'typography',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
                           'fields': [
                             'subject',
                             'description',
@@ -1143,10 +1291,6 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                             'status',
                             'assignee',
                           ],
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
                         },
                       ],
                     },
@@ -1189,8 +1333,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'TicketSaveFailed',
                         'success': 'TicketSaved',
+                        'failure': 'TicketSaveFailed',
                       },
                     },
                   ],
@@ -1436,30 +1580,31 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'gap': 'md',
                       'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
-                              'content': 'Edit Ticket',
                               'variant': 'h3',
                               'type': 'typography',
+                              'content': 'Edit Ticket',
                             },
                           ],
                           'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'mode': 'edit',
                           'fields': [
                             'subject',
                             'description',
@@ -1468,7 +1613,6 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                             'assignee',
                           ],
                           'type': 'form-section',
-                          'mode': 'edit',
                           'cancelEvent': 'CLOSE',
                           'submitEvent': 'SAVE',
                           'entity': '@payload.row',
@@ -1514,8 +1658,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'TicketUpdateFailed',
                         'success': 'TicketUpdated',
+                        'failure': 'TicketUpdateFailed',
                       },
                     },
                   ],
@@ -1698,8 +1842,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Ticket',
                     {
                       'emit': {
-                        'failure': 'TicketLoadFailed',
                         'success': 'TicketLoaded',
+                        'failure': 'TicketLoadFailed',
                       },
                     },
                   ],
@@ -1714,35 +1858,34 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'fetch',
                     'Ticket',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'success': 'TicketLoaded',
                         'failure': 'TicketLoadFailed',
+                        'success': 'TicketLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
                       'direction': 'vertical',
                       'children': [
                         {
-                          'align': 'center',
-                          'type': 'stack',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
-                              'content': '@entity.subject',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.subject',
                             },
                           ],
+                          'type': 'stack',
+                          'align': 'center',
                           'gap': 'sm',
                           'direction': 'horizontal',
                         },
@@ -1751,42 +1894,40 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                         },
                         {
                           'type': 'stack',
-                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'content': 'Subject',
                               'type': 'typography',
                               'variant': 'caption',
+                              'content': 'Subject',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                               'content': '@entity.subject',
                             },
                           ],
-                          'direction': 'horizontal',
+                          'gap': 'md',
                         },
                         {
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'typography',
-                              'content': 'Description',
                               'variant': 'caption',
+                              'content': 'Description',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.description',
+                              'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
                           'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
                           'gap': 'md',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'content': 'Priority',
@@ -1794,20 +1935,22 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                             {
+                              'content': '@entity.priority',
                               'type': 'typography',
                               'variant': 'body',
-                              'content': '@entity.priority',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
-                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
+                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Status',
-                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
@@ -1815,7 +1958,7 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                               'content': '@entity.status',
                             },
                           ],
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'children': [
@@ -1825,9 +1968,9 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.assignee',
+                              'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
                           'gap': 'md',
@@ -1838,27 +1981,28 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'justify': 'end',
                           'gap': 'sm',
                           'children': [
                             {
-                              'label': 'Edit',
-                              'variant': 'primary',
+                              'action': 'EDIT',
                               'type': 'button',
                               'icon': 'edit',
-                              'action': 'EDIT',
+                              'variant': 'primary',
+                              'label': 'Edit',
                             },
                             {
-                              'type': 'button',
                               'label': 'Close',
-                              'variant': 'ghost',
+                              'type': 'button',
                               'action': 'CLOSE',
+                              'variant': 'ghost',
                             },
                           ],
-                          'justify': 'end',
+                          'type': 'stack',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2088,8 +2232,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Ticket',
                     {
                       'emit': {
-                        'failure': 'TicketLoadFailed',
                         'success': 'TicketLoaded',
+                        'failure': 'TicketLoadFailed',
                       },
                     },
                   ],
@@ -2109,68 +2253,68 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'fetch',
                     'Ticket',
                     {
-                      'id': '@payload.id',
                       'emit': {
                         'success': 'TicketLoaded',
                         'failure': 'TicketLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
                       'children': [
                         {
+                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'alert-triangle',
                               'type': 'icon',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Delete Ticket',
-                              'variant': 'h3',
                             },
                           ],
-                          'gap': 'sm',
-                          'align': 'center',
                           'direction': 'horizontal',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'message': 'This action cannot be undone.',
-                          'variant': 'error',
                           'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
                         },
                         {
-                          'justify': 'end',
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
+                          'justify': 'end',
                           'children': [
                             {
+                              'type': 'button',
                               'variant': 'ghost',
                               'action': 'CANCEL',
                               'label': 'Cancel',
-                              'type': 'button',
                             },
                             {
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'type': 'button',
                               'label': 'Delete',
                               'action': 'CONFIRM_DELETE',
-                              'icon': 'check',
-                              'type': 'button',
-                              'variant': 'danger',
                             },
                           ],
+                          'gap': 'sm',
                         },
                       ],
-                      'type': 'stack',
-                      'gap': 'md',
                       'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2209,8 +2353,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Ticket',
                     {
                       'emit': {
-                        'failure': 'TicketLoadFailed',
                         'success': 'TicketLoaded',
+                        'failure': 'TicketLoadFailed',
                       },
                     },
                   ],
@@ -2242,8 +2386,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Ticket',
                     {
                       'emit': {
-                        'success': 'TicketLoaded',
                         'failure': 'TicketLoadFailed',
+                        'success': 'TicketLoaded',
                       },
                     },
                   ],
@@ -2271,8 +2415,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Ticket',
                     {
                       'emit': {
-                        'success': 'TicketLoaded',
                         'failure': 'TicketLoadFailed',
+                        'success': 'TicketLoaded',
                       },
                     },
                   ],
@@ -2502,11 +2646,9 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
@@ -2518,6 +2660,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                           'variant': 'caption',
                         },
                       ],
+                      'direction': 'vertical',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -2532,73 +2676,68 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'Helpdesk',
-                      'navItems': [
-                        {
-                          'href': '/tickets',
-                          'icon': 'inbox',
-                          'label': 'Tickets',
-                        },
-                        {
-                          'label': 'Responses',
-                          'href': '/responses',
-                          'icon': 'message-circle',
-                        },
-                        {
-                          'label': 'Metrics',
-                          'icon': 'layout-list',
-                          'href': '/metrics',
-                        },
-                      ],
                       'children': [
                         {
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
                           'type': 'stack',
                           'children': [
                             {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'justify': 'between',
-                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
                                   'align': 'center',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'message-circle',
+                                      'type': 'icon',
                                     },
                                     {
                                       'type': 'typography',
-                                      'content': 'Responses',
                                       'variant': 'h2',
+                                      'content': 'Responses',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'icon': 'edit',
-                                      'variant': 'primary',
                                       'action': 'COMPOSE',
-                                      'label': 'Compose',
+                                      'variant': 'primary',
+                                      'icon': 'edit',
                                       'type': 'button',
+                                      'label': 'Compose',
                                     },
                                   ],
                                 },
                               ],
+                              'align': 'center',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                },
+                              ],
                               'variant': 'card',
+                              'gap': 'sm',
+                              'entity': '@payload.data',
                               'fields': [
                                 {
                                   'variant': 'h4',
@@ -2610,26 +2749,31 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   'variant': 'body',
                                 },
                                 {
-                                  'variant': 'caption',
-                                  'name': 'createdAt',
                                   'format': 'date',
+                                  'name': 'createdAt',
+                                  'variant': 'caption',
                                 },
                               ],
-                              'gap': 'sm',
-                              'entity': '@payload.data',
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                              ],
-                              'type': 'data-list',
                             },
                           ],
-                          'direction': 'vertical',
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'Helpdesk',
+                      'navItems': [
+                        {
+                          'href': '/tickets',
+                          'icon': 'inbox',
+                          'label': 'Tickets',
+                        },
+                        {
+                          'label': 'Responses',
+                          'icon': 'message-circle',
+                          'href': '/responses',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                          'label': 'Metrics',
                         },
                       ],
                     },
@@ -2645,12 +2789,11 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'color': 'destructive',
                           'name': 'alert-triangle',
                           'type': 'icon',
-                          'color': 'destructive',
                         },
                         {
                           'type': 'typography',
@@ -2658,21 +2801,22 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                           'content': 'Failed to load response',
                         },
                         {
-                          'type': 'typography',
-                          'content': '@payload.error',
-                          'color': 'muted',
                           'variant': 'body',
+                          'content': '@payload.error',
+                          'type': 'typography',
+                          'color': 'muted',
                         },
                         {
+                          'icon': 'rotate-ccw',
                           'type': 'button',
                           'label': 'Retry',
-                          'action': 'INIT',
-                          'icon': 'rotate-ccw',
                           'variant': 'primary',
+                          'action': 'INIT',
                         },
                       ],
-                      'gap': 'md',
+                      'direction': 'vertical',
                       'align': 'center',
+                      'gap': 'md',
                       'type': 'stack',
                       'className': 'py-12',
                     },
@@ -2863,39 +3007,39 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     {
                       'gap': 'md',
                       'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
-                              'type': 'typography',
                               'content': 'New Response',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
-                          'submitEvent': 'SEND',
-                          'mode': 'create',
                           'fields': [
                             'ticketId',
                             'body',
                             'author',
                           ],
+                          'submitEvent': 'SEND',
+                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
                         },
                       ],
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -2936,8 +3080,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'ResponseSaveFailed',
                         'success': 'ResponseSaved',
+                        'failure': 'ResponseSaveFailed',
                       },
                     },
                   ],
@@ -3090,8 +3234,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'Response',
                     {
                       'emit': {
-                        'failure': 'ResponseLoadFailed',
                         'success': 'ResponseLoaded',
+                        'failure': 'ResponseLoadFailed',
                       },
                     },
                   ],
@@ -3106,59 +3250,58 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'fetch',
                     'Response',
                     {
-                      'emit': {
-                        'failure': 'ResponseLoadFailed',
-                        'success': 'ResponseLoaded',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'success': 'ResponseLoaded',
+                        'failure': 'ResponseLoadFailed',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
                       'children': [
                         {
+                          'direction': 'horizontal',
                           'align': 'center',
                           'type': 'stack',
                           'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
                               'content': '@entity.ticketId',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
-                          'gap': 'md',
                           'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
                               'type': 'typography',
-                              'content': 'Ticket ID',
                               'variant': 'caption',
+                              'content': 'Ticket ID',
                             },
                             {
                               'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.ticketId',
+                              'variant': 'body',
                             },
                           ],
+                          'type': 'stack',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
@@ -3166,67 +3309,68 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.body',
-                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'md',
                         },
                         {
+                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Author',
-                              'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.author',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
                           'gap': 'md',
-                          'type': 'stack',
                         },
                         {
-                          'type': 'stack',
+                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'variant': 'caption',
-                              'content': 'Created At',
                               'type': 'typography',
+                              'content': 'Created At',
                             },
                             {
-                              'content': '@entity.createdAt',
                               'variant': 'body',
+                              'content': '@entity.createdAt',
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'justify': 'end',
                           'direction': 'horizontal',
                           'type': 'stack',
-                          'gap': 'sm',
-                          'justify': 'end',
                           'children': [
                             {
-                              'type': 'button',
-                              'variant': 'ghost',
                               'label': 'Close',
                               'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
                             },
                           ],
+                          'gap': 'sm',
                         },
                       ],
-                      'direction': 'vertical',
-                      'type': 'stack',
                       'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3466,8 +3610,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'SupportMetrics',
                     {
                       'emit': {
-                        'success': 'SupportMetricsLoaded',
                         'failure': 'SupportMetricsLoadFailed',
+                        'success': 'SupportMetricsLoaded',
                       },
                     },
                   ],
@@ -3475,17 +3619,14 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'appName': 'Helpdesk',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
                               'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'label': 'Home',
@@ -3495,11 +3636,14 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'label': 'Support Metrics',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                       'type': 'stack',
                                       'children': [
                                         {
@@ -3507,22 +3651,20 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'type': 'icon',
                                         },
                                         {
+                                          'type': 'typography',
                                           'content': 'Support Metrics',
                                           'variant': 'h2',
-                                          'type': 'typography',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
-                                      'variant': 'secondary',
                                       'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'type': 'stack',
                                   'gap': 'md',
@@ -3531,42 +3673,42 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'value': '@entity.openTickets',
                                           'type': 'stat-display',
                                           'label': 'OpenTickets',
+                                          'value': '@entity.openTickets',
                                         },
                                         {
+                                          'type': 'stat-display',
                                           'value': '@entity.resolvedTickets',
                                           'label': 'ResolvedTickets',
-                                          'type': 'stat-display',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'children': [
                                                 {
                                                   'variant': 'caption',
-                                                  'type': 'typography',
                                                   'content': 'AvgResponseTime',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.avgResponseTime',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.avgResponseTime',
                                                 },
                                               ],
                                               'gap': 'sm',
-                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'label': 'SatisfactionScore',
@@ -3574,44 +3716,44 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'ActiveAgents',
                                           'type': 'stat-display',
+                                          'label': 'ActiveAgents',
                                           'value': '@entity.activeAgents',
                                         },
                                       ],
                                       'type': 'simple-grid',
                                     },
                                   ],
-                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
+                                  'gap': 'md',
                                   'children': [
                                     {
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Chart View',
-                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
-                                  'gap': 'md',
                                   'type': 'grid',
                                 },
                                 {
@@ -3622,8 +3764,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
@@ -3634,12 +3776,12 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
@@ -3657,7 +3799,6 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   ],
                                 },
                                 {
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -3668,45 +3809,48 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'source': 'b',
                                     },
                                   ],
+                                  'height': 200,
                                   'type': 'graph-view',
                                   'width': 400,
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
                                 },
                               ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'Helpdesk',
                       'navItems': [
                         {
-                          'label': 'Tickets',
                           'href': '/tickets',
                           'icon': 'inbox',
+                          'label': 'Tickets',
                         },
                         {
                           'icon': 'message-circle',
-                          'href': '/responses',
                           'label': 'Responses',
+                          'href': '/responses',
                         },
                         {
                           'label': 'Metrics',
-                          'href': '/metrics',
                           'icon': 'layout-list',
+                          'href': '/metrics',
                         },
                       ],
                     },
@@ -3735,8 +3879,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                       'navItems': [
                         {
                           'icon': 'inbox',
-                          'href': '/tickets',
                           'label': 'Tickets',
+                          'href': '/tickets',
                         },
                         {
                           'label': 'Responses',
@@ -3744,37 +3888,39 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                           'icon': 'message-circle',
                         },
                         {
+                          'href': '/metrics',
                           'label': 'Metrics',
                           'icon': 'layout-list',
-                          'href': '/metrics',
                         },
                       ],
-                      'appName': 'Helpdesk',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
                               'type': 'stack',
+                              'direction': 'vertical',
                               'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Support Metrics',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'gap': 'md',
+                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
@@ -3787,55 +3933,54 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'type': 'typography',
                                         },
                                       ],
-                                      'type': 'stack',
+                                      'gap': 'md',
                                     },
                                     {
                                       'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
                                       'type': 'button',
                                       'variant': 'secondary',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
                                     },
                                   ],
-                                  'justify': 'between',
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
                                   'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                       'children': [
                                         {
-                                          'value': '@entity.openTickets',
                                           'label': 'OpenTickets',
+                                          'value': '@entity.openTickets',
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'value': '@entity.resolvedTickets',
-                                          'type': 'stat-display',
                                           'label': 'ResolvedTickets',
+                                          'type': 'stat-display',
+                                          'value': '@entity.resolvedTickets',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'AvgResponseTime',
-                                                  'type': 'typography',
                                                 },
                                                 {
+                                                  'content': '@entity.avgResponseTime',
                                                   'type': 'typography',
                                                   'variant': 'h3',
-                                                  'content': '@entity.avgResponseTime',
                                                 },
                                               ],
                                             },
@@ -3843,53 +3988,51 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'type': 'card',
                                         },
                                         {
-                                          'value': '@entity.satisfactionScore',
                                           'label': 'SatisfactionScore',
                                           'type': 'stat-display',
+                                          'value': '@entity.satisfactionScore',
                                         },
                                         {
                                           'label': 'ActiveAgents',
-                                          'type': 'stat-display',
                                           'value': '@entity.activeAgents',
+                                          'type': 'stat-display',
                                         },
                                       ],
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
                                   'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
                                   'cols': 2,
+                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -3904,8 +4047,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'date': 'May',
@@ -3916,55 +4059,56 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
-                                  'height': 200,
+                                  'type': 'graph-view',
                                   'width': 400,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
                                       'label': 'Process',
                                       'id': 'b',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                 },
                               ],
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'Helpdesk',
                       'type': 'dashboard-layout',
                     },
                   ],
@@ -3980,8 +4124,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'SupportMetrics',
                     {
                       'emit': {
-                        'success': 'SupportMetricsLoaded',
                         'failure': 'SupportMetricsLoadFailed',
+                        'success': 'SupportMetricsLoaded',
                       },
                     },
                   ],
@@ -3989,17 +4133,17 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'children': [
                                 {
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Support Metrics',
@@ -4008,102 +4152,101 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'activity',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'type': 'typography',
                                           'content': 'Support Metrics',
+                                          'type': 'typography',
                                           'variant': 'h2',
                                         },
                                       ],
                                       'gap': 'md',
                                       'direction': 'horizontal',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'action': 'REFRESH',
                                       'type': 'button',
+                                      'variant': 'secondary',
                                       'icon': 'refresh-cw',
                                       'label': 'Refresh',
-                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'label': 'OpenTickets',
                                           'type': 'stat-display',
                                           'value': '@entity.openTickets',
+                                          'label': 'OpenTickets',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'ResolvedTickets',
                                           'value': '@entity.resolvedTickets',
+                                          'label': 'ResolvedTickets',
                                         },
                                         {
                                           'children': [
                                             {
+                                              'direction': 'vertical',
                                               'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'content': 'AvgResponseTime',
                                                   'type': 'typography',
+                                                  'content': 'AvgResponseTime',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'type': 'typography',
                                                   'content': '@entity.avgResponseTime',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
-                                          'label': 'SatisfactionScore',
                                           'value': '@entity.satisfactionScore',
+                                          'label': 'SatisfactionScore',
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'ActiveAgents',
                                           'value': '@entity.activeAgents',
+                                          'type': 'stat-display',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'type': 'grid',
                                   'cols': 2,
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Chart View',
@@ -4111,21 +4254,23 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -4136,8 +4281,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'date': 'Feb',
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
@@ -4148,47 +4293,46 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'target': 'b',
                                       'source': 'a',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
                                   'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
                                       'id': 'c',
@@ -4197,32 +4341,32 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   ],
                                 },
                               ],
+                              'gap': 'lg',
                               'direction': 'vertical',
                               'type': 'stack',
-                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'Helpdesk',
                       'navItems': [
                         {
-                          'icon': 'inbox',
                           'label': 'Tickets',
+                          'icon': 'inbox',
                           'href': '/tickets',
                         },
                         {
+                          'label': 'Responses',
                           'icon': 'message-circle',
                           'href': '/responses',
-                          'label': 'Responses',
                         },
                         {
                           'label': 'Metrics',
-                          'icon': 'layout-list',
                           'href': '/metrics',
+                          'icon': 'layout-list',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'Helpdesk',
                     },
                   ],
                 ],
@@ -4237,8 +4381,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'SupportMetrics',
                     {
                       'emit': {
-                        'failure': 'SupportMetricsLoadFailed',
                         'success': 'SupportMetricsLoaded',
+                        'failure': 'SupportMetricsLoadFailed',
                       },
                     },
                   ],
@@ -4246,32 +4390,32 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'Helpdesk',
                       'navItems': [
                         {
-                          'icon': 'inbox',
                           'label': 'Tickets',
+                          'icon': 'inbox',
                           'href': '/tickets',
                         },
                         {
+                          'label': 'Responses',
                           'href': '/responses',
                           'icon': 'message-circle',
-                          'label': 'Responses',
                         },
                         {
-                          'label': 'Metrics',
                           'href': '/metrics',
+                          'label': 'Metrics',
                           'icon': 'layout-list',
                         },
                       ],
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -4281,15 +4425,18 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'label': 'Support Metrics',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'activity',
+                                          'type': 'icon',
                                         },
                                         {
                                           'type': 'typography',
@@ -4297,36 +4444,30 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
                                       'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
                                       'variant': 'secondary',
-                                      'icon': 'refresh-cw',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'type': 'stack',
                                   'direction': 'horizontal',
-                                  'gap': 'md',
-                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 3,
                                       'children': [
                                         {
-                                          'label': 'OpenTickets',
                                           'type': 'stat-display',
+                                          'label': 'OpenTickets',
                                           'value': '@entity.openTickets',
                                         },
                                         {
@@ -4335,26 +4476,26 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'label': 'ResolvedTickets',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'direction': 'vertical',
-                                              'type': 'stack',
                                               'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'content': 'AvgResponseTime',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.avgResponseTime',
                                                   'type': 'typography',
                                                   'variant': 'h3',
+                                                  'content': '@entity.avgResponseTime',
                                                 },
                                               ],
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'value': '@entity.satisfactionScore',
@@ -4362,14 +4503,16 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'value': '@entity.activeAgents',
-                                          'label': 'ActiveAgents',
                                           'type': 'stat-display',
+                                          'label': 'ActiveAgents',
+                                          'value': '@entity.activeAgents',
                                         },
                                       ],
                                       'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -4380,26 +4523,26 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
                                   'gap': 'md',
                                   'type': 'grid',
+                                  'cols': 2,
                                 },
                                 {
                                   'type': 'line-chart',
@@ -4413,73 +4556,74 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'color': 'primary',
                                       'label': 'Current',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'type': 'graph-view',
+                                  'width': 400,
                                   'edges': [
                                     {
-                                      'target': 'b',
                                       'source': 'a',
+                                      'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'width': 400,
+                                  'height': 200,
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Helpdesk',
                     },
                   ],
                 ],
@@ -4503,31 +4647,18 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'icon': 'inbox',
-                          'href': '/tickets',
-                          'label': 'Tickets',
-                        },
-                        {
-                          'label': 'Responses',
-                          'icon': 'message-circle',
-                          'href': '/responses',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
-                          'href': '/metrics',
-                        },
-                      ],
+                      'appName': 'Helpdesk',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
                               'gap': 'lg',
+                              'direction': 'vertical',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -4537,65 +4668,62 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'label': 'Support Metrics',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
-                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'activity',
                                         },
                                         {
-                                          'content': 'Support Metrics',
                                           'type': 'typography',
+                                          'content': 'Support Metrics',
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'type': 'button',
-                                      'label': 'Refresh',
-                                      'variant': 'secondary',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
                                     },
                                   ],
+                                  'gap': 'md',
                                   'direction': 'horizontal',
                                   'type': 'stack',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'type': 'stat-display',
-                                          'label': 'OpenTickets',
                                           'value': '@entity.openTickets',
+                                          'label': 'OpenTickets',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'value': '@entity.resolvedTickets',
-                                          'type': 'stat-display',
                                           'label': 'ResolvedTickets',
+                                          'type': 'stat-display',
+                                          'value': '@entity.resolvedTickets',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -4603,42 +4731,47 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                                   'content': 'AvgResponseTime',
                                                 },
                                                 {
-                                                  'content': '@entity.avgResponseTime',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.avgResponseTime',
                                                 },
                                               ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
-                                          'label': 'SatisfactionScore',
                                           'value': '@entity.satisfactionScore',
                                           'type': 'stat-display',
+                                          'label': 'SatisfactionScore',
                                         },
                                         {
-                                          'label': 'ActiveAgents',
                                           'type': 'stat-display',
+                                          'label': 'ActiveAgents',
                                           'value': '@entity.activeAgents',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Chart View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
@@ -4646,27 +4779,24 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Graph View',
-                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
-                                  'cols': 2,
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'date': 'Mar',
@@ -4677,8 +4807,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'value': 30,
@@ -4700,22 +4830,10 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                   ],
                                 },
                                 {
-                                  'type': 'graph-view',
-                                  'height': 200,
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
                                       'label': 'Process',
@@ -4726,17 +4844,43 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                                       'label': 'End',
                                     },
                                   ],
+                                  'height': 200,
                                   'width': 400,
+                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
-                              'direction': 'vertical',
                               'type': 'stack',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Helpdesk',
+                      'navItems': [
+                        {
+                          'href': '/tickets',
+                          'icon': 'inbox',
+                          'label': 'Tickets',
+                        },
+                        {
+                          'href': '/responses',
+                          'label': 'Responses',
+                          'icon': 'message-circle',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
                     },
                   ],
                 ],

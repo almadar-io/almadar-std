@@ -23,6 +23,234 @@ const BEHAVIOR_PATH = 'std/behaviors/std-service-marketplace';
 const ALIAS = 'ServiceMarketplace';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdServiceMarketplaceEventKey = 'CHECKOUT' | 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'OrderDeleteFailed' | 'OrderDeleted' | 'OrderSaveFailed' | 'OrderSaved' | 'OrderUpdateFailed' | 'OrderUpdated' | 'ProductDeleteFailed' | 'ProductDeleted' | 'ProductEmailCompleted' | 'ProductEmailFailed' | 'ProductLoadFailed' | 'ProductLoaded' | 'ProductOauthCompleted' | 'ProductOauthFailed' | 'ProductSaveFailed' | 'ProductSaved' | 'ProductStripeCompleted' | 'ProductStripeFailed' | 'ProductUpdateFailed' | 'ProductUpdated' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdServiceMarketplaceListenKey = 'PRODUCT_CREATED' | 'PRODUCT_UPDATED' | 'PRODUCT_DELETED';
+
+/**
+ * Payload shape for the `CHECKOUT` event.
+ */
+export interface StdServiceMarketplaceCheckoutPayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    inStock?: boolean;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdServiceMarketplaceViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    inStock?: boolean;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdServiceMarketplaceEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    inStock?: boolean;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdServiceMarketplaceDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    inStock?: boolean;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `ProductLoaded` event.
+ */
+export interface StdServiceMarketplaceProductLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `ProductLoadFailed` event.
+ */
+export interface StdServiceMarketplaceProductLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductSaved` event.
+ */
+export interface StdServiceMarketplaceProductSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ProductSaveFailed` event.
+ */
+export interface StdServiceMarketplaceProductSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductUpdated` event.
+ */
+export interface StdServiceMarketplaceProductUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ProductUpdateFailed` event.
+ */
+export interface StdServiceMarketplaceProductUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductDeleted` event.
+ */
+export interface StdServiceMarketplaceProductDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ProductDeleteFailed` event.
+ */
+export interface StdServiceMarketplaceProductDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductOauthCompleted` event.
+ */
+export interface StdServiceMarketplaceProductOauthCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ProductOauthFailed` event.
+ */
+export interface StdServiceMarketplaceProductOauthFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductStripeCompleted` event.
+ */
+export interface StdServiceMarketplaceProductStripeCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ProductStripeFailed` event.
+ */
+export interface StdServiceMarketplaceProductStripeFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ProductEmailCompleted` event.
+ */
+export interface StdServiceMarketplaceProductEmailCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ProductEmailFailed` event.
+ */
+export interface StdServiceMarketplaceProductEmailFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `OrderSaved` event.
+ */
+export interface StdServiceMarketplaceOrderSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OrderSaveFailed` event.
+ */
+export interface StdServiceMarketplaceOrderSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `OrderUpdated` event.
+ */
+export interface StdServiceMarketplaceOrderUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OrderUpdateFailed` event.
+ */
+export interface StdServiceMarketplaceOrderUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `OrderDeleted` event.
+ */
+export interface StdServiceMarketplaceOrderDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `OrderDeleteFailed` event.
+ */
+export interface StdServiceMarketplaceOrderDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-service-marketplace descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +266,8 @@ export interface StdServiceMarketplaceParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdServiceMarketplaceEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +287,11 @@ export function stdServiceMarketplaceProductBrowseTrait(params: StdServiceMarket
     ref: `${ALIAS}.traits.ProductBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +302,11 @@ export function stdServiceMarketplaceProductCreateTrait(params: StdServiceMarket
     ref: `${ALIAS}.traits.ProductCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +317,11 @@ export function stdServiceMarketplaceProductEditTrait(params: StdServiceMarketpl
     ref: `${ALIAS}.traits.ProductEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +332,11 @@ export function stdServiceMarketplaceProductViewTrait(params: StdServiceMarketpl
     ref: `${ALIAS}.traits.ProductView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +347,11 @@ export function stdServiceMarketplaceProductDeleteTrait(params: StdServiceMarket
     ref: `${ALIAS}.traits.ProductDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -964,21 +1192,21 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'color': 'muted',
                           'content': 'Loading…',
                           'variant': 'caption',
+                          'color': 'muted',
                           'type': 'typography',
                         },
                       ],
-                      'type': 'stack',
-                      'className': 'py-12',
                       'align': 'center',
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
                     },
                   ],
@@ -995,58 +1223,79 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     {
                       'children': [
                         {
-                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
                           'children': [
                             {
+                              'type': 'stack',
                               'direction': 'horizontal',
+                              'gap': 'md',
                               'justify': 'between',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'gap': 'sm',
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'shopping-bag',
                                     },
                                     {
-                                      'content': 'Products',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Products',
                                     },
                                   ],
-                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'align': 'center',
+                                  'type': 'stack',
                                 },
                                 {
+                                  'type': 'stack',
                                   'children': [
                                     {
+                                      'variant': 'primary',
+                                      'icon': 'plus',
                                       'type': 'button',
                                       'label': 'Create Product',
                                       'action': 'CREATE',
-                                      'variant': 'primary',
-                                      'icon': 'plus',
                                     },
                                   ],
                                   'direction': 'horizontal',
-                                  'type': 'stack',
                                   'gap': 'sm',
                                 },
                               ],
-                              'align': 'center',
-                              'type': 'stack',
-                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'entity': '@payload.data',
-                              'type': 'data-grid',
+                              'itemActions': [
+                                {
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                  'event': 'VIEW',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                },
+                                {
+                                  'variant': 'primary',
+                                  'event': 'CHECKOUT',
+                                  'label': 'Checkout',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                },
+                              ],
                               'fields': [
                                 {
-                                  'name': 'name',
                                   'icon': 'shopping-bag',
+                                  'name': 'name',
                                   'label': 'Name',
                                   'variant': 'h4',
                                 },
@@ -1055,53 +1304,32 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                   'name': 'description',
                                   'colorMap': {
                                     'archived': 'neutral',
-                                    'disabled': 'neutral',
-                                    'active': 'success',
-                                    'error': 'destructive',
-                                    'failed': 'destructive',
-                                    'scheduled': 'warning',
-                                    'inactive': 'neutral',
-                                    'completed': 'success',
-                                    'cancelled': 'destructive',
                                     'done': 'success',
+                                    'scheduled': 'warning',
+                                    'cancelled': 'destructive',
+                                    'completed': 'success',
                                     'pending': 'warning',
+                                    'error': 'destructive',
+                                    'inactive': 'neutral',
+                                    'active': 'success',
                                     'draft': 'warning',
+                                    'failed': 'destructive',
+                                    'disabled': 'neutral',
                                   },
                                   'label': 'Description',
                                 },
                                 {
-                                  'name': 'price',
                                   'variant': 'caption',
                                   'label': 'Price',
+                                  'name': 'price',
                                 },
                               ],
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'event': 'EDIT',
-                                  'label': 'Edit',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'variant': 'primary',
-                                  'event': 'CHECKOUT',
-                                  'label': 'Checkout',
-                                },
-                                {
-                                  'label': 'Delete',
-                                  'event': 'DELETE',
-                                  'variant': 'danger',
-                                },
-                              ],
+                              'type': 'data-grid',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
                           'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
                         },
                       ],
                       'type': 'dashboard-layout',
@@ -1112,19 +1340,19 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/products',
                         },
                         {
-                          'icon': 'layout-list',
                           'href': '/login',
+                          'icon': 'layout-list',
                           'label': 'Login',
                         },
                         {
+                          'href': '/checkout',
                           'icon': 'credit-card',
                           'label': 'Checkout',
-                          'href': '/checkout',
                         },
                         {
+                          'href': '/orders',
                           'label': 'Orders',
                           'icon': 'clipboard-list',
-                          'href': '/orders',
                         },
                       ],
                       'appName': 'ServiceMarketplace',
@@ -1141,11 +1369,15 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'align': 'center',
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'name': 'alert-triangle',
                           'type': 'icon',
                           'color': 'destructive',
+                          'name': 'alert-triangle',
                         },
                         {
                           'variant': 'h3',
@@ -1153,24 +1385,20 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'type': 'typography',
                         },
                         {
-                          'type': 'typography',
                           'variant': 'body',
-                          'color': 'muted',
                           'content': '@payload.error',
+                          'color': 'muted',
+                          'type': 'typography',
                         },
                         {
                           'action': 'INIT',
                           'type': 'button',
+                          'icon': 'rotate-ccw',
                           'label': 'Retry',
                           'variant': 'primary',
-                          'icon': 'rotate-ccw',
                         },
                       ],
-                      'direction': 'vertical',
                       'gap': 'md',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -1379,31 +1607,29 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
+                      'gap': 'md',
                       'children': [
                         {
                           'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'name': 'plus-circle',
                               'type': 'icon',
+                              'name': 'plus-circle',
                             },
                             {
-                              'type': 'typography',
-                              'content': 'Create Product',
                               'variant': 'h3',
+                              'content': 'Create Product',
+                              'type': 'typography',
                             },
                           ],
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'cancelEvent': 'CLOSE',
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
                           'fields': [
                             'name',
                             'description',
@@ -1411,11 +1637,13 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                             'category',
                             'inStock',
                           ],
-                          'type': 'form-section',
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
                         },
                       ],
                       'direction': 'vertical',
-                      'gap': 'md',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -1456,8 +1684,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'ProductSaved',
                         'failure': 'ProductSaveFailed',
+                        'success': 'ProductSaved',
                       },
                     },
                   ],
@@ -1692,22 +1920,22 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'fetch',
                     'Product',
                     {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
@@ -1719,14 +1947,15 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'variant': 'h3',
                             },
                           ],
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'cancelEvent': 'CLOSE',
                           'entity': '@payload.row',
-                          'mode': 'edit',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'name',
                             'description',
@@ -1734,13 +1963,12 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                             'category',
                             'inStock',
                           ],
-                          'type': 'form-section',
                           'submitEvent': 'SAVE',
+                          'mode': 'edit',
                         },
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1981,64 +2209,65 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'fetch',
                     'Product',
                     {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
-                              'type': 'typography',
                               'content': '@entity.name',
+                              'type': 'typography',
                               'variant': 'h3',
                             },
                           ],
                           'align': 'center',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'stack',
+                          'direction': 'horizontal',
                           'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
-                              'type': 'typography',
                               'content': 'Name',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.name',
                               'variant': 'body',
+                              'content': '@entity.name',
                             },
                           ],
-                          'direction': 'horizontal',
                         },
                         {
-                          'gap': 'md',
-                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'content': 'Description',
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'type': 'typography',
@@ -2046,46 +2275,45 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'content': '@entity.description',
                             },
                           ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Price',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.price',
-                              'variant': 'body',
-                            },
-                          ],
                           'gap': 'md',
                           'type': 'stack',
                         },
                         {
+                          'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
+                              'content': 'Price',
                               'variant': 'caption',
                               'type': 'typography',
+                            },
+                            {
+                              'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.price',
+                            },
+                          ],
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
                               'content': 'Category',
                             },
                             {
                               'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.category',
+                              'variant': 'body',
                             },
                           ],
-                          'gap': 'md',
                           'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                           'children': [
                             {
                               'type': 'typography',
@@ -2093,39 +2321,39 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'content': 'In Stock',
                             },
                             {
-                              'content': '@entity.inStock',
                               'type': 'typography',
+                              'content': '@entity.inStock',
                               'variant': 'body',
                             },
                           ],
+                          'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'justify': 'end',
                           'children': [
                             {
-                              'icon': 'edit',
                               'label': 'Edit',
-                              'type': 'button',
                               'action': 'EDIT',
+                              'icon': 'edit',
                               'variant': 'primary',
+                              'type': 'button',
                             },
                             {
                               'variant': 'ghost',
-                              'label': 'Close',
-                              'type': 'button',
                               'action': 'CLOSE',
+                              'type': 'button',
+                              'label': 'Close',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
-                          'justify': 'end',
                         },
                       ],
-                      'direction': 'vertical',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -2355,8 +2583,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Product',
                     {
                       'emit': {
-                        'failure': 'ProductLoadFailed',
                         'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
                       },
                     },
                   ],
@@ -2377,8 +2605,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Product',
                     {
                       'emit': {
-                        'failure': 'ProductLoadFailed',
                         'success': 'ProductLoaded',
+                        'failure': 'ProductLoadFailed',
                       },
                       'id': '@payload.id',
                     },
@@ -2387,23 +2615,25 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
+                      'gap': 'md',
                       'children': [
                         {
                           'direction': 'horizontal',
                           'gap': 'sm',
+                          'align': 'center',
+                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'alert-triangle',
+                              'type': 'icon',
                             },
                             {
-                              'content': 'Delete Product',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Delete Product',
                             },
                           ],
-                          'type': 'stack',
-                          'align': 'center',
                         },
                         {
                           'type': 'divider',
@@ -2414,30 +2644,28 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'variant': 'error',
                         },
                         {
-                          'gap': 'sm',
+                          'type': 'stack',
+                          'justify': 'end',
                           'children': [
                             {
+                              'type': 'button',
+                              'variant': 'ghost',
                               'label': 'Cancel',
                               'action': 'CANCEL',
-                              'variant': 'ghost',
-                              'type': 'button',
                             },
                             {
-                              'type': 'button',
-                              'variant': 'danger',
                               'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
+                              'type': 'button',
                               'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
                             },
                           ],
-                          'justify': 'end',
-                          'type': 'stack',
+                          'gap': 'sm',
                           'direction': 'horizontal',
                         },
                       ],
-                      'gap': 'md',
                       'direction': 'vertical',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -2476,8 +2704,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Product',
                     {
                       'emit': {
-                        'success': 'ProductLoaded',
                         'failure': 'ProductLoadFailed',
+                        'success': 'ProductLoaded',
                       },
                     },
                   ],
@@ -2837,50 +3065,27 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ServiceMarketplace',
                       'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
+                          'align': 'center',
                           'children': [
                             {
-                              'align': 'center',
+                              'direction': 'horizontal',
                               'children': [
                                 {
                                   'type': 'icon',
                                   'name': 'lock',
                                 },
                                 {
+                                  'type': 'typography',
                                   'content': 'Sign In',
                                   'variant': 'h2',
-                                  'type': 'typography',
                                 },
                               ],
-                              'type': 'stack',
+                              'align': 'center',
                               'gap': 'md',
-                              'direction': 'horizontal',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
@@ -2889,12 +3094,12 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'type': 'select',
                               'options': [
                                 {
-                                  'value': 'google',
                                   'label': 'Google',
+                                  'value': 'google',
                                 },
                                 {
-                                  'value': 'github',
                                   'label': 'GitHub',
+                                  'value': 'github',
                                 },
                                 {
                                   'label': 'Microsoft',
@@ -2903,16 +3108,39 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               ],
                             },
                             {
-                              'label': 'Login',
-                              'action': 'LOGIN',
                               'type': 'button',
-                              'variant': 'primary',
+                              'label': 'Login',
                               'icon': 'log-in',
+                              'variant': 'primary',
+                              'action': 'LOGIN',
                             },
                           ],
-                          'type': 'stack',
                           'gap': 'lg',
-                          'align': 'center',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'ServiceMarketplace',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Login',
+                          'href': '/login',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
                         },
                       ],
                     },
@@ -2928,20 +3156,20 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
                           'message': 'Redirecting to provider for authorization.',
-                          'type': 'loading-state',
                           'title': 'Authorizing...',
+                          'type': 'loading-state',
                         },
                       ],
-                      'appName': 'ServiceMarketplace',
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
                           'label': 'Products',
-                          'href': '/products',
                           'icon': 'package',
+                          'href': '/products',
                         },
                         {
                           'label': 'Login',
@@ -2949,14 +3177,14 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/login',
                         },
                         {
-                          'icon': 'credit-card',
                           'href': '/checkout',
+                          'icon': 'credit-card',
                           'label': 'Checkout',
                         },
                         {
+                          'label': 'Orders',
                           'href': '/orders',
                           'icon': 'clipboard-list',
-                          'label': 'Orders',
                         },
                       ],
                     },
@@ -2995,47 +3223,12 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'name': 'external-link',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Authorization Required',
-                            },
-                            {
-                              'content': '@entity.authUrl',
-                              'variant': 'body',
-                              'type': 'typography',
-                              'color': 'muted',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'Paste authorization code here',
-                            },
-                            {
-                              'label': 'Submit',
-                              'variant': 'primary',
-                              'type': 'button',
-                              'icon': 'check',
-                              'action': 'CALLBACK',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
+                      'appName': 'ServiceMarketplace',
                       'navItems': [
                         {
-                          'label': 'Products',
-                          'href': '/products',
                           'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
                         },
                         {
                           'icon': 'layout-list',
@@ -3043,18 +3236,53 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'label': 'Login',
                         },
                         {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
                           'href': '/checkout',
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
                         },
                         {
-                          'label': 'Orders',
                           'icon': 'clipboard-list',
                           'href': '/orders',
+                          'label': 'Orders',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'align': 'center',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'name': 'external-link',
+                              'type': 'icon',
+                            },
+                            {
+                              'content': 'Authorization Required',
+                              'type': 'typography',
+                              'variant': 'h2',
+                            },
+                            {
+                              'content': '@entity.authUrl',
+                              'color': 'muted',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                            {
+                              'placeholder': 'Paste authorization code here',
+                              'type': 'input',
+                            },
+                            {
+                              'type': 'button',
+                              'icon': 'check',
+                              'variant': 'primary',
+                              'label': 'Submit',
+                              'action': 'CALLBACK',
+                            },
+                          ],
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -3082,71 +3310,71 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ServiceMarketplace',
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'package',
                           'label': 'Products',
                           'href': '/products',
+                          'icon': 'package',
                         },
                         {
+                          'icon': 'layout-list',
                           'href': '/login',
                           'label': 'Login',
-                          'icon': 'layout-list',
                         },
                         {
                           'href': '/checkout',
-                          'label': 'Checkout',
                           'icon': 'credit-card',
+                          'label': 'Checkout',
                         },
                         {
                           'href': '/orders',
-                          'label': 'Orders',
                           'icon': 'clipboard-list',
+                          'label': 'Orders',
                         },
                       ],
                       'children': [
                         {
-                          'gap': 'lg',
                           'type': 'stack',
-                          'direction': 'vertical',
                           'align': 'center',
+                          'gap': 'lg',
                           'children': [
                             {
                               'name': 'check-circle',
                               'type': 'icon',
                             },
                             {
-                              'variant': 'success',
                               'type': 'alert',
+                              'variant': 'success',
                               'message': 'Authenticated successfully',
                             },
                             {
-                              'gap': 'sm',
-                              'justify': 'center',
                               'type': 'stack',
-                              'direction': 'horizontal',
                               'children': [
                                 {
+                                  'type': 'button',
                                   'label': 'Refresh Token',
                                   'action': 'REFRESH',
-                                  'variant': 'ghost',
                                   'icon': 'refresh-cw',
-                                  'type': 'button',
+                                  'variant': 'ghost',
                                 },
                                 {
-                                  'action': 'LOGOUT',
-                                  'type': 'button',
-                                  'label': 'Logout',
                                   'variant': 'ghost',
                                   'icon': 'log-out',
+                                  'label': 'Logout',
+                                  'type': 'button',
+                                  'action': 'LOGOUT',
                                 },
                               ],
+                              'direction': 'horizontal',
+                              'justify': 'center',
+                              'gap': 'sm',
                             },
                           ],
+                          'direction': 'vertical',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -3173,8 +3401,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/products',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Login',
+                          'icon': 'layout-list',
                           'href': '/login',
                         },
                         {
@@ -3183,35 +3411,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/checkout',
                         },
                         {
-                          'href': '/orders',
-                          'label': 'Orders',
                           'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'title': 'Authentication Failed',
-                              'type': 'error-state',
-                              'message': '@entity.error',
-                              'onRetry': 'RETRY',
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Try Again',
-                              'icon': 'rotate-ccw',
-                              'action': 'RETRY',
-                              'type': 'button',
-                            },
-                          ],
+                          'label': 'Orders',
+                          'href': '/orders',
                         },
                       ],
                       'appName': 'ServiceMarketplace',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'title': 'Authentication Failed',
+                              'message': '@entity.error',
+                              'type': 'error-state',
+                              'onRetry': 'RETRY',
+                            },
+                            {
+                              'icon': 'rotate-ccw',
+                              'label': 'Try Again',
+                              'type': 'button',
+                              'action': 'RETRY',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -3240,20 +3468,21 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'href': '/products',
                           'icon': 'package',
                           'label': 'Products',
+                          'href': '/products',
                         },
                         {
-                          'href': '/login',
                           'label': 'Login',
                           'icon': 'layout-list',
+                          'href': '/login',
                         },
                         {
-                          'label': 'Checkout',
                           'href': '/checkout',
+                          'label': 'Checkout',
                           'icon': 'credit-card',
                         },
                         {
@@ -3262,49 +3491,48 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/orders',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'gap': 'lg',
                           'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'check-circle',
+                              'type': 'icon',
                             },
                             {
-                              'variant': 'success',
                               'message': 'Authenticated successfully',
                               'type': 'alert',
+                              'variant': 'success',
                             },
                             {
-                              'direction': 'horizontal',
+                              'type': 'stack',
                               'gap': 'sm',
+                              'direction': 'horizontal',
+                              'justify': 'center',
                               'children': [
                                 {
-                                  'label': 'Refresh Token',
                                   'icon': 'refresh-cw',
-                                  'action': 'REFRESH',
                                   'type': 'button',
+                                  'label': 'Refresh Token',
+                                  'action': 'REFRESH',
                                   'variant': 'ghost',
                                 },
                                 {
-                                  'variant': 'ghost',
+                                  'icon': 'log-out',
+                                  'action': 'LOGOUT',
                                   'type': 'button',
                                   'label': 'Logout',
-                                  'action': 'LOGOUT',
-                                  'icon': 'log-out',
+                                  'variant': 'ghost',
                                 },
                               ],
-                              'type': 'stack',
-                              'justify': 'center',
                             },
                           ],
                           'align': 'center',
-                          'direction': 'vertical',
                         },
                       ],
-                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -3318,34 +3546,34 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                      ],
                       'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'loading-state',
                           'title': 'Refreshing token...',
                           'message': 'Obtaining a new access token.',
+                          'type': 'loading-state',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'icon': 'package',
+                          'label': 'Products',
+                        },
+                        {
+                          'label': 'Login',
+                          'href': '/login',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
                         },
                       ],
                       'appName': 'ServiceMarketplace',
@@ -3360,8 +3588,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     },
                     {
                       'emit': {
-                        'success': 'ProductOauthCompleted',
                         'failure': 'ProductOauthFailed',
+                        'success': 'ProductOauthCompleted',
                       },
                     },
                   ],
@@ -3381,17 +3609,16 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ServiceMarketplace',
                       'navItems': [
                         {
-                          'href': '/products',
                           'icon': 'package',
                           'label': 'Products',
+                          'href': '/products',
                         },
                         {
+                          'icon': 'layout-list',
                           'label': 'Login',
                           'href': '/login',
-                          'icon': 'layout-list',
                         },
                         {
                           'label': 'Checkout',
@@ -3399,18 +3626,21 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/checkout',
                         },
                         {
+                          'icon': 'clipboard-list',
                           'label': 'Orders',
                           'href': '/orders',
-                          'icon': 'clipboard-list',
                         },
                       ],
+                      'appName': 'ServiceMarketplace',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'align': 'center',
                           'children': [
                             {
                               'type': 'stack',
+                              'align': 'center',
                               'gap': 'md',
                               'children': [
                                 {
@@ -3419,46 +3649,44 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                 },
                                 {
                                   'variant': 'h2',
-                                  'type': 'typography',
                                   'content': 'Sign In',
+                                  'type': 'typography',
                                 },
                               ],
                               'direction': 'horizontal',
-                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'select',
                               'options': [
                                 {
-                                  'label': 'Google',
                                   'value': 'google',
+                                  'label': 'Google',
                                 },
                                 {
-                                  'label': 'GitHub',
                                   'value': 'github',
+                                  'label': 'GitHub',
                                 },
                                 {
-                                  'value': 'microsoft',
                                   'label': 'Microsoft',
+                                  'value': 'microsoft',
                                 },
                               ],
+                              'type': 'select',
                             },
                             {
-                              'action': 'LOGIN',
-                              'variant': 'primary',
-                              'type': 'button',
-                              'label': 'Login',
                               'icon': 'log-in',
+                              'type': 'button',
+                              'action': 'LOGIN',
+                              'label': 'Login',
+                              'variant': 'primary',
                             },
                           ],
-                          'gap': 'lg',
-                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3477,17 +3705,37 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'appName': 'ServiceMarketplace',
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'label': 'Products',
+                          'href': '/products',
+                        },
+                        {
+                          'label': 'Login',
+                          'href': '/login',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'type': 'stack',
                           'gap': 'lg',
-                          'align': 'center',
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
                               'type': 'alert',
@@ -3495,53 +3743,33 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'message': 'Authenticated successfully',
                             },
                             {
-                              'type': 'stack',
                               'justify': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
                               'children': [
                                 {
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'label': 'Refresh Token',
                                   'action': 'REFRESH',
+                                  'variant': 'ghost',
                                   'icon': 'refresh-cw',
+                                  'type': 'button',
+                                  'label': 'Refresh Token',
                                 },
                                 {
                                   'action': 'LOGOUT',
-                                  'icon': 'log-out',
-                                  'type': 'button',
                                   'label': 'Logout',
                                   'variant': 'ghost',
+                                  'icon': 'log-out',
+                                  'type': 'button',
                                 },
                               ],
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'gap': 'sm',
                             },
                           ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'align': 'center',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'href': '/login',
-                          'label': 'Login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3560,53 +3788,53 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
                           'icon': 'package',
-                          'href': '/products',
                           'label': 'Products',
+                          'href': '/products',
                         },
                         {
+                          'icon': 'layout-list',
                           'label': 'Login',
                           'href': '/login',
-                          'icon': 'layout-list',
                         },
                         {
                           'label': 'Checkout',
-                          'icon': 'credit-card',
                           'href': '/checkout',
+                          'icon': 'credit-card',
                         },
                         {
-                          'icon': 'clipboard-list',
                           'href': '/orders',
                           'label': 'Orders',
+                          'icon': 'clipboard-list',
                         },
                       ],
                       'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'type': 'stack',
                           'children': [
                             {
                               'onRetry': 'RETRY',
+                              'title': 'Authentication Failed',
                               'message': '@entity.error',
                               'type': 'error-state',
-                              'title': 'Authentication Failed',
                             },
                             {
-                              'icon': 'rotate-ccw',
-                              'variant': 'primary',
                               'label': 'Try Again',
-                              'action': 'RETRY',
+                              'variant': 'primary',
                               'type': 'button',
+                              'action': 'RETRY',
+                              'icon': 'rotate-ccw',
                             },
                           ],
+                          'direction': 'vertical',
+                          'type': 'stack',
                           'gap': 'lg',
                           'align': 'center',
                         },
                       ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3622,11 +3850,65 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     {
                       'appName': 'ServiceMarketplace',
                       'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'children': [
+                                {
+                                  'name': 'lock',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Sign In',
+                                  'variant': 'h2',
+                                  'type': 'typography',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'options': [
+                                {
+                                  'value': 'google',
+                                  'label': 'Google',
+                                },
+                                {
+                                  'label': 'GitHub',
+                                  'value': 'github',
+                                },
+                                {
+                                  'label': 'Microsoft',
+                                  'value': 'microsoft',
+                                },
+                              ],
+                              'type': 'select',
+                            },
+                            {
+                              'action': 'LOGIN',
+                              'variant': 'primary',
+                              'type': 'button',
+                              'label': 'Login',
+                              'icon': 'log-in',
+                            },
+                          ],
+                        },
+                      ],
                       'navItems': [
                         {
                           'href': '/products',
-                          'icon': 'package',
                           'label': 'Products',
+                          'icon': 'package',
                         },
                         {
                           'href': '/login',
@@ -3634,68 +3916,14 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'label': 'Login',
                         },
                         {
-                          'icon': 'credit-card',
                           'label': 'Checkout',
                           'href': '/checkout',
+                          'icon': 'credit-card',
                         },
                         {
-                          'icon': 'clipboard-list',
                           'label': 'Orders',
+                          'icon': 'clipboard-list',
                           'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'lock',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Sign In',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'select',
-                              'options': [
-                                {
-                                  'value': 'google',
-                                  'label': 'Google',
-                                },
-                                {
-                                  'value': 'github',
-                                  'label': 'GitHub',
-                                },
-                                {
-                                  'label': 'Microsoft',
-                                  'value': 'microsoft',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Login',
-                              'variant': 'primary',
-                              'action': 'LOGIN',
-                              'icon': 'log-in',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'lg',
                         },
                       ],
                     },
@@ -3982,8 +4210,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'OrderPayment',
                     {
                       'emit': {
-                        'failure': 'OrderPaymentLoadFailed',
                         'success': 'OrderPaymentLoaded',
+                        'failure': 'OrderPaymentLoadFailed',
                       },
                     },
                   ],
@@ -3992,44 +4220,41 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'gap': 'lg',
-                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
+                              'align': 'center',
+                              'gap': 'md',
                               'children': [
                                 {
                                   'type': 'icon',
                                   'name': 'credit-card',
                                 },
                                 {
-                                  'variant': 'h2',
                                   'type': 'typography',
                                   'content': 'Payment',
+                                  'variant': 'h2',
                                 },
                               ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'align': 'center',
                               'type': 'stack',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'direction': 'vertical',
-                              'gap': 'md',
                               'type': 'stack',
                               'children': [
                                 {
-                                  'inputType': 'number',
                                   'placeholder': '0.00',
+                                  'inputType': 'number',
                                   'type': 'input',
                                 },
                                 {
-                                  'type': 'select',
                                   'options': [
                                     {
                                       'label': 'USD',
@@ -4044,19 +4269,21 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                       'label': 'GBP',
                                     },
                                   ],
+                                  'type': 'select',
                                 },
                               ],
+                              'gap': 'md',
                             },
                             {
-                              'variant': 'primary',
-                              'icon': 'credit-card',
-                              'label': 'Pay',
-                              'action': 'CREATE_PAYMENT',
                               'type': 'button',
+                              'label': 'Pay',
+                              'icon': 'credit-card',
+                              'action': 'CREATE_PAYMENT',
+                              'variant': 'primary',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'align': 'center',
                         },
                       ],
                       'navItems': [
@@ -4067,20 +4294,21 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                         },
                         {
                           'href': '/login',
-                          'label': 'Login',
                           'icon': 'layout-list',
+                          'label': 'Login',
                         },
                         {
                           'icon': 'credit-card',
-                          'label': 'Checkout',
                           'href': '/checkout',
+                          'label': 'Checkout',
                         },
                         {
                           'icon': 'clipboard-list',
-                          'label': 'Orders',
                           'href': '/orders',
+                          'label': 'Orders',
                         },
                       ],
+                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -4094,25 +4322,16 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'title': 'Creating payment...',
-                          'message': 'Setting up your payment intent.',
-                          'type': 'loading-state',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
                       'navItems': [
                         {
+                          'label': 'Products',
                           'href': '/products',
                           'icon': 'package',
-                          'label': 'Products',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Login',
                           'href': '/login',
+                          'icon': 'layout-list',
                         },
                         {
                           'label': 'Checkout',
@@ -4120,11 +4339,20 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'icon': 'credit-card',
                         },
                         {
+                          'href': '/orders',
                           'icon': 'clipboard-list',
                           'label': 'Orders',
-                          'href': '/orders',
                         },
                       ],
+                      'children': [
+                        {
+                          'type': 'loading-state',
+                          'title': 'Creating payment...',
+                          'message': 'Setting up your payment intent.',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                     },
                   ],
                   [
@@ -4137,8 +4365,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     },
                     {
                       'emit': {
-                        'failure': 'ProductStripeFailed',
                         'success': 'ProductStripeCompleted',
+                        'failure': 'ProductStripeFailed',
                       },
                     },
                   ],
@@ -4163,11 +4391,13 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ServiceMarketplace',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Products',
                           'href': '/products',
                           'icon': 'package',
+                          'label': 'Products',
                         },
                         {
                           'label': 'Login',
@@ -4175,25 +4405,23 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'icon': 'layout-list',
                         },
                         {
-                          'label': 'Checkout',
                           'href': '/checkout',
                           'icon': 'credit-card',
+                          'label': 'Checkout',
                         },
                         {
+                          'href': '/orders',
                           'icon': 'clipboard-list',
                           'label': 'Orders',
-                          'href': '/orders',
                         },
                       ],
-                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'title': 'Confirming payment...',
                           'type': 'loading-state',
+                          'title': 'Confirming payment...',
                           'message': 'Processing your payment.',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                   [
@@ -4229,35 +4457,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                       'navItems': [
                         {
                           'label': 'Products',
-                          'href': '/products',
                           'icon': 'package',
+                          'href': '/products',
                         },
                         {
-                          'icon': 'layout-list',
                           'href': '/login',
                           'label': 'Login',
+                          'icon': 'layout-list',
                         },
                         {
+                          'icon': 'credit-card',
                           'href': '/checkout',
                           'label': 'Checkout',
-                          'icon': 'credit-card',
                         },
                         {
-                          'label': 'Orders',
                           'icon': 'clipboard-list',
+                          'label': 'Orders',
                           'href': '/orders',
                         },
                       ],
                       'children': [
                         {
-                          'type': 'error-state',
-                          'onRetry': 'RETRY',
                           'title': 'Payment Failed',
                           'message': '@entity.error',
+                          'type': 'error-state',
+                          'onRetry': 'RETRY',
                         },
                       ],
-                      'appName': 'ServiceMarketplace',
                       'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -4283,57 +4511,57 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                       'appName': 'ServiceMarketplace',
                       'children': [
                         {
+                          'direction': 'vertical',
                           'gap': 'lg',
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
                               'type': 'alert',
-                              'variant': 'success',
                               'message': 'Payment successful! Sending receipt...',
+                              'variant': 'success',
                             },
                             {
                               'variant': 'body',
-                              'color': 'muted',
                               'type': 'typography',
                               'content': '@entity.paymentIntentId',
+                              'color': 'muted',
                             },
                             {
+                              'type': 'button',
                               'label': 'New Payment',
+                              'action': 'RESET',
                               'variant': 'ghost',
                               'icon': 'rotate-ccw',
-                              'type': 'button',
-                              'action': 'RESET',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'vertical',
                         },
                       ],
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Products',
                           'href': '/products',
+                          'label': 'Products',
                           'icon': 'package',
                         },
                         {
+                          'label': 'Login',
                           'href': '/login',
                           'icon': 'layout-list',
-                          'label': 'Login',
                         },
                         {
+                          'href': '/checkout',
                           'icon': 'credit-card',
                           'label': 'Checkout',
-                          'href': '/checkout',
                         },
                         {
+                          'label': 'Orders',
                           'href': '/orders',
                           'icon': 'clipboard-list',
-                          'label': 'Orders',
                         },
                       ],
                     },
@@ -4357,35 +4585,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                       'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'title': 'Payment Failed',
-                          'message': '@entity.error',
-                          'type': 'error-state',
                           'onRetry': 'RETRY',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'href': '/products',
-                          'label': 'Products',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
+                          'title': 'Payment Failed',
+                          'type': 'error-state',
+                          'message': '@entity.error',
                         },
                       ],
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Products',
+                          'href': '/products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Login',
+                          'href': '/login',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                          'href': '/orders',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -4399,42 +4627,61 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/login',
+                          'label': 'Login',
+                        },
+                        {
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                        },
+                      ],
                       'appName': 'ServiceMarketplace',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
                           'children': [
                             {
+                              'type': 'stack',
                               'gap': 'md',
                               'children': [
                                 {
-                                  'type': 'icon',
                                   'name': 'credit-card',
+                                  'type': 'icon',
                                 },
                                 {
-                                  'content': 'Payment',
                                   'type': 'typography',
+                                  'content': 'Payment',
                                   'variant': 'h2',
                                 },
                               ],
                               'align': 'center',
                               'direction': 'horizontal',
-                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'direction': 'vertical',
                               'gap': 'md',
                               'children': [
                                 {
                                   'type': 'input',
-                                  'placeholder': '0.00',
                                   'inputType': 'number',
+                                  'placeholder': '0.00',
                                 },
                                 {
                                   'type': 'select',
@@ -4444,49 +4691,30 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                       'value': 'usd',
                                     },
                                     {
-                                      'label': 'EUR',
                                       'value': 'eur',
+                                      'label': 'EUR',
                                     },
                                     {
-                                      'label': 'GBP',
                                       'value': 'gbp',
+                                      'label': 'GBP',
                                     },
                                   ],
                                 },
                               ],
                               'type': 'stack',
+                              'direction': 'vertical',
                             },
                             {
-                              'type': 'button',
+                              'icon': 'credit-card',
                               'variant': 'primary',
+                              'type': 'button',
                               'label': 'Pay',
                               'action': 'CREATE_PAYMENT',
-                              'icon': 'credit-card',
                             },
                           ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'lg',
                         },
                       ],
                     },
@@ -4502,58 +4730,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
+                          'align': 'center',
+                          'direction': 'vertical',
                           'gap': 'lg',
                           'type': 'stack',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'md',
                               'direction': 'horizontal',
+                              'type': 'stack',
                               'align': 'center',
                               'children': [
                                 {
-                                  'type': 'icon',
                                   'name': 'credit-card',
+                                  'type': 'icon',
                                 },
                                 {
-                                  'type': 'typography',
                                   'content': 'Payment',
                                   'variant': 'h2',
+                                  'type': 'typography',
                                 },
                               ],
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'gap': 'md',
-                              'direction': 'vertical',
-                              'type': 'stack',
                               'children': [
                                 {
                                   'inputType': 'number',
@@ -4564,34 +4769,57 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                   'type': 'select',
                                   'options': [
                                     {
-                                      'label': 'USD',
                                       'value': 'usd',
+                                      'label': 'USD',
                                     },
                                     {
                                       'value': 'eur',
                                       'label': 'EUR',
                                     },
                                     {
-                                      'value': 'gbp',
                                       'label': 'GBP',
+                                      'value': 'gbp',
                                     },
                                   ],
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                             {
+                              'variant': 'primary',
+                              'icon': 'credit-card',
                               'label': 'Pay',
                               'action': 'CREATE_PAYMENT',
-                              'variant': 'primary',
                               'type': 'button',
-                              'icon': 'credit-card',
                             },
                           ],
-                          'direction': 'vertical',
-                          'align': 'center',
                         },
                       ],
+                      'appName': 'ServiceMarketplace',
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'href': '/products',
+                          'label': 'Products',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Login',
+                          'href': '/login',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'icon': 'credit-card',
+                          'href': '/checkout',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -4605,52 +4833,29 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
+                          'gap': 'lg',
                           'type': 'stack',
                           'align': 'center',
+                          'direction': 'vertical',
                           'children': [
                             {
+                              'type': 'stack',
+                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'name': 'credit-card',
                                   'type': 'icon',
+                                  'name': 'credit-card',
                                 },
                                 {
                                   'type': 'typography',
-                                  'content': 'Payment',
                                   'variant': 'h2',
+                                  'content': 'Payment',
                                 },
                               ],
-                              'align': 'center',
                               'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
@@ -4658,41 +4863,64 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                             {
                               'direction': 'vertical',
                               'gap': 'md',
-                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'input',
-                                  'placeholder': '0.00',
                                   'inputType': 'number',
+                                  'placeholder': '0.00',
+                                  'type': 'input',
                                 },
                                 {
+                                  'type': 'select',
                                   'options': [
                                     {
                                       'label': 'USD',
                                       'value': 'usd',
                                     },
                                     {
-                                      'value': 'eur',
                                       'label': 'EUR',
+                                      'value': 'eur',
                                     },
                                     {
                                       'label': 'GBP',
                                       'value': 'gbp',
                                     },
                                   ],
-                                  'type': 'select',
                                 },
                               ],
+                              'type': 'stack',
                             },
                             {
-                              'variant': 'primary',
-                              'type': 'button',
-                              'icon': 'credit-card',
-                              'action': 'CREATE_PAYMENT',
                               'label': 'Pay',
+                              'action': 'CREATE_PAYMENT',
+                              'variant': 'primary',
+                              'icon': 'credit-card',
+                              'type': 'button',
                             },
                           ],
-                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'ServiceMarketplace',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'label': 'Products',
+                          'icon': 'package',
+                        },
+                        {
+                          'label': 'Login',
+                          'icon': 'layout-list',
+                          'href': '/login',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'href': '/checkout',
+                          'label': 'Checkout',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                          'href': '/orders',
                         },
                       ],
                     },
@@ -4831,47 +5059,47 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'main',
                     {
                       'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'align': 'center',
                           'children': [
                             {
-                              'name': 'mail',
                               'type': 'icon',
+                              'name': 'mail',
                             },
                             {
-                              'color': 'muted',
                               'variant': 'body',
                               'type': 'typography',
+                              'color': 'muted',
                               'content': 'Receipt will be sent after payment.',
                             },
                           ],
-                          'align': 'center',
-                          'gap': 'md',
                           'direction': 'vertical',
-                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'label': 'Products',
+                          'icon': 'package',
+                        },
+                        {
+                          'href': '/login',
+                          'label': 'Login',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                          'icon': 'credit-card',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
                         },
                       ],
                     },
@@ -4887,37 +5115,37 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
                       'children': [
                         {
-                          'title': 'Sending receipt...',
                           'message': 'Delivering your payment receipt.',
                           'type': 'loading-state',
+                          'title': 'Sending receipt...',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Products',
                           'href': '/products',
                           'icon': 'package',
+                          'label': 'Products',
                         },
                         {
                           'href': '/login',
-                          'icon': 'layout-list',
                           'label': 'Login',
+                          'icon': 'layout-list',
                         },
                         {
-                          'label': 'Checkout',
-                          'href': '/checkout',
                           'icon': 'credit-card',
+                          'href': '/checkout',
+                          'label': 'Checkout',
                         },
                         {
                           'label': 'Orders',
-                          'href': '/orders',
                           'icon': 'clipboard-list',
+                          'href': '/orders',
                         },
                       ],
-                      'appName': 'ServiceMarketplace',
                     },
                   ],
                   [
@@ -4925,9 +5153,9 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'email',
                     'send',
                     {
+                      'to': '@entity.to',
                       'subject': '@entity.subject',
                       'body': '@entity.body',
-                      'to': '@entity.to',
                     },
                     {
                       'emit': {
@@ -4952,12 +5180,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'href': '/products',
+                          'icon': 'package',
+                          'label': 'Products',
+                        },
+                        {
+                          'label': 'Login',
+                          'icon': 'layout-list',
+                          'href': '/login',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                          'href': '/orders',
+                        },
+                      ],
                       'type': 'dashboard-layout',
                       'appName': 'ServiceMarketplace',
                       'children': [
                         {
                           'type': 'stack',
                           'align': 'center',
+                          'gap': 'md',
                           'direction': 'vertical',
                           'children': [
                             {
@@ -4970,29 +5221,6 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                               'type': 'alert',
                             },
                           ],
-                          'gap': 'md',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
                         },
                       ],
                     },
@@ -5013,8 +5241,31 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ServiceMarketplace',
                       'type': 'dashboard-layout',
+                      'appName': 'ServiceMarketplace',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'gap': 'md',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'type': 'error-state',
+                              'title': 'Receipt Failed',
+                              'onRetry': 'RETRY_RECEIPT',
+                              'message': 'Could not send receipt email.',
+                            },
+                            {
+                              'icon': 'refresh-cw',
+                              'type': 'button',
+                              'action': 'RETRY_RECEIPT',
+                              'label': 'Retry',
+                              'variant': 'primary',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
                       'navItems': [
                         {
                           'icon': 'package',
@@ -5022,42 +5273,19 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                           'href': '/products',
                         },
                         {
-                          'href': '/login',
-                          'label': 'Login',
                           'icon': 'layout-list',
+                          'label': 'Login',
+                          'href': '/login',
                         },
                         {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
                           'href': '/checkout',
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
                         },
                         {
                           'icon': 'clipboard-list',
-                          'label': 'Orders',
                           'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'align': 'center',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'error-state',
-                              'onRetry': 'RETRY_RECEIPT',
-                              'message': 'Could not send receipt email.',
-                              'title': 'Receipt Failed',
-                            },
-                            {
-                              'label': 'Retry',
-                              'type': 'button',
-                              'variant': 'primary',
-                              'action': 'RETRY_RECEIPT',
-                              'icon': 'refresh-cw',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'label': 'Orders',
                         },
                       ],
                     },
@@ -5088,8 +5316,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     },
                     {
                       'emit': {
-                        'failure': 'ProductEmailFailed',
                         'success': 'ProductEmailCompleted',
+                        'failure': 'ProductEmailFailed',
                       },
                     },
                   ],
@@ -5104,37 +5332,37 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ServiceMarketplace',
                       'navItems': [
                         {
-                          'label': 'Products',
                           'icon': 'package',
+                          'label': 'Products',
                           'href': '/products',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Login',
                           'href': '/login',
+                          'icon': 'layout-list',
                         },
                         {
-                          'label': 'Checkout',
-                          'href': '/checkout',
                           'icon': 'credit-card',
+                          'href': '/checkout',
+                          'label': 'Checkout',
                         },
                         {
-                          'href': '/orders',
                           'label': 'Orders',
                           'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'title': 'Sending receipt...',
+                          'message': 'Delivering your payment receipt.',
+                          'type': 'loading-state',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Sending receipt...',
-                          'message': 'Delivering your payment receipt.',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
                     },
                   ],
                   [
@@ -5142,9 +5370,9 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'email',
                     'send',
                     {
-                      'subject': '@entity.subject',
                       'body': '@entity.body',
                       'to': '@entity.to',
+                      'subject': '@entity.subject',
                     },
                     {
                       'emit': {
@@ -5450,8 +5678,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Order',
                     {
                       'emit': {
-                        'success': 'OrderLoaded',
                         'failure': 'OrderLoadFailed',
+                        'success': 'OrderLoaded',
                       },
                     },
                   ],
@@ -5459,22 +5687,22 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
+                      'align': 'center',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'content': 'Loading…',
-                          'color': 'muted',
-                          'type': 'typography',
                           'variant': 'caption',
+                          'type': 'typography',
+                          'color': 'muted',
+                          'content': 'Loading…',
                         },
                       ],
-                      'align': 'center',
+                      'className': 'py-12',
                       'direction': 'vertical',
-                      'type': 'stack',
                       'gap': 'md',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -5489,20 +5717,42 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
+                      'navItems': [
+                        {
+                          'icon': 'package',
+                          'label': 'Products',
+                          'href': '/products',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Login',
+                          'href': '/login',
+                        },
+                        {
+                          'icon': 'credit-card',
+                          'label': 'Checkout',
+                          'href': '/checkout',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                      ],
                       'children': [
                         {
-                          'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
                           'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'align': 'center',
-                              'gap': 'md',
                               'justify': 'between',
+                              'align': 'center',
                               'type': 'stack',
-                              'direction': 'horizontal',
                               'children': [
                                 {
+                                  'type': 'stack',
+                                  'gap': 'sm',
                                   'direction': 'horizontal',
                                   'align': 'center',
                                   'children': [
@@ -5511,29 +5761,29 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                                       'name': 'list',
                                     },
                                     {
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                       'content': 'Orders',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
                                 },
                                 {
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'children': [
                                     {
                                       'variant': 'primary',
-                                      'action': 'CREATE',
-                                      'icon': 'plus',
                                       'label': 'Create Order',
                                       'type': 'button',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
                                     },
                                   ],
-                                  'type': 'stack',
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
                                 },
                               ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
@@ -5541,83 +5791,61 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                             {
                               'itemActions': [
                                 {
-                                  'variant': 'ghost',
-                                  'event': 'VIEW',
                                   'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
                                 },
                                 {
                                   'label': 'Edit',
-                                  'variant': 'ghost',
                                   'event': 'EDIT',
+                                  'variant': 'ghost',
                                 },
                                 {
-                                  'label': 'Delete',
                                   'event': 'DELETE',
+                                  'label': 'Delete',
                                   'variant': 'danger',
                                 },
                               ],
+                              'type': 'data-grid',
                               'fields': [
                                 {
-                                  'name': 'productName',
-                                  'variant': 'h4',
                                   'label': 'Product Name',
                                   'icon': 'list',
+                                  'variant': 'h4',
+                                  'name': 'productName',
                                 },
                                 {
-                                  'label': 'Amount',
-                                  'variant': 'badge',
                                   'colorMap': {
-                                    'pending': 'warning',
-                                    'completed': 'success',
-                                    'archived': 'neutral',
-                                    'cancelled': 'destructive',
                                     'inactive': 'neutral',
-                                    'failed': 'destructive',
-                                    'active': 'success',
-                                    'done': 'success',
+                                    'archived': 'neutral',
                                     'disabled': 'neutral',
+                                    'cancelled': 'destructive',
                                     'error': 'destructive',
+                                    'done': 'success',
+                                    'failed': 'destructive',
+                                    'completed': 'success',
+                                    'active': 'success',
+                                    'pending': 'warning',
                                     'scheduled': 'warning',
                                     'draft': 'warning',
                                   },
                                   'name': 'amount',
+                                  'label': 'Amount',
+                                  'variant': 'badge',
                                 },
                                 {
-                                  'name': 'paymentStatus',
                                   'variant': 'caption',
+                                  'name': 'paymentStatus',
                                   'label': 'Payment Status',
                                 },
                               ],
                               'entity': '@payload.data',
-                              'type': 'data-grid',
                             },
                           ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'href': '/products',
-                          'label': 'Products',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
+                      'appName': 'ServiceMarketplace',
                     },
                   ],
                 ],
@@ -5632,35 +5860,35 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'main',
                     {
                       'type': 'stack',
-                      'direction': 'vertical',
                       'align': 'center',
+                      'gap': 'md',
+                      'className': 'py-12',
                       'children': [
                         {
-                          'name': 'alert-triangle',
                           'color': 'destructive',
                           'type': 'icon',
+                          'name': 'alert-triangle',
                         },
                         {
-                          'variant': 'h3',
                           'type': 'typography',
                           'content': 'Failed to load order',
+                          'variant': 'h3',
                         },
                         {
-                          'type': 'typography',
                           'variant': 'body',
-                          'content': '@payload.error',
                           'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
                         },
                         {
                           'label': 'Retry',
-                          'variant': 'primary',
+                          'type': 'button',
                           'icon': 'rotate-ccw',
                           'action': 'INIT',
-                          'type': 'button',
+                          'variant': 'primary',
                         },
                       ],
-                      'gap': 'md',
-                      'className': 'py-12',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -5861,42 +6089,42 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'plus-circle',
                               'type': 'icon',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Create Order',
-                              'variant': 'h3',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
                           'fields': [
                             'productName',
                             'amount',
                             'paymentStatus',
                             'orderDate',
                           ],
+                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
                         },
                       ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -6148,8 +6376,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Order',
                     {
                       'emit': {
-                        'failure': 'OrderLoadFailed',
                         'success': 'OrderLoaded',
+                        'failure': 'OrderLoadFailed',
                       },
                     },
                   ],
@@ -6164,53 +6392,53 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'fetch',
                     'Order',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'OrderLoaded',
                         'failure': 'OrderLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
                       'children': [
                         {
-                          'children': [
-                            {
-                              'name': 'edit',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Edit Order',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
+                          'gap': 'sm',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'edit',
+                            },
+                            {
+                              'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Edit Order',
+                            },
+                          ],
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
                           'cancelEvent': 'CLOSE',
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
                           'fields': [
                             'productName',
                             'amount',
                             'paymentStatus',
                             'orderDate',
                           ],
-                          'submitEvent': 'SAVE',
-                          'entity': '@payload.row',
-                          'mode': 'edit',
                         },
                       ],
+                      'gap': 'md',
                       'direction': 'vertical',
                     },
                   ],
@@ -6252,8 +6480,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'OrderUpdateFailed',
                         'success': 'OrderUpdated',
+                        'failure': 'OrderUpdateFailed',
                       },
                     },
                   ],
@@ -6423,8 +6651,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Order',
                     {
                       'emit': {
-                        'success': 'OrderLoaded',
                         'failure': 'OrderLoadFailed',
+                        'success': 'OrderLoaded',
                       },
                     },
                   ],
@@ -6440,8 +6668,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'Order',
                     {
                       'emit': {
-                        'success': 'OrderLoaded',
                         'failure': 'OrderLoadFailed',
+                        'success': 'OrderLoaded',
                       },
                       'id': '@payload.id',
                     },
@@ -6450,123 +6678,123 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
                       'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'eye',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': '@entity.productName',
-                              'type': 'typography',
-                            },
-                          ],
-                          'align': 'center',
+                          'type': 'stack',
                           'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
+                          'align': 'center',
+                          'children': [
+                            {
+                              'name': 'eye',
+                              'type': 'icon',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.productName',
+                            },
+                          ],
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
-                              'type': 'typography',
                               'content': 'Product Name',
+                              'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'content': '@entity.productName',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
-                          'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
                               'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Amount',
+                              'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.amount',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
-                          'type': 'stack',
                           'children': [
                             {
-                              'content': 'Payment Status',
                               'type': 'typography',
                               'variant': 'caption',
+                              'content': 'Payment Status',
                             },
                             {
                               'content': '@entity.paymentStatus',
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
                           'gap': 'md',
                           'type': 'stack',
                           'direction': 'horizontal',
+                        },
+                        {
                           'children': [
                             {
                               'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Order Date',
+                              'variant': 'caption',
                             },
                             {
                               'variant': 'body',
-                              'content': '@entity.orderDate',
                               'type': 'typography',
+                              'content': '@entity.orderDate',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'justify': 'end',
-                          'gap': 'sm',
                           'type': 'stack',
                           'direction': 'horizontal',
+                          'justify': 'end',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'label': 'Edit',
                               'type': 'button',
-                              'action': 'EDIT',
                               'icon': 'edit',
+                              'label': 'Edit',
                               'variant': 'primary',
+                              'action': 'EDIT',
                             },
                             {
-                              'variant': 'ghost',
                               'action': 'CLOSE',
-                              'type': 'button',
                               'label': 'Close',
+                              'variant': 'ghost',
+                              'type': 'button',
                             },
                           ],
                         },
                       ],
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -6820,13 +7048,11 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'align': 'center',
                           'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'name': 'alert-triangle',
@@ -6834,43 +7060,45 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                             },
                             {
                               'type': 'typography',
-                              'content': 'Delete Order',
                               'variant': 'h3',
+                              'content': 'Delete Order',
                             },
                           ],
+                          'align': 'center',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'message': 'This action cannot be undone.',
                           'type': 'alert',
+                          'message': 'This action cannot be undone.',
                           'variant': 'error',
                         },
                         {
-                          'children': [
-                            {
-                              'action': 'CANCEL',
-                              'label': 'Cancel',
-                              'type': 'button',
-                              'variant': 'ghost',
-                            },
-                            {
-                              'label': 'Delete',
-                              'variant': 'danger',
-                              'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
-                              'type': 'button',
-                            },
-                          ],
                           'gap': 'sm',
                           'type': 'stack',
                           'direction': 'horizontal',
                           'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Cancel',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'action': 'CANCEL',
+                            },
+                            {
+                              'type': 'button',
+                              'variant': 'danger',
+                              'icon': 'check',
+                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
+                            },
+                          ],
                         },
                       ],
+                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -6887,8 +7115,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'success': 'OrderDeleted',
                         'failure': 'OrderDeleteFailed',
+                        'success': 'OrderDeleted',
                       },
                     },
                   ],

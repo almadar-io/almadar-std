@@ -23,6 +23,53 @@ const BEHAVIOR_PATH = 'std/behaviors/std-modal';
 const ALIAS = 'Modal';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdModalEventKey = 'CLOSE' | 'INIT' | 'ModalRecordLoadFailed' | 'ModalRecordLoaded' | 'OPEN' | 'SAVE';
+
+/**
+ * Payload shape for the `SAVE` event.
+ */
+export interface StdModalSavePayload {
+  data: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ModalRecordLoadFailed` event.
+ */
+export interface StdModalModalRecordLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ModalRecordLoaded` event.
+ */
+export interface StdModalModalRecordLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdModalConfig {
+  /** Default: `[]` */
+  fields?: string[];
+  /** Default: `"create"` */
+  mode?: string;
+  /** Default: `"layout-panel-top"` */
+  icon?: string;
+  /** Default: `"Details"` */
+  title?: string;
+}
+
+/**
  * Params for the std-modal descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,16 +85,16 @@ export interface StdModalParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdModalEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
   listens?: unknown[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdModalConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
@@ -59,11 +106,11 @@ export function stdModalTrait(params: StdModalParams): TraitReference {
     ref: `${ALIAS}.traits.ModalRecordModal`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

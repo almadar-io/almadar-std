@@ -23,6 +23,33 @@ const BEHAVIOR_PATH = 'std/behaviors/std-coding-academy';
 const ALIAS = 'CodingAcademy';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdCodingAcademyEventKey = 'COMPLETE' | 'INIT' | 'NAVIGATE' | 'RESTART' | 'START' | 'SeqChallengeLoadFailed' | 'SeqChallengeLoaded';
+
+/**
+ * Payload shape for the `SeqChallengeLoaded` event.
+ */
+export interface StdCodingAcademySeqChallengeLoadedPayload {
+  id: string;
+  title: string;
+  difficulty?: string;
+  score?: number;
+  completed?: boolean;
+  level?: number;
+}
+
+/**
+ * Payload shape for the `SeqChallengeLoadFailed` event.
+ */
+export interface StdCodingAcademySeqChallengeLoadFailedPayload {
+  message?: string;
+}
+
+/**
  * Params for the std-coding-academy descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +65,8 @@ export interface StdCodingAcademyParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdCodingAcademyEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +86,11 @@ export function stdCodingAcademyTrait(params: StdCodingAcademyParams): TraitRefe
     ref: `${ALIAS}.traits.SeqChallengeSequencerGame`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -280,8 +307,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'SeqChallenge',
                     {
                       'emit': {
-                        'success': 'SeqChallengeLoaded',
                         'failure': 'SeqChallengeLoadFailed',
+                        'success': 'SeqChallengeLoaded',
                       },
                     },
                   ],
@@ -289,20 +316,20 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
+                      'showTopBar': true,
                       'children': [
                         {
                           'type': 'game-menu',
                           'title': 'Sequencer Challenge',
                           'menuItems': [
                             {
-                              'label': 'Start',
                               'variant': 'primary',
+                              'label': 'Start',
                               'event': 'START',
                             },
                           ],
                         },
                       ],
-                      'showTopBar': true,
                       'appName': 'Coding Academy',
                       'type': 'game-shell',
                     },
@@ -318,19 +345,18 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
                       'showTopBar': true,
-                      'appName': 'Coding Academy',
                       'children': [
                         {
-                          'direction': 'vertical',
+                          'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'game-hud',
                               'stats': [
                                 {
-                                  'label': 'Score',
                                   'value': '@entity.score',
+                                  'label': 'Score',
                                 },
                                 {
                                   'label': 'Level',
@@ -339,15 +365,16 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                               ],
                             },
                             {
+                              'type': 'sequencer-board',
                               'completeEvent': 'COMPLETE',
                               'entity': 'SeqChallenge',
-                              'type': 'sequencer-board',
                             },
                           ],
-                          'gap': 'md',
-                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
+                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
                     },
                   ],
                 ],
@@ -366,11 +393,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
                       'children': [
                         {
-                          'type': 'game-over-screen',
-                          'title': 'Well Done!',
                           'menuItems': [
                             {
                               'variant': 'primary',
@@ -378,10 +402,13 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                               'label': 'Play Again',
                             },
                           ],
+                          'type': 'game-over-screen',
+                          'title': 'Well Done!',
                         },
                       ],
-                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
                       'showTopBar': true,
+                      'appName': 'Coding Academy',
                     },
                   ],
                 ],
@@ -395,12 +422,13 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
-                      'appName': 'Coding Academy',
                       'showTopBar': true,
+                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
                       'children': [
                         {
                           'title': 'Sequencer Challenge',
+                          'type': 'game-menu',
                           'menuItems': [
                             {
                               'event': 'START',
@@ -408,7 +436,6 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                               'variant': 'primary',
                             },
                           ],
-                          'type': 'game-menu',
                         },
                       ],
                     },
@@ -620,8 +647,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'BuildChallenge',
                     {
                       'emit': {
-                        'success': 'BuildChallengeLoaded',
                         'failure': 'BuildChallengeLoadFailed',
+                        'success': 'BuildChallengeLoaded',
                       },
                     },
                   ],
@@ -629,22 +656,22 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
-                      'showTopBar': true,
                       'appName': 'Coding Academy',
                       'children': [
                         {
+                          'type': 'game-menu',
+                          'title': 'Builder Challenge',
                           'menuItems': [
                             {
-                              'variant': 'primary',
                               'event': 'START',
                               'label': 'Start',
+                              'variant': 'primary',
                             },
                           ],
-                          'title': 'Builder Challenge',
-                          'type': 'game-menu',
                         },
                       ],
+                      'showTopBar': true,
+                      'type': 'game-shell',
                     },
                   ],
                 ],
@@ -658,36 +685,36 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'showTopBar': true,
-                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
                       'children': [
                         {
-                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
+                              'type': 'game-hud',
                               'stats': [
                                 {
-                                  'value': '@entity.score',
                                   'label': 'Score',
+                                  'value': '@entity.score',
                                 },
                                 {
-                                  'label': 'Level',
                                   'value': '@entity.level',
+                                  'label': 'Level',
                                 },
                               ],
-                              'type': 'game-hud',
                             },
                             {
-                              'type': 'builder-board',
                               'entity': 'BuildChallenge',
                               'completeEvent': 'COMPLETE',
+                              'type': 'builder-board',
                             },
                           ],
-                          'gap': 'md',
-                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
-                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
+                      'showTopBar': true,
                     },
                   ],
                 ],
@@ -706,22 +733,22 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'showTopBar': true,
-                      'appName': 'Coding Academy',
                       'type': 'game-shell',
                       'children': [
                         {
+                          'title': 'Well Done!',
+                          'type': 'game-over-screen',
                           'menuItems': [
                             {
-                              'event': 'RESTART',
                               'label': 'Play Again',
+                              'event': 'RESTART',
                               'variant': 'primary',
                             },
                           ],
-                          'type': 'game-over-screen',
-                          'title': 'Well Done!',
                         },
                       ],
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
                     },
                   ],
                 ],
@@ -735,22 +762,22 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
                       'showTopBar': true,
-                      'appName': 'Coding Academy',
                       'children': [
                         {
-                          'type': 'game-menu',
                           'title': 'Builder Challenge',
+                          'type': 'game-menu',
                           'menuItems': [
                             {
-                              'event': 'START',
-                              'variant': 'primary',
                               'label': 'Start',
+                              'variant': 'primary',
+                              'event': 'START',
                             },
                           ],
                         },
                       ],
+                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
                     },
                   ],
                 ],
@@ -969,9 +996,9 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Coding Academy',
-                      'showTopBar': true,
                       'type': 'game-shell',
+                      'showTopBar': true,
+                      'appName': 'Coding Academy',
                       'children': [
                         {
                           'menuItems': [
@@ -998,34 +1025,34 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Coding Academy',
                       'children': [
                         {
-                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'vertical',
                           'children': [
                             {
+                              'type': 'game-hud',
                               'stats': [
                                 {
-                                  'label': 'Score',
                                   'value': '@entity.score',
+                                  'label': 'Score',
                                 },
                                 {
-                                  'value': '@entity.level',
                                   'label': 'Level',
+                                  'value': '@entity.level',
                                 },
                               ],
-                              'type': 'game-hud',
                             },
                             {
-                              'type': 'event-handler-board',
                               'completeEvent': 'COMPLETE',
+                              'type': 'event-handler-board',
                               'entity': 'EventChallenge',
                             },
                           ],
-                          'gap': 'md',
-                          'direction': 'vertical',
+                          'type': 'stack',
                         },
                       ],
+                      'appName': 'Coding Academy',
                       'type': 'game-shell',
                       'showTopBar': true,
                     },
@@ -1046,22 +1073,22 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Coding Academy',
                       'showTopBar': true,
+                      'type': 'game-shell',
+                      'appName': 'Coding Academy',
                       'children': [
                         {
+                          'title': 'Well Done!',
+                          'type': 'game-over-screen',
                           'menuItems': [
                             {
+                              'label': 'Play Again',
                               'variant': 'primary',
                               'event': 'RESTART',
-                              'label': 'Play Again',
                             },
                           ],
-                          'type': 'game-over-screen',
-                          'title': 'Well Done!',
                         },
                       ],
-                      'type': 'game-shell',
                     },
                   ],
                 ],
@@ -1075,22 +1102,22 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
-                      'showTopBar': true,
+                      'appName': 'Coding Academy',
                       'children': [
                         {
+                          'type': 'game-menu',
+                          'title': 'Event Handler Challenge',
                           'menuItems': [
                             {
-                              'label': 'Start',
                               'event': 'START',
+                              'label': 'Start',
                               'variant': 'primary',
                             },
                           ],
-                          'type': 'game-menu',
-                          'title': 'Event Handler Challenge',
                         },
                       ],
-                      'appName': 'Coding Academy',
+                      'type': 'game-shell',
+                      'showTopBar': true,
                     },
                   ],
                 ],
@@ -1287,8 +1314,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'StudentProgress',
                     {
                       'emit': {
-                        'failure': 'StudentProgressLoadFailed',
                         'success': 'StudentProgressLoaded',
+                        'failure': 'StudentProgressLoadFailed',
                       },
                     },
                   ],
@@ -1296,18 +1323,16 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
+                      'type': 'game-shell',
                       'appName': 'Coding Academy',
-                      'showTopBar': true,
                       'children': [
                         {
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
                               'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'label': 'Home',
@@ -1317,37 +1342,38 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'label': 'Progress',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'type': 'stack',
                                   'children': [
                                     {
                                       'type': 'stack',
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
+                                          'type': 'typography',
                                           'content': 'Progress',
                                           'variant': 'h2',
-                                          'type': 'typography',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                     },
                                     {
+                                      'icon': 'refresh-cw',
+                                      'type': 'button',
                                       'label': 'Refresh',
                                       'variant': 'secondary',
-                                      'icon': 'refresh-cw',
                                       'action': 'REFRESH',
-                                      'type': 'button',
                                     },
                                   ],
                                   'gap': 'md',
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
@@ -1360,13 +1386,13 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'children': [
                                         {
                                           'label': 'TotalLessons',
-                                          'value': '@entity.totalLessons',
                                           'type': 'stat-display',
+                                          'value': '@entity.totalLessons',
                                         },
                                         {
                                           'label': 'CompletedLessons',
-                                          'value': '@entity.completedLessons',
                                           'type': 'stat-display',
+                                          'value': '@entity.completedLessons',
                                         },
                                         {
                                           'label': 'AverageScore',
@@ -1374,13 +1400,13 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                           'value': '@entity.averageScore',
                                         },
                                         {
-                                          'label': 'Streak',
-                                          'type': 'stat-display',
                                           'value': '@entity.streak',
+                                          'type': 'stat-display',
+                                          'label': 'Streak',
                                         },
                                       ],
-                                      'cols': 3,
                                       'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
                                 },
@@ -1389,14 +1415,16 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                 },
                                 {
                                   'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
@@ -1411,18 +1439,17 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       ],
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'date': 'Mar',
@@ -1433,22 +1460,21 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'value': 30,
                                       'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'color': 'muted',
@@ -1457,41 +1483,42 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   ],
                                 },
                                 {
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
                                   'width': 400,
-                                  'height': 200,
                                   'type': 'graph-view',
+                                  'height': 200,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
+                              'direction': 'vertical',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
-                      'type': 'game-shell',
+                      'showTopBar': true,
                     },
                   ],
                 ],
@@ -1506,8 +1533,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'StudentProgress',
                     {
                       'emit': {
-                        'failure': 'StudentProgressLoadFailed',
                         'success': 'StudentProgressLoaded',
+                        'failure': 'StudentProgressLoadFailed',
                       },
                     },
                   ],
@@ -1517,11 +1544,9 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     {
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
-                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -1536,46 +1561,42 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                   'children': [
                                     {
                                       'type': 'stack',
+                                      'direction': 'horizontal',
                                       'gap': 'md',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'trending-up',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Progress',
+                                          'variant': 'h2',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'action': 'REFRESH',
+                                      'type': 'button',
                                       'label': 'Refresh',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
                                       'icon': 'refresh-cw',
-                                      'type': 'button',
                                     },
                                   ],
-                                  'justify': 'between',
-                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 3,
-                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'type': 'stat-display',
@@ -1584,22 +1605,26 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                         },
                                         {
                                           'value': '@entity.completedLessons',
-                                          'type': 'stat-display',
                                           'label': 'CompletedLessons',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'AverageScore',
                                           'value': '@entity.averageScore',
+                                          'label': 'AverageScore',
                                         },
                                         {
-                                          'value': '@entity.streak',
-                                          'label': 'Streak',
                                           'type': 'stat-display',
+                                          'label': 'Streak',
+                                          'value': '@entity.streak',
                                         },
                                       ],
+                                      'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -1613,104 +1638,106 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
                                       'value': 19,
                                       'date': 'Feb',
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
                                   'type': 'graph-view',
                                   'width': 400,
                                   'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
-                                    },
-                                  ],
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
+                                      'id': 'c',
                                     },
                                   ],
                                 },
                               ],
+                              'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'type': 'game-shell',
-                      'showTopBar': true,
                       'appName': 'Coding Academy',
+                      'showTopBar': true,
+                      'type': 'game-shell',
                     },
                   ],
                 ],
@@ -1734,90 +1761,88 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
-                      'type': 'game-shell',
                       'appName': 'Coding Academy',
+                      'type': 'game-shell',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Progress',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'direction': 'horizontal',
-                                  'type': 'stack',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'trending-up',
                                         },
                                         {
-                                          'variant': 'h2',
-                                          'type': 'typography',
                                           'content': 'Progress',
+                                          'type': 'typography',
+                                          'variant': 'h2',
                                         },
                                       ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'variant': 'secondary',
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
                                       'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'type': 'stack',
                                   'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalLessons',
                                           'value': '@entity.totalLessons',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'CompletedLessons',
+                                          'type': 'stat-display',
                                           'value': '@entity.completedLessons',
-                                          'type': 'stat-display',
+                                          'label': 'CompletedLessons',
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.averageScore',
                                           'label': 'AverageScore',
+                                          'value': '@entity.averageScore',
+                                          'type': 'stat-display',
                                         },
                                         {
+                                          'label': 'Streak',
                                           'type': 'stat-display',
                                           'value': '@entity.streak',
-                                          'label': 'Streak',
                                         },
                                       ],
                                     },
@@ -1827,15 +1852,15 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
+                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
@@ -1843,41 +1868,41 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
-                                          'content': 'Graph View',
                                           'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
                                   'type': 'grid',
-                                  'gap': 'md',
+                                  'cols': 2,
                                 },
                                 {
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                   'type': 'line-chart',
@@ -1886,8 +1911,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'color': 'muted',
@@ -1896,35 +1921,37 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   ],
                                 },
                                 {
+                                  'width': 400,
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                   'nodes': [
                                     {
                                       'label': 'Start',
                                       'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'width': 400,
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
-                                  'height': 200,
-                                  'type': 'graph-view',
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
                         },
@@ -1953,14 +1980,14 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
+                      'type': 'game-shell',
+                      'showTopBar': true,
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
                               'direction': 'vertical',
-                              'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -1975,77 +2002,78 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   ],
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                  'gap': 'md',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
-                                          'type': 'typography',
-                                          'content': 'Progress',
                                           'variant': 'h2',
+                                          'content': 'Progress',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'stack',
                                       'gap': 'md',
                                       'direction': 'horizontal',
                                     },
                                     {
                                       'type': 'button',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
-                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'stat-display',
-                                          'label': 'TotalLessons',
                                           'value': '@entity.totalLessons',
+                                          'label': 'TotalLessons',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'CompletedLessons',
                                           'type': 'stat-display',
+                                          'label': 'CompletedLessons',
                                           'value': '@entity.completedLessons',
                                         },
                                         {
-                                          'value': '@entity.averageScore',
-                                          'label': 'AverageScore',
                                           'type': 'stat-display',
+                                          'label': 'AverageScore',
+                                          'value': '@entity.averageScore',
                                         },
                                         {
-                                          'label': 'Streak',
-                                          'type': 'stat-display',
                                           'value': '@entity.streak',
+                                          'type': 'stat-display',
+                                          'label': 'Streak',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                     },
                                   ],
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
@@ -2060,15 +2088,14 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                     {
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'content': 'Graph View',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
                                 },
                                 {
                                   'data': [
@@ -2077,24 +2104,24 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'date': 'May',
                                       'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                   'type': 'line-chart',
@@ -2107,48 +2134,48 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                       'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
                                       'id': 'b',
                                       'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
-                                    },
-                                  ],
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
+                                      'id': 'c',
                                     },
                                   ],
                                   'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                   'height': 200,
-                                  'type': 'graph-view',
                                 },
                               ],
+                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
                       'appName': 'Coding Academy',
-                      'type': 'game-shell',
-                      'showTopBar': true,
                     },
                   ],
                 ],
@@ -2163,8 +2190,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'StudentProgress',
                     {
                       'emit': {
-                        'failure': 'StudentProgressLoadFailed',
                         'success': 'StudentProgressLoaded',
+                        'failure': 'StudentProgressLoadFailed',
                       },
                     },
                   ],
@@ -2172,20 +2199,20 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                     'render-ui',
                     'main',
                     {
+                      'type': 'game-shell',
                       'appName': 'Coding Academy',
                       'children': [
                         {
                           'children': [
                             {
-                              'gap': 'lg',
-                              'type': 'stack',
                               'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Progress',
@@ -2194,11 +2221,9 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'gap': 'md',
                                       'type': 'stack',
                                       'direction': 'horizontal',
                                       'children': [
@@ -2207,32 +2232,31 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                           'type': 'icon',
                                         },
                                         {
+                                          'type': 'typography',
                                           'content': 'Progress',
                                           'variant': 'h2',
-                                          'type': 'typography',
                                         },
                                       ],
+                                      'gap': 'md',
                                     },
                                     {
                                       'variant': 'secondary',
-                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
                                       'label': 'Refresh',
                                       'type': 'button',
-                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
                                   'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
-                                  'type': 'box',
                                   'children': [
                                     {
-                                      'cols': 3,
                                       'type': 'simple-grid',
                                       'children': [
                                         {
@@ -2241,8 +2265,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                           'value': '@entity.totalLessons',
                                         },
                                         {
-                                          'value': '@entity.completedLessons',
                                           'label': 'CompletedLessons',
+                                          'value': '@entity.completedLessons',
                                           'type': 'stat-display',
                                         },
                                         {
@@ -2256,118 +2280,121 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
                                           'value': '@entity.streak',
                                         },
                                       ],
+                                      'cols': 3,
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'grid',
-                                  'cols': 2,
                                   'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                           'variant': 'caption',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
+                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'value': 30,
                                       'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
-                                  'width': 400,
                                   'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
-                                  'height': 200,
                                 },
                               ],
+                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
                       'showTopBar': true,
-                      'type': 'game-shell',
                     },
                   ],
                 ],

@@ -308,8 +308,8 @@
                     "AgentConversation",
                     {
                       "emit": {
-                        "success": "AgentConversationLoaded",
-                        "failure": "AgentConversationLoadFailed"
+                        "failure": "AgentConversationLoadFailed",
+                        "success": "AgentConversationLoaded"
                       }
                     }
                   ],
@@ -317,22 +317,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading conversation…",
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading conversation…"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -346,41 +346,40 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "Conversation Thread",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Conversation Thread"
+                                  "type": "typography"
                                 }
                               ],
-                              "align": "center"
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
-                              "icon": "plus",
                               "variant": "primary",
-                              "label": "New Message",
                               "type": "button",
-                              "action": "COMPOSE"
+                              "action": "COMPOSE",
+                              "label": "New Message",
+                              "icon": "plus"
                             }
                           ],
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -392,13 +391,12 @@
                             "fn",
                             "item",
                             {
-                              "gap": "xs",
                               "direction": "vertical",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "align": "center",
+                                  "gap": "sm",
                                   "children": [
                                     {
                                       "type": "badge",
@@ -411,26 +409,28 @@
                                     },
                                     {
                                       "variant": "caption",
-                                      "type": "typography",
+                                      "content": "@item.timestamp",
                                       "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "type": "typography"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "gap": "sm"
+                                  "type": "stack"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@item.content",
                                   "variant": "body",
-                                  "content": "@item.content"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "xs",
+                              "type": "stack"
                             }
                           ],
                           "type": "data-list"
                         }
                       ],
-                      "gap": "lg"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -444,36 +444,36 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "name": "alert-triangle",
                           "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "type": "icon"
                         },
                         {
                           "variant": "h3",
-                          "content": "Failed to load",
+                          "type": "typography",
+                          "content": "Failed to load"
+                        },
+                        {
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "@payload.error",
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "content": "@payload.error",
-                          "variant": "body",
-                          "color": "muted"
-                        },
-                        {
                           "label": "Retry",
-                          "icon": "rotate-ccw",
-                          "type": "button",
+                          "action": "INIT",
                           "variant": "primary",
-                          "action": "INIT"
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -487,39 +487,39 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "message-circle",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Conversation Thread",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
                           "align": "center",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cancelEvent": "CANCEL_COMPOSE",
-                          "type": "form-section",
-                          "submitEvent": "SEND",
                           "mode": "create",
+                          "type": "form-section",
                           "fields": [
                             "content"
-                          ]
+                          ],
+                          "submitEvent": "SEND"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -560,15 +560,15 @@
                     "create",
                     "AgentConversation",
                     {
-                      "status": "sent",
+                      "content": "@payload.content",
                       "role": "user",
-                      "timestamp": "@now",
-                      "content": "@payload.content"
+                      "status": "sent",
+                      "timestamp": "@now"
                     },
                     {
                       "emit": {
-                        "failure": "AgentConversationSaveFailed",
-                        "success": "AgentConversationSaved"
+                        "success": "AgentConversationSaved",
+                        "failure": "AgentConversationSaveFailed"
                       }
                     }
                   ],
@@ -615,8 +615,8 @@
                     "AgentConversation",
                     {
                       "emit": {
-                        "failure": "AgentConversationLoadFailed",
-                        "success": "AgentConversationLoaded"
+                        "success": "AgentConversationLoaded",
+                        "failure": "AgentConversationLoadFailed"
                       }
                     }
                   ],
@@ -638,25 +638,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
-                          "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
-                          "type": "typography",
                           "content": "Failed to send",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
                           "content": "@payload.error",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
                           "type": "button",
@@ -666,8 +665,9 @@
                           "icon": "rotate-ccw"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -705,36 +705,36 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
                       "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "content": "Failed to clear",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to clear"
                         },
                         {
+                          "type": "typography",
                           "variant": "body",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
                           "label": "Retry",
-                          "type": "button",
-                          "variant": "primary",
                           "action": "INIT",
-                          "icon": "rotate-ccw"
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -907,9 +907,9 @@
                     "render-ui",
                     "main",
                     {
+                      "icon": "message-circle",
                       "title": "Conversation",
                       "type": "empty-state",
-                      "icon": "message-circle",
                       "description": "Conversation is ready"
                     }
                   ]

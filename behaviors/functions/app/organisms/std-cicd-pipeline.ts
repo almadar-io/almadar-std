@@ -23,6 +23,140 @@ const BEHAVIOR_PATH = 'std/behaviors/std-cicd-pipeline';
 const ALIAS = 'CicdPipeline';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdCicdPipelineEventKey = 'BuildDeleteFailed' | 'BuildDeleted' | 'BuildLoadFailed' | 'BuildLoaded' | 'BuildSaveFailed' | 'BuildSaved' | 'BuildUpdateFailed' | 'BuildUpdated' | 'CREATE' | 'DELETE' | 'DeploymentSaveFailed' | 'DeploymentSaved' | 'EDIT' | 'INIT' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdCicdPipelineListenKey = 'BUILD_CREATED' | 'BUILD_UPDATED' | 'BUILD_DELETED';
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdCicdPipelineViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    branch: string;
+    status?: string;
+    commit?: string;
+    triggeredBy?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdCicdPipelineEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    branch: string;
+    status?: string;
+    commit?: string;
+    triggeredBy?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdCicdPipelineDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    branch: string;
+    status?: string;
+    commit?: string;
+    triggeredBy?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `BuildLoaded` event.
+ */
+export interface StdCicdPipelineBuildLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `BuildLoadFailed` event.
+ */
+export interface StdCicdPipelineBuildLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `BuildSaved` event.
+ */
+export interface StdCicdPipelineBuildSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `BuildSaveFailed` event.
+ */
+export interface StdCicdPipelineBuildSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `BuildUpdated` event.
+ */
+export interface StdCicdPipelineBuildUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `BuildUpdateFailed` event.
+ */
+export interface StdCicdPipelineBuildUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `BuildDeleted` event.
+ */
+export interface StdCicdPipelineBuildDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `BuildDeleteFailed` event.
+ */
+export interface StdCicdPipelineBuildDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DeploymentSaved` event.
+ */
+export interface StdCicdPipelineDeploymentSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DeploymentSaveFailed` event.
+ */
+export interface StdCicdPipelineDeploymentSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-cicd-pipeline descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +172,8 @@ export interface StdCicdPipelineParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdCicdPipelineEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +193,11 @@ export function stdCicdPipelineBuildBrowseTrait(params: StdCicdPipelineParams): 
     ref: `${ALIAS}.traits.BuildBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +208,11 @@ export function stdCicdPipelineBuildCreateTrait(params: StdCicdPipelineParams): 
     ref: `${ALIAS}.traits.BuildCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +223,11 @@ export function stdCicdPipelineBuildEditTrait(params: StdCicdPipelineParams): Tr
     ref: `${ALIAS}.traits.BuildEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +238,11 @@ export function stdCicdPipelineBuildViewTrait(params: StdCicdPipelineParams): Tr
     ref: `${ALIAS}.traits.BuildView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +253,11 @@ export function stdCicdPipelineBuildDeleteTrait(params: StdCicdPipelineParams): 
     ref: `${ALIAS}.traits.BuildDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -663,22 +797,22 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'gap': 'md',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'color': 'muted',
                           'content': 'Loading builds…',
+                          'variant': 'caption',
+                          'color': 'muted',
+                          'type': 'typography',
                         },
                       ],
+                      'align': 'center',
                       'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
+                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -692,71 +826,49 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'CI/CD Pipeline',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Builds',
-                          'icon': 'hammer',
-                          'href': '/builds',
-                        },
-                        {
-                          'icon': 'layers',
-                          'label': 'Stages',
-                          'href': '/stages',
-                        },
-                        {
-                          'label': 'Deploy',
-                          'href': '/deploy',
-                          'icon': 'rocket',
-                        },
-                      ],
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'vertical',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
-                              'justify': 'between',
-                              'align': 'center',
+                              'type': 'stack',
+                              'gap': 'md',
                               'children': [
                                 {
                                   'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
                                   'children': [
                                     {
                                       'name': 'package',
                                       'type': 'icon',
                                     },
                                     {
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                       'content': 'Builds',
                                     },
                                   ],
-                                  'type': 'stack',
                                   'align': 'center',
-                                  'gap': 'sm',
                                 },
                                 {
-                                  'gap': 'sm',
                                   'type': 'stack',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'variant': 'primary',
-                                      'action': 'CREATE',
                                       'icon': 'plus',
-                                      'type': 'button',
                                       'label': 'Create Build',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'type': 'button',
                                     },
                                   ],
                                   'direction': 'horizontal',
                                 },
                               ],
+                              'align': 'center',
+                              'justify': 'between',
                               'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
@@ -765,9 +877,9 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                               'type': 'data-list',
                               'itemActions': [
                                 {
-                                  'label': 'View',
-                                  'variant': 'ghost',
                                   'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
                                 },
                                 {
                                   'variant': 'ghost',
@@ -775,16 +887,17 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'label': 'Edit',
                                 },
                                 {
-                                  'label': 'Delete',
-                                  'event': 'DELETE',
                                   'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
                                 },
                               ],
+                              'entity': '@payload.data',
                               'fields': [
                                 {
+                                  'name': 'branch',
                                   'variant': 'h3',
                                   'icon': 'git-branch',
-                                  'name': 'branch',
                                 },
                                 {
                                   'name': 'status',
@@ -795,16 +908,37 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'variant': 'body',
                                 },
                                 {
-                                  'label': 'Triggered By',
                                   'variant': 'caption',
                                   'name': 'triggeredBy',
+                                  'label': 'Triggered By',
                                 },
                               ],
-                              'entity': '@payload.data',
                               'variant': 'card',
                               'gap': 'sm',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'hammer',
+                          'label': 'Builds',
+                          'href': '/builds',
+                        },
+                        {
+                          'href': '/stages',
+                          'label': 'Stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'href': '/deploy',
+                          'icon': 'rocket',
+                          'label': 'Deploy',
                         },
                       ],
                     },
@@ -820,36 +954,36 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
                       'direction': 'vertical',
+                      'className': 'py-12',
                       'gap': 'md',
                       'align': 'center',
-                      'className': 'py-12',
                       'children': [
                         {
                           'color': 'destructive',
-                          'type': 'icon',
                           'name': 'alert-triangle',
+                          'type': 'icon',
                         },
                         {
-                          'type': 'typography',
-                          'content': 'Failed to load builds',
                           'variant': 'h3',
+                          'content': 'Failed to load builds',
+                          'type': 'typography',
                         },
                         {
                           'color': 'muted',
-                          'type': 'typography',
                           'content': '@payload.error',
+                          'type': 'typography',
                           'variant': 'body',
                         },
                         {
                           'type': 'button',
                           'action': 'INIT',
-                          'icon': 'rotate-ccw',
-                          'label': 'Retry',
                           'variant': 'primary',
+                          'label': 'Retry',
+                          'icon': 'rotate-ccw',
                         },
                       ],
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -1032,8 +1166,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Build',
                     {
                       'emit': {
-                        'failure': 'BuildLoadFailed',
                         'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
                       },
                     },
                   ],
@@ -1058,16 +1192,17 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'plus-circle',
+                              'type': 'icon',
                             },
                             {
                               'type': 'typography',
@@ -1075,25 +1210,24 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                               'variant': 'h3',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
                           'mode': 'create',
-                          'cancelEvent': 'CLOSE',
                           'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'branch',
                             'status',
                             'commit',
                             'triggeredBy',
                           ],
+                          'type': 'form-section',
                         },
                       ],
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1381,20 +1515,21 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
                       'children': [
                         {
-                          'type': 'stack',
-                          'gap': 'sm',
                           'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'name': 'edit',
                               'type': 'icon',
                             },
                             {
-                              'variant': 'h3',
-                              'content': 'Edit Build',
                               'type': 'typography',
+                              'content': 'Edit Build',
+                              'variant': 'h3',
                             },
                           ],
                         },
@@ -1402,20 +1537,19 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
-                          'entity': '@payload.row',
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                          'mode': 'edit',
                           'fields': [
                             'branch',
                             'status',
                             'commit',
                             'triggeredBy',
                           ],
+                          'entity': '@payload.row',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'mode': 'edit',
                         },
                       ],
-                      'gap': 'md',
                       'type': 'stack',
                       'direction': 'vertical',
                     },
@@ -1458,8 +1592,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'BuildUpdated',
                         'failure': 'BuildUpdateFailed',
+                        'success': 'BuildUpdated',
                       },
                     },
                   ],
@@ -1653,95 +1787,94 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'fetch',
                     'Build',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'failure': 'BuildLoadFailed',
                         'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'gap': 'md',
                       'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'align': 'center',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'h3',
                               'content': '@entity.branch',
+                              'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'content': 'Branch',
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.branch',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Status',
-                              'type': 'typography',
-                            },
-                            {
                               'variant': 'body',
                               'type': 'typography',
-                              'content': '@entity.status',
                             },
                           ],
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'gap': 'md',
                         },
                         {
-                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
+                              'content': 'Status',
                               'type': 'typography',
                               'variant': 'caption',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                        },
+                        {
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Commit',
                             },
                             {
+                              'content': '@entity.commit',
                               'variant': 'body',
                               'type': 'typography',
-                              'content': '@entity.commit',
                             },
                           ],
+                          'gap': 'md',
                           'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
                               'content': 'Triggered By',
@@ -1754,33 +1887,34 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                               'type': 'typography',
                             },
                           ],
-                          'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'sm',
-                          'justify': 'end',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'button',
-                              'action': 'EDIT',
                               'variant': 'primary',
                               'label': 'Edit',
                               'icon': 'edit',
+                              'action': 'EDIT',
                             },
                             {
-                              'variant': 'ghost',
                               'type': 'button',
-                              'label': 'Close',
                               'action': 'CLOSE',
+                              'variant': 'ghost',
+                              'label': 'Close',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'justify': 'end',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2010,8 +2144,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Build',
                     {
                       'emit': {
-                        'failure': 'BuildLoadFailed',
                         'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
                       },
                     },
                   ],
@@ -2032,8 +2166,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Build',
                     {
                       'emit': {
-                        'success': 'BuildLoaded',
                         'failure': 'BuildLoadFailed',
+                        'success': 'BuildLoaded',
                       },
                       'id': '@payload.id',
                     },
@@ -2042,12 +2176,14 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
                       'type': 'stack',
-                      'gap': 'md',
                       'children': [
                         {
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
                           'children': [
                             {
                               'type': 'icon',
@@ -2059,21 +2195,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'message': 'This action cannot be undone.',
                           'type': 'alert',
                           'variant': 'error',
-                          'message': 'This action cannot be undone.',
                         },
                         {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
                           'justify': 'end',
+                          'gap': 'sm',
                           'children': [
                             {
                               'label': 'Cancel',
@@ -2082,17 +2215,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                               'variant': 'ghost',
                             },
                             {
-                              'icon': 'check',
-                              'type': 'button',
+                              'variant': 'danger',
                               'label': 'Delete',
                               'action': 'CONFIRM_DELETE',
-                              'variant': 'danger',
+                              'type': 'button',
+                              'icon': 'check',
                             },
                           ],
+                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                       ],
-                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2109,8 +2243,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'failure': 'BuildDeleteFailed',
                         'success': 'BuildDeleted',
+                        'failure': 'BuildDeleteFailed',
                       },
                     },
                   ],
@@ -2193,8 +2327,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Build',
                     {
                       'emit': {
-                        'failure': 'BuildLoadFailed',
                         'success': 'BuildLoaded',
+                        'failure': 'BuildLoadFailed',
                       },
                     },
                   ],
@@ -2385,8 +2519,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Stage',
                     {
                       'emit': {
-                        'success': 'StageLoaded',
                         'failure': 'StageLoadFailed',
+                        'success': 'StageLoaded',
                       },
                     },
                   ],
@@ -2394,21 +2528,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Stages',
@@ -2416,33 +2547,33 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'type': 'stack',
                                   'gap': 'md',
-                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'name': 'layers',
                                           'type': 'icon',
+                                          'name': 'layers',
                                         },
                                         {
                                           'type': 'typography',
-                                          'content': 'Stages',
                                           'variant': 'h2',
+                                          'content': 'Stages',
                                         },
                                       ],
                                       'type': 'stack',
-                                      'gap': 'md',
                                       'direction': 'horizontal',
+                                      'gap': 'md',
                                     },
                                     {
                                       'label': 'Refresh',
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
                                       'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
                                 },
@@ -2450,16 +2581,16 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 3,
-                                      'type': 'simple-grid',
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
                                               'type': 'stack',
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'children': [
                                                 {
@@ -2469,25 +2600,25 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'content': '@entity.name',
                                                   'type': 'typography',
+                                                  'content': '@entity.name',
                                                 },
                                               ],
+                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'direction': 'vertical',
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'content': 'Status',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'Status',
                                                 },
                                                 {
                                                   'variant': 'h3',
@@ -2500,12 +2631,11 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'type': 'stack',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -2513,19 +2643,19 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'content': 'Duration',
                                                 },
                                                 {
-                                                  'variant': 'h3',
-                                                  'type': 'typography',
                                                   'content': '@entity.duration',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'content': 'Output',
@@ -2533,39 +2663,42 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'content': '@entity.output',
                                                   'type': 'typography',
+                                                  'content': '@entity.output',
                                                   'variant': 'h3',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
-                                          'type': 'typography',
                                           'content': 'Chart View',
+                                          'type': 'typography',
+                                          'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -2573,40 +2706,38 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
-                                  'type': 'grid',
-                                  'gap': 'md',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'date': 'Mar',
                                       'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -2616,26 +2747,12 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'label': 'Start',
-                                      'id': 'a',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'label': 'End',
-                                      'id': 'c',
-                                    },
-                                  ],
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -2648,15 +2765,31 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   ],
                                   'type': 'graph-view',
                                   'width': 400,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
                                   'height': 200,
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'gap': 'lg',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
                       'navItems': [
                         {
                           'icon': 'hammer',
@@ -2664,16 +2797,17 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                           'href': '/builds',
                         },
                         {
+                          'href': '/stages',
                           'icon': 'layers',
                           'label': 'Stages',
-                          'href': '/stages',
                         },
                         {
-                          'label': 'Deploy',
                           'href': '/deploy',
                           'icon': 'rocket',
+                          'label': 'Deploy',
                         },
                       ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2697,36 +2831,39 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
                       'navItems': [
                         {
-                          'icon': 'hammer',
                           'label': 'Builds',
+                          'icon': 'hammer',
                           'href': '/builds',
                         },
                         {
-                          'label': 'Stages',
                           'href': '/stages',
+                          'label': 'Stages',
                           'icon': 'layers',
                         },
                         {
+                          'label': 'Deploy',
                           'href': '/deploy',
                           'icon': 'rocket',
-                          'label': 'Deploy',
                         },
                       ],
-                      'appName': 'CI/CD Pipeline',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
+                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Stages',
@@ -2735,15 +2872,14 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                 },
                                 {
                                   'direction': 'horizontal',
-                                  'justify': 'between',
                                   'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'layers',
+                                          'type': 'icon',
                                         },
                                         {
                                           'type': 'typography',
@@ -2751,44 +2887,44 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
                                       'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'gap': 'md',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                       'children': [
                                         {
                                           'children': [
                                             {
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'Name',
-                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'content': '@entity.name',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                               'type': 'stack',
                                               'gap': 'sm',
                                             },
@@ -2798,58 +2934,56 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                         {
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'Status',
-                                                  'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'content': '@entity.status',
                                                   'type': 'typography',
+                                                  'content': '@entity.status',
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'content': 'Duration',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'Duration',
                                                 },
                                                 {
                                                   'content': '@entity.duration',
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'children': [
                                             {
                                               'direction': 'vertical',
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'content': 'Output',
                                                   'variant': 'caption',
+                                                  'content': 'Output',
+                                                  'type': 'typography',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -2857,76 +2991,80 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'content': '@entity.output',
                                                 },
                                               ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                       ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
                                   'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'cols': 2,
                                   'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
-                                        },
-                                      ],
-                                    },
-                                    {
-                                      'children': [
-                                        {
                                           'type': 'typography',
-                                          'content': 'Graph View',
-                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
+                                    },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
                                       'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
@@ -2937,44 +3075,40 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'label': 'Start',
-                                      'id': 'a',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
                                   'height': 200,
-                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
                                   'width': 400,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
                                 },
                               ],
-                              'direction': 'vertical',
                               'gap': 'lg',
-                              'type': 'stack',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
                     },
@@ -3000,15 +3134,33 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'label': 'Builds',
+                          'href': '/builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'href': '/stages',
+                          'icon': 'layers',
+                          'label': 'Stages',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                          'href': '/deploy',
+                        },
+                      ],
+                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'gap': 'lg',
                               'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -3018,52 +3170,54 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'label': 'Stages',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'direction': 'horizontal',
-                                  'gap': 'md',
-                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'name': 'layers',
                                           'type': 'icon',
                                         },
                                         {
+                                          'type': 'typography',
                                           'content': 'Stages',
                                           'variant': 'h2',
-                                          'type': 'typography',
                                         },
                                       ],
-                                      'direction': 'horizontal',
-                                      'type': 'stack',
-                                      'gap': 'md',
                                     },
                                     {
                                       'label': 'Refresh',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                       'type': 'button',
                                       'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'justify': 'between',
                                   'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'content': 'Name',
@@ -3071,21 +3225,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.name',
                                                 },
                                               ],
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
                                               'children': [
                                                 {
                                                   'content': 'Status',
@@ -3098,23 +3249,25 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
-                                                  'content': 'Duration',
                                                   'type': 'typography',
+                                                  'content': 'Duration',
                                                 },
                                                 {
                                                   'variant': 'h3',
@@ -3129,14 +3282,13 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'type': 'stack',
                                               'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'Output',
+                                                  'type': 'typography',
                                                 },
                                                 {
                                                   'variant': 'h3',
@@ -3144,19 +3296,22 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'content': '@entity.output',
                                                 },
                                               ],
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                       ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
@@ -3169,55 +3324,53 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'type': 'grid',
                                   'gap': 'md',
-                                  'cols': 2,
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'date': 'May',
                                       'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'color': 'muted',
@@ -3226,59 +3379,40 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
+                                  'width': 400,
                                   'type': 'graph-view',
+                                  'height': 200,
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'label': 'End',
                                       'id': 'c',
                                     },
                                   ],
-                                  'height': 200,
-                                  'width': 400,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                 },
                               ],
                               'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Builds',
-                          'href': '/builds',
-                          'icon': 'hammer',
-                        },
-                        {
-                          'label': 'Stages',
-                          'icon': 'layers',
-                          'href': '/stages',
-                        },
-                        {
-                          'href': '/deploy',
-                          'label': 'Deploy',
-                          'icon': 'rocket',
-                        },
-                      ],
-                      'appName': 'CI/CD Pipeline',
                       'type': 'dashboard-layout',
                     },
                   ],
@@ -3303,11 +3437,13 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -3322,17 +3458,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'justify': 'between',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'stack',
-                                      'gap': 'md',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'layers',
+                                          'type': 'icon',
                                         },
                                         {
                                           'type': 'typography',
@@ -3340,37 +3477,34 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'content': 'Stages',
                                         },
                                       ],
+                                      'gap': 'md',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
                                       'action': 'REFRESH',
+                                      'label': 'Refresh',
                                       'type': 'button',
                                       'variant': 'secondary',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
                                   'children': [
                                     {
+                                      'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                   'content': 'Name',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -3378,25 +3512,7 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          'children': [
-                                            {
                                               'type': 'stack',
-                                              'children': [
-                                                {
-                                                  'type': 'typography',
-                                                  'variant': 'caption',
-                                                  'content': 'Status',
-                                                },
-                                                {
-                                                  'type': 'typography',
-                                                  'content': '@entity.status',
-                                                  'variant': 'h3',
-                                                },
-                                              ],
                                               'direction': 'vertical',
                                               'gap': 'sm',
                                             },
@@ -3404,10 +3520,33 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
                                               'direction': 'vertical',
+                                              'children': [
+                                                {
+                                                  'variant': 'caption',
+                                                  'content': 'Status',
+                                                  'type': 'typography',
+                                                },
+                                                {
+                                                  'content': '@entity.status',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'type': 'stack',
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
@@ -3416,60 +3555,56 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                 },
                                                 {
                                                   'content': '@entity.duration',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'Output',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
                                                   'content': '@entity.output',
+                                                  'variant': 'h3',
                                                 },
                                               ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
                                       'type': 'simple-grid',
-                                      'cols': 3,
                                     },
                                   ],
                                   'padding': 'md',
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
@@ -3482,11 +3617,11 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       ],
                                     },
                                   ],
+                                  'type': 'grid',
                                   'cols': 2,
                                   'gap': 'md',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -3497,8 +3632,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
@@ -3509,37 +3644,38 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'color': 'muted',
                                       'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
                                   'edges': [
                                     {
-                                      'target': 'b',
                                       'source': 'a',
+                                      'target': 'b',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
+                                  'width': 400,
                                   'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'label': 'Start',
@@ -3554,32 +3690,30 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'label': 'End',
                                     },
                                   ],
-                                  'width': 400,
+                                  'type': 'graph-view',
                                 },
                               ],
                               'gap': 'lg',
-                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'CI/CD Pipeline',
                       'navItems': [
                         {
-                          'label': 'Builds',
                           'href': '/builds',
                           'icon': 'hammer',
+                          'label': 'Builds',
                         },
                         {
+                          'href': '/stages',
                           'icon': 'layers',
                           'label': 'Stages',
-                          'href': '/stages',
                         },
                         {
+                          'icon': 'rocket',
                           'label': 'Deploy',
                           'href': '/deploy',
-                          'icon': 'rocket',
                         },
                       ],
                       'type': 'dashboard-layout',
@@ -3597,8 +3731,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Stage',
                     {
                       'emit': {
-                        'failure': 'StageLoadFailed',
                         'success': 'StageLoaded',
+                        'failure': 'StageLoadFailed',
                       },
                     },
                   ],
@@ -3611,28 +3745,26 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                       'navItems': [
                         {
                           'icon': 'hammer',
-                          'label': 'Builds',
                           'href': '/builds',
+                          'label': 'Builds',
                         },
                         {
+                          'href': '/stages',
                           'icon': 'layers',
                           'label': 'Stages',
-                          'href': '/stages',
                         },
                         {
-                          'icon': 'rocket',
                           'href': '/deploy',
                           'label': 'Deploy',
+                          'icon': 'rocket',
                         },
                       ],
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -3642,37 +3774,38 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'label': 'Stages',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'gap': 'md',
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'justify': 'between',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'gap': 'md',
-                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'name': 'layers',
                                           'type': 'icon',
+                                          'name': 'layers',
                                         },
                                         {
                                           'content': 'Stages',
-                                          'variant': 'h2',
                                           'type': 'typography',
+                                          'variant': 'h2',
                                         },
                                       ],
+                                      'type': 'stack',
+                                      'gap': 'md',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
-                                      'action': 'REFRESH',
                                       'variant': 'secondary',
                                       'label': 'Refresh',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
@@ -3682,26 +3815,25 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'content': 'Name',
                                                   'variant': 'caption',
                                                   'type': 'typography',
+                                                  'content': 'Name',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'content': '@entity.name',
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'gap': 'sm',
                                             },
@@ -3711,14 +3843,13 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
                                               'direction': 'vertical',
-                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
-                                                  'type': 'typography',
                                                   'content': 'Status',
+                                                  'type': 'typography',
                                                 },
                                                 {
                                                   'content': '@entity.status',
@@ -3726,11 +3857,11 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'variant': 'h3',
                                                 },
                                               ],
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'children': [
@@ -3740,40 +3871,42 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.duration',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Output',
                                                   'type': 'typography',
+                                                  'content': 'Output',
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'h3',
                                                   'content': '@entity.output',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                 },
@@ -3781,8 +3914,6 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'gap': 'md',
                                   'type': 'grid',
                                   'children': [
                                     {
@@ -3790,13 +3921,12 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'children': [
                                         {
                                           'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Graph View',
@@ -3804,11 +3934,13 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                           'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
@@ -3819,8 +3951,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
                                       'date': 'Apr',
@@ -3831,17 +3963,18 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                       'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'label': 'Previous',
@@ -3850,37 +3983,38 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'width': 400,
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
+                                  'width': 400,
+                                  'type': 'graph-view',
                                   'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
-                              'gap': 'lg',
+                              'type': 'stack',
                               'direction': 'vertical',
+                              'gap': 'lg',
                             },
                           ],
                           'type': 'scaled-diagram',
@@ -4109,8 +4243,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'Deployment',
                     {
                       'emit': {
-                        'failure': 'DeploymentLoadFailed',
                         'success': 'DeploymentLoaded',
+                        'failure': 'DeploymentLoadFailed',
                       },
                     },
                   ],
@@ -4118,12 +4252,32 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'href': '/builds',
+                          'label': 'Builds',
+                          'icon': 'hammer',
+                        },
+                        {
+                          'label': 'Stages',
+                          'href': '/stages',
+                          'icon': 'layers',
+                        },
+                        {
+                          'label': 'Deploy',
+                          'icon': 'rocket',
+                          'href': '/deploy',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
-                          'direction': 'vertical',
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
+                              'direction': 'horizontal',
                               'gap': 'md',
                               'children': [
                                 {
@@ -4131,55 +4285,35 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                   'type': 'icon',
                                 },
                                 {
+                                  'type': 'typography',
                                   'variant': 'h2',
                                   'content': 'Deployment',
-                                  'type': 'typography',
                                 },
                               ],
-                              'align': 'center',
                               'type': 'stack',
-                              'direction': 'horizontal',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'variant': 'body',
-                              'color': 'muted',
                               'type': 'typography',
+                              'color': 'muted',
                               'content': 'Ready to start deployment operation.',
+                              'variant': 'body',
                             },
                             {
-                              'type': 'button',
-                              'label': 'Start',
-                              'action': 'START',
                               'variant': 'primary',
                               'icon': 'play',
+                              'action': 'START',
+                              'type': 'button',
+                              'label': 'Start',
                             },
                           ],
-                          'type': 'stack',
                           'gap': 'lg',
+                          'direction': 'vertical',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Builds',
-                          'href': '/builds',
-                          'icon': 'hammer',
-                        },
-                        {
-                          'href': '/stages',
-                          'label': 'Stages',
-                          'icon': 'layers',
-                        },
-                        {
-                          'icon': 'rocket',
-                          'label': 'Deploy',
-                          'href': '/deploy',
-                        },
-                      ],
-                      'appName': 'CI/CD Pipeline',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -4193,10 +4327,12 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Builds',
                           'icon': 'hammer',
+                          'label': 'Builds',
                           'href': '/builds',
                         },
                         {
@@ -4205,30 +4341,28 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                           'icon': 'layers',
                         },
                         {
-                          'href': '/deploy',
                           'label': 'Deploy',
+                          'href': '/deploy',
                           'icon': 'rocket',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
-                          'align': 'center',
-                          'gap': 'lg',
+                          'type': 'stack',
                           'direction': 'vertical',
                           'children': [
                             {
                               'type': 'loading-state',
-                              'title': 'Deploying...',
                               'message': 'Processing deployment...',
+                              'title': 'Deploying...',
                             },
                             {
-                              'type': 'skeleton',
                               'variant': 'text',
+                              'type': 'skeleton',
                             },
                           ],
-                          'type': 'stack',
+                          'gap': 'lg',
+                          'align': 'center',
                         },
                       ],
                     },
@@ -4256,42 +4390,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'appName': 'CI/CD Pipeline',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': 'Deployment successful.',
-                              'variant': 'success',
-                            },
-                            {
-                              'justify': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'icon': 'rotate-ccw',
-                                  'label': 'Reset',
-                                  'action': 'RESET',
-                                  'variant': 'ghost',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                          ],
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
                           'label': 'Builds',
@@ -4299,14 +4399,48 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                           'icon': 'hammer',
                         },
                         {
+                          'icon': 'layers',
                           'href': '/stages',
                           'label': 'Stages',
-                          'icon': 'layers',
                         },
                         {
-                          'icon': 'rocket',
                           'label': 'Deploy',
+                          'icon': 'rocket',
                           'href': '/deploy',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'check-circle',
+                            },
+                            {
+                              'type': 'alert',
+                              'variant': 'success',
+                              'message': 'Deployment successful.',
+                            },
+                            {
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'justify': 'center',
+                              'children': [
+                                {
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'label': 'Reset',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                },
+                              ],
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'align': 'center',
+                          'type': 'stack',
                         },
                       ],
                     },
@@ -4322,61 +4456,61 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'children': [
+                      'navItems': [
                         {
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'title': 'Operation Failed',
-                              'type': 'error-state',
-                              'onRetry': 'RETRY',
-                              'message': 'Deployment failed.',
-                            },
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'action': 'RETRY',
-                                  'icon': 'refresh-cw',
-                                  'type': 'button',
-                                  'label': 'Retry',
-                                  'variant': 'primary',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Reset',
-                                  'action': 'RESET',
-                                  'icon': 'rotate-ccw',
-                                  'variant': 'ghost',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'justify': 'center',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
+                          'icon': 'hammer',
+                          'href': '/builds',
+                          'label': 'Builds',
+                        },
+                        {
+                          'label': 'Stages',
+                          'icon': 'layers',
+                          'href': '/stages',
+                        },
+                        {
+                          'icon': 'rocket',
+                          'label': 'Deploy',
+                          'href': '/deploy',
                         },
                       ],
                       'appName': 'CI/CD Pipeline',
-                      'navItems': [
+                      'type': 'dashboard-layout',
+                      'children': [
                         {
-                          'label': 'Builds',
-                          'href': '/builds',
-                          'icon': 'hammer',
-                        },
-                        {
-                          'href': '/stages',
-                          'label': 'Stages',
-                          'icon': 'layers',
-                        },
-                        {
-                          'label': 'Deploy',
-                          'icon': 'rocket',
-                          'href': '/deploy',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'message': 'Deployment failed.',
+                              'onRetry': 'RETRY',
+                              'title': 'Operation Failed',
+                              'type': 'error-state',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'children': [
+                                {
+                                  'label': 'Retry',
+                                  'variant': 'primary',
+                                  'icon': 'refresh-cw',
+                                  'action': 'RETRY',
+                                  'type': 'button',
+                                },
+                                {
+                                  'label': 'Reset',
+                                  'variant': 'ghost',
+                                  'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                },
+                              ],
+                              'justify': 'center',
+                            },
+                          ],
+                          'type': 'stack',
+                          'align': 'center',
                         },
                       ],
                     },
@@ -4392,68 +4526,68 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'align': 'center',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'gap': 'md',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'icon',
                                   'name': 'upload-cloud',
+                                  'type': 'icon',
                                 },
                                 {
-                                  'content': 'Deployment',
-                                  'variant': 'h2',
                                   'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Deployment',
                                 },
                               ],
+                              'gap': 'md',
                               'direction': 'horizontal',
-                              'type': 'stack',
                               'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'content': 'Ready to start deployment operation.',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
+                              'content': 'Ready to start deployment operation.',
                               'color': 'muted',
                             },
                             {
-                              'icon': 'play',
                               'label': 'Start',
-                              'action': 'START',
+                              'icon': 'play',
                               'variant': 'primary',
+                              'action': 'START',
                               'type': 'button',
                             },
                           ],
-                          'gap': 'lg',
                           'type': 'stack',
+                          'direction': 'vertical',
+                          'align': 'center',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Builds',
                           'icon': 'hammer',
                           'href': '/builds',
+                          'label': 'Builds',
                         },
                         {
-                          'icon': 'layers',
                           'href': '/stages',
                           'label': 'Stages',
+                          'icon': 'layers',
                         },
                         {
+                          'label': 'Deploy',
                           'href': '/deploy',
                           'icon': 'rocket',
-                          'label': 'Deploy',
                         },
                       ],
+                      'appName': 'CI/CD Pipeline',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -4467,29 +4601,33 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'hammer',
                           'label': 'Builds',
                           'href': '/builds',
+                          'icon': 'hammer',
                         },
                         {
                           'icon': 'layers',
-                          'href': '/stages',
                           'label': 'Stages',
+                          'href': '/stages',
                         },
                         {
-                          'href': '/deploy',
-                          'label': 'Deploy',
                           'icon': 'rocket',
+                          'label': 'Deploy',
+                          'href': '/deploy',
                         },
                       ],
-                      'appName': 'CI/CD Pipeline',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
                           'align': 'center',
                           'children': [
                             {
+                              'type': 'stack',
                               'align': 'center',
                               'children': [
                                 {
@@ -4498,37 +4636,33 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                                 },
                                 {
                                   'content': 'Deployment',
-                                  'type': 'typography',
                                   'variant': 'h2',
+                                  'type': 'typography',
                                 },
                               ],
                               'direction': 'horizontal',
-                              'type': 'stack',
                               'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'color': 'muted',
-                              'variant': 'body',
-                              'content': 'Ready to start deployment operation.',
                               'type': 'typography',
+                              'color': 'muted',
+                              'content': 'Ready to start deployment operation.',
+                              'variant': 'body',
                             },
                             {
                               'type': 'button',
-                              'action': 'START',
-                              'label': 'Start',
-                              'variant': 'primary',
                               'icon': 'play',
+                              'variant': 'primary',
+                              'label': 'Start',
+                              'action': 'START',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'CI/CD Pipeline',
                     },
                   ],
                 ],
@@ -4543,31 +4677,12 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'title': 'Deploying...',
-                              'message': 'Processing deployment...',
-                              'type': 'loading-state',
-                            },
-                            {
-                              'type': 'skeleton',
-                              'variant': 'text',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
                       'appName': 'CI/CD Pipeline',
                       'navItems': [
                         {
-                          'icon': 'hammer',
-                          'label': 'Builds',
                           'href': '/builds',
+                          'label': 'Builds',
+                          'icon': 'hammer',
                         },
                         {
                           'icon': 'layers',
@@ -4575,9 +4690,28 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
                           'label': 'Stages',
                         },
                         {
-                          'href': '/deploy',
                           'icon': 'rocket',
                           'label': 'Deploy',
+                          'href': '/deploy',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'loading-state',
+                              'title': 'Deploying...',
+                              'message': 'Processing deployment...',
+                            },
+                            {
+                              'type': 'skeleton',
+                              'variant': 'text',
+                            },
+                          ],
+                          'direction': 'vertical',
+                          'type': 'stack',
                         },
                       ],
                     },

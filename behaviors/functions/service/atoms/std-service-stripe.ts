@@ -23,6 +23,53 @@ const BEHAVIOR_PATH = 'std/behaviors/std-service-stripe';
 const ALIAS = 'ServiceStripe';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdServiceStripeEventKey = 'CREATE_PAYMENT' | 'FAILED' | 'INIT' | 'PAYMENT_CONFIRMED' | 'PAYMENT_CREATED' | 'RESET' | 'RETRY' | 'ServiceStripeLoadFailed' | 'ServiceStripeLoaded' | 'ServiceStripeStripeCompleted' | 'ServiceStripeStripeFailed';
+
+/**
+ * Payload shape for the `ServiceStripeLoaded` event.
+ */
+export interface StdServiceStripeServiceStripeLoadedPayload {
+  id: string;
+  amount?: number;
+  currency?: string;
+  paymentIntentId?: string;
+  clientSecret?: string;
+  paymentStatus?: string;
+  error?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+}
+
+/**
+ * Payload shape for the `ServiceStripeLoadFailed` event.
+ */
+export interface StdServiceStripeServiceStripeLoadFailedPayload {
+  message?: string;
+}
+
+/**
+ * Payload shape for the `ServiceStripeStripeCompleted` event.
+ */
+export interface StdServiceStripeServiceStripeStripeCompletedPayload {
+  result?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ServiceStripeStripeFailed` event.
+ */
+export interface StdServiceStripeServiceStripeStripeFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-service-stripe descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +85,8 @@ export interface StdServiceStripeParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdServiceStripeEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +106,11 @@ export function stdServiceStripeTrait(params: StdServiceStripeParams): TraitRefe
     ref: `${ALIAS}.traits.ServiceStripeStripe`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

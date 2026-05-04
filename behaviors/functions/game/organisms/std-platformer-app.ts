@@ -23,6 +23,74 @@ const BEHAVIOR_PATH = 'std/behaviors/std-platformer-app';
 const ALIAS = 'PlatformerApp';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdPlatformerAppEventKey = 'CLOSE' | 'CollectibleDeleteFailed' | 'CollectibleDeleted' | 'CollectibleSaveFailed' | 'CollectibleSaved' | 'CollectibleUpdateFailed' | 'CollectibleUpdated' | 'GAME_OVER' | 'INIT' | 'JUMP' | 'LEFT' | 'NAVIGATE' | 'PAUSE' | 'PlatLevelLoadFailed' | 'PlatLevelLoaded' | 'RESTART' | 'RESUME' | 'RIGHT' | 'START' | 'STOP';
+
+/**
+ * Payload shape for the `PlatLevelLoaded` event.
+ */
+export interface StdPlatformerAppPlatLevelLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `PlatLevelLoadFailed` event.
+ */
+export interface StdPlatformerAppPlatLevelLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleSaved` event.
+ */
+export interface StdPlatformerAppCollectibleSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleSaveFailed` event.
+ */
+export interface StdPlatformerAppCollectibleSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleUpdated` event.
+ */
+export interface StdPlatformerAppCollectibleUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleUpdateFailed` event.
+ */
+export interface StdPlatformerAppCollectibleUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleDeleted` event.
+ */
+export interface StdPlatformerAppCollectibleDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CollectibleDeleteFailed` event.
+ */
+export interface StdPlatformerAppCollectibleDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-platformer-app descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +106,8 @@ export interface StdPlatformerAppParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdPlatformerAppEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +127,11 @@ export function stdPlatformerAppPlatLevelPlatformerFlowTrait(params: StdPlatform
     ref: `${ALIAS}.traits.PlatLevelPlatformerFlow`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +142,11 @@ export function stdPlatformerAppPlatLevelPlatformerCanvasTrait(params: StdPlatfo
     ref: `${ALIAS}.traits.PlatLevelPlatformerCanvas`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

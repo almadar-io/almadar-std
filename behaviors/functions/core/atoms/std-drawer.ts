@@ -23,6 +23,29 @@ const BEHAVIOR_PATH = 'std/behaviors/std-drawer';
 const ALIAS = 'Drawer';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdDrawerEventKey = 'CLOSE' | 'DrawerContentLoadFailed' | 'DrawerContentLoaded' | 'INIT' | 'OPEN';
+
+/**
+ * Payload shape for the `DrawerContentLoaded` event.
+ */
+export interface StdDrawerDrawerContentLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `DrawerContentLoadFailed` event.
+ */
+export interface StdDrawerDrawerContentLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-drawer descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +61,8 @@ export interface StdDrawerParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdDrawerEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +82,11 @@ export function stdDrawerTrait(params: StdDrawerParams): TraitReference {
     ref: `${ALIAS}.traits.DrawerContentDrawer`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

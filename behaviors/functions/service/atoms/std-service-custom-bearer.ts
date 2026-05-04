@@ -23,6 +23,54 @@ const BEHAVIOR_PATH = 'std/behaviors/std-service-custom-bearer';
 const ALIAS = 'ServiceCustomBearer';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdServiceCustomBearerEventKey = 'API_RESPONSE' | 'CALL_API' | 'FAILED' | 'INIT' | 'RESET' | 'RETRY' | 'ServiceCustomBearerCustomBearerApiCompleted' | 'ServiceCustomBearerCustomBearerApiFailed' | 'ServiceCustomBearerLoadFailed' | 'ServiceCustomBearerLoaded';
+
+/**
+ * Payload shape for the `ServiceCustomBearerLoaded` event.
+ */
+export interface StdServiceCustomBearerServiceCustomBearerLoadedPayload {
+  id?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+  endpoint?: string;
+  method?: string;
+  requestBody?: string;
+  responseData?: string;
+  statusCode?: string;
+  callStatus?: string;
+  error?: string;
+}
+
+/**
+ * Payload shape for the `ServiceCustomBearerLoadFailed` event.
+ */
+export interface StdServiceCustomBearerServiceCustomBearerLoadFailedPayload {
+  message?: string;
+}
+
+/**
+ * Payload shape for the `ServiceCustomBearerCustomBearerApiCompleted` event.
+ */
+export interface StdServiceCustomBearerServiceCustomBearerCustomBearerApiCompletedPayload {
+  result?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ServiceCustomBearerCustomBearerApiFailed` event.
+ */
+export interface StdServiceCustomBearerServiceCustomBearerCustomBearerApiFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-service-custom-bearer descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +86,8 @@ export interface StdServiceCustomBearerParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdServiceCustomBearerEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +107,11 @@ export function stdServiceCustomBearerTrait(params: StdServiceCustomBearerParams
     ref: `${ALIAS}.traits.ServiceCustomBearerCustomBearer`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

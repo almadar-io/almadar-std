@@ -23,6 +23,61 @@ const BEHAVIOR_PATH = 'std/behaviors/std-agent-completion';
 const ALIAS = 'AgentCompletion';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdAgentCompletionEventKey = 'AgentCompletionLoadFailed' | 'AgentCompletionLoaded' | 'AgentCompletionSaveFailed' | 'AgentCompletionSaved' | 'CLOSE' | 'GENERATE' | 'GENERATED' | 'INIT' | 'SAVE';
+
+/**
+ * Payload shape for the `GENERATED` event.
+ */
+export interface StdAgentCompletionGeneratedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentCompletionLoaded` event.
+ */
+export interface StdAgentCompletionAgentCompletionLoadedPayload {
+  id?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+  prompt?: string;
+  response?: string;
+  provider?: string;
+  model?: string;
+  error?: string;
+  message?: string;
+  notificationType?: string;
+}
+
+/**
+ * Payload shape for the `AgentCompletionLoadFailed` event.
+ */
+export interface StdAgentCompletionAgentCompletionLoadFailedPayload {
+  message?: string;
+}
+
+/**
+ * Payload shape for the `AgentCompletionSaved` event.
+ */
+export interface StdAgentCompletionAgentCompletionSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentCompletionSaveFailed` event.
+ */
+export interface StdAgentCompletionAgentCompletionSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-agent-completion descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +93,8 @@ export interface StdAgentCompletionParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdAgentCompletionEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +114,11 @@ export function stdAgentCompletionAgentCompletionModalTrait(params: StdAgentComp
     ref: `${ALIAS}.traits.AgentCompletionModal`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +129,11 @@ export function stdAgentCompletionAgentCompletionNotificationTrait(params: StdAg
     ref: `${ALIAS}.traits.AgentCompletionNotification`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +144,11 @@ export function stdAgentCompletionAgentCompletionAgentTrait(params: StdAgentComp
     ref: `${ALIAS}.traits.AgentCompletionAgent`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

@@ -23,6 +23,74 @@ const BEHAVIOR_PATH = 'std/behaviors/std-iot-dashboard';
 const ALIAS = 'IotDashboard';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdIotDashboardEventKey = 'DeviceDeleteFailed' | 'DeviceDeleted' | 'DeviceSaveFailed' | 'DeviceSaved' | 'DeviceUpdateFailed' | 'DeviceUpdated' | 'INIT' | 'LOADED' | 'REFRESH' | 'REFRESHED' | 'SensorReadingLoadFailed' | 'SensorReadingLoaded';
+
+/**
+ * Payload shape for the `SensorReadingLoaded` event.
+ */
+export interface StdIotDashboardSensorReadingLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `SensorReadingLoadFailed` event.
+ */
+export interface StdIotDashboardSensorReadingLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DeviceSaved` event.
+ */
+export interface StdIotDashboardDeviceSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DeviceSaveFailed` event.
+ */
+export interface StdIotDashboardDeviceSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DeviceUpdated` event.
+ */
+export interface StdIotDashboardDeviceUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DeviceUpdateFailed` event.
+ */
+export interface StdIotDashboardDeviceUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DeviceDeleted` event.
+ */
+export interface StdIotDashboardDeviceDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DeviceDeleteFailed` event.
+ */
+export interface StdIotDashboardDeviceDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-iot-dashboard descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +106,8 @@ export interface StdIotDashboardParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdIotDashboardEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +127,11 @@ export function stdIotDashboardTrait(params: StdIotDashboardParams): TraitRefere
     ref: `${ALIAS}.traits.SensorReadingDisplay`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -387,8 +455,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'SensorReading',
                     {
                       'emit': {
-                        'success': 'SensorReadingLoaded',
                         'failure': 'SensorReadingLoadFailed',
+                        'success': 'SensorReadingLoaded',
                       },
                     },
                   ],
@@ -396,17 +464,20 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'children': [
                                 {
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Sensor Readings',
@@ -415,55 +486,55 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'name': 'thermometer',
                                           'type': 'icon',
+                                          'name': 'thermometer',
                                         },
                                         {
-                                          'type': 'typography',
-                                          'content': 'Sensor Readings',
                                           'variant': 'h2',
+                                          'content': 'Sensor Readings',
+                                          'type': 'typography',
                                         },
                                       ],
                                       'direction': 'horizontal',
-                                      'type': 'stack',
+                                      'gap': 'md',
                                     },
                                     {
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
                                       'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'justify': 'between',
                                   'direction': 'horizontal',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'content': 'SensorId',
                                                   'type': 'typography',
+                                                  'content': 'SensorId',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'content': '@entity.sensorId',
@@ -471,35 +542,35 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.value',
                                           'label': 'Value',
+                                          'value': '@entity.value',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'content': 'Unit',
                                                   'type': 'typography',
+                                                  'content': 'Unit',
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.unit',
                                                 },
                                               ],
-                                              'gap': 'sm',
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
@@ -508,13 +579,11 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'children': [
                                             {
                                               'type': 'stack',
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'content': 'Timestamp',
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -522,29 +591,29 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                                   'content': '@entity.timestamp',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                       ],
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                     },
                                   ],
+                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
                                   'type': 'grid',
-                                  'cols': 2,
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
                                       'type': 'card',
@@ -553,13 +622,15 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
+                                  'cols': 2,
+                                  'gap': 'md',
                                 },
                                 {
                                   'data': [
@@ -568,45 +639,42 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'date': 'Mar',
                                       'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                   'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -617,10 +685,13 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'source': 'a',
@@ -633,32 +704,29 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   ],
                                 },
                               ],
-                              'direction': 'vertical',
-                              'type': 'stack',
+                              'gap': 'lg',
                             },
                           ],
-                          'type': 'scaled-diagram',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/sensors',
-                          'icon': 'layout-list',
-                          'label': 'Sensors',
-                        },
-                        {
-                          'icon': 'cpu',
-                          'label': 'Devices',
-                          'href': '/devices',
-                        },
-                        {
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                          'icon': 'bell',
                         },
                       ],
                       'appName': 'IoT Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'icon': 'layout-list',
+                          'href': '/sensors',
+                        },
+                        {
+                          'icon': 'cpu',
+                          'href': '/devices',
+                          'label': 'Devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -673,8 +741,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'SensorReading',
                     {
                       'emit': {
-                        'failure': 'SensorReadingLoadFailed',
                         'success': 'SensorReadingLoaded',
+                        'failure': 'SensorReadingLoadFailed',
                       },
                     },
                   ],
@@ -682,54 +750,73 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                        },
+                        {
+                          'label': 'Devices',
+                          'href': '/devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'type': 'stack',
                               'gap': 'lg',
-                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Sensor Readings',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'thermometer',
                                         },
                                         {
+                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Sensor Readings',
-                                          'variant': 'h2',
                                         },
                                       ],
                                       'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'md',
                                   'direction': 'horizontal',
                                   'justify': 'between',
                                 },
@@ -737,36 +824,35 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'children': [
                                     {
-                                      'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                               'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                   'content': 'SensorId',
                                                 },
                                                 {
+                                                  'content': '@entity.sensorId',
                                                   'variant': 'h3',
                                                   'type': 'typography',
-                                                  'content': '@entity.sensorId',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'label': 'Value',
                                           'value': '@entity.value',
+                                          'label': 'Value',
                                           'type': 'stat-display',
                                         },
                                         {
@@ -774,7 +860,6 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'children': [
                                             {
                                               'direction': 'vertical',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'content': 'Unit',
@@ -782,11 +867,12 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.unit',
-                                                  'type': 'typography',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'gap': 'sm',
                                             },
                                           ],
@@ -796,35 +882,34 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'children': [
                                             {
                                               'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Timestamp',
                                                   'type': 'typography',
                                                   'variant': 'caption',
+                                                  'content': 'Timestamp',
                                                 },
                                                 {
-                                                  'variant': 'h3',
-                                                  'content': '@entity.timestamp',
                                                   'type': 'typography',
+                                                  'content': '@entity.timestamp',
+                                                  'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
                                       ],
-                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
+                                  'type': 'box',
                                   'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
@@ -837,17 +922,19 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
                                   'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
                                 },
                                 {
                                   'type': 'line-chart',
@@ -857,20 +944,20 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
@@ -879,35 +966,19 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'label': 'End',
-                                      'id': 'c',
-                                    },
-                                  ],
-                                  'type': 'graph-view',
-                                  'width': 400,
                                   'height': 200,
                                   'edges': [
                                     {
@@ -915,34 +986,31 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'source': 'a',
                                     },
                                     {
-                                      'target': 'c',
                                       'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
                                 },
                               ],
+                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
-                        },
-                      ],
-                      'appName': 'IoT Dashboard',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Sensors',
-                          'href': '/sensors',
-                        },
-                        {
-                          'label': 'Devices',
-                          'icon': 'cpu',
-                          'href': '/devices',
-                        },
-                        {
-                          'href': '/alerts',
-                          'icon': 'bell',
-                          'label': 'Alerts',
                         },
                       ],
                     },
@@ -968,130 +1036,109 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Sensors',
-                          'icon': 'layout-list',
-                          'href': '/sensors',
-                        },
-                        {
-                          'href': '/devices',
-                          'icon': 'cpu',
-                          'label': 'Devices',
-                        },
-                        {
-                          'icon': 'bell',
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                        },
-                      ],
-                      'appName': 'IoT Dashboard',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
                               'type': 'stack',
-                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Sensor Readings',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'gap': 'md',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'thermometer',
                                         },
                                         {
-                                          'content': 'Sensor Readings',
                                           'type': 'typography',
                                           'variant': 'h2',
+                                          'content': 'Sensor Readings',
                                         },
                                       ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
-                                      'variant': 'secondary',
-                                      'icon': 'refresh-cw',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'type': 'stack',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                   'content': 'SensorId',
+                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.sensorId',
                                                 },
                                               ],
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'label': 'Value',
-                                          'value': '@entity.value',
                                           'type': 'stat-display',
+                                          'value': '@entity.value',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                               'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'caption',
                                                   'content': 'Unit',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.unit',
                                                   'variant': 'h3',
+                                                  'content': '@entity.unit',
                                                   'type': 'typography',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
                                           'type': 'card',
@@ -1101,8 +1148,6 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -1110,33 +1155,36 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                                   'content': 'Timestamp',
                                                 },
                                                 {
-                                                  'content': '@entity.timestamp',
                                                   'type': 'typography',
                                                   'variant': 'h3',
+                                                  'content': '@entity.timestamp',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                   'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
                                   'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Chart View',
-                                          'type': 'typography',
                                         },
                                       ],
                                       'type': 'card',
@@ -1152,85 +1200,105 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'type': 'graph-view',
                                   'width': 400,
                                   'height': 200,
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
+                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
                       'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                      'navItems': [
+                        {
+                          'href': '/sensors',
+                          'label': 'Sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'cpu',
+                          'label': 'Devices',
+                          'href': '/devices',
+                        },
+                        {
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -1254,24 +1322,24 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'layout-list',
                           'label': 'Sensors',
                           'href': '/sensors',
+                          'icon': 'layout-list',
                         },
                         {
+                          'href': '/devices',
                           'label': 'Devices',
                           'icon': 'cpu',
-                          'href': '/devices',
                         },
                         {
-                          'icon': 'bell',
-                          'href': '/alerts',
                           'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'appName': 'IoT Dashboard',
                       'children': [
                         {
@@ -1279,49 +1347,51 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'children': [
                             {
                               'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Sensor Readings',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'gap': 'md',
                                   'children': [
                                     {
                                       'direction': 'horizontal',
-                                      'gap': 'md',
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'thermometer',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'type': 'typography',
+                                          'variant': 'h2',
                                           'content': 'Sensor Readings',
                                         },
                                       ],
+                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'type': 'button',
                                       'label': 'Refresh',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -1331,43 +1401,40 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'SensorId',
                                                 },
                                                 {
-                                                  'content': '@entity.sensorId',
                                                   'type': 'typography',
                                                   'variant': 'h3',
+                                                  'content': '@entity.sensorId',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
+                                          'value': '@entity.value',
                                           'type': 'stat-display',
                                           'label': 'Value',
-                                          'value': '@entity.value',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
                                               'direction': 'vertical',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -1380,27 +1447,30 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                                   'variant': 'h3',
                                                 },
                                               ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'children': [
                                             {
+                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'content': 'Timestamp',
                                                   'variant': 'caption',
+                                                  'content': 'Timestamp',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'content': '@entity.timestamp',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
@@ -1413,11 +1483,10 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'cols': 2,
-                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
@@ -1425,7 +1494,6 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
@@ -1438,37 +1506,40 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       ],
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
@@ -1479,23 +1550,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
                                   'width': 400,
                                   'type': 'graph-view',
                                   'edges': [
@@ -1508,11 +1564,23 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'source': 'b',
                                     },
                                   ],
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
                                   'height': 200,
                                 },
                               ],
-                              'gap': 'lg',
-                              'type': 'stack',
                             },
                           ],
                         },
@@ -1540,18 +1608,17 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'IoT Dashboard',
                       'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
                               'type': 'stack',
                               'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'label': 'Home',
@@ -1561,11 +1628,11 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'label': 'Sensor Readings',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'gap': 'md',
                                       'children': [
@@ -1574,30 +1641,32 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'type': 'icon',
                                         },
                                         {
+                                          'variant': 'h2',
                                           'content': 'Sensor Readings',
                                           'type': 'typography',
-                                          'variant': 'h2',
                                         },
                                       ],
+                                      'type': 'stack',
                                     },
                                     {
+                                      'action': 'REFRESH',
                                       'type': 'button',
                                       'label': 'Refresh',
-                                      'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                   'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'cols': 3,
@@ -1607,69 +1676,69 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                   'content': 'SensorId',
                                                 },
                                                 {
-                                                  'content': '@entity.sensorId',
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.sensorId',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
+                                          'type': 'stat-display',
                                           'value': '@entity.value',
                                           'label': 'Value',
-                                          'type': 'stat-display',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'Unit',
-                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'variant': 'h3',
                                                   'content': '@entity.unit',
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'type': 'stack',
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
+                                                  'content': 'Timestamp',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'Timestamp',
                                                 },
                                                 {
+                                                  'variant': 'h3',
                                                   'content': '@entity.timestamp',
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'gap': 'sm',
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                           'type': 'card',
@@ -1677,37 +1746,36 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       ],
                                     },
                                   ],
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'content': 'Chart View',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Graph View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
-                                  'gap': 'md',
+                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
@@ -1717,8 +1785,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'date': 'Mar',
@@ -1729,12 +1797,12 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                 },
@@ -1745,30 +1813,29 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'type': 'graph-view',
-                                  'height': 200,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
+                                  'height': 200,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'source': 'a',
@@ -1779,28 +1846,29 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'target': 'c',
                                     },
                                   ],
+                                  'width': 400,
                                 },
                               ],
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'IoT Dashboard',
                       'navItems': [
                         {
-                          'href': '/sensors',
                           'icon': 'layout-list',
                           'label': 'Sensors',
+                          'href': '/sensors',
                         },
                         {
-                          'href': '/devices',
                           'icon': 'cpu',
                           'label': 'Devices',
+                          'href': '/devices',
                         },
                         {
-                          'icon': 'bell',
-                          'label': 'Alerts',
                           'href': '/alerts',
+                          'label': 'Alerts',
+                          'icon': 'bell',
                         },
                       ],
                     },
@@ -2099,8 +2167,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'failure': 'DeviceLoadFailed',
                         'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
                       },
                     },
                   ],
@@ -2108,22 +2176,22 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'align': 'center',
+                      'gap': 'md',
+                      'type': 'stack',
                       'direction': 'vertical',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'color': 'muted',
+                          'variant': 'caption',
                           'type': 'typography',
                           'content': 'Loading…',
-                          'variant': 'caption',
+                          'color': 'muted',
                         },
                       ],
-                      'align': 'center',
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2137,78 +2205,76 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/devices',
+                          'label': 'Devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                      ],
                       'appName': 'IoT Dashboard',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'className': 'max-w-5xl mx-auto w-full',
                           'type': 'stack',
+                          'gap': 'lg',
                           'direction': 'vertical',
                           'children': [
                             {
+                              'gap': 'md',
                               'align': 'center',
+                              'justify': 'between',
+                              'direction': 'horizontal',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'cpu',
                                     },
                                     {
-                                      'content': 'Devices',
                                       'type': 'typography',
+                                      'content': 'Devices',
                                       'variant': 'h2',
                                     },
                                   ],
-                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
                                   'gap': 'sm',
-                                  'align': 'center',
                                 },
                                 {
-                                  'gap': 'sm',
-                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'label': 'Create Device',
-                                      'variant': 'primary',
                                       'action': 'CREATE',
-                                      'icon': 'plus',
                                       'type': 'button',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                      'label': 'Create Device',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                               ],
-                              'justify': 'between',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'cols': 3,
-                              'itemActions': [
-                                {
-                                  'event': 'VIEW',
-                                  'label': 'View',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'variant': 'danger',
-                                  'event': 'DELETE',
-                                  'label': 'Delete',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'data-grid',
-                              'entity': '@payload.data',
                               'fields': [
                                 {
                                   'variant': 'h3',
@@ -2224,33 +2290,35 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'name': 'type',
                                 },
                                 {
-                                  'variant': 'caption',
                                   'format': 'date',
+                                  'variant': 'caption',
                                   'name': 'lastSeen',
                                   'label': 'Last Seen',
                                 },
                               ],
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'event': 'EDIT',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                },
+                              ],
+                              'gap': 'md',
+                              'type': 'data-grid',
+                              'entity': '@payload.data',
+                              'cols': 3,
                             },
                           ],
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Sensors',
-                          'href': '/sensors',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'cpu',
-                          'href': '/devices',
-                          'label': 'Devices',
-                        },
-                        {
-                          'href': '/alerts',
-                          'label': 'Alerts',
-                          'icon': 'bell',
                         },
                       ],
                     },
@@ -2266,35 +2334,35 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'className': 'py-12',
+                      'align': 'center',
                       'type': 'stack',
                       'direction': 'vertical',
                       'children': [
                         {
+                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
-                          'type': 'icon',
                         },
                         {
-                          'variant': 'h3',
                           'content': 'Failed to load device',
+                          'variant': 'h3',
                           'type': 'typography',
                         },
                         {
-                          'content': '@payload.error',
-                          'type': 'typography',
-                          'variant': 'body',
                           'color': 'muted',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'variant': 'body',
                         },
                         {
-                          'icon': 'rotate-ccw',
-                          'action': 'INIT',
-                          'variant': 'primary',
-                          'type': 'button',
                           'label': 'Retry',
+                          'action': 'INIT',
+                          'type': 'button',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
                         },
                       ],
-                      'align': 'center',
-                      'className': 'py-12',
                       'gap': 'md',
                     },
                   ],
@@ -2470,8 +2538,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'failure': 'DeviceLoadFailed',
                         'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
                       },
                     },
                   ],
@@ -2496,11 +2564,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
-                      'type': 'stack',
                       'children': [
                         {
-                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'plus-circle',
@@ -2512,6 +2577,7 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                               'variant': 'h3',
                             },
                           ],
+                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
                         },
@@ -2519,18 +2585,20 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'type': 'divider',
                         },
                         {
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
                           'fields': [
                             'name',
                             'type',
                             'status',
                             'lastSeen',
                           ],
-                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
                         },
                       ],
+                      'type': 'stack',
+                      'direction': 'vertical',
                       'gap': 'md',
                     },
                   ],
@@ -2783,8 +2851,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'success': 'DeviceLoaded',
                         'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
                       },
                     },
                   ],
@@ -2800,8 +2868,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'success': 'DeviceLoaded',
                         'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
                       },
                       'id': '@payload.id',
                     },
@@ -2810,8 +2878,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
                           'direction': 'horizontal',
@@ -2821,8 +2889,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                               'name': 'edit',
                             },
                             {
-                              'variant': 'h3',
                               'content': 'Edit Device',
+                              'variant': 'h3',
                               'type': 'typography',
                             },
                           ],
@@ -2833,17 +2901,17 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'type': 'divider',
                         },
                         {
+                          'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
+                          'mode': 'edit',
                           'fields': [
                             'name',
                             'type',
                             'status',
                             'lastSeen',
                           ],
-                          'entity': '@payload.row',
                           'type': 'form-section',
-                          'mode': 'edit',
-                          'submitEvent': 'SAVE',
                         },
                       ],
                       'direction': 'vertical',
@@ -2887,8 +2955,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'DeviceUpdated',
                         'failure': 'DeviceUpdateFailed',
+                        'success': 'DeviceUpdated',
                       },
                     },
                   ],
@@ -3058,8 +3126,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'success': 'DeviceLoaded',
                         'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
                       },
                     },
                   ],
@@ -3085,18 +3153,16 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
                               'type': 'typography',
@@ -3104,104 +3170,106 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                               'content': '@entity.name',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Name',
                             },
                             {
+                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.name',
-                              'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'gap': 'md',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'content': 'Type',
+                              'type': 'typography',
+                              'variant': 'caption',
+                            },
+                            {
+                              'variant': 'body',
+                              'content': '@entity.type',
+                              'type': 'typography',
+                            },
+                          ],
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Type',
-                            },
-                            {
-                              'content': '@entity.type',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
                               'content': 'Status',
                               'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
-                              'content': '@entity.status',
                               'type': 'typography',
                               'variant': 'body',
+                              'content': '@entity.status',
                             },
                           ],
-                          'type': 'stack',
                         },
                         {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
                           'children': [
                             {
-                              'type': 'typography',
-                              'content': 'Last Seen',
                               'variant': 'caption',
+                              'content': 'Last Seen',
+                              'type': 'typography',
                             },
                             {
+                              'content': '@entity.lastSeen',
                               'type': 'typography',
                               'variant': 'body',
-                              'content': '@entity.lastSeen',
                             },
                           ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
                           'justify': 'end',
-                          'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
-                              'type': 'button',
                               'label': 'Edit',
-                              'action': 'EDIT',
                               'icon': 'edit',
+                              'type': 'button',
+                              'action': 'EDIT',
                               'variant': 'primary',
                             },
                             {
-                              'type': 'button',
-                              'action': 'CLOSE',
                               'label': 'Close',
+                              'action': 'CLOSE',
+                              'type': 'button',
                               'variant': 'ghost',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                         },
                       ],
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3423,8 +3491,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'failure': 'DeviceLoadFailed',
                         'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
                       },
                     },
                   ],
@@ -3445,8 +3513,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'failure': 'DeviceLoadFailed',
                         'success': 'DeviceLoaded',
+                        'failure': 'DeviceLoadFailed',
                       },
                       'id': '@payload.id',
                     },
@@ -3455,57 +3523,57 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
+                          'align': 'center',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'alert-triangle',
+                              'type': 'icon',
                             },
                             {
-                              'content': 'Delete Device',
                               'type': 'typography',
                               'variant': 'h3',
+                              'content': 'Delete Device',
                             },
                           ],
-                          'align': 'center',
+                          'gap': 'sm',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'message': 'This action cannot be undone.',
-                          'type': 'alert',
                           'variant': 'error',
+                          'type': 'alert',
                         },
                         {
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'gap': 'sm',
-                          'justify': 'end',
                           'children': [
                             {
+                              'action': 'CANCEL',
+                              'type': 'button',
                               'variant': 'ghost',
                               'label': 'Cancel',
-                              'type': 'button',
-                              'action': 'CANCEL',
                             },
                             {
-                              'type': 'button',
-                              'icon': 'check',
-                              'variant': 'danger',
                               'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                              'variant': 'danger',
+                              'icon': 'check',
                               'label': 'Delete',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
+                          'justify': 'end',
                         },
                       ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3544,8 +3612,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'Device',
                     {
                       'emit': {
-                        'success': 'DeviceLoaded',
                         'failure': 'DeviceLoadFailed',
+                        'success': 'DeviceLoaded',
                       },
                     },
                   ],
@@ -3804,8 +3872,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'DeviceAlert',
                     {
                       'emit': {
-                        'failure': 'DeviceAlertLoadFailed',
                         'success': 'DeviceAlertLoaded',
+                        'failure': 'DeviceAlertLoadFailed',
                       },
                     },
                   ],
@@ -3813,74 +3881,53 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Sensors',
-                          'href': '/sensors',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/devices',
-                          'label': 'Devices',
-                          'icon': 'cpu',
-                        },
-                        {
-                          'icon': 'bell',
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'IoT Dashboard',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'gap': 'lg',
                           'type': 'stack',
+                          'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
                               'children': [
                                 {
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'bell',
+                                      'type': 'icon',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'DeviceAlert',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'align': 'center',
                                   'type': 'stack',
                                   'direction': 'horizontal',
-                                  'align': 'center',
-                                  'gap': 'md',
                                 },
                                 {
-                                  'pulse': false,
                                   'status': 'online',
-                                  'type': 'status-dot',
                                   'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                  'pulse': false,
                                 },
                               ],
-                              'align': 'center',
-                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'message': 'Service is healthy. All requests are being processed.',
                               'type': 'alert',
                               'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
                             },
                             {
-                              'cols': 2,
-                              'type': 'simple-grid',
                               'children': [
                                 {
                                   'value': '@entity.failureCount',
@@ -3889,18 +3936,39 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                 },
                                 {
                                   'label': 'Successes',
-                                  'type': 'stat-display',
                                   'value': '@entity.successCount',
+                                  'type': 'stat-display',
                                 },
                               ],
+                              'type': 'simple-grid',
+                              'cols': 2,
                             },
                             {
+                              'max': '@entity.threshold',
+                              'value': '@entity.failureCount',
                               'type': 'meter',
                               'min': 0,
-                              'value': '@entity.failureCount',
-                              'max': '@entity.threshold',
                             },
                           ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Sensors',
+                          'href': '/sensors',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Devices',
+                          'href': '/devices',
+                          'icon': 'cpu',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
                         },
                       ],
                     },
@@ -3916,11 +3984,12 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'appName': 'IoT Dashboard',
                       'navItems': [
                         {
-                          'label': 'Sensors',
                           'href': '/sensors',
                           'icon': 'layout-list',
+                          'label': 'Sensors',
                         },
                         {
                           'href': '/devices',
@@ -3933,60 +4002,61 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'href': '/alerts',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'stack',
                           'direction': 'vertical',
                           'gap': 'lg',
-                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'stack',
-                              'align': 'center',
                               'direction': 'horizontal',
+                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'name': 'alert-triangle',
                                       'type': 'icon',
+                                      'name': 'alert-triangle',
                                     },
                                     {
-                                      'content': 'DeviceAlert',
                                       'variant': 'h2',
                                       'type': 'typography',
+                                      'content': 'DeviceAlert',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'align': 'center',
+                                  'gap': 'md',
+                                  'type': 'stack',
                                 },
                                 {
                                   'status': 'critical',
+                                  'type': 'status-dot',
                                   'label': 'Circuit Open',
                                   'pulse': true,
-                                  'type': 'status-dot',
                                 },
                               ],
-                              'gap': 'md',
-                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                              'variant': 'error',
                               'type': 'alert',
+                              'variant': 'error',
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
                             },
                             {
-                              'cols': 2,
                               'type': 'simple-grid',
+                              'cols': 2,
                               'children': [
                                 {
-                                  'value': '@entity.failureCount',
                                   'type': 'stat-display',
                                   'label': 'Failures',
+                                  'value': '@entity.failureCount',
                                 },
                                 {
                                   'value': '@entity.successCount',
@@ -3997,22 +4067,20 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                             },
                             {
                               'type': 'meter',
+                              'value': '@entity.failureCount',
                               'min': 0,
                               'max': '@entity.threshold',
-                              'value': '@entity.failureCount',
                             },
                             {
-                              'type': 'button',
                               'icon': 'rotate-ccw',
-                              'label': 'Reset',
                               'action': 'RESET',
+                              'label': 'Reset',
+                              'type': 'button',
                               'variant': 'ghost',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'IoT Dashboard',
                     },
                   ],
                 ],
@@ -4026,17 +4094,88 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'name': 'bell',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'DeviceAlert',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'status': 'online',
+                                  'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                  'pulse': false,
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'variant': 'success',
+                              'type': 'alert',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                              'max': '@entity.threshold',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Sensors',
                           'href': '/sensors',
+                          'label': 'Sensors',
                           'icon': 'layout-list',
                         },
                         {
                           'href': '/devices',
-                          'label': 'Devices',
                           'icon': 'cpu',
+                          'label': 'Devices',
                         },
                         {
                           'icon': 'bell',
@@ -4045,77 +4184,6 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                         },
                       ],
                       'appName': 'IoT Dashboard',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'bell',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'content': 'DeviceAlert',
-                                    },
-                                  ],
-                                  'align': 'center',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'type': 'status-dot',
-                                  'status': 'online',
-                                  'label': 'Circuit Closed',
-                                  'pulse': false,
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'type': 'alert',
-                              'variant': 'success',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'label': 'Failures',
-                                  'type': 'stat-display',
-                                  'value': '@entity.failureCount',
-                                },
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Successes',
-                                  'value': '@entity.successCount',
-                                },
-                              ],
-                              'type': 'simple-grid',
-                              'cols': 2,
-                            },
-                            {
-                              'value': '@entity.failureCount',
-                              'min': 0,
-                              'type': 'meter',
-                              'max': '@entity.threshold',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
                     },
                   ],
                 ],
@@ -4129,21 +4197,18 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'align': 'center',
                               'children': [
                                 {
                                   'children': [
                                     {
-                                      'name': 'activity',
                                       'type': 'icon',
+                                      'name': 'activity',
                                     },
                                     {
                                       'type': 'typography',
@@ -4151,10 +4216,10 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                       'content': 'DeviceAlert',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'align': 'center',
                                   'gap': 'md',
                                   'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'status': 'warning',
@@ -4164,42 +4229,44 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                 },
                               ],
                               'justify': 'between',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'alert',
                               'variant': 'warning',
                               'message': 'Testing recovery. Limited requests are being allowed through.',
+                              'type': 'alert',
                             },
                             {
-                              'type': 'simple-grid',
                               'cols': 2,
                               'children': [
                                 {
                                   'type': 'stat-display',
-                                  'value': '@entity.failureCount',
                                   'label': 'Failures',
+                                  'value': '@entity.failureCount',
                                 },
                                 {
-                                  'label': 'Successes',
                                   'value': '@entity.successCount',
                                   'type': 'stat-display',
+                                  'label': 'Successes',
                                 },
                               ],
+                              'type': 'simple-grid',
                             },
                           ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
                           'type': 'stack',
                         },
                       ],
                       'navItems': [
                         {
-                          'label': 'Sensors',
-                          'href': '/sensors',
                           'icon': 'layout-list',
+                          'href': '/sensors',
+                          'label': 'Sensors',
                         },
                         {
                           'icon': 'cpu',
@@ -4207,11 +4274,12 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'href': '/devices',
                         },
                         {
-                          'icon': 'bell',
                           'label': 'Alerts',
+                          'icon': 'bell',
                           'href': '/alerts',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'appName': 'IoT Dashboard',
                     },
                   ],
@@ -4226,96 +4294,96 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'IoT Dashboard',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'gap': 'lg',
-                          'type': 'stack',
                           'direction': 'vertical',
+                          'type': 'stack',
                           'children': [
                             {
-                              'gap': 'md',
-                              'align': 'center',
-                              'type': 'stack',
                               'direction': 'horizontal',
+                              'type': 'stack',
                               'justify': 'between',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
                                   'align': 'center',
                                   'children': [
                                     {
-                                      'name': 'bell',
                                       'type': 'icon',
+                                      'name': 'bell',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'DeviceAlert',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                                 {
-                                  'type': 'status-dot',
-                                  'status': 'online',
-                                  'label': 'Circuit Closed',
                                   'pulse': false,
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Closed',
+                                  'status': 'online',
                                 },
                               ],
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'message': 'Service is healthy. All requests are being processed.',
                               'type': 'alert',
                               'variant': 'success',
-                              'message': 'Service is healthy. All requests are being processed.',
                             },
                             {
-                              'cols': 2,
-                              'type': 'simple-grid',
                               'children': [
                                 {
-                                  'label': 'Failures',
-                                  'value': '@entity.failureCount',
                                   'type': 'stat-display',
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
                                 },
                                 {
-                                  'label': 'Successes',
-                                  'type': 'stat-display',
                                   'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
                                 },
                               ],
+                              'type': 'simple-grid',
+                              'cols': 2,
                             },
                             {
-                              'max': '@entity.threshold',
                               'type': 'meter',
                               'value': '@entity.failureCount',
                               'min': 0,
+                              'max': '@entity.threshold',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'href': '/sensors',
-                          'label': 'Sensors',
                           'icon': 'layout-list',
+                          'label': 'Sensors',
+                          'href': '/sensors',
                         },
                         {
-                          'href': '/devices',
-                          'icon': 'cpu',
                           'label': 'Devices',
+                          'icon': 'cpu',
+                          'href': '/devices',
                         },
                         {
                           'icon': 'bell',
-                          'href': '/alerts',
                           'label': 'Alerts',
+                          'href': '/alerts',
                         },
                       ],
+                      'appName': 'IoT Dashboard',
                     },
                   ],
                 ],
@@ -4330,40 +4398,43 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     'main',
                     {
                       'type': 'dashboard-layout',
+                      'appName': 'IoT Dashboard',
                       'children': [
                         {
+                          'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'justify': 'between',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
                                   'type': 'stack',
                                   'gap': 'md',
+                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'bell',
                                     },
                                     {
-                                      'content': 'DeviceAlert',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'DeviceAlert',
                                     },
                                   ],
-                                  'align': 'center',
+                                  'direction': 'horizontal',
                                 },
                                 {
+                                  'type': 'status-dot',
                                   'label': 'Circuit Closed',
                                   'pulse': false,
-                                  'type': 'status-dot',
                                   'status': 'online',
                                 },
                               ],
-                              'gap': 'md',
                               'direction': 'horizontal',
+                              'gap': 'md',
                               'type': 'stack',
                               'align': 'center',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
@@ -4383,42 +4454,39 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                                   'value': '@entity.failureCount',
                                 },
                                 {
-                                  'value': '@entity.successCount',
-                                  'label': 'Successes',
                                   'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
                                 },
                               ],
                             },
                             {
-                              'type': 'meter',
-                              'max': '@entity.threshold',
                               'min': 0,
                               'value': '@entity.failureCount',
+                              'type': 'meter',
+                              'max': '@entity.threshold',
                             },
                           ],
                           'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
                         },
                       ],
                       'navItems': [
                         {
                           'href': '/sensors',
-                          'label': 'Sensors',
                           'icon': 'layout-list',
+                          'label': 'Sensors',
                         },
                         {
-                          'href': '/devices',
                           'icon': 'cpu',
+                          'href': '/devices',
                           'label': 'Devices',
                         },
                         {
-                          'label': 'Alerts',
                           'icon': 'bell',
+                          'label': 'Alerts',
                           'href': '/alerts',
                         },
                       ],
-                      'appName': 'IoT Dashboard',
                     },
                   ],
                 ],
@@ -4435,64 +4503,65 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                       'type': 'dashboard-layout',
                       'children': [
                         {
+                          'direction': 'vertical',
                           'type': 'stack',
                           'gap': 'lg',
                           'children': [
                             {
-                              'direction': 'horizontal',
                               'justify': 'between',
-                              'type': 'stack',
-                              'align': 'center',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'gap': 'md',
+                                  'type': 'stack',
                                   'align': 'center',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'alert-triangle',
                                     },
                                     {
+                                      'content': 'DeviceAlert',
                                       'variant': 'h2',
                                       'type': 'typography',
-                                      'content': 'DeviceAlert',
                                     },
                                   ],
                                 },
                                 {
-                                  'pulse': true,
-                                  'label': 'Circuit Open',
                                   'type': 'status-dot',
                                   'status': 'critical',
+                                  'label': 'Circuit Open',
+                                  'pulse': true,
                                 },
                               ],
+                              'direction': 'horizontal',
                               'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'type': 'alert',
                               'variant': 'error',
                               'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                              'type': 'alert',
                             },
                             {
-                              'type': 'simple-grid',
+                              'cols': 2,
                               'children': [
                                 {
+                                  'type': 'stat-display',
                                   'value': '@entity.failureCount',
                                   'label': 'Failures',
-                                  'type': 'stat-display',
                                 },
                                 {
-                                  'type': 'stat-display',
-                                  'label': 'Successes',
                                   'value': '@entity.successCount',
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
                                 },
                               ],
-                              'cols': 2,
+                              'type': 'simple-grid',
                             },
                             {
                               'type': 'meter',
@@ -4502,25 +4571,23 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                             },
                             {
                               'action': 'RESET',
-                              'label': 'Reset',
                               'variant': 'ghost',
+                              'label': 'Reset',
                               'icon': 'rotate-ccw',
                               'type': 'button',
                             },
                           ],
-                          'direction': 'vertical',
                         },
                       ],
-                      'appName': 'IoT Dashboard',
                       'navItems': [
                         {
                           'label': 'Sensors',
-                          'href': '/sensors',
                           'icon': 'layout-list',
+                          'href': '/sensors',
                         },
                         {
-                          'label': 'Devices',
                           'href': '/devices',
+                          'label': 'Devices',
                           'icon': 'cpu',
                         },
                         {
@@ -4529,6 +4596,7 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'icon': 'bell',
                         },
                       ],
+                      'appName': 'IoT Dashboard',
                     },
                   ],
                 ],
@@ -4544,65 +4612,65 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                     {
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'vertical',
                           'gap': 'lg',
+                          'type': 'stack',
                           'children': [
                             {
                               'children': [
                                 {
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'bell',
                                     },
                                     {
+                                      'content': 'DeviceAlert',
                                       'variant': 'h2',
                                       'type': 'typography',
-                                      'content': 'DeviceAlert',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'align': 'center',
                                   'gap': 'md',
-                                  'direction': 'horizontal',
                                 },
                                 {
-                                  'status': 'online',
                                   'type': 'status-dot',
                                   'pulse': false,
+                                  'status': 'online',
                                   'label': 'Circuit Closed',
                                 },
                               ],
                               'type': 'stack',
+                              'justify': 'between',
+                              'align': 'center',
                               'gap': 'md',
                               'direction': 'horizontal',
-                              'align': 'center',
-                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'type': 'alert',
-                              'variant': 'success',
                               'message': 'Service is healthy. All requests are being processed.',
+                              'variant': 'success',
                             },
                             {
-                              'type': 'simple-grid',
                               'cols': 2,
                               'children': [
                                 {
-                                  'value': '@entity.failureCount',
-                                  'label': 'Failures',
                                   'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
                                 },
                                 {
+                                  'label': 'Successes',
                                   'value': '@entity.successCount',
                                   'type': 'stat-display',
-                                  'label': 'Successes',
                                 },
                               ],
+                              'type': 'simple-grid',
                             },
                             {
                               'min': 0,
@@ -4614,16 +4682,17 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                         },
                       ],
                       'appName': 'IoT Dashboard',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Sensors',
                           'href': '/sensors',
                           'icon': 'layout-list',
+                          'label': 'Sensors',
                         },
                         {
+                          'icon': 'cpu',
                           'label': 'Devices',
                           'href': '/devices',
-                          'icon': 'cpu',
                         },
                         {
                           'label': 'Alerts',
@@ -4631,7 +4700,6 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
                           'icon': 'bell',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],

@@ -23,6 +23,125 @@ const BEHAVIOR_PATH = 'std/behaviors/std-api-gateway';
 const ALIAS = 'ApiGateway';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdApiGatewayEventKey = 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'RouteDeleteFailed' | 'RouteDeleted' | 'RouteLoadFailed' | 'RouteLoaded' | 'RouteSaveFailed' | 'RouteSaved' | 'RouteUpdateFailed' | 'RouteUpdated' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdApiGatewayListenKey = 'ROUTE_CREATED' | 'ROUTE_UPDATED' | 'ROUTE_DELETED';
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdApiGatewayViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    path: string;
+    method?: string;
+    backend: string;
+    rateLimit?: number;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdApiGatewayEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    path: string;
+    method?: string;
+    backend: string;
+    rateLimit?: number;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdApiGatewayDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    path: string;
+    method?: string;
+    backend: string;
+    rateLimit?: number;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `RouteLoaded` event.
+ */
+export interface StdApiGatewayRouteLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `RouteLoadFailed` event.
+ */
+export interface StdApiGatewayRouteLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RouteSaved` event.
+ */
+export interface StdApiGatewayRouteSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RouteSaveFailed` event.
+ */
+export interface StdApiGatewayRouteSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RouteUpdated` event.
+ */
+export interface StdApiGatewayRouteUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RouteUpdateFailed` event.
+ */
+export interface StdApiGatewayRouteUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RouteDeleted` event.
+ */
+export interface StdApiGatewayRouteDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RouteDeleteFailed` event.
+ */
+export interface StdApiGatewayRouteDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-api-gateway descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +157,8 @@ export interface StdApiGatewayParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdApiGatewayEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +178,11 @@ export function stdApiGatewayRouteBrowseTrait(params: StdApiGatewayParams): Trai
     ref: `${ALIAS}.traits.RouteBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +193,11 @@ export function stdApiGatewayRouteCreateTrait(params: StdApiGatewayParams): Trai
     ref: `${ALIAS}.traits.RouteCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +208,11 @@ export function stdApiGatewayRouteEditTrait(params: StdApiGatewayParams): TraitR
     ref: `${ALIAS}.traits.RouteEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +223,11 @@ export function stdApiGatewayRouteViewTrait(params: StdApiGatewayParams): TraitR
     ref: `${ALIAS}.traits.RouteView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +238,11 @@ export function stdApiGatewayRouteDeleteTrait(params: StdApiGatewayParams): Trai
     ref: `${ALIAS}.traits.RouteDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -621,19 +740,19 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'main',
                     {
                       'type': 'stack',
-                      'gap': 'md',
-                      'align': 'center',
                       'direction': 'vertical',
+                      'align': 'center',
+                      'gap': 'md',
                       'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
+                          'color': 'muted',
                           'variant': 'caption',
                           'type': 'typography',
                           'content': 'Loading routes…',
-                          'color': 'muted',
                         },
                       ],
                     },
@@ -649,20 +768,31 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/routes',
+                          'icon': 'git-branch',
+                          'label': 'Routes',
+                        },
+                        {
+                          'icon': 'server',
+                          'label': 'Backends',
+                          'href': '/backends',
+                        },
+                        {
+                          'href': '/analytics',
+                          'icon': 'bar-chart-2',
+                          'label': 'Analytics',
+                        },
+                      ],
+                      'appName': 'API Gateway',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'gap': 'lg',
                           'children': [
                             {
-                              'justify': 'between',
-                              'align': 'center',
                               'children': [
                                 {
                                   'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'type': 'stack',
                                   'align': 'center',
                                   'children': [
                                     {
@@ -675,23 +805,27 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'variant': 'h2',
                                     },
                                   ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
                                 },
                                 {
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'variant': 'primary',
-                                      'icon': 'plus',
-                                      'type': 'button',
-                                      'action': 'CREATE',
                                       'label': 'Create Route',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'icon': 'plus',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
                                 },
                               ],
+                              'align': 'center',
                               'type': 'stack',
+                              'justify': 'between',
                               'direction': 'horizontal',
                               'gap': 'md',
                             },
@@ -700,71 +834,56 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                             },
                             {
                               'gap': 'sm',
-                              'entity': '@payload.data',
                               'variant': 'card',
-                              'fields': [
+                              'itemActions': [
                                 {
-                                  'variant': 'badge',
-                                  'name': 'method',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                  'event': 'VIEW',
                                 },
                                 {
-                                  'icon': 'git-branch',
-                                  'name': 'path',
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'name': 'method',
+                                  'variant': 'badge',
+                                },
+                                {
                                   'variant': 'h3',
+                                  'name': 'path',
+                                  'icon': 'git-branch',
                                 },
                                 {
                                   'variant': 'body',
                                   'name': 'backend',
                                 },
                                 {
-                                  'format': 'number',
                                   'name': 'rateLimit',
                                   'variant': 'caption',
                                   'label': 'Rate Limit',
+                                  'format': 'number',
                                 },
                               ],
                               'type': 'data-list',
-                              'itemActions': [
-                                {
-                                  'variant': 'ghost',
-                                  'event': 'VIEW',
-                                  'label': 'View',
-                                },
-                                {
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                  'label': 'Edit',
-                                },
-                                {
-                                  'event': 'DELETE',
-                                  'variant': 'danger',
-                                  'label': 'Delete',
-                                },
-                              ],
                             },
                           ],
                           'type': 'stack',
+                          'gap': 'lg',
                           'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'href': '/routes',
-                          'icon': 'git-branch',
-                          'label': 'Routes',
-                        },
-                        {
-                          'href': '/backends',
-                          'label': 'Backends',
-                          'icon': 'server',
-                        },
-                        {
-                          'label': 'Analytics',
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
-                        },
-                      ],
-                      'appName': 'API Gateway',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -779,35 +898,35 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'main',
                     {
                       'direction': 'vertical',
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'align': 'center',
                       'type': 'stack',
+                      'align': 'center',
+                      'className': 'py-12',
                       'children': [
                         {
                           'name': 'alert-triangle',
-                          'type': 'icon',
                           'color': 'destructive',
+                          'type': 'icon',
                         },
                         {
-                          'type': 'typography',
-                          'variant': 'h3',
                           'content': 'Failed to load routes',
+                          'variant': 'h3',
+                          'type': 'typography',
                         },
                         {
-                          'color': 'muted',
-                          'content': '@payload.error',
                           'type': 'typography',
                           'variant': 'body',
+                          'color': 'muted',
+                          'content': '@payload.error',
                         },
                         {
-                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
                           'label': 'Retry',
                           'type': 'button',
+                          'action': 'INIT',
                           'variant': 'primary',
-                          'icon': 'rotate-ccw',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1007,8 +1126,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Route',
                     {
                       'emit': {
-                        'failure': 'RouteLoadFailed',
                         'success': 'RouteLoaded',
+                        'failure': 'RouteLoadFailed',
                       },
                     },
                   ],
@@ -1020,28 +1139,28 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                       'children': [
                         {
                           'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'name': 'plus-circle',
                               'type': 'icon',
+                              'name': 'plus-circle',
                             },
                             {
-                              'variant': 'h3',
-                              'type': 'typography',
                               'content': 'Create Route',
+                              'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'cancelEvent': 'CLOSE',
                           'type': 'form-section',
                           'submitEvent': 'SAVE',
                           'mode': 'create',
-                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'path',
                             'method',
@@ -1050,8 +1169,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                           ],
                         },
                       ],
-                      'gap': 'md',
                       'type': 'stack',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1092,8 +1211,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'RouteSaved',
                         'failure': 'RouteSaveFailed',
+                        'success': 'RouteSaved',
                       },
                     },
                   ],
@@ -1339,43 +1458,43 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
+                              'type': 'typography',
                               'content': 'Edit Route',
                               'variant': 'h3',
-                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'entity': '@payload.row',
-                          'cancelEvent': 'CLOSE',
                           'mode': 'edit',
+                          'entity': '@payload.row',
                           'submitEvent': 'SAVE',
-                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'path',
                             'method',
                             'backend',
                             'rateLimit',
                           ],
+                          'type': 'form-section',
                         },
                       ],
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1416,8 +1535,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'RouteUpdateFailed',
                         'success': 'RouteUpdated',
+                        'failure': 'RouteUpdateFailed',
                       },
                     },
                   ],
@@ -1611,42 +1730,59 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'fetch',
                     'Route',
                     {
-                      'id': '@payload.id',
                       'emit': {
                         'success': 'RouteLoaded',
                         'failure': 'RouteLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'direction': 'vertical',
                       'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
-                              'variant': 'h3',
                               'content': '@entity.path',
                               'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Path',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.path',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
                           'direction': 'horizontal',
                           'gap': 'md',
                           'type': 'stack',
@@ -1654,89 +1790,72 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                             {
                               'type': 'typography',
                               'variant': 'caption',
-                              'content': 'Path',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.path',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
                               'content': 'Method',
                             },
                             {
                               'content': '@entity.method',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
                         },
                         {
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Backend',
                             },
                             {
+                              'content': '@entity.backend',
                               'type': 'typography',
                               'variant': 'body',
-                              'content': '@entity.backend',
                             },
                           ],
                           'gap': 'md',
                           'type': 'stack',
                         },
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Rate Limit',
+                              'variant': 'caption',
+                              'type': 'typography',
                             },
                             {
+                              'content': '@entity.rateLimit',
                               'variant': 'body',
                               'type': 'typography',
-                              'content': '@entity.rateLimit',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
                           'type': 'stack',
+                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'direction': 'horizontal',
                           'gap': 'sm',
-                          'justify': 'end',
                           'type': 'stack',
+                          'justify': 'end',
                           'children': [
                             {
-                              'label': 'Edit',
-                              'icon': 'edit',
-                              'variant': 'primary',
                               'action': 'EDIT',
+                              'icon': 'edit',
+                              'label': 'Edit',
+                              'variant': 'primary',
                               'type': 'button',
                             },
                             {
-                              'action': 'CLOSE',
-                              'type': 'button',
                               'label': 'Close',
+                              'type': 'button',
+                              'action': 'CLOSE',
                               'variant': 'ghost',
                             },
                           ],
-                          'direction': 'horizontal',
                         },
                       ],
                     },
@@ -2000,57 +2119,57 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
-                          'type': 'stack',
+                          'gap': 'sm',
+                          'align': 'center',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'alert-triangle',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                               'content': 'Delete Route',
                             },
                           ],
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'variant': 'error',
-                          'message': 'This action cannot be undone.',
                           'type': 'alert',
+                          'message': 'This action cannot be undone.',
                         },
                         {
-                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'justify': 'end',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'label': 'Cancel',
+                              'variant': 'ghost',
                               'type': 'button',
                               'action': 'CANCEL',
-                              'variant': 'ghost',
+                              'label': 'Cancel',
                             },
                             {
+                              'type': 'button',
                               'icon': 'check',
                               'variant': 'danger',
-                              'action': 'CONFIRM_DELETE',
-                              'type': 'button',
                               'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                         },
                       ],
-                      'direction': 'vertical',
                       'type': 'stack',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2089,8 +2208,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Route',
                     {
                       'emit': {
-                        'success': 'RouteLoaded',
                         'failure': 'RouteLoadFailed',
+                        'success': 'RouteLoaded',
                       },
                     },
                   ],
@@ -2151,8 +2270,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Route',
                     {
                       'emit': {
-                        'success': 'RouteLoaded',
                         'failure': 'RouteLoadFailed',
+                        'success': 'RouteLoaded',
                       },
                     },
                   ],
@@ -2349,8 +2468,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Backend',
                     {
                       'emit': {
-                        'success': 'BackendLoaded',
                         'failure': 'BackendLoadFailed',
+                        'success': 'BackendLoaded',
                       },
                     },
                   ],
@@ -2358,43 +2477,42 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'appName': 'API Gateway',
                       'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
+                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'align': 'center',
                                   'children': [
                                     {
-                                      'name': 'server',
                                       'type': 'icon',
+                                      'name': 'server',
                                     },
                                     {
-                                      'type': 'typography',
-                                      'content': 'Backend',
                                       'variant': 'h2',
+                                      'content': 'Backend',
+                                      'type': 'typography',
                                     },
                                   ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'gap': 'md',
                                 },
                                 {
-                                  'pulse': false,
                                   'status': 'online',
                                   'type': 'status-dot',
+                                  'pulse': false,
                                   'label': 'Circuit Closed',
                                 },
                               ],
-                              'justify': 'between',
-                              'align': 'center',
-                              'type': 'stack',
                               'gap': 'md',
-                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
@@ -2405,8 +2523,6 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                               'message': 'Service is healthy. All requests are being processed.',
                             },
                             {
-                              'type': 'simple-grid',
-                              'cols': 2,
                               'children': [
                                 {
                                   'value': '@entity.failureCount',
@@ -2414,21 +2530,23 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'label': 'Failures',
                                 },
                                 {
-                                  'label': 'Successes',
                                   'value': '@entity.successCount',
                                   'type': 'stat-display',
+                                  'label': 'Successes',
                                 },
                               ],
+                              'type': 'simple-grid',
+                              'cols': 2,
                             },
                             {
-                              'min': 0,
                               'type': 'meter',
-                              'value': '@entity.failureCount',
                               'max': '@entity.threshold',
+                              'min': 0,
+                              'value': '@entity.failureCount',
                             },
                           ],
+                          'type': 'stack',
                           'direction': 'vertical',
-                          'gap': 'lg',
                         },
                       ],
                       'navItems': [
@@ -2438,16 +2556,17 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                           'label': 'Routes',
                         },
                         {
-                          'label': 'Backends',
                           'href': '/backends',
                           'icon': 'server',
+                          'label': 'Backends',
                         },
                         {
                           'label': 'Analytics',
-                          'href': '/analytics',
                           'icon': 'bar-chart-2',
+                          'href': '/analytics',
                         },
                       ],
+                      'appName': 'API Gateway',
                     },
                   ],
                 ],
@@ -2461,70 +2580,51 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'appName': 'API Gateway',
-                      'navItems': [
-                        {
-                          'label': 'Routes',
-                          'href': '/routes',
-                          'icon': 'git-branch',
-                        },
-                        {
-                          'label': 'Backends',
-                          'href': '/backends',
-                          'icon': 'server',
-                        },
-                        {
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
-                          'label': 'Analytics',
-                        },
-                      ],
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'vertical',
-                          'gap': 'lg',
+                          'type': 'stack',
                           'children': [
                             {
+                              'type': 'stack',
+                              'direction': 'horizontal',
                               'justify': 'between',
-                              'gap': 'md',
                               'children': [
                                 {
-                                  'type': 'stack',
                                   'gap': 'md',
-                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'alert-triangle',
                                     },
                                     {
-                                      'content': 'Backend',
                                       'type': 'typography',
+                                      'content': 'Backend',
                                       'variant': 'h2',
                                     },
                                   ],
+                                  'type': 'stack',
+                                  'align': 'center',
                                   'direction': 'horizontal',
                                 },
                                 {
-                                  'label': 'Circuit Open',
+                                  'status': 'critical',
                                   'type': 'status-dot',
                                   'pulse': true,
-                                  'status': 'critical',
+                                  'label': 'Circuit Open',
                                 },
                               ],
                               'align': 'center',
-                              'direction': 'horizontal',
-                              'type': 'stack',
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'variant': 'error',
                               'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
                               'type': 'alert',
-                              'variant': 'error',
                             },
                             {
                               'cols': 2,
@@ -2535,27 +2635,46 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'value': '@entity.failureCount',
                                 },
                                 {
-                                  'value': '@entity.successCount',
                                   'type': 'stat-display',
+                                  'value': '@entity.successCount',
                                   'label': 'Successes',
                                 },
                               ],
                               'type': 'simple-grid',
                             },
                             {
-                              'value': '@entity.failureCount',
-                              'type': 'meter',
                               'max': '@entity.threshold',
                               'min': 0,
+                              'value': '@entity.failureCount',
+                              'type': 'meter',
                             },
                             {
                               'label': 'Reset',
-                              'variant': 'ghost',
-                              'icon': 'rotate-ccw',
                               'type': 'button',
                               'action': 'RESET',
+                              'variant': 'ghost',
+                              'icon': 'rotate-ccw',
                             },
                           ],
+                          'gap': 'lg',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'git-branch',
+                          'href': '/routes',
+                          'label': 'Routes',
+                        },
+                        {
+                          'icon': 'server',
+                          'label': 'Backends',
+                          'href': '/backends',
+                        },
+                        {
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
+                          'href': '/analytics',
                         },
                       ],
                     },
@@ -2571,10 +2690,83 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Backend',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'pulse': false,
+                                  'status': 'online',
+                                  'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'cols': 2,
+                            },
+                            {
+                              'min': 0,
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
+                              'type': 'meter',
+                            },
+                          ],
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'API Gateway',
                       'navItems': [
                         {
-                          'href': '/routes',
                           'label': 'Routes',
+                          'href': '/routes',
                           'icon': 'git-branch',
                         },
                         {
@@ -2583,84 +2775,11 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                           'label': 'Backends',
                         },
                         {
-                          'icon': 'bar-chart-2',
-                          'label': 'Analytics',
                           'href': '/analytics',
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'server',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Backend',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                },
-                                {
-                                  'label': 'Circuit Closed',
-                                  'type': 'status-dot',
-                                  'status': 'online',
-                                  'pulse': false,
-                                },
-                              ],
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'variant': 'success',
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'type': 'alert',
-                            },
-                            {
-                              'type': 'simple-grid',
-                              'cols': 2,
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'value': '@entity.failureCount',
-                                  'label': 'Failures',
-                                },
-                                {
-                                  'value': '@entity.successCount',
-                                  'label': 'Successes',
-                                  'type': 'stat-display',
-                                },
-                              ],
-                            },
-                            {
-                              'value': '@entity.failureCount',
-                              'min': 0,
-                              'max': '@entity.threshold',
-                              'type': 'meter',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'appName': 'API Gateway',
                     },
                   ],
                 ],
@@ -2687,43 +2806,46 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                           'label': 'Backends',
                         },
                         {
-                          'href': '/analytics',
                           'label': 'Analytics',
+                          'href': '/analytics',
                           'icon': 'bar-chart-2',
                         },
                       ],
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
+                              'type': 'stack',
                               'align': 'center',
+                              'gap': 'md',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'align': 'center',
                                   'children': [
                                     {
-                                      'name': 'activity',
                                       'type': 'icon',
+                                      'name': 'activity',
                                     },
                                     {
-                                      'content': 'Backend',
                                       'type': 'typography',
+                                      'content': 'Backend',
                                       'variant': 'h2',
                                     },
                                   ],
-                                  'gap': 'md',
                                   'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'md',
                                 },
                                 {
-                                  'pulse': true,
-                                  'type': 'status-dot',
-                                  'status': 'warning',
                                   'label': 'Circuit Half-Open',
+                                  'status': 'warning',
+                                  'type': 'status-dot',
+                                  'pulse': true,
                                 },
                               ],
-                              'gap': 'md',
-                              'type': 'stack',
                               'direction': 'horizontal',
                               'justify': 'between',
                             },
@@ -2731,9 +2853,9 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                               'type': 'divider',
                             },
                             {
+                              'message': 'Testing recovery. Limited requests are being allowed through.',
                               'variant': 'warning',
                               'type': 'alert',
-                              'message': 'Testing recovery. Limited requests are being allowed through.',
                             },
                             {
                               'type': 'simple-grid',
@@ -2741,20 +2863,17 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                               'children': [
                                 {
                                   'type': 'stat-display',
-                                  'value': '@entity.failureCount',
                                   'label': 'Failures',
+                                  'value': '@entity.failureCount',
                                 },
                                 {
                                   'type': 'stat-display',
-                                  'label': 'Successes',
                                   'value': '@entity.successCount',
+                                  'label': 'Successes',
                                 },
                               ],
                             },
                           ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
                         },
                       ],
                       'appName': 'API Gateway',
@@ -2771,51 +2890,70 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'appName': 'API Gateway',
+                      'navItems': [
+                        {
+                          'label': 'Routes',
+                          'href': '/routes',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Backends',
+                          'icon': 'server',
+                          'href': '/backends',
+                        },
+                        {
+                          'label': 'Analytics',
+                          'href': '/analytics',
+                          'icon': 'bar-chart-2',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'direction': 'vertical',
-                          'type': 'stack',
                           'gap': 'lg',
+                          'type': 'stack',
                           'children': [
                             {
-                              'justify': 'between',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
                               'align': 'center',
+                              'justify': 'between',
                               'children': [
                                 {
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'server',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Backend',
-                                    },
-                                  ],
-                                  'gap': 'md',
                                   'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'md',
                                   'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'Backend',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
                                 },
                                 {
-                                  'type': 'status-dot',
-                                  'pulse': false,
                                   'status': 'online',
+                                  'pulse': false,
+                                  'type': 'status-dot',
                                   'label': 'Circuit Closed',
                                 },
                               ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'type': 'alert',
                               'variant': 'success',
+                              'type': 'alert',
+                              'message': 'Service is healthy. All requests are being processed.',
                             },
                             {
                               'type': 'simple-grid',
@@ -2834,31 +2972,12 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                               ],
                             },
                             {
-                              'min': 0,
                               'value': '@entity.failureCount',
-                              'max': '@entity.threshold',
                               'type': 'meter',
+                              'min': 0,
+                              'max': '@entity.threshold',
                             },
                           ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'API Gateway',
-                      'navItems': [
-                        {
-                          'href': '/routes',
-                          'label': 'Routes',
-                          'icon': 'git-branch',
-                        },
-                        {
-                          'label': 'Backends',
-                          'icon': 'server',
-                          'href': '/backends',
-                        },
-                        {
-                          'label': 'Analytics',
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
                         },
                       ],
                     },
@@ -2874,75 +2993,57 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'appName': 'API Gateway',
-                      'navItems': [
-                        {
-                          'icon': 'git-branch',
-                          'label': 'Routes',
-                          'href': '/routes',
-                        },
-                        {
-                          'icon': 'server',
-                          'href': '/backends',
-                          'label': 'Backends',
-                        },
-                        {
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
-                          'label': 'Analytics',
-                        },
-                      ],
                       'children': [
                         {
-                          'gap': 'lg',
                           'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'justify': 'between',
-                              'type': 'stack',
                               'gap': 'md',
-                              'align': 'center',
                               'direction': 'horizontal',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
                                   'gap': 'md',
                                   'align': 'center',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'server',
+                                      'type': 'icon',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Backend',
+                                      'type': 'typography',
                                       'variant': 'h2',
                                     },
                                   ],
                                   'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                                 {
-                                  'label': 'Circuit Closed',
-                                  'type': 'status-dot',
                                   'pulse': false,
+                                  'label': 'Circuit Closed',
                                   'status': 'online',
+                                  'type': 'status-dot',
                                 },
                               ],
+                              'align': 'center',
+                              'type': 'stack',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'message': 'Service is healthy. All requests are being processed.',
-                              'variant': 'success',
                               'type': 'alert',
+                              'variant': 'success',
                             },
                             {
+                              'cols': 2,
                               'children': [
                                 {
-                                  'label': 'Failures',
                                   'type': 'stat-display',
+                                  'label': 'Failures',
                                   'value': '@entity.failureCount',
                                 },
                                 {
@@ -2952,18 +3053,36 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                 },
                               ],
                               'type': 'simple-grid',
-                              'cols': 2,
                             },
                             {
-                              'min': 0,
-                              'value': '@entity.failureCount',
-                              'type': 'meter',
                               'max': '@entity.threshold',
+                              'min': 0,
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
                             },
                           ],
+                          'direction': 'vertical',
                         },
                       ],
+                      'appName': 'API Gateway',
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Routes',
+                          'href': '/routes',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'icon': 'server',
+                          'label': 'Backends',
+                          'href': '/backends',
+                        },
+                        {
+                          'label': 'Analytics',
+                          'href': '/analytics',
+                          'icon': 'bar-chart-2',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -2977,52 +3096,71 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'API Gateway',
+                      'navItems': [
+                        {
+                          'label': 'Routes',
+                          'icon': 'git-branch',
+                          'href': '/routes',
+                        },
+                        {
+                          'href': '/backends',
+                          'icon': 'server',
+                          'label': 'Backends',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Analytics',
+                          'href': '/analytics',
+                        },
+                      ],
                       'children': [
                         {
-                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'justify': 'between',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'direction': 'horizontal',
+                                  'align': 'center',
                                   'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'name': 'alert-triangle',
                                       'type': 'icon',
+                                      'name': 'alert-triangle',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Backend',
+                                      'type': 'typography',
                                       'variant': 'h2',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'align': 'center',
-                                  'direction': 'horizontal',
                                 },
                                 {
-                                  'status': 'critical',
                                   'label': 'Circuit Open',
                                   'type': 'status-dot',
+                                  'status': 'critical',
                                   'pulse': true,
                                 },
                               ],
                               'gap': 'md',
-                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                              'type': 'alert',
                               'variant': 'error',
+                              'type': 'alert',
                             },
                             {
-                              'cols': 2,
                               'children': [
                                 {
                                   'value': '@entity.failureCount',
@@ -3036,42 +3174,23 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                 },
                               ],
                               'type': 'simple-grid',
+                              'cols': 2,
                             },
                             {
                               'min': 0,
+                              'type': 'meter',
                               'value': '@entity.failureCount',
                               'max': '@entity.threshold',
-                              'type': 'meter',
                             },
                             {
+                              'type': 'button',
+                              'variant': 'ghost',
                               'icon': 'rotate-ccw',
                               'label': 'Reset',
                               'action': 'RESET',
-                              'type': 'button',
-                              'variant': 'ghost',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'API Gateway',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Routes',
-                          'href': '/routes',
-                          'icon': 'git-branch',
-                        },
-                        {
-                          'label': 'Backends',
-                          'icon': 'server',
-                          'href': '/backends',
-                        },
-                        {
-                          'href': '/analytics',
-                          'label': 'Analytics',
-                          'icon': 'bar-chart-2',
+                          'gap': 'lg',
                         },
                       ],
                     },
@@ -3087,93 +3206,93 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'API Gateway',
                       'children': [
                         {
                           'type': 'stack',
-                          'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'gap': 'md',
                               'direction': 'horizontal',
                               'align': 'center',
                               'justify': 'between',
                               'children': [
                                 {
-                                  'align': 'center',
                                   'type': 'stack',
-                                  'gap': 'md',
                                   'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'server',
                                     },
                                     {
+                                      'variant': 'h2',
                                       'type': 'typography',
                                       'content': 'Backend',
-                                      'variant': 'h2',
                                     },
                                   ],
                                 },
                                 {
-                                  'pulse': false,
                                   'status': 'online',
                                   'type': 'status-dot',
                                   'label': 'Circuit Closed',
+                                  'pulse': false,
                                 },
                               ],
+                              'gap': 'md',
                               'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'alert',
                               'variant': 'success',
                               'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
                             },
                             {
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Failures',
-                                  'value': '@entity.failureCount',
-                                },
-                                {
-                                  'value': '@entity.successCount',
-                                  'label': 'Successes',
-                                  'type': 'stat-display',
-                                },
-                              ],
                               'cols': 2,
                               'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                },
+                                {
+                                  'label': 'Successes',
+                                  'type': 'stat-display',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
                             },
                             {
-                              'max': '@entity.threshold',
                               'type': 'meter',
-                              'value': '@entity.failureCount',
                               'min': 0,
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
                             },
                           ],
-                          'direction': 'vertical',
+                          'gap': 'lg',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'API Gateway',
                       'navItems': [
                         {
+                          'href': '/routes',
                           'icon': 'git-branch',
                           'label': 'Routes',
-                          'href': '/routes',
                         },
                         {
+                          'href': '/backends',
                           'icon': 'server',
                           'label': 'Backends',
-                          'href': '/backends',
                         },
                         {
-                          'href': '/analytics',
                           'icon': 'bar-chart-2',
+                          'href': '/analytics',
                           'label': 'Analytics',
                         },
                       ],
@@ -3349,8 +3468,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Analytics',
                     {
                       'emit': {
-                        'success': 'AnalyticsLoaded',
                         'failure': 'AnalyticsLoadFailed',
+                        'success': 'AnalyticsLoaded',
                       },
                     },
                   ],
@@ -3358,32 +3477,32 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'API Gateway',
                       'navItems': [
                         {
+                          'icon': 'git-branch',
                           'label': 'Routes',
                           'href': '/routes',
-                          'icon': 'git-branch',
                         },
                         {
+                          'icon': 'server',
                           'label': 'Backends',
                           'href': '/backends',
-                          'icon': 'server',
                         },
                         {
-                          'label': 'Analytics',
                           'href': '/analytics',
+                          'label': 'Analytics',
                           'icon': 'bar-chart-2',
                         },
                       ],
+                      'appName': 'API Gateway',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
                               'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'items': [
@@ -3398,49 +3517,51 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
-                                  'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'gap': 'md',
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'bar-chart-2',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'type': 'typography',
-                                          'variant': 'h2',
                                           'content': 'Analytics',
+                                          'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'stack',
+                                      'gap': 'md',
                                       'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
+                                      'variant': 'secondary',
                                       'label': 'Refresh',
                                       'action': 'REFRESH',
-                                      'variant': 'secondary',
                                       'icon': 'refresh-cw',
+                                      'type': 'button',
                                     },
                                   ],
-                                  'gap': 'md',
+                                  'justify': 'between',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'value': '@entity.totalRequests',
                                           'label': 'TotalRequests',
                                           'type': 'stat-display',
+                                          'value': '@entity.totalRequests',
                                         },
                                         {
                                           'value': '@entity.errorRate',
@@ -3453,14 +3574,16 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                           'value': '@entity.avgLatency',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'content': 'Uptime',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -3468,58 +3591,53 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                                   'content': '@entity.uptime',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
-                                  'gap': 'md',
-                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                           'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
@@ -3538,38 +3656,38 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'value': 30,
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'width': 400,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'type': 'graph-view',
-                                  'height': 200,
-                                  'width': 400,
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
                                       'label': 'Process',
@@ -3580,6 +3698,7 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'label': 'End',
                                     },
                                   ],
+                                  'height': 200,
                                 },
                               ],
                               'type': 'stack',
@@ -3601,8 +3720,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'Analytics',
                     {
                       'emit': {
-                        'success': 'AnalyticsLoaded',
                         'failure': 'AnalyticsLoadFailed',
+                        'success': 'AnalyticsLoaded',
                       },
                     },
                   ],
@@ -3610,27 +3729,9 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Routes',
-                          'href': '/routes',
-                          'icon': 'git-branch',
-                        },
-                        {
-                          'icon': 'server',
-                          'label': 'Backends',
-                          'href': '/backends',
-                        },
-                        {
-                          'label': 'Analytics',
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
-                        },
-                      ],
-                      'appName': 'API Gateway',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'children': [
@@ -3647,44 +3748,42 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
-                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'bar-chart-2',
+                                          'type': 'icon',
                                         },
                                         {
+                                          'content': 'Analytics',
                                           'type': 'typography',
                                           'variant': 'h2',
-                                          'content': 'Analytics',
                                         },
                                       ],
                                       'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
+                                      'type': 'button',
                                       'variant': 'secondary',
                                       'icon': 'refresh-cw',
-                                      'type': 'button',
                                       'label': 'Refresh',
                                       'action': 'REFRESH',
                                     },
                                   ],
-                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 3,
                                       'children': [
                                         {
                                           'type': 'stat-display',
@@ -3697,124 +3796,123 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                           'label': 'ErrorRate',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'AvgLatency',
                                           'value': '@entity.avgLatency',
+                                          'type': 'stat-display',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                   'content': 'Uptime',
                                                 },
                                                 {
-                                                  'variant': 'h3',
-                                                  'type': 'typography',
                                                   'content': '@entity.uptime',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
                                       'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
                                   'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'variant': 'caption',
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'content': 'Graph View',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'grid',
-                                  'cols': 2,
                                 },
                                 {
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'date': 'Mar',
                                       'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                   'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
                                   'edges': [
                                     {
-                                      'target': 'b',
                                       'source': 'a',
+                                      'target': 'b',
                                     },
                                     {
                                       'target': 'c',
                                       'source': 'b',
                                     },
                                   ],
-                                  'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -3829,6 +3927,9 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'label': 'End',
                                     },
                                   ],
+                                  'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
                                 },
                               ],
                               'gap': 'lg',
@@ -3836,9 +3937,27 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                               'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'API Gateway',
+                      'navItems': [
+                        {
+                          'href': '/routes',
+                          'label': 'Routes',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'href': '/backends',
+                          'label': 'Backends',
+                          'icon': 'server',
+                        },
+                        {
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
+                          'href': '/analytics',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3862,31 +3981,32 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
+                          'href': '/routes',
                           'icon': 'git-branch',
                           'label': 'Routes',
-                          'href': '/routes',
                         },
                         {
-                          'icon': 'server',
                           'label': 'Backends',
+                          'icon': 'server',
                           'href': '/backends',
                         },
                         {
-                          'icon': 'bar-chart-2',
-                          'label': 'Analytics',
                           'href': '/analytics',
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'API Gateway',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
                               'type': 'stack',
+                              'direction': 'vertical',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -3901,70 +4021,74 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   ],
                                 },
                                 {
-                                  'gap': 'md',
-                                  'justify': 'between',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'children': [
                                     {
+                                      'type': 'stack',
+                                      'gap': 'md',
                                       'children': [
                                         {
                                           'name': 'bar-chart-2',
                                           'type': 'icon',
                                         },
                                         {
+                                          'variant': 'h2',
                                           'content': 'Analytics',
                                           'type': 'typography',
-                                          'variant': 'h2',
                                         },
                                       ],
                                       'direction': 'horizontal',
-                                      'type': 'stack',
-                                      'gap': 'md',
                                     },
                                     {
                                       'label': 'Refresh',
-                                      'type': 'button',
-                                      'variant': 'secondary',
-                                      'icon': 'refresh-cw',
                                       'action': 'REFRESH',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
                                     },
                                   ],
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalRequests',
+                                          'type': 'stat-display',
                                           'value': '@entity.totalRequests',
                                         },
                                         {
-                                          'label': 'ErrorRate',
                                           'value': '@entity.errorRate',
                                           'type': 'stat-display',
+                                          'label': 'ErrorRate',
                                         },
                                         {
+                                          'value': '@entity.avgLatency',
                                           'type': 'stat-display',
                                           'label': 'AvgLatency',
-                                          'value': '@entity.avgLatency',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'Uptime',
-                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'content': '@entity.uptime',
@@ -3972,12 +4096,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
                                     },
@@ -3987,38 +4107,37 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
+                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Chart View',
-                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'content': 'Graph View',
                                           'variant': 'caption',
-                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'gap': 'md',
+                                  'cols': 2,
                                   'type': 'grid',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
                                       'date': 'Feb',
@@ -4041,23 +4160,33 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'value': 30,
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
                                   'type': 'graph-view',
-                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                   'nodes': [
                                     {
                                       'label': 'Start',
@@ -4072,25 +4201,15 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'id': 'c',
                                     },
                                   ],
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'target': 'c',
-                                      'source': 'b',
-                                    },
-                                  ],
                                   'width': 400,
+                                  'height': 200,
                                 },
                               ],
+                              'gap': 'lg',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'API Gateway',
                     },
                   ],
                 ],
@@ -4115,73 +4234,55 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'git-branch',
-                          'label': 'Routes',
-                          'href': '/routes',
-                        },
-                        {
-                          'href': '/backends',
-                          'label': 'Backends',
-                          'icon': 'server',
-                        },
-                        {
-                          'href': '/analytics',
-                          'icon': 'bar-chart-2',
-                          'label': 'Analytics',
-                        },
-                      ],
                       'children': [
                         {
                           'children': [
                             {
-                              'direction': 'vertical',
-                              'gap': 'lg',
                               'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Analytics',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'gap': 'md',
                                   'justify': 'between',
-                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'direction': 'horizontal',
-                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'name': 'bar-chart-2',
                                           'type': 'icon',
+                                          'name': 'bar-chart-2',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Analytics',
+                                          'variant': 'h2',
                                         },
                                       ],
+                                      'gap': 'md',
                                       'type': 'stack',
                                     },
                                     {
+                                      'icon': 'refresh-cw',
                                       'type': 'button',
                                       'label': 'Refresh',
                                       'variant': 'secondary',
                                       'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
@@ -4189,7 +4290,7 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                 {
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
+                                      'cols': 3,
                                       'children': [
                                         {
                                           'label': 'TotalRequests',
@@ -4198,13 +4299,13 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                         },
                                         {
                                           'label': 'ErrorRate',
-                                          'type': 'stat-display',
                                           'value': '@entity.errorRate',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'AvgLatency',
                                           'value': '@entity.avgLatency',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'card',
@@ -4213,23 +4314,23 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                               'children': [
                                                 {
                                                   'content': 'Uptime',
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.uptime',
-                                                  'type': 'typography',
                                                 },
                                               ],
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                       ],
-                                      'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                   'padding': 'md',
@@ -4239,8 +4340,6 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
-                                  'cols': 2,
                                   'children': [
                                     {
                                       'children': [
@@ -4256,17 +4355,18 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
                                   'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
@@ -4277,22 +4377,23 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'date': 'Feb',
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -4308,7 +4409,23 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   ],
                                 },
                                 {
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
                                   'width': 400,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -4319,30 +4436,32 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'target': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'height': 200,
                                 },
                               ],
+                              'direction': 'vertical',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
                       'appName': 'API Gateway',
+                      'navItems': [
+                        {
+                          'href': '/routes',
+                          'icon': 'git-branch',
+                          'label': 'Routes',
+                        },
+                        {
+                          'label': 'Backends',
+                          'href': '/backends',
+                          'icon': 'server',
+                        },
+                        {
+                          'href': '/analytics',
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -4366,32 +4485,13 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/routes',
-                          'icon': 'git-branch',
-                          'label': 'Routes',
-                        },
-                        {
-                          'icon': 'server',
-                          'href': '/backends',
-                          'label': 'Backends',
-                        },
-                        {
-                          'label': 'Analytics',
-                          'icon': 'bar-chart-2',
-                          'href': '/analytics',
-                        },
-                      ],
-                      'appName': 'API Gateway',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -4401,38 +4501,37 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'label': 'Analytics',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'children': [
-                                        {
-                                          'type': 'icon',
-                                          'name': 'bar-chart-2',
-                                        },
-                                        {
-                                          'type': 'typography',
-                                          'variant': 'h2',
-                                          'content': 'Analytics',
-                                        },
-                                      ],
                                       'direction': 'horizontal',
                                       'gap': 'md',
+                                      'children': [
+                                        {
+                                          'name': 'bar-chart-2',
+                                          'type': 'icon',
+                                        },
+                                        {
+                                          'content': 'Analytics',
+                                          'type': 'typography',
+                                          'variant': 'h2',
+                                        },
+                                      ],
+                                      'type': 'stack',
                                     },
                                     {
-                                      'type': 'button',
                                       'action': 'REFRESH',
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                   'gap': 'md',
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
@@ -4440,13 +4539,11 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                 {
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalRequests',
                                           'value': '@entity.totalRequests',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -4462,44 +4559,46 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
                                               'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'type': 'typography',
                                                   'content': 'Uptime',
                                                   'variant': 'caption',
-                                                  'type': 'typography',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'type': 'typography',
                                                   'content': '@entity.uptime',
+                                                  'type': 'typography',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                             },
                                           ],
                                         },
                                       ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
                                   'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
                                   'gap': 'md',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Chart View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
@@ -4507,8 +4606,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'content': 'Graph View',
+                                          'type': 'typography',
                                           'variant': 'caption',
                                         },
                                       ],
@@ -4517,6 +4616,7 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                   'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -4531,8 +4631,8 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'date': 'Mar',
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
                                       'value': 22,
@@ -4543,58 +4643,77 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] 
                                       'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'type': 'graph-view',
-                                  'height': 200,
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'target': 'c',
                                       'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'width': 400,
                                 },
                               ],
-                              'type': 'stack',
                               'direction': 'vertical',
                               'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'API Gateway',
+                      'navItems': [
+                        {
+                          'href': '/routes',
+                          'label': 'Routes',
+                          'icon': 'git-branch',
+                        },
+                        {
+                          'label': 'Backends',
+                          'href': '/backends',
+                          'icon': 'server',
+                        },
+                        {
+                          'label': 'Analytics',
+                          'icon': 'bar-chart-2',
+                          'href': '/analytics',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],

@@ -23,6 +23,81 @@ const BEHAVIOR_PATH = 'std/behaviors/std-social-feed';
 const ALIAS = 'SocialFeed';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdSocialFeedEventKey = 'COMMENT' | 'CREATE' | 'CommentSaveFailed' | 'CommentSaved' | 'INIT' | 'PostLoadFailed' | 'PostLoaded' | 'PostSaveFailed' | 'PostSaved' | 'VIEW';
+
+/**
+ * Payload shape for the `COMMENT` event.
+ */
+export interface StdSocialFeedCommentPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdSocialFeedViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    title?: string;
+    content?: string;
+    author?: string;
+    createdAt?: string;
+    likes?: number;
+  };
+}
+
+/**
+ * Payload shape for the `PostLoaded` event.
+ */
+export interface StdSocialFeedPostLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `PostLoadFailed` event.
+ */
+export interface StdSocialFeedPostLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `PostSaved` event.
+ */
+export interface StdSocialFeedPostSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `PostSaveFailed` event.
+ */
+export interface StdSocialFeedPostSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CommentSaved` event.
+ */
+export interface StdSocialFeedCommentSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CommentSaveFailed` event.
+ */
+export interface StdSocialFeedCommentSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-social-feed descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +113,8 @@ export interface StdSocialFeedParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdSocialFeedEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +134,11 @@ export function stdSocialFeedPostBrowseTrait(params: StdSocialFeedParams): Trait
     ref: `${ALIAS}.traits.PostBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +149,11 @@ export function stdSocialFeedPostCreateTrait(params: StdSocialFeedParams): Trait
     ref: `${ALIAS}.traits.PostCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +164,11 @@ export function stdSocialFeedPostViewTrait(params: StdSocialFeedParams): TraitRe
     ref: `${ALIAS}.traits.PostView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -419,21 +494,21 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'main',
                     {
                       'direction': 'vertical',
-                      'className': 'py-12',
+                      'type': 'stack',
                       'gap': 'md',
+                      'className': 'py-12',
+                      'align': 'center',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'type': 'typography',
                           'variant': 'caption',
-                          'content': 'Loading…',
                           'color': 'muted',
+                          'content': 'Loading…',
+                          'type': 'typography',
                         },
                       ],
-                      'type': 'stack',
-                      'align': 'center',
                     },
                   ],
                 ],
@@ -447,58 +522,69 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Feed',
+                          'href': '/feed',
+                        },
+                        {
+                          'href': '/messages',
+                          'label': 'Messages',
+                          'icon': 'message-circle',
+                        },
+                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'justify': 'between',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'align': 'center',
                                   'children': [
                                     {
-                                      'name': 'rss',
                                       'type': 'icon',
+                                      'name': 'rss',
                                     },
                                     {
-                                      'content': 'Feed',
                                       'variant': 'h2',
+                                      'content': 'Feed',
                                       'type': 'typography',
                                     },
                                   ],
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'align': 'center',
                                 },
                                 {
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'label': 'New Post',
-                                      'type': 'button',
-                                      'action': 'CREATE',
                                       'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'type': 'button',
                                       'variant': 'primary',
+                                      'label': 'New Post',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
                                 },
                               ],
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
                               'align': 'center',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'variant': 'card',
                               'gap': 'sm',
+                              'type': 'data-list',
                               'fields': [
                                 {
                                   'name': 'title',
@@ -507,51 +593,40 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                                 },
                                 {
                                   'format': 'number',
-                                  'name': 'likes',
                                   'variant': 'badge',
+                                  'name': 'likes',
                                 },
                                 {
-                                  'variant': 'body',
                                   'name': 'author',
-                                },
-                                {
-                                  'name': 'content',
                                   'variant': 'body',
                                 },
                                 {
-                                  'name': 'createdAt',
-                                  'variant': 'caption',
+                                  'variant': 'body',
+                                  'name': 'content',
+                                },
+                                {
                                   'label': 'Posted',
+                                  'name': 'createdAt',
                                   'format': 'date',
+                                  'variant': 'caption',
                                 },
                               ],
+                              'variant': 'card',
+                              'entity': '@payload.data',
                               'itemActions': [
                                 {
                                   'label': 'View',
-                                  'event': 'VIEW',
                                   'variant': 'ghost',
+                                  'event': 'VIEW',
                                 },
                               ],
-                              'entity': '@payload.data',
-                              'type': 'data-list',
                             },
                           ],
-                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Feed',
-                          'icon': 'layout-list',
-                          'href': '/feed',
-                        },
-                        {
-                          'href': '/messages',
-                          'icon': 'message-circle',
-                          'label': 'Messages',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'appName': 'SocialFeed',
                     },
                   ],
@@ -566,36 +641,36 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
+                      'direction': 'vertical',
                       'align': 'center',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
+                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
-                          'type': 'icon',
                         },
                         {
                           'variant': 'h3',
-                          'content': 'Failed to load post',
                           'type': 'typography',
+                          'content': 'Failed to load post',
                         },
                         {
+                          'color': 'muted',
                           'type': 'typography',
                           'variant': 'body',
-                          'color': 'muted',
                           'content': '@payload.error',
                         },
                         {
-                          'label': 'Retry',
                           'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
                           'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'label': 'Retry',
+                          'type': 'button',
                         },
                       ],
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -764,8 +839,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'Post',
                     {
                       'emit': {
-                        'failure': 'PostLoadFailed',
                         'success': 'PostLoaded',
+                        'failure': 'PostLoadFailed',
                       },
                     },
                   ],
@@ -781,8 +856,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'Post',
                     {
                       'emit': {
-                        'failure': 'PostLoadFailed',
                         'success': 'PostLoaded',
+                        'failure': 'PostLoadFailed',
                       },
                     },
                   ],
@@ -790,34 +865,34 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
-                      'direction': 'vertical',
                       'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'plus-circle',
                             },
                             {
-                              'content': 'Create Post',
                               'type': 'typography',
+                              'content': 'Create Post',
                               'variant': 'h3',
                             },
                           ],
                           'direction': 'horizontal',
                           'gap': 'sm',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'mode': 'create',
                           'type': 'form-section',
-                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'mode': 'create',
                           'fields': [
                             'title',
                             'content',
@@ -1033,8 +1108,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'Post',
                     {
                       'emit': {
-                        'failure': 'PostLoadFailed',
                         'success': 'PostLoaded',
+                        'failure': 'PostLoadFailed',
                       },
                     },
                   ],
@@ -1049,36 +1124,36 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'fetch',
                     'Post',
                     {
-                      'id': '@payload.id',
                       'emit': {
                         'failure': 'PostLoadFailed',
                         'success': 'PostLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
                       'gap': 'md',
+                      'direction': 'vertical',
                       'type': 'stack',
                       'children': [
                         {
+                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'eye',
                             },
                             {
-                              'content': '@entity.title',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
+                              'content': '@entity.title',
                             },
                           ],
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
                           'align': 'center',
                         },
                         {
@@ -1086,43 +1161,44 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                         },
                         {
                           'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
-                              'content': 'Title',
                               'type': 'typography',
+                              'content': 'Title',
                             },
                             {
-                              'variant': 'body',
                               'type': 'typography',
                               'content': '@entity.title',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'content': 'Content',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.content',
                               'variant': 'body',
                             },
                           ],
-                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
-                              'content': 'Author',
                               'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Content',
+                            },
+                            {
+                              'content': '@entity.content',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'gap': 'md',
+                        },
+                        {
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'content': 'Author',
                               'variant': 'caption',
                             },
                             {
@@ -1132,59 +1208,58 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                             },
                           ],
                           'gap': 'md',
-                          'direction': 'horizontal',
                           'type': 'stack',
                         },
                         {
-                          'gap': 'md',
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
                               'content': 'Created At',
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.createdAt',
+                              'type': 'typography',
                             },
                           ],
+                          'gap': 'md',
+                          'type': 'stack',
                         },
                         {
+                          'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                               'content': 'Likes',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.likes',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'action': 'CLOSE',
                               'type': 'button',
-                              'variant': 'ghost',
                               'label': 'Close',
+                              'variant': 'ghost',
                             },
                           ],
                           'justify': 'end',
+                          'gap': 'sm',
                         },
                       ],
                     },
@@ -1440,22 +1515,22 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
+                      'align': 'center',
+                      'type': 'stack',
                       'direction': 'vertical',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'type': 'typography',
-                          'variant': 'caption',
                           'color': 'muted',
+                          'variant': 'caption',
                           'content': 'Loading…',
+                          'type': 'typography',
                         },
                       ],
-                      'align': 'center',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -1469,33 +1544,16 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
-                      'appName': 'SocialFeed',
-                      'navItems': [
-                        {
-                          'href': '/feed',
-                          'label': 'Feed',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Messages',
-                          'href': '/messages',
-                          'icon': 'message-circle',
-                        },
-                      ],
                       'type': 'dashboard-layout',
                       'children': [
                         {
                           'className': 'max-w-5xl mx-auto w-full',
-                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
                                   'children': [
                                     {
                                       'type': 'icon',
@@ -1503,66 +1561,83 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                                     },
                                     {
                                       'variant': 'h2',
-                                      'type': 'typography',
                                       'content': 'Messages',
+                                      'type': 'typography',
                                     },
                                   ],
-                                  'gap': 'sm',
                                   'align': 'center',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'gap': 'sm',
                                   'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'sm',
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'icon': 'edit',
-                                      'action': 'COMPOSE',
                                       'variant': 'primary',
+                                      'icon': 'edit',
                                       'type': 'button',
                                       'label': 'Compose',
+                                      'action': 'COMPOSE',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                               ],
+                              'align': 'center',
+                              'gap': 'md',
                               'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'entity': '@payload.data',
+                              'gap': 'sm',
+                              'type': 'data-list',
                               'fields': [
                                 {
-                                  'variant': 'h4',
-                                  'name': 'author',
                                   'icon': 'message-circle',
+                                  'name': 'author',
+                                  'variant': 'h4',
                                 },
                                 {
-                                  'variant': 'body',
                                   'name': 'body',
+                                  'variant': 'body',
                                 },
                                 {
                                   'variant': 'caption',
-                                  'name': 'createdAt',
                                   'format': 'date',
+                                  'name': 'createdAt',
                                 },
                               ],
                               'variant': 'card',
-                              'gap': 'sm',
-                              'entity': '@payload.data',
-                              'type': 'data-list',
                               'itemActions': [
                                 {
                                   'event': 'VIEW',
-                                  'variant': 'ghost',
                                   'label': 'View',
+                                  'variant': 'ghost',
                                 },
                               ],
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'appName': 'SocialFeed',
+                      'navItems': [
+                        {
+                          'href': '/feed',
+                          'icon': 'layout-list',
+                          'label': 'Feed',
+                        },
+                        {
+                          'icon': 'message-circle',
+                          'label': 'Messages',
+                          'href': '/messages',
                         },
                       ],
                     },
@@ -1578,9 +1653,9 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'main',
                     {
+                      'gap': 'md',
                       'type': 'stack',
                       'align': 'center',
-                      'gap': 'md',
                       'className': 'py-12',
                       'direction': 'vertical',
                       'children': [
@@ -1590,22 +1665,22 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                           'name': 'alert-triangle',
                         },
                         {
+                          'type': 'typography',
                           'variant': 'h3',
                           'content': 'Failed to load comment',
-                          'type': 'typography',
                         },
                         {
-                          'color': 'muted',
-                          'type': 'typography',
                           'variant': 'body',
+                          'type': 'typography',
                           'content': '@payload.error',
+                          'color': 'muted',
                         },
                         {
                           'label': 'Retry',
+                          'icon': 'rotate-ccw',
+                          'type': 'button',
                           'action': 'INIT',
                           'variant': 'primary',
-                          'type': 'button',
-                          'icon': 'rotate-ccw',
                         },
                       ],
                     },
@@ -1778,8 +1853,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'Comment',
                     {
                       'emit': {
-                        'success': 'CommentLoaded',
                         'failure': 'CommentLoadFailed',
+                        'success': 'CommentLoaded',
                       },
                     },
                   ],
@@ -1794,41 +1869,41 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
                           'gap': 'sm',
-                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
-                              'type': 'typography',
                               'content': 'New Comment',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'submitEvent': 'SEND',
-                          'type': 'form-section',
                           'mode': 'create',
-                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'body',
                             'author',
                             'postId',
                           ],
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1869,8 +1944,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'CommentSaveFailed',
                         'success': 'CommentSaved',
+                        'failure': 'CommentSaveFailed',
                       },
                     },
                   ],
@@ -2050,83 +2125,82 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'direction': 'vertical',
                       'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
                           'children': [
                             {
                               'name': 'eye',
                               'type': 'icon',
                             },
                             {
-                              'type': 'typography',
-                              'content': '@entity.body',
                               'variant': 'h3',
+                              'content': '@entity.body',
+                              'type': 'typography',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
+                              'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Body',
-                              'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
+                              'variant': 'body',
+                              'type': 'typography',
                               'content': '@entity.body',
-                              'variant': 'body',
-                              'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
                         },
                         {
                           'type': 'stack',
-                          'gap': 'md',
                           'children': [
                             {
+                              'variant': 'caption',
                               'content': 'Author',
-                              'variant': 'caption',
                               'type': 'typography',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.author',
+                              'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
+                          'gap': 'md',
                           'direction': 'horizontal',
                         },
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
+                              'content': 'Post ID',
                               'type': 'typography',
                               'variant': 'caption',
-                              'content': 'Post ID',
                             },
                             {
                               'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.postId',
+                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'md',
                         },
                         {
-                          'gap': 'md',
                           'direction': 'horizontal',
                           'children': [
                             {
@@ -2141,23 +2215,24 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                             },
                           ],
                           'type': 'stack',
+                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'end',
                           'children': [
                             {
-                              'label': 'Close',
-                              'action': 'CLOSE',
-                              'type': 'button',
                               'variant': 'ghost',
+                              'label': 'Close',
+                              'type': 'button',
+                              'action': 'CLOSE',
                             },
                           ],
                           'gap': 'sm',
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
                         },
                       ],
                     },

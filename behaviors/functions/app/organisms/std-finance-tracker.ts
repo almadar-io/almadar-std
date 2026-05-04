@@ -23,6 +23,140 @@ const BEHAVIOR_PATH = 'std/behaviors/std-finance-tracker';
 const ALIAS = 'FinanceTracker';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdFinanceTrackerEventKey = 'CREATE' | 'DELETE' | 'EDIT' | 'FinanceReportSaveFailed' | 'FinanceReportSaved' | 'INIT' | 'TransactionDeleteFailed' | 'TransactionDeleted' | 'TransactionLoadFailed' | 'TransactionLoaded' | 'TransactionSaveFailed' | 'TransactionSaved' | 'TransactionUpdateFailed' | 'TransactionUpdated' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdFinanceTrackerListenKey = 'TRANSACTION_CREATED' | 'TRANSACTION_UPDATED' | 'TRANSACTION_DELETED';
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdFinanceTrackerViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    description: string;
+    amount: number;
+    category?: string;
+    date?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdFinanceTrackerEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    description: string;
+    amount: number;
+    category?: string;
+    date?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdFinanceTrackerDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    description: string;
+    amount: number;
+    category?: string;
+    date?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `TransactionLoaded` event.
+ */
+export interface StdFinanceTrackerTransactionLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `TransactionLoadFailed` event.
+ */
+export interface StdFinanceTrackerTransactionLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TransactionSaved` event.
+ */
+export interface StdFinanceTrackerTransactionSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TransactionSaveFailed` event.
+ */
+export interface StdFinanceTrackerTransactionSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TransactionUpdated` event.
+ */
+export interface StdFinanceTrackerTransactionUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TransactionUpdateFailed` event.
+ */
+export interface StdFinanceTrackerTransactionUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TransactionDeleted` event.
+ */
+export interface StdFinanceTrackerTransactionDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TransactionDeleteFailed` event.
+ */
+export interface StdFinanceTrackerTransactionDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `FinanceReportSaved` event.
+ */
+export interface StdFinanceTrackerFinanceReportSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `FinanceReportSaveFailed` event.
+ */
+export interface StdFinanceTrackerFinanceReportSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-finance-tracker descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +172,8 @@ export interface StdFinanceTrackerParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdFinanceTrackerEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +193,11 @@ export function stdFinanceTrackerTransactionBrowseTrait(params: StdFinanceTracke
     ref: `${ALIAS}.traits.TransactionBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +208,11 @@ export function stdFinanceTrackerTransactionCreateTrait(params: StdFinanceTracke
     ref: `${ALIAS}.traits.TransactionCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +223,11 @@ export function stdFinanceTrackerTransactionEditTrait(params: StdFinanceTrackerP
     ref: `${ALIAS}.traits.TransactionEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +238,11 @@ export function stdFinanceTrackerTransactionViewTrait(params: StdFinanceTrackerP
     ref: `${ALIAS}.traits.TransactionView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +253,11 @@ export function stdFinanceTrackerTransactionDeleteTrait(params: StdFinanceTracke
     ref: `${ALIAS}.traits.TransactionDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -661,22 +795,22 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
                           'color': 'muted',
-                          'content': 'Loading…',
                           'type': 'typography',
+                          'content': 'Loading…',
                           'variant': 'caption',
                         },
                       ],
+                      'gap': 'md',
                       'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -690,80 +824,78 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'appName': 'Finance Tracker',
                       'navItems': [
                         {
+                          'href': '/transactions',
                           'icon': 'dollar-sign',
                           'label': 'Transactions',
-                          'href': '/transactions',
                         },
                         {
-                          'href': '/summary',
                           'icon': 'layout-list',
                           'label': 'Summary',
+                          'href': '/summary',
                         },
                         {
+                          'label': 'Reports',
                           'href': '/reports',
                           'icon': 'bar-chart',
-                          'label': 'Reports',
                         },
                       ],
                       'children': [
                         {
-                          'type': 'stack',
                           'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
                               'justify': 'between',
+                              'gap': 'md',
                               'type': 'stack',
+                              'direction': 'horizontal',
                               'align': 'center',
                               'children': [
                                 {
                                   'type': 'stack',
                                   'direction': 'horizontal',
-                                  'gap': 'sm',
                                   'align': 'center',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'credit-card',
+                                      'type': 'icon',
                                     },
                                     {
                                       'type': 'typography',
-                                      'content': 'Transactions',
                                       'variant': 'h2',
+                                      'content': 'Transactions',
                                     },
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'type': 'button',
-                                      'label': 'Create Transaction',
-                                      'icon': 'plus',
                                       'action': 'CREATE',
+                                      'icon': 'plus',
+                                      'label': 'Create Transaction',
+                                      'type': 'button',
                                       'variant': 'primary',
                                     },
                                   ],
                                   'type': 'stack',
-                                  'gap': 'sm',
+                                  'direction': 'horizontal',
                                 },
                               ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'gap': 'sm',
-                              'type': 'data-list',
                               'itemActions': [
                                 {
-                                  'label': 'View',
                                   'event': 'VIEW',
                                   'variant': 'ghost',
+                                  'label': 'View',
                                 },
                                 {
                                   'label': 'Edit',
@@ -771,27 +903,27 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'variant': 'ghost',
                                 },
                                 {
-                                  'variant': 'danger',
                                   'label': 'Delete',
                                   'event': 'DELETE',
+                                  'variant': 'danger',
                                 },
                               ],
+                              'type': 'data-list',
                               'entity': '@payload.data',
-                              'variant': 'card',
                               'fields': [
                                 {
-                                  'name': 'description',
                                   'variant': 'h3',
                                   'icon': 'credit-card',
+                                  'name': 'description',
                                 },
                                 {
-                                  'name': 'category',
                                   'variant': 'badge',
+                                  'name': 'category',
                                 },
                                 {
+                                  'variant': 'h4',
                                   'format': 'currency',
                                   'name': 'amount',
-                                  'variant': 'h4',
                                 },
                                 {
                                   'format': 'date',
@@ -799,13 +931,15 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'name': 'date',
                                 },
                               ],
+                              'variant': 'card',
                             },
                           ],
-                          'gap': 'lg',
                           'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
                         },
                       ],
-                      'appName': 'Finance Tracker',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -819,10 +953,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
                       'className': 'py-12',
+                      'gap': 'md',
                       'children': [
                         {
                           'color': 'destructive',
@@ -830,9 +962,9 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'name': 'alert-triangle',
                         },
                         {
-                          'content': 'Failed to load transaction',
                           'type': 'typography',
                           'variant': 'h3',
+                          'content': 'Failed to load transaction',
                         },
                         {
                           'variant': 'body',
@@ -842,13 +974,15 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                         },
                         {
                           'action': 'INIT',
-                          'label': 'Retry',
                           'variant': 'primary',
                           'icon': 'rotate-ccw',
                           'type': 'button',
+                          'label': 'Retry',
                         },
                       ],
-                      'gap': 'md',
+                      'align': 'center',
+                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1031,8 +1165,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'Transaction',
                     {
                       'emit': {
-                        'failure': 'TransactionLoadFailed',
                         'success': 'TransactionLoaded',
+                        'failure': 'TransactionLoadFailed',
                       },
                     },
                   ],
@@ -1057,41 +1191,41 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'plus-circle',
+                              'type': 'icon',
                             },
                             {
                               'variant': 'h3',
-                              'content': 'Create Transaction',
                               'type': 'typography',
+                              'content': 'Create Transaction',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'submitEvent': 'SAVE',
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
                           'fields': [
                             'description',
                             'amount',
                             'category',
                             'date',
                           ],
-                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
                         },
                       ],
-                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
                     },
                   ],
@@ -1369,54 +1503,54 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'fetch',
                     'Transaction',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'success': 'TransactionLoaded',
                         'failure': 'TransactionLoadFailed',
+                        'success': 'TransactionLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'edit',
+                              'type': 'icon',
                             },
                             {
-                              'type': 'typography',
                               'content': 'Edit Transaction',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'entity': '@payload.row',
-                          'mode': 'edit',
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
                           'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'description',
                             'amount',
                             'category',
                             'date',
                           ],
+                          'type': 'form-section',
+                          'mode': 'edit',
                         },
                       ],
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1457,8 +1591,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'TransactionUpdateFailed',
                         'success': 'TransactionUpdated',
+                        'failure': 'TransactionUpdateFailed',
                       },
                     },
                   ],
@@ -1652,11 +1786,11 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'fetch',
                     'Transaction',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'TransactionLoaded',
                         'failure': 'TransactionLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
@@ -1664,34 +1798,35 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'modal',
                     {
                       'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
-                          'gap': 'sm',
+                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'eye',
                             },
                             {
-                              'variant': 'h3',
-                              'type': 'typography',
                               'content': '@entity.description',
+                              'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
-                              'content': 'Description',
                               'variant': 'caption',
+                              'content': 'Description',
+                              'type': 'typography',
                             },
                             {
                               'variant': 'body',
@@ -1699,13 +1834,10 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                               'type': 'typography',
                             },
                           ],
+                          'gap': 'md',
                           'type': 'stack',
-                          'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
@@ -1713,21 +1845,24 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                               'type': 'typography',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.amount',
+                              'type': 'typography',
                             },
                           ],
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'direction': 'horizontal',
                           'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Category',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
@@ -1743,8 +1878,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'children': [
                             {
                               'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Date',
+                              'variant': 'caption',
                             },
                             {
                               'variant': 'body',
@@ -1757,28 +1892,27 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'type': 'divider',
                         },
                         {
-                          'justify': 'end',
+                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
+                          'justify': 'end',
                           'children': [
                             {
-                              'label': 'Edit',
-                              'icon': 'edit',
-                              'variant': 'primary',
                               'type': 'button',
+                              'icon': 'edit',
+                              'label': 'Edit',
                               'action': 'EDIT',
+                              'variant': 'primary',
                             },
                             {
-                              'label': 'Close',
                               'type': 'button',
-                              'variant': 'ghost',
                               'action': 'CLOSE',
+                              'label': 'Close',
+                              'variant': 'ghost',
                             },
                           ],
-                          'gap': 'sm',
                         },
                       ],
-                      'gap': 'md',
                       'type': 'stack',
                     },
                   ],
@@ -2041,9 +2175,10 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
+                      'gap': 'md',
                       'children': [
                         {
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
@@ -2051,47 +2186,46 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                             },
                             {
                               'content': 'Delete Transaction',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
                           'type': 'stack',
                           'gap': 'sm',
+                          'direction': 'horizontal',
                           'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'message': 'This action cannot be undone.',
                           'variant': 'error',
                           'type': 'alert',
-                          'message': 'This action cannot be undone.',
                         },
                         {
+                          'gap': 'sm',
                           'children': [
                             {
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'label': 'Cancel',
                               'action': 'CANCEL',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Cancel',
                             },
                             {
-                              'variant': 'danger',
                               'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
                               'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
                               'type': 'button',
                             },
                           ],
                           'type': 'stack',
                           'direction': 'horizontal',
                           'justify': 'end',
-                          'gap': 'sm',
                         },
                       ],
-                      'type': 'stack',
                       'direction': 'vertical',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2108,8 +2242,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'success': 'TransactionDeleted',
                         'failure': 'TransactionDeleteFailed',
+                        'success': 'TransactionDeleted',
                       },
                     },
                   ],
@@ -2130,8 +2264,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'Transaction',
                     {
                       'emit': {
-                        'success': 'TransactionLoaded',
                         'failure': 'TransactionLoadFailed',
+                        'success': 'TransactionLoaded',
                       },
                     },
                   ],
@@ -2377,8 +2511,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'FinanceSummary',
                     {
                       'emit': {
-                        'success': 'FinanceSummaryLoaded',
                         'failure': 'FinanceSummaryLoadFailed',
+                        'success': 'FinanceSummaryLoaded',
                       },
                     },
                   ],
@@ -2386,52 +2520,36 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'Finance Tracker',
-                      'navItems': [
-                        {
-                          'href': '/transactions',
-                          'icon': 'dollar-sign',
-                          'label': 'Transactions',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Summary',
-                          'href': '/summary',
-                        },
-                        {
-                          'icon': 'bar-chart',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                      ],
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Financial Summary',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'name': 'pie-chart',
                                           'type': 'icon',
+                                          'name': 'pie-chart',
                                         },
                                         {
                                           'type': 'typography',
@@ -2439,46 +2557,42 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
                                       'type': 'stack',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
-                                      'label': 'Refresh',
                                       'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'type': 'button',
                                       'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
                                   'type': 'stack',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'label': 'TotalIncome',
                                           'type': 'stat-display',
+                                          'label': 'TotalIncome',
                                           'value': '@entity.totalIncome',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalExpenses',
                                           'value': '@entity.totalExpenses',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'Balance',
+                                          'type': 'stat-display',
                                           'value': '@entity.balance',
                                         },
                                         {
@@ -2494,23 +2608,24 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                         },
                                       ],
@@ -2518,7 +2633,6 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   ],
                                   'type': 'grid',
                                   'cols': 2,
-                                  'gap': 'md',
                                 },
                                 {
                                   'data': [
@@ -2531,16 +2645,16 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'date': 'Jun',
@@ -2557,12 +2671,28 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                 },
                                 {
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'height': 200,
                                   'type': 'graph-view',
                                   'edges': [
                                     {
@@ -2574,30 +2704,34 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'source': 'b',
                                     },
                                   ],
-                                  'height': 200,
-                                  'nodes': [
-                                    {
-                                      'label': 'Start',
-                                      'id': 'a',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'width': 400,
                                 },
                               ],
-                              'gap': 'lg',
                               'direction': 'vertical',
+                              'type': 'stack',
+                              'gap': 'lg',
                             },
                           ],
                         },
                       ],
+                      'navItems': [
+                        {
+                          'href': '/transactions',
+                          'icon': 'dollar-sign',
+                          'label': 'Transactions',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Summary',
+                          'href': '/summary',
+                        },
+                        {
+                          'label': 'Reports',
+                          'href': '/reports',
+                          'icon': 'bar-chart',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Finance Tracker',
                     },
                   ],
                 ],
@@ -2622,32 +2756,47 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'main',
                     {
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/transactions',
+                          'icon': 'dollar-sign',
+                          'label': 'Transactions',
+                        },
+                        {
+                          'href': '/summary',
+                          'icon': 'layout-list',
+                          'label': 'Summary',
+                        },
+                        {
+                          'icon': 'bar-chart',
+                          'href': '/reports',
+                          'label': 'Reports',
+                        },
+                      ],
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
+                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Financial Summary',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'justify': 'between',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
-                                      'type': 'stack',
                                       'gap': 'md',
                                       'children': [
                                         {
@@ -2655,65 +2804,71 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'name': 'pie-chart',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Financial Summary',
+                                          'variant': 'h2',
                                         },
                                       ],
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
                                       'icon': 'refresh-cw',
+                                      'type': 'button',
                                     },
                                   ],
+                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'children': [
                                         {
+                                          'value': '@entity.totalIncome',
                                           'label': 'TotalIncome',
                                           'type': 'stat-display',
-                                          'value': '@entity.totalIncome',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'TotalExpenses',
                                           'value': '@entity.totalExpenses',
+                                          'label': 'TotalExpenses',
                                         },
                                         {
+                                          'label': 'Balance',
                                           'type': 'stat-display',
                                           'value': '@entity.balance',
-                                          'label': 'Balance',
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.savingsRate',
                                           'label': 'SavingsRate',
+                                          'value': '@entity.savingsRate',
+                                          'type': 'stat-display',
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
+                                  'gap': 'md',
                                   'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Chart View',
@@ -2721,20 +2876,18 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'content': 'Graph View',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'line-chart',
@@ -2752,16 +2905,16 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                 },
@@ -2773,12 +2926,13 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'graph-view',
                                   'width': 400,
                                   'height': 200,
                                   'nodes': [
@@ -2801,35 +2955,15 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'type': 'graph-view',
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'gap': 'lg',
                             },
                           ],
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Transactions',
-                          'href': '/transactions',
-                          'icon': 'dollar-sign',
-                        },
-                        {
-                          'label': 'Summary',
-                          'icon': 'layout-list',
-                          'href': '/summary',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'bar-chart',
-                          'label': 'Reports',
                         },
                       ],
                       'appName': 'Finance Tracker',
@@ -2856,29 +2990,30 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'Finance Tracker',
                       'children': [
                         {
                           'children': [
                             {
-                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Financial Summary',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
                                   'gap': 'md',
                                   'children': [
                                     {
+                                      'gap': 'md',
                                       'type': 'stack',
                                       'children': [
                                         {
@@ -2887,42 +3022,40 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                         },
                                         {
                                           'type': 'typography',
-                                          'content': 'Financial Summary',
                                           'variant': 'h2',
+                                          'content': 'Financial Summary',
                                         },
                                       ],
-                                      'gap': 'md',
                                       'direction': 'horizontal',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
+                                      'type': 'button',
                                       'label': 'Refresh',
+                                      'icon': 'refresh-cw',
                                       'action': 'REFRESH',
                                       'variant': 'secondary',
-                                      'type': 'button',
                                     },
                                   ],
                                   'type': 'stack',
                                   'direction': 'horizontal',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
-                                  'type': 'box',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'label': 'TotalIncome',
                                           'type': 'stat-display',
+                                          'label': 'TotalIncome',
                                           'value': '@entity.totalIncome',
                                         },
                                         {
-                                          'value': '@entity.totalExpenses',
-                                          'type': 'stat-display',
                                           'label': 'TotalExpenses',
+                                          'type': 'stat-display',
+                                          'value': '@entity.totalExpenses',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -2935,19 +3068,19 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'label': 'SavingsRate',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
@@ -2955,6 +3088,7 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
                                       'children': [
@@ -2967,15 +3101,16 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'type': 'card',
                                     },
                                   ],
-                                  'type': 'grid',
+                                  'gap': 'md',
                                   'cols': 2,
+                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'value': 19,
@@ -2994,55 +3129,56 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'color': 'muted',
                                       'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
                                   'type': 'graph-view',
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
                                   'width': 400,
-                                  'height': 200,
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
                                 },
                               ],
                               'gap': 'lg',
+                              'direction': 'vertical',
                               'type': 'stack',
                             },
                           ],
@@ -3052,22 +3188,20 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                       'navItems': [
                         {
                           'href': '/transactions',
-                          'icon': 'dollar-sign',
                           'label': 'Transactions',
+                          'icon': 'dollar-sign',
                         },
                         {
-                          'href': '/summary',
                           'label': 'Summary',
+                          'href': '/summary',
                           'icon': 'layout-list',
                         },
                         {
+                          'href': '/reports',
                           'icon': 'bar-chart',
                           'label': 'Reports',
-                          'href': '/reports',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Finance Tracker',
                     },
                   ],
                 ],
@@ -3091,51 +3225,31 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/transactions',
-                          'icon': 'dollar-sign',
-                          'label': 'Transactions',
-                        },
-                        {
-                          'label': 'Summary',
-                          'icon': 'layout-list',
-                          'href': '/summary',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'bar-chart',
-                        },
-                      ],
-                      'appName': 'Finance Tracker',
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
                               'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Financial Summary',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'type': 'stack',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
@@ -3143,55 +3257,56 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                         },
                                         {
                                           'content': 'Financial Summary',
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
                                       'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                       'type': 'button',
                                       'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
-                                      'variant': 'secondary',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'stack',
                                   'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'label': 'TotalIncome',
                                           'value': '@entity.totalIncome',
                                           'type': 'stat-display',
+                                          'label': 'TotalIncome',
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'label': 'TotalExpenses',
                                           'value': '@entity.totalExpenses',
-                                        },
-                                        {
-                                          'value': '@entity.balance',
-                                          'label': 'Balance',
+                                          'label': 'TotalExpenses',
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'SavingsRate',
+                                          'type': 'stat-display',
+                                          'label': 'Balance',
+                                          'value': '@entity.balance',
+                                        },
+                                        {
                                           'value': '@entity.savingsRate',
                                           'type': 'stat-display',
+                                          'label': 'SavingsRate',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                     },
                                   ],
                                 },
@@ -3199,38 +3314,38 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'type': 'grid',
-                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'content': 'Chart View',
                                           'variant': 'caption',
-                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'content': 'Graph View',
                                           'type': 'typography',
-                                          'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
@@ -3249,58 +3364,77 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'height': 200,
+                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
                                   'type': 'graph-view',
-                                  'width': 400,
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
                                 },
                               ],
                               'gap': 'lg',
                             },
                           ],
                           'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'Finance Tracker',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/transactions',
+                          'icon': 'dollar-sign',
+                          'label': 'Transactions',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Summary',
+                          'href': '/summary',
+                        },
+                        {
+                          'icon': 'bar-chart',
+                          'label': 'Reports',
+                          'href': '/reports',
                         },
                       ],
                     },
@@ -3326,29 +3460,49 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'dollar-sign',
+                          'href': '/transactions',
+                          'label': 'Transactions',
+                        },
+                        {
+                          'label': 'Summary',
+                          'href': '/summary',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/reports',
+                          'icon': 'bar-chart',
+                          'label': 'Reports',
+                        },
+                      ],
+                      'appName': 'Finance Tracker',
                       'children': [
                         {
                           'children': [
                             {
+                              'direction': 'vertical',
                               'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Financial Summary',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'gap': 'md',
                                   'direction': 'horizontal',
-                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'type': 'stack',
                                   'children': [
                                     {
                                       'children': [
@@ -3357,23 +3511,24 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'name': 'pie-chart',
                                         },
                                         {
-                                          'type': 'typography',
-                                          'variant': 'h2',
                                           'content': 'Financial Summary',
+                                          'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'gap': 'md',
                                       'type': 'stack',
                                       'direction': 'horizontal',
-                                      'gap': 'md',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'type': 'button',
-                                      'icon': 'refresh-cw',
-                                      'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
@@ -3383,6 +3538,7 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 3,
                                       'children': [
                                         {
                                           'value': '@entity.totalIncome',
@@ -3395,18 +3551,17 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                           'label': 'TotalExpenses',
                                         },
                                         {
-                                          'label': 'Balance',
                                           'value': '@entity.balance',
                                           'type': 'stat-display',
+                                          'label': 'Balance',
                                         },
                                         {
                                           'label': 'SavingsRate',
-                                          'type': 'stat-display',
                                           'value': '@entity.savingsRate',
+                                          'type': 'stat-display',
                                         },
                                       ],
                                       'type': 'simple-grid',
-                                      'cols': 3,
                                     },
                                   ],
                                 },
@@ -3414,16 +3569,13 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'cols': 2,
-                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                           'content': 'Chart View',
                                         },
                                       ],
@@ -3432,35 +3584,38 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'content': 'Graph View',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
                                 },
                                 {
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
                                       'date': 'Feb',
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'value': 25,
                                       'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'date': 'Jun',
@@ -3470,6 +3625,7 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                   'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'color': 'primary',
@@ -3480,64 +3636,42 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
+                                  'width': 400,
                                   'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'width': 400,
                                 },
                               ],
-                              'direction': 'vertical',
-                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'Finance Tracker',
-                      'navItems': [
-                        {
-                          'label': 'Transactions',
-                          'icon': 'dollar-sign',
-                          'href': '/transactions',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Summary',
-                          'href': '/summary',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'bar-chart',
-                          'href': '/reports',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3726,7 +3860,6 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
@@ -3738,10 +3871,11 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'type': 'typography',
                         },
                       ],
-                      'align': 'center',
                       'gap': 'md',
-                      'type': 'stack',
                       'direction': 'vertical',
+                      'align': 'center',
+                      'type': 'stack',
+                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -3755,99 +3889,11 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'file-text',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'content': 'Reports',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'gap': 'sm',
-                                },
-                                {
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'button',
-                                      'variant': 'primary',
-                                      'label': 'Create FinanceReport',
-                                      'icon': 'plus',
-                                      'action': 'CREATE',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'justify': 'between',
-                              'align': 'center',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'itemActions': [
-                                {
-                                  'event': 'VIEW',
-                                  'label': 'View',
-                                  'variant': 'ghost',
-                                },
-                              ],
-                              'entity': '@payload.data',
-                              'fields': [
-                                {
-                                  'icon': 'file-text',
-                                  'name': 'title',
-                                  'variant': 'h3',
-                                },
-                                {
-                                  'name': 'period',
-                                  'variant': 'badge',
-                                },
-                                {
-                                  'name': 'total',
-                                  'format': 'currency',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'format': 'date',
-                                  'label': 'Generated',
-                                  'name': 'generatedAt',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'type': 'data-list',
-                              'variant': 'card',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
-                        },
-                      ],
+                      'appName': 'Finance Tracker',
                       'navItems': [
                         {
-                          'href': '/transactions',
                           'label': 'Transactions',
+                          'href': '/transactions',
                           'icon': 'dollar-sign',
                         },
                         {
@@ -3861,7 +3907,95 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'label': 'Reports',
                         },
                       ],
-                      'appName': 'Finance Tracker',
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'file-text',
+                                    },
+                                    {
+                                      'content': 'Reports',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'children': [
+                                    {
+                                      'variant': 'primary',
+                                      'type': 'button',
+                                      'label': 'Create FinanceReport',
+                                      'action': 'CREATE',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                },
+                              ],
+                              'gap': 'md',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'card',
+                              'gap': 'sm',
+                              'itemActions': [
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                  'event': 'VIEW',
+                                },
+                              ],
+                              'fields': [
+                                {
+                                  'icon': 'file-text',
+                                  'name': 'title',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'name': 'period',
+                                },
+                                {
+                                  'variant': 'h4',
+                                  'format': 'currency',
+                                  'name': 'total',
+                                },
+                                {
+                                  'format': 'date',
+                                  'variant': 'caption',
+                                  'name': 'generatedAt',
+                                  'label': 'Generated',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'type': 'data-list',
+                            },
+                          ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3875,14 +4009,11 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
                       'children': [
                         {
-                          'name': 'alert-triangle',
-                          'type': 'icon',
                           'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
                         },
                         {
                           'type': 'typography',
@@ -3890,21 +4021,24 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'content': 'Failed to load financereport',
                         },
                         {
-                          'type': 'typography',
-                          'color': 'muted',
                           'content': '@payload.error',
+                          'type': 'typography',
                           'variant': 'body',
+                          'color': 'muted',
                         },
                         {
+                          'label': 'Retry',
+                          'action': 'INIT',
                           'icon': 'rotate-ccw',
                           'type': 'button',
                           'variant': 'primary',
-                          'label': 'Retry',
-                          'action': 'INIT',
                         },
                       ],
-                      'className': 'py-12',
                       'gap': 'md',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'type': 'stack',
+                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -4098,22 +4232,22 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'name': 'plus-circle',
                               'type': 'icon',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'New FinanceReport',
-                              'variant': 'h3',
                             },
                           ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'gap': 'sm',
                         },
                         {
@@ -4121,19 +4255,19 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                         },
                         {
                           'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
                           'fields': [
                             'title',
                             'period',
                             'total',
                             'generatedAt',
                           ],
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -4174,8 +4308,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'FinanceReportSaved',
                         'failure': 'FinanceReportSaveFailed',
+                        'success': 'FinanceReportSaved',
                       },
                     },
                   ],
@@ -4346,8 +4480,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     {
                       'id': '@payload.id',
                       'emit': {
-                        'failure': 'FinanceReportLoadFailed',
                         'success': 'FinanceReportLoaded',
+                        'failure': 'FinanceReportLoadFailed',
                       },
                     },
                   ],
@@ -4355,22 +4489,23 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'gap': 'sm',
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
                               'variant': 'h3',
-                              'type': 'typography',
                               'content': '@entity.title',
+                              'type': 'typography',
                             },
                           ],
                         },
@@ -4378,29 +4513,29 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
                               'type': 'typography',
                               'content': 'Title',
+                              'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.title',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Period',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'variant': 'body',
@@ -4408,40 +4543,40 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'gap': 'md',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'content': 'Total',
+                              'type': 'typography',
                               'variant': 'caption',
                             },
                             {
-                              'content': '@entity.total',
                               'type': 'typography',
+                              'content': '@entity.total',
                               'variant': 'body',
                             },
                           ],
                           'type': 'stack',
                         },
                         {
+                          'gap': 'md',
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                           'children': [
                             {
                               'variant': 'caption',
-                              'content': 'Generated At',
                               'type': 'typography',
+                              'content': 'Generated At',
                             },
                             {
                               'content': '@entity.generatedAt',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
                         },
@@ -4452,18 +4587,17 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                           'justify': 'end',
                           'children': [
                             {
-                              'action': 'CLOSE',
-                              'label': 'Close',
                               'type': 'button',
+                              'label': 'Close',
+                              'action': 'CLOSE',
                               'variant': 'ghost',
                             },
                           ],
+                          'direction': 'horizontal',
                           'gap': 'sm',
                           'type': 'stack',
-                          'direction': 'horizontal',
                         },
                       ],
-                      'type': 'stack',
                       'direction': 'vertical',
                     },
                   ],

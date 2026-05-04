@@ -23,6 +23,195 @@ const BEHAVIOR_PATH = 'std/behaviors/std-crm';
 const ALIAS = 'Crm';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdCrmEventKey = 'CONVERT_LEAD' | 'CREATE' | 'ContactDeleteFailed' | 'ContactDeleted' | 'ContactLoadFailed' | 'ContactLoaded' | 'ContactSaveFailed' | 'ContactSaved' | 'ContactUpdateFailed' | 'ContactUpdated' | 'DELETE' | 'DealDeleteFailed' | 'DealDeleted' | 'DealSaveFailed' | 'DealSaved' | 'DealUpdateFailed' | 'DealUpdated' | 'EDIT' | 'INIT' | 'NoteSaveFailed' | 'NoteSaved' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdCrmListenKey = 'CONTACT_CREATED' | 'CONTACT_UPDATED' | 'CONTACT_DELETED';
+
+/**
+ * Payload shape for the `CONVERT_LEAD` event.
+ */
+export interface StdCrmConvertLeadPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdCrmViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    company?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdCrmEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    company?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdCrmDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    company?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `ContactLoaded` event.
+ */
+export interface StdCrmContactLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `ContactLoadFailed` event.
+ */
+export interface StdCrmContactLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ContactSaved` event.
+ */
+export interface StdCrmContactSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ContactSaveFailed` event.
+ */
+export interface StdCrmContactSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ContactUpdated` event.
+ */
+export interface StdCrmContactUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ContactUpdateFailed` event.
+ */
+export interface StdCrmContactUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ContactDeleted` event.
+ */
+export interface StdCrmContactDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ContactDeleteFailed` event.
+ */
+export interface StdCrmContactDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DealSaved` event.
+ */
+export interface StdCrmDealSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DealSaveFailed` event.
+ */
+export interface StdCrmDealSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DealUpdated` event.
+ */
+export interface StdCrmDealUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DealUpdateFailed` event.
+ */
+export interface StdCrmDealUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `DealDeleted` event.
+ */
+export interface StdCrmDealDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `DealDeleteFailed` event.
+ */
+export interface StdCrmDealDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `NoteSaved` event.
+ */
+export interface StdCrmNoteSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `NoteSaveFailed` event.
+ */
+export interface StdCrmNoteSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-crm descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +227,8 @@ export interface StdCrmParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdCrmEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +248,11 @@ export function stdCrmContactBrowseTrait(params: StdCrmParams): TraitReference {
     ref: `${ALIAS}.traits.ContactBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +263,11 @@ export function stdCrmContactCreateTrait(params: StdCrmParams): TraitReference {
     ref: `${ALIAS}.traits.ContactCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +278,11 @@ export function stdCrmContactEditTrait(params: StdCrmParams): TraitReference {
     ref: `${ALIAS}.traits.ContactEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +293,11 @@ export function stdCrmContactViewTrait(params: StdCrmParams): TraitReference {
     ref: `${ALIAS}.traits.ContactView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +308,11 @@ export function stdCrmContactDeleteTrait(params: StdCrmParams): TraitReference {
     ref: `${ALIAS}.traits.ContactDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -795,8 +984,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'failure': 'ContactLoadFailed',
                         'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
                       },
                     },
                   ],
@@ -804,11 +993,6 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'align': 'center',
-                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
@@ -816,10 +1000,15 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                         {
                           'content': 'Loading…',
                           'type': 'typography',
-                          'variant': 'caption',
                           'color': 'muted',
+                          'variant': 'caption',
                         },
                       ],
+                      'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -834,19 +1023,44 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'main',
                     {
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                          'href': '/deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Notes',
+                          'href': '/notes',
+                          'icon': 'file-text',
+                        },
+                      ],
+                      'appName': 'CRM',
                       'children': [
                         {
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
                           'gap': 'lg',
-                          'direction': 'vertical',
                           'children': [
                             {
+                              'justify': 'between',
                               'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
                               'gap': 'md',
                               'children': [
                                 {
-                                  'gap': 'sm',
                                   'direction': 'horizontal',
-                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
@@ -859,116 +1073,91 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                     },
                                   ],
                                   'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
                                 },
                                 {
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
+                                      'type': 'button',
                                       'action': 'CREATE',
                                       'icon': 'plus',
-                                      'type': 'button',
                                       'label': 'Add Contact',
                                       'variant': 'primary',
                                     },
                                   ],
                                   'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
                                 },
                               ],
-                              'type': 'stack',
-                              'justify': 'between',
-                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'icon': 'users',
-                                  'value': '@payload.data.length',
-                                  'label': 'Total Contacts',
-                                },
-                              ],
                               'type': 'simple-grid',
                               'cols': 1,
+                              'children': [
+                                {
+                                  'value': '@payload.data.length',
+                                  'label': 'Total Contacts',
+                                  'icon': 'users',
+                                  'type': 'stat-display',
+                                },
+                              ],
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'entity': '@payload.data',
                               'variant': 'card',
                               'gap': 'sm',
+                              'type': 'data-list',
                               'itemActions': [
                                 {
-                                  'label': 'View',
                                   'event': 'VIEW',
                                   'variant': 'ghost',
+                                  'label': 'View',
                                 },
                                 {
-                                  'label': 'Edit',
                                   'event': 'EDIT',
                                   'variant': 'ghost',
+                                  'label': 'Edit',
                                 },
                                 {
+                                  'event': 'DELETE',
                                   'variant': 'danger',
                                   'label': 'Delete',
-                                  'event': 'DELETE',
                                 },
                               ],
-                              'type': 'data-list',
                               'fields': [
                                 {
-                                  'variant': 'h3',
                                   'icon': 'user',
+                                  'variant': 'h3',
                                   'name': 'name',
                                 },
                                 {
-                                  'name': 'status',
                                   'variant': 'badge',
+                                  'name': 'status',
                                 },
                                 {
-                                  'name': 'company',
                                   'variant': 'body',
+                                  'name': 'company',
                                 },
                                 {
-                                  'variant': 'caption',
                                   'name': 'email',
+                                  'variant': 'caption',
                                 },
                                 {
-                                  'name': 'phone',
                                   'variant': 'caption',
+                                  'name': 'phone',
                                 },
                               ],
-                              'entity': '@payload.data',
                             },
                           ],
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
-                        },
-                      ],
-                      'appName': 'CRM',
-                      'navItems': [
-                        {
-                          'icon': 'users',
-                          'href': '/contacts',
-                          'label': 'Contacts',
-                        },
-                        {
-                          'label': 'Deals',
-                          'icon': 'briefcase',
-                          'href': '/deals',
-                        },
-                        {
-                          'href': '/pipeline',
-                          'label': 'Pipeline',
-                          'icon': 'bar-chart-2',
-                        },
-                        {
-                          'href': '/notes',
-                          'label': 'Notes',
-                          'icon': 'file-text',
+                          'direction': 'vertical',
                         },
                       ],
                     },
@@ -984,36 +1173,36 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
-                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
-                          'name': 'alert-triangle',
                           'color': 'destructive',
                           'type': 'icon',
+                          'name': 'alert-triangle',
                         },
                         {
-                          'variant': 'h3',
+                          'type': 'typography',
                           'content': 'Failed to load contact',
-                          'type': 'typography',
+                          'variant': 'h3',
                         },
                         {
-                          'type': 'typography',
+                          'content': '@payload.error',
                           'variant': 'body',
                           'color': 'muted',
-                          'content': '@payload.error',
+                          'type': 'typography',
                         },
                         {
-                          'label': 'Retry',
                           'variant': 'primary',
                           'action': 'INIT',
                           'icon': 'rotate-ccw',
                           'type': 'button',
+                          'label': 'Retry',
                         },
                       ],
-                      'gap': 'md',
+                      'className': 'py-12',
                       'type': 'stack',
                       'align': 'center',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1196,8 +1385,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'success': 'ContactLoaded',
                         'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
                       },
                     },
                   ],
@@ -1213,8 +1402,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'failure': 'ContactLoadFailed',
                         'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
                       },
                     },
                   ],
@@ -1222,11 +1411,13 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
+                      'direction': 'vertical',
                       'type': 'stack',
                       'children': [
                         {
                           'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
@@ -1238,17 +1429,15 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                           ],
-                          'gap': 'sm',
-                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
-                          'mode': 'create',
                           'submitEvent': 'SAVE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'name',
                             'company',
@@ -1258,7 +1447,7 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                           ],
                         },
                       ],
-                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1299,8 +1488,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'ContactSaved',
                         'failure': 'ContactSaveFailed',
+                        'success': 'ContactSaved',
                       },
                     },
                   ],
@@ -1537,8 +1726,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     {
                       'id': '@payload.id',
                       'emit': {
-                        'failure': 'ContactLoadFailed',
                         'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
                       },
                     },
                   ],
@@ -1546,30 +1735,27 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
                       'children': [
                         {
                           'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'edit',
                               'type': 'icon',
                             },
                             {
-                              'content': 'Edit Contact',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'Edit Contact',
                             },
                           ],
                           'type': 'stack',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'mode': 'edit',
-                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'name',
                             'company',
@@ -1577,13 +1763,16 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             'phone',
                             'status',
                           ],
-                          'entity': '@payload.row',
                           'type': 'form-section',
+                          'mode': 'edit',
+                          'entity': '@payload.row',
                           'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
-                      'type': 'stack',
                       'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1624,8 +1813,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'ContactUpdateFailed',
                         'success': 'ContactUpdated',
+                        'failure': 'ContactUpdateFailed',
                       },
                     },
                   ],
@@ -1854,96 +2043,99 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'fetch',
                     'Contact',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'success': 'ContactLoaded',
                         'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'direction': 'horizontal',
+                          'align': 'center',
                           'type': 'stack',
-                          'gap': 'sm',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                               'content': '@entity.name',
                             },
                           ],
-                          'align': 'center',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'gap': 'md',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Name',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.name',
                               'variant': 'body',
+                              'content': '@entity.name',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                         },
                         {
-                          'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
-                              'type': 'typography',
                               'content': 'Company',
+                              'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.company',
                               'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Email',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.email',
-                              'type': 'typography',
                             },
                           ],
                           'type': 'stack',
+                        },
+                        {
+                          'type': 'stack',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Email',
+                              'type': 'typography',
+                            },
+                            {
+                              'content': '@entity.email',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
+                          'direction': 'horizontal',
                           'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
                           'type': 'stack',
                           'children': [
                             {
                               'type': 'typography',
-                              'content': 'Phone',
                               'variant': 'caption',
+                              'content': 'Phone',
                             },
                             {
                               'content': '@entity.phone',
@@ -1951,24 +2143,23 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'md',
                         },
                         {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'content': 'Status',
-                              'variant': 'caption',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.status',
-                            },
-                          ],
                           'type': 'stack',
                           'gap': 'md',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Status',
+                            },
+                            {
+                              'content': '@entity.status',
+                              'type': 'typography',
+                              'variant': 'body',
+                            },
+                          ],
                           'direction': 'horizontal',
                         },
                         {
@@ -1977,28 +2168,26 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                         {
                           'children': [
                             {
-                              'label': 'Edit',
+                              'icon': 'edit',
+                              'action': 'EDIT',
                               'variant': 'primary',
                               'type': 'button',
-                              'action': 'EDIT',
-                              'icon': 'edit',
+                              'label': 'Edit',
                             },
                             {
-                              'variant': 'ghost',
                               'label': 'Close',
                               'type': 'button',
                               'action': 'CLOSE',
+                              'variant': 'ghost',
                             },
                           ],
+                          'justify': 'end',
+                          'gap': 'sm',
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'end',
                         },
                       ],
                       'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -2228,8 +2417,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'failure': 'ContactLoadFailed',
                         'success': 'ContactLoaded',
+                        'failure': 'ContactLoadFailed',
                       },
                     },
                   ],
@@ -2260,57 +2449,57 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'alert-triangle',
                             },
                             {
-                              'content': 'Delete Contact',
                               'variant': 'h3',
                               'type': 'typography',
+                              'content': 'Delete Contact',
                             },
                           ],
+                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'alert',
                           'variant': 'error',
+                          'type': 'alert',
                           'message': 'This action cannot be undone.',
                         },
                         {
-                          'justify': 'end',
                           'gap': 'sm',
                           'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'button',
                               'variant': 'ghost',
-                              'label': 'Cancel',
                               'action': 'CANCEL',
+                              'label': 'Cancel',
                             },
                             {
-                              'icon': 'check',
-                              'label': 'Delete',
-                              'action': 'CONFIRM_DELETE',
-                              'type': 'button',
                               'variant': 'danger',
+                              'type': 'button',
+                              'icon': 'check',
+                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
                             },
                           ],
                           'type': 'stack',
+                          'justify': 'end',
                         },
                       ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2382,8 +2571,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'success': 'ContactLoaded',
                         'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
                       },
                     },
                   ],
@@ -2411,8 +2600,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Contact',
                     {
                       'emit': {
-                        'success': 'ContactLoaded',
                         'failure': 'ContactLoadFailed',
+                        'success': 'ContactLoaded',
                       },
                     },
                   ],
@@ -2752,8 +2941,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'success': 'DealLoaded',
                         'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
                       },
                     },
                   ],
@@ -2766,17 +2955,17 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                           'type': 'spinner',
                         },
                         {
-                          'content': 'Loading…',
                           'color': 'muted',
                           'type': 'typography',
+                          'content': 'Loading…',
                           'variant': 'caption',
                         },
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
                       'className': 'py-12',
+                      'direction': 'vertical',
+                      'align': 'center',
+                      'type': 'stack',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2790,127 +2979,127 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'href': '/contacts',
-                          'label': 'Contacts',
-                          'icon': 'users',
-                        },
-                        {
-                          'icon': 'briefcase',
-                          'label': 'Deals',
-                          'href': '/deals',
-                        },
-                        {
-                          'icon': 'bar-chart-2',
-                          'label': 'Pipeline',
-                          'href': '/pipeline',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Notes',
-                          'href': '/notes',
-                        },
-                      ],
                       'appName': 'CRM',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
                           'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
+                              'gap': 'md',
                               'justify': 'between',
+                              'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
                                   'type': 'stack',
-                                  'gap': 'sm',
-                                  'align': 'center',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'briefcase',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Deals',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
+                                  'align': 'center',
+                                  'gap': 'sm',
                                 },
                                 {
-                                  'gap': 'sm',
                                   'type': 'stack',
                                   'children': [
                                     {
-                                      'label': 'New Deal',
-                                      'action': 'CREATE',
                                       'type': 'button',
-                                      'variant': 'primary',
+                                      'label': 'New Deal',
                                       'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
                                     },
                                   ],
+                                  'gap': 'sm',
                                   'direction': 'horizontal',
                                 },
                               ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'fields': [
-                                {
-                                  'icon': 'briefcase',
-                                  'variant': 'h3',
-                                  'name': 'title',
-                                },
-                                {
-                                  'variant': 'badge',
-                                  'name': 'stage',
-                                },
-                                {
-                                  'variant': 'h4',
-                                  'name': 'value',
-                                  'format': 'currency',
-                                },
-                                {
-                                  'label': 'Contact',
-                                  'name': 'contactId',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'gap': 'md',
                               'entity': '@payload.data',
                               'itemActions': [
                                 {
+                                  'label': 'View',
                                   'event': 'VIEW',
                                   'variant': 'ghost',
-                                  'label': 'View',
                                 },
                                 {
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
                                   'label': 'Edit',
+                                  'variant': 'ghost',
+                                  'event': 'EDIT',
                                 },
                                 {
-                                  'event': 'DELETE',
                                   'label': 'Delete',
                                   'variant': 'danger',
+                                  'event': 'DELETE',
                                 },
                               ],
-                              'type': 'data-grid',
+                              'fields': [
+                                {
+                                  'variant': 'h3',
+                                  'name': 'title',
+                                  'icon': 'briefcase',
+                                },
+                                {
+                                  'name': 'stage',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'value',
+                                  'variant': 'h4',
+                                  'format': 'currency',
+                                },
+                                {
+                                  'name': 'contactId',
+                                  'label': 'Contact',
+                                  'variant': 'caption',
+                                },
+                              ],
                               'cols': 2,
+                              'gap': 'md',
+                              'type': 'data-grid',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
                         },
                       ],
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                        },
+                        {
+                          'label': 'Deals',
+                          'icon': 'briefcase',
+                          'href': '/deals',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'label': 'Notes',
+                          'icon': 'file-text',
+                          'href': '/notes',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2924,36 +3113,36 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
-                      'align': 'center',
                       'children': [
                         {
+                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
-                          'type': 'icon',
                         },
                         {
+                          'type': 'typography',
                           'content': 'Failed to load deal',
                           'variant': 'h3',
-                          'type': 'typography',
                         },
                         {
-                          'content': '@payload.error',
-                          'variant': 'body',
                           'color': 'muted',
+                          'variant': 'body',
                           'type': 'typography',
+                          'content': '@payload.error',
                         },
                         {
-                          'label': 'Retry',
                           'type': 'button',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
                           'action': 'INIT',
+                          'label': 'Retry',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
                         },
                       ],
-                      'direction': 'vertical',
                       'gap': 'md',
+                      'direction': 'vertical',
+                      'align': 'center',
                       'className': 'py-12',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -3128,8 +3317,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'failure': 'DealLoadFailed',
                         'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
                       },
                     },
                   ],
@@ -3145,8 +3334,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'failure': 'DealLoadFailed',
                         'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
                       },
                     },
                   ],
@@ -3154,12 +3343,12 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
                       'type': 'stack',
-                      'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
@@ -3167,17 +3356,20 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             },
                             {
                               'variant': 'h3',
-                              'content': 'Create Deal',
                               'type': 'typography',
+                              'content': 'Create Deal',
                             },
                           ],
-                          'gap': 'sm',
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
                           'fields': [
                             'title',
                             'contactId',
@@ -3185,12 +3377,9 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             'stage',
                             'closedAt',
                           ],
-                          'type': 'form-section',
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3469,34 +3658,28 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'edit',
+                              'type': 'icon',
                             },
                             {
                               'content': 'Edit Deal',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
-                          'mode': 'edit',
-                          'submitEvent': 'SAVE',
-                          'entity': '@payload.row',
                           'fields': [
                             'title',
                             'contactId',
@@ -3504,9 +3687,15 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             'stage',
                             'closedAt',
                           ],
+                          'entity': '@payload.row',
+                          'mode': 'edit',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3780,50 +3969,54 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'gap': 'sm',
                           'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'eye',
                             },
                             {
-                              'variant': 'h3',
                               'content': '@entity.title',
                               'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
-                          'gap': 'md',
                           'children': [
                             {
+                              'content': 'Title',
                               'type': 'typography',
                               'variant': 'caption',
-                              'content': 'Title',
                             },
                             {
-                              'type': 'typography',
                               'content': '@entity.title',
                               'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'md',
                         },
                         {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Contact ID',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
@@ -3831,29 +4024,25 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'variant': 'body',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                               'content': 'Value',
                             },
                             {
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.value',
+                              'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
                           'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
                         },
                         {
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'variant': 'caption',
@@ -3862,21 +4051,23 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             },
                             {
                               'content': '@entity.stage',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
+                          'type': 'stack',
                           'gap': 'md',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Closed At',
+                              'variant': 'caption',
+                              'type': 'typography',
                             },
                             {
                               'content': '@entity.closedAt',
@@ -3884,34 +4075,32 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'justify': 'end',
-                          'gap': 'sm',
                           'children': [
                             {
+                              'icon': 'edit',
                               'type': 'button',
+                              'variant': 'primary',
                               'action': 'EDIT',
                               'label': 'Edit',
-                              'variant': 'primary',
-                              'icon': 'edit',
                             },
                             {
-                              'variant': 'ghost',
                               'action': 'CLOSE',
                               'type': 'button',
                               'label': 'Close',
+                              'variant': 'ghost',
                             },
                           ],
+                          'gap': 'sm',
+                          'justify': 'end',
                           'type': 'stack',
                           'direction': 'horizontal',
                         },
                       ],
-                      'direction': 'vertical',
                       'type': 'stack',
                       'gap': 'md',
                     },
@@ -4167,48 +4356,50 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
                           'align': 'center',
-                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'alert-triangle',
+                              'type': 'icon',
                             },
                             {
+                              'content': 'Delete Deal',
                               'variant': 'h3',
                               'type': 'typography',
-                              'content': 'Delete Deal',
                             },
                           ],
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'alert',
                           'variant': 'error',
+                          'type': 'alert',
                           'message': 'This action cannot be undone.',
                         },
                         {
                           'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
                           'justify': 'end',
                           'children': [
                             {
                               'label': 'Cancel',
+                              'action': 'CANCEL',
                               'type': 'button',
                               'variant': 'ghost',
-                              'action': 'CANCEL',
                             },
                             {
-                              'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
                               'type': 'button',
+                              'action': 'CONFIRM_DELETE',
+                              'icon': 'check',
                               'label': 'Delete',
                               'variant': 'danger',
                             },
@@ -4216,8 +4407,6 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                         },
                       ],
                       'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -4256,8 +4445,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'failure': 'DealLoadFailed',
                         'success': 'DealLoaded',
+                        'failure': 'DealLoadFailed',
                       },
                     },
                   ],
@@ -4289,8 +4478,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'success': 'DealLoaded',
                         'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
                       },
                     },
                   ],
@@ -4318,8 +4507,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Deal',
                     {
                       'emit': {
-                        'success': 'DealLoaded',
                         'failure': 'DealLoadFailed',
+                        'success': 'DealLoaded',
                       },
                     },
                   ],
@@ -4523,8 +4712,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Pipeline',
                     {
                       'emit': {
-                        'success': 'PipelineLoaded',
                         'failure': 'PipelineLoadFailed',
+                        'success': 'PipelineLoaded',
                       },
                     },
                   ],
@@ -4533,22 +4722,40 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'CRM',
+                      'navItems': [
+                        {
+                          'icon': 'users',
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                        },
+                        {
+                          'icon': 'briefcase',
+                          'href': '/deals',
+                          'label': 'Deals',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'href': '/notes',
+                          'icon': 'file-text',
+                          'label': 'Notes',
+                        },
+                      ],
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'direction': 'vertical',
-                              'type': 'stack',
-                              'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Pipeline',
@@ -4556,42 +4763,41 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'gap': 'md',
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'bar-chart-2',
+                                          'type': 'icon',
                                         },
                                         {
                                           'variant': 'h2',
-                                          'type': 'typography',
                                           'content': 'Pipeline',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'gap': 'md',
+                                      'type': 'stack',
                                       'direction': 'horizontal',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'type': 'button',
-                                      'variant': 'secondary',
-                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'padding': 'md',
-                                  'type': 'box',
                                   'children': [
                                     {
                                       'children': [
@@ -4602,18 +4808,18 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.totalValue',
                                           'label': 'TotalValue',
+                                          'value': '@entity.totalValue',
                                         },
                                         {
-                                          'label': 'WonDeals',
                                           'value': '@entity.wonDeals',
                                           'type': 'stat-display',
+                                          'label': 'WonDeals',
                                         },
                                         {
+                                          'label': 'LostDeals',
                                           'value': '@entity.lostDeals',
                                           'type': 'stat-display',
-                                          'label': 'LostDeals',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -4621,94 +4827,93 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                           'label': 'ConversionRate',
                                         },
                                       ],
-                                      'cols': 3,
                                       'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
                                   'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Chart View',
-                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                     {
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
-                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'date': 'Jun',
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
-                                  'width': 400,
                                   'edges': [
                                     {
                                       'target': 'b',
                                       'source': 'a',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
                                   'nodes': [
@@ -4717,43 +4922,27 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
+                                  'width': 400,
+                                  'height': 200,
                                   'type': 'graph-view',
                                 },
                               ],
+                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Contacts',
-                          'href': '/contacts',
-                          'icon': 'users',
-                        },
-                        {
-                          'label': 'Deals',
-                          'href': '/deals',
-                          'icon': 'briefcase',
-                        },
-                        {
-                          'label': 'Pipeline',
-                          'href': '/pipeline',
-                          'icon': 'bar-chart-2',
-                        },
-                        {
-                          'href': '/notes',
-                          'label': 'Notes',
-                          'icon': 'file-text',
-                        },
-                      ],
+                      'appName': 'CRM',
                     },
                   ],
                 ],
@@ -4768,8 +4957,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Pipeline',
                     {
                       'emit': {
-                        'failure': 'PipelineLoadFailed',
                         'success': 'PipelineLoaded',
+                        'failure': 'PipelineLoadFailed',
                       },
                     },
                   ],
@@ -4782,9 +4971,9 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                           'type': 'scaled-diagram',
                           'children': [
                             {
+                              'type': 'stack',
                               'direction': 'vertical',
                               'gap': 'lg',
-                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -4799,10 +4988,10 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                   ],
                                 },
                                 {
-                                  'gap': 'md',
-                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'name': 'bar-chart-2',
@@ -4815,99 +5004,99 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                         },
                                       ],
                                       'gap': 'md',
-                                      'direction': 'horizontal',
-                                      'type': 'stack',
                                     },
                                     {
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
                                       'type': 'button',
                                       'icon': 'refresh-cw',
-                                      'action': 'REFRESH',
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'justify': 'between',
                                   'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalDeals',
                                           'value': '@entity.totalDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.totalValue',
                                           'label': 'TotalValue',
+                                          'value': '@entity.totalValue',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'WonDeals',
                                           'value': '@entity.wonDeals',
+                                          'label': 'WonDeals',
                                         },
                                         {
-                                          'value': '@entity.lostDeals',
                                           'label': 'LostDeals',
                                           'type': 'stat-display',
+                                          'value': '@entity.lostDeals',
                                         },
                                         {
-                                          'value': '@entity.conversionRate',
                                           'type': 'stat-display',
+                                          'value': '@entity.conversionRate',
                                           'label': 'ConversionRate',
                                         },
                                       ],
                                       'cols': 3,
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'gap': 'md',
                                   'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                           'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
+                                  'gap': 'md',
                                 },
                                 {
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'date': 'Mar',
@@ -4918,8 +5107,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
@@ -4929,40 +5118,40 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                   'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
+                                  'width': 400,
                                   'type': 'graph-view',
+                                  'height': 200,
                                   'nodes': [
                                     {
                                       'label': 'Start',
                                       'id': 'a',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
@@ -4980,23 +5169,23 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                       'navItems': [
                         {
                           'icon': 'users',
-                          'href': '/contacts',
                           'label': 'Contacts',
+                          'href': '/contacts',
                         },
                         {
-                          'icon': 'briefcase',
                           'label': 'Deals',
+                          'icon': 'briefcase',
                           'href': '/deals',
                         },
                         {
+                          'label': 'Pipeline',
                           'href': '/pipeline',
                           'icon': 'bar-chart-2',
-                          'label': 'Pipeline',
                         },
                         {
                           'label': 'Notes',
-                          'href': '/notes',
                           'icon': 'file-text',
+                          'href': '/notes',
                         },
                       ],
                     },
@@ -5022,28 +5211,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'href': '/contacts',
-                          'icon': 'users',
-                          'label': 'Contacts',
-                        },
-                        {
-                          'icon': 'briefcase',
-                          'label': 'Deals',
-                          'href': '/deals',
-                        },
-                        {
-                          'icon': 'bar-chart-2',
-                          'label': 'Pipeline',
-                          'href': '/pipeline',
-                        },
-                        {
-                          'href': '/notes',
-                          'icon': 'file-text',
-                          'label': 'Notes',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'CRM',
                       'children': [
                         {
                           'children': [
@@ -5051,94 +5220,97 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'direction': 'vertical',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Pipeline',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
                                   'justify': 'between',
-                                  'direction': 'horizontal',
                                   'gap': 'md',
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'stack',
+                                      'gap': 'md',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'bar-chart-2',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'content': 'Pipeline',
                                           'type': 'typography',
+                                          'content': 'Pipeline',
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
                                       'type': 'button',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'padding': 'md',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.totalDeals',
                                           'label': 'TotalDeals',
+                                          'value': '@entity.totalDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'TotalValue',
                                           'value': '@entity.totalValue',
+                                          'label': 'TotalValue',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'WonDeals',
+                                          'type': 'stat-display',
                                           'value': '@entity.wonDeals',
                                         },
                                         {
-                                          'value': '@entity.lostDeals',
                                           'type': 'stat-display',
                                           'label': 'LostDeals',
+                                          'value': '@entity.lostDeals',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'ConversionRate',
+                                          'type': 'stat-display',
                                           'value': '@entity.conversionRate',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -5146,45 +5318,42 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                           'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                           'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
                                   'cols': 2,
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
@@ -5196,54 +5365,74 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'label': 'End',
-                                      'id': 'c',
-                                    },
-                                  ],
+                                  'type': 'graph-view',
                                   'width': 400,
-                                  'height': 200,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
                                 },
                               ],
-                              'type': 'stack',
                               'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'CRM',
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/contacts',
+                          'label': 'Contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'href': '/deals',
+                          'label': 'Deals',
+                          'icon': 'briefcase',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'label': 'Pipeline',
+                          'icon': 'bar-chart-2',
+                        },
+                        {
+                          'href': '/notes',
+                          'icon': 'file-text',
+                          'label': 'Notes',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -5267,19 +5456,41 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'href': '/deals',
+                          'label': 'Deals',
+                          'icon': 'briefcase',
+                        },
+                        {
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                          'href': '/pipeline',
+                        },
+                        {
+                          'label': 'Notes',
+                          'href': '/notes',
+                          'icon': 'file-text',
+                        },
+                      ],
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
                               'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Pipeline',
@@ -5288,12 +5499,11 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                 },
                                 {
                                   'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
@@ -5305,32 +5515,32 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                           'variant': 'h2',
                                         },
                                       ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
                                     },
                                     {
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
-                                      'type': 'button',
+                                      'variant': 'secondary',
                                       'action': 'REFRESH',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalDeals',
                                           'value': '@entity.totalDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -5338,54 +5548,55 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                           'label': 'TotalValue',
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.wonDeals',
                                           'label': 'WonDeals',
+                                          'value': '@entity.wonDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'label': 'LostDeals',
-                                          'type': 'stat-display',
                                           'value': '@entity.lostDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
+                                          'type': 'stat-display',
                                           'label': 'ConversionRate',
                                           'value': '@entity.conversionRate',
-                                          'type': 'stat-display',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'box',
                                   'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'gap': 'md',
                                   'type': 'grid',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                           'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
+                                  'cols': 2,
                                 },
                                 {
                                   'type': 'line-chart',
@@ -5399,16 +5610,16 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'date': 'Jun',
@@ -5417,19 +5628,21 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                   ],
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'width': 400,
+                                  'height': 200,
                                   'type': 'graph-view',
                                   'edges': [
                                     {
@@ -5441,8 +5654,6 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'target': 'c',
                                     },
                                   ],
-                                  'height': 200,
-                                  'width': 400,
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -5453,8 +5664,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
                                 },
@@ -5467,28 +5678,6 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                       ],
                       'type': 'dashboard-layout',
                       'appName': 'CRM',
-                      'navItems': [
-                        {
-                          'href': '/contacts',
-                          'label': 'Contacts',
-                          'icon': 'users',
-                        },
-                        {
-                          'href': '/deals',
-                          'icon': 'briefcase',
-                          'label': 'Deals',
-                        },
-                        {
-                          'href': '/pipeline',
-                          'label': 'Pipeline',
-                          'icon': 'bar-chart-2',
-                        },
-                        {
-                          'label': 'Notes',
-                          'icon': 'file-text',
-                          'href': '/notes',
-                        },
-                      ],
                     },
                   ],
                 ],
@@ -5512,138 +5701,116 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'appName': 'CRM',
-                      'navItems': [
-                        {
-                          'label': 'Contacts',
-                          'href': '/contacts',
-                          'icon': 'users',
-                        },
-                        {
-                          'icon': 'briefcase',
-                          'label': 'Deals',
-                          'href': '/deals',
-                        },
-                        {
-                          'href': '/pipeline',
-                          'icon': 'bar-chart-2',
-                          'label': 'Pipeline',
-                        },
-                        {
-                          'label': 'Notes',
-                          'href': '/notes',
-                          'icon': 'file-text',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
+                              'direction': 'vertical',
                               'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Pipeline',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'direction': 'horizontal',
+                                  'justify': 'between',
                                   'gap': 'md',
                                   'type': 'stack',
-                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
-                                      'type': 'stack',
                                       'children': [
                                         {
                                           'name': 'bar-chart-2',
                                           'type': 'icon',
                                         },
                                         {
-                                          'type': 'typography',
                                           'variant': 'h2',
                                           'content': 'Pipeline',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'gap': 'md',
+                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
                                       'action': 'REFRESH',
-                                      'label': 'Refresh',
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
                                     },
                                   ],
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
-                                  'type': 'box',
                                   'children': [
                                     {
                                       'children': [
                                         {
                                           'value': '@entity.totalDeals',
-                                          'type': 'stat-display',
                                           'label': 'TotalDeals',
+                                          'type': 'stat-display',
                                         },
                                         {
+                                          'label': 'TotalValue',
                                           'value': '@entity.totalValue',
                                           'type': 'stat-display',
-                                          'label': 'TotalValue',
                                         },
                                         {
-                                          'label': 'WonDeals',
-                                          'type': 'stat-display',
                                           'value': '@entity.wonDeals',
+                                          'type': 'stat-display',
+                                          'label': 'WonDeals',
                                         },
                                         {
                                           'label': 'LostDeals',
-                                          'value': '@entity.lostDeals',
                                           'type': 'stat-display',
+                                          'value': '@entity.lostDeals',
                                         },
                                         {
+                                          'label': 'ConversionRate',
                                           'value': '@entity.conversionRate',
                                           'type': 'stat-display',
-                                          'label': 'ConversionRate',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'type': 'grid',
                                   'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'children': [
@@ -5656,13 +5823,14 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'type': 'card',
                                     },
                                   ],
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
                                       'value': 19,
@@ -5681,57 +5849,78 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                                       'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'color': 'primary',
                                       'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
-                                    },
-                                  ],
-                                  'height': 200,
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
+                                      'label': 'End',
                                     },
                                   ],
                                   'type': 'graph-view',
+                                  'width': 400,
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
-                              'direction': 'vertical',
                             },
                           ],
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
+                        },
+                        {
+                          'href': '/deals',
+                          'icon': 'briefcase',
+                          'label': 'Deals',
+                        },
+                        {
+                          'href': '/pipeline',
+                          'icon': 'bar-chart-2',
+                          'label': 'Pipeline',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'label': 'Notes',
+                          'href': '/notes',
                         },
                       ],
                     },
@@ -5918,8 +6107,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Note',
                     {
                       'emit': {
-                        'failure': 'NoteLoadFailed',
                         'success': 'NoteLoaded',
+                        'failure': 'NoteLoadFailed',
                       },
                     },
                   ],
@@ -5927,22 +6116,22 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'direction': 'vertical',
                       'type': 'stack',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'type': 'typography',
-                          'content': 'Loading…',
-                          'color': 'muted',
                           'variant': 'caption',
+                          'color': 'muted',
+                          'content': 'Loading…',
+                          'type': 'typography',
                         },
                       ],
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'className': 'py-12',
                       'gap': 'md',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -5956,100 +6145,99 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'appName': 'CRM',
                       'children': [
                         {
                           'direction': 'vertical',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'align': 'center',
                               'type': 'stack',
-                              'gap': 'md',
+                              'justify': 'between',
+                              'align': 'center',
                               'children': [
                                 {
+                                  'type': 'stack',
                                   'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'name': 'file-text',
                                       'type': 'icon',
+                                      'name': 'file-text',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Notes',
+                                      'type': 'typography',
                                       'variant': 'h2',
                                     },
                                   ],
-                                  'gap': 'sm',
                                   'align': 'center',
-                                  'type': 'stack',
+                                  'gap': 'sm',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
                                   'children': [
                                     {
                                       'variant': 'primary',
+                                      'icon': 'edit',
                                       'action': 'COMPOSE',
                                       'type': 'button',
                                       'label': 'Compose',
-                                      'icon': 'edit',
                                     },
                                   ],
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                               ],
-                              'justify': 'between',
+                              'gap': 'md',
                               'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'variant': 'card',
+                              'type': 'data-list',
+                              'entity': '@payload.data',
                               'fields': [
                                 {
+                                  'name': 'subject',
                                   'variant': 'h4',
                                   'icon': 'file-text',
-                                  'name': 'subject',
                                 },
                                 {
-                                  'variant': 'caption',
                                   'name': 'author',
+                                  'variant': 'caption',
                                 },
                                 {
                                   'name': 'createdAt',
-                                  'variant': 'caption',
                                   'format': 'date',
+                                  'variant': 'caption',
                                 },
                               ],
-                              'gap': 'sm',
-                              'type': 'data-list',
-                              'entity': '@payload.data',
                               'itemActions': [
                                 {
-                                  'label': 'View',
                                   'variant': 'ghost',
+                                  'label': 'View',
                                   'event': 'VIEW',
                                 },
                               ],
+                              'variant': 'card',
+                              'gap': 'sm',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
                       'navItems': [
                         {
-                          'icon': 'users',
-                          'href': '/contacts',
                           'label': 'Contacts',
+                          'href': '/contacts',
+                          'icon': 'users',
                         },
                         {
                           'href': '/deals',
-                          'icon': 'briefcase',
                           'label': 'Deals',
+                          'icon': 'briefcase',
                         },
                         {
                           'icon': 'bar-chart-2',
@@ -6057,11 +6245,12 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                           'href': '/pipeline',
                         },
                         {
-                          'icon': 'file-text',
-                          'href': '/notes',
                           'label': 'Notes',
+                          'href': '/notes',
+                          'icon': 'file-text',
                         },
                       ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -6075,36 +6264,36 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
+                      'gap': 'md',
+                      'align': 'center',
                       'className': 'py-12',
+                      'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
                           'name': 'alert-triangle',
-                          'type': 'icon',
                           'color': 'destructive',
+                          'type': 'icon',
                         },
                         {
                           'type': 'typography',
-                          'variant': 'h3',
                           'content': 'Failed to load note',
+                          'variant': 'h3',
                         },
                         {
-                          'content': '@payload.error',
-                          'type': 'typography',
-                          'color': 'muted',
                           'variant': 'body',
+                          'type': 'typography',
+                          'content': '@payload.error',
+                          'color': 'muted',
                         },
                         {
-                          'action': 'INIT',
                           'type': 'button',
                           'label': 'Retry',
-                          'variant': 'primary',
+                          'action': 'INIT',
                           'icon': 'rotate-ccw',
+                          'variant': 'primary',
                         },
                       ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'align': 'center',
                     },
                   ],
                 ],
@@ -6291,10 +6480,9 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'gap': 'sm',
                           'children': [
                             {
@@ -6302,17 +6490,20 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                               'name': 'edit',
                             },
                             {
-                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'New Note',
+                              'variant': 'h3',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'form-section',
+                          'submitEvent': 'SEND',
                           'cancelEvent': 'CLOSE',
                           'fields': [
                             'subject',
@@ -6320,12 +6511,10 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             'author',
                           ],
                           'mode': 'create',
-                          'submitEvent': 'SEND',
                         },
                       ],
-                      'direction': 'vertical',
                       'type': 'stack',
-                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -6520,8 +6709,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'Note',
                     {
                       'emit': {
-                        'success': 'NoteLoaded',
                         'failure': 'NoteLoadFailed',
+                        'success': 'NoteLoaded',
                       },
                     },
                   ],
@@ -6536,11 +6725,11 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'fetch',
                     'Note',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'NoteLoaded',
                         'failure': 'NoteLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
@@ -6548,11 +6737,11 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                     'modal',
                     {
                       'gap': 'md',
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
                           'align': 'center',
                           'children': [
                             {
@@ -6561,10 +6750,12 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                             },
                             {
                               'content': '@entity.subject',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
@@ -6575,88 +6766,86 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
                           'gap': 'md',
                           'children': [
                             {
-                              'content': 'Subject',
                               'variant': 'caption',
                               'type': 'typography',
+                              'content': 'Subject',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                               'content': '@entity.subject',
                             },
                           ],
                         },
                         {
-                          'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
+                          'children': [
+                            {
+                              'type': 'typography',
+                              'variant': 'caption',
+                              'content': 'Body',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.body',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                        },
+                        {
+                          'direction': 'horizontal',
                           'gap': 'md',
                           'children': [
                             {
-                              'content': 'Body',
+                              'type': 'typography',
                               'variant': 'caption',
-                              'type': 'typography',
-                            },
-                            {
-                              'content': '@entity.body',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
                               'content': 'Author',
-                              'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.author',
                               'type': 'typography',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                        },
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Created At',
-                            },
-                            {
-                              'content': '@entity.createdAt',
-                              'type': 'typography',
                               'variant': 'body',
                             },
                           ],
                           'type': 'stack',
+                        },
+                        {
+                          'gap': 'md',
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'content': 'Created At',
+                              'type': 'typography',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.createdAt',
+                            },
+                          ],
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
                           'gap': 'sm',
                           'children': [
                             {
-                              'variant': 'ghost',
                               'label': 'Close',
-                              'action': 'CLOSE',
                               'type': 'button',
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
                             },
                           ],
-                          'type': 'stack',
-                          'justify': 'end',
-                          'direction': 'horizontal',
                         },
                       ],
-                      'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],

@@ -23,6 +23,116 @@ const BEHAVIOR_PATH = 'std/behaviors/std-agent-session';
 const ALIAS = 'AgentSession';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdAgentSessionEventKey = 'AgentSessionLoadFailed' | 'AgentSessionLoaded' | 'AgentSessionSaveFailed' | 'AgentSessionSaved' | 'AgentSessionUpdateFailed' | 'AgentSessionUpdated' | 'END' | 'FORK' | 'INIT' | 'LABEL';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdAgentSessionListenKey = 'FORKED' | 'LABELED' | 'ENDED';
+
+/**
+ * Payload shape for the `FORK` event.
+ */
+export interface StdAgentSessionForkPayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    description?: string;
+    status?: string;
+    createdAt?: string;
+    sessionId?: string;
+    parentId?: string;
+    label?: string;
+  };
+}
+
+/**
+ * Payload shape for the `LABEL` event.
+ */
+export interface StdAgentSessionLabelPayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    description?: string;
+    status?: string;
+    createdAt?: string;
+    sessionId?: string;
+    parentId?: string;
+    label?: string;
+  };
+}
+
+/**
+ * Payload shape for the `END` event.
+ */
+export interface StdAgentSessionEndPayload {
+  id: string;
+  row?: {
+    id: string;
+    name?: string;
+    description?: string;
+    status?: string;
+    createdAt?: string;
+    sessionId?: string;
+    parentId?: string;
+    label?: string;
+  };
+}
+
+/**
+ * Payload shape for the `AgentSessionLoaded` event.
+ */
+export interface StdAgentSessionAgentSessionLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `AgentSessionLoadFailed` event.
+ */
+export interface StdAgentSessionAgentSessionLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentSessionUpdated` event.
+ */
+export interface StdAgentSessionAgentSessionUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentSessionUpdateFailed` event.
+ */
+export interface StdAgentSessionAgentSessionUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentSessionSaved` event.
+ */
+export interface StdAgentSessionAgentSessionSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentSessionSaveFailed` event.
+ */
+export interface StdAgentSessionAgentSessionSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-agent-session descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +148,8 @@ export interface StdAgentSessionParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdAgentSessionEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +169,11 @@ export function stdAgentSessionAgentSessionBrowseTrait(params: StdAgentSessionPa
     ref: `${ALIAS}.traits.AgentSessionBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +184,11 @@ export function stdAgentSessionAgentSessionLabelTrait(params: StdAgentSessionPar
     ref: `${ALIAS}.traits.AgentSessionLabel`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +199,11 @@ export function stdAgentSessionAgentSessionAgentTrait(params: StdAgentSessionPar
     ref: `${ALIAS}.traits.AgentSessionAgent`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

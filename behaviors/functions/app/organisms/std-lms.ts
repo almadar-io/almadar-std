@@ -23,6 +23,150 @@ const BEHAVIOR_PATH = 'std/behaviors/std-lms';
 const ALIAS = 'Lms';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdLmsEventKey = 'CREATE' | 'CourseDeleteFailed' | 'CourseDeleted' | 'CourseLoadFailed' | 'CourseLoaded' | 'CourseSaveFailed' | 'CourseSaved' | 'CourseUpdateFailed' | 'CourseUpdated' | 'DELETE' | 'EDIT' | 'ENROLL' | 'EnrollmentSaveFailed' | 'EnrollmentSaved' | 'INIT' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdLmsListenKey = 'COURSE_CREATED' | 'COURSE_UPDATED' | 'COURSE_DELETED';
+
+/**
+ * Payload shape for the `ENROLL` event.
+ */
+export interface StdLmsEnrollPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdLmsViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    title?: string;
+    description?: string;
+    instructor?: string;
+    duration?: string;
+    level?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdLmsEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    title?: string;
+    description?: string;
+    instructor?: string;
+    duration?: string;
+    level?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdLmsDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    title?: string;
+    description?: string;
+    instructor?: string;
+    duration?: string;
+    level?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `CourseLoaded` event.
+ */
+export interface StdLmsCourseLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `CourseLoadFailed` event.
+ */
+export interface StdLmsCourseLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CourseSaved` event.
+ */
+export interface StdLmsCourseSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CourseSaveFailed` event.
+ */
+export interface StdLmsCourseSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CourseUpdated` event.
+ */
+export interface StdLmsCourseUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CourseUpdateFailed` event.
+ */
+export interface StdLmsCourseUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CourseDeleted` event.
+ */
+export interface StdLmsCourseDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CourseDeleteFailed` event.
+ */
+export interface StdLmsCourseDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `EnrollmentSaved` event.
+ */
+export interface StdLmsEnrollmentSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `EnrollmentSaveFailed` event.
+ */
+export interface StdLmsEnrollmentSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-lms descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +182,8 @@ export interface StdLmsParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdLmsEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +203,11 @@ export function stdLmsCourseBrowseTrait(params: StdLmsParams): TraitReference {
     ref: `${ALIAS}.traits.CourseBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +218,11 @@ export function stdLmsCourseCreateTrait(params: StdLmsParams): TraitReference {
     ref: `${ALIAS}.traits.CourseCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +233,11 @@ export function stdLmsCourseEditTrait(params: StdLmsParams): TraitReference {
     ref: `${ALIAS}.traits.CourseEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +248,11 @@ export function stdLmsCourseViewTrait(params: StdLmsParams): TraitReference {
     ref: `${ALIAS}.traits.CourseView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +263,11 @@ export function stdLmsCourseDeleteTrait(params: StdLmsParams): TraitReference {
     ref: `${ALIAS}.traits.CourseDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -683,8 +827,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Course',
                     {
                       'emit': {
-                        'failure': 'CourseLoadFailed',
                         'success': 'CourseLoaded',
+                        'failure': 'CourseLoadFailed',
                       },
                     },
                   ],
@@ -692,22 +836,22 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
-                      'className': 'py-12',
+                      'type': 'stack',
+                      'align': 'center',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
                           'type': 'typography',
-                          'variant': 'caption',
                           'content': 'Loading…',
+                          'variant': 'caption',
                           'color': 'muted',
                         },
                       ],
-                      'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
                       'gap': 'md',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -721,67 +865,50 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Courses',
-                          'href': '/courses',
-                          'icon': 'book-open',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Enroll',
-                          'href': '/enroll',
-                        },
-                        {
-                          'label': 'Progress',
-                          'icon': 'layout-list',
-                          'href': '/progress',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'horizontal',
                               'justify': 'between',
-                              'align': 'center',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'align': 'center',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'book-open',
+                                      'type': 'icon',
                                     },
                                     {
                                       'type': 'typography',
-                                      'variant': 'h2',
                                       'content': 'Courses',
+                                      'variant': 'h2',
                                     },
                                   ],
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
                                   'type': 'stack',
                                 },
                                 {
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'label': 'Add Course',
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
+                                      'variant': 'primary',
+                                    },
+                                  ],
                                   'type': 'stack',
                                   'direction': 'horizontal',
                                   'gap': 'sm',
-                                  'children': [
-                                    {
-                                      'label': 'Add Course',
-                                      'variant': 'primary',
-                                      'type': 'button',
-                                      'icon': 'plus',
-                                      'action': 'CREATE',
-                                    },
-                                  ],
                                 },
                               ],
+                              'align': 'center',
+                              'type': 'stack',
                               'gap': 'md',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
@@ -789,56 +916,73 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             {
                               'itemActions': [
                                 {
-                                  'variant': 'ghost',
-                                  'event': 'VIEW',
                                   'label': 'View',
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
                                 },
                                 {
-                                  'label': 'Edit',
                                   'event': 'EDIT',
+                                  'label': 'Edit',
                                   'variant': 'ghost',
                                 },
                                 {
                                   'event': 'DELETE',
-                                  'label': 'Delete',
                                   'variant': 'danger',
+                                  'label': 'Delete',
                                 },
                               ],
                               'fields': [
                                 {
-                                  'name': 'title',
                                   'variant': 'h3',
                                   'icon': 'book-open',
+                                  'name': 'title',
                                 },
                                 {
-                                  'name': 'level',
                                   'variant': 'badge',
+                                  'name': 'level',
                                 },
                                 {
                                   'variant': 'body',
                                   'name': 'instructor',
                                 },
                                 {
-                                  'name': 'duration',
                                   'variant': 'body',
+                                  'name': 'duration',
                                 },
                                 {
                                   'variant': 'caption',
                                   'name': 'description',
                                 },
                               ],
+                              'cols': 2,
+                              'gap': 'md',
                               'entity': '@payload.data',
                               'type': 'data-grid',
-                              'gap': 'md',
-                              'cols': 2,
                             },
                           ],
-                          'direction': 'vertical',
                           'gap': 'lg',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'label': 'Courses',
+                          'icon': 'book-open',
+                          'href': '/courses',
+                        },
+                        {
+                          'href': '/enroll',
+                          'icon': 'layout-list',
+                          'label': 'Enroll',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Progress',
+                          'href': '/progress',
                         },
                       ],
                       'appName': 'LMS',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -852,36 +996,36 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'align': 'center',
+                      'type': 'stack',
                       'className': 'py-12',
+                      'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'name': 'alert-triangle',
-                          'type': 'icon',
                           'color': 'destructive',
+                          'type': 'icon',
+                          'name': 'alert-triangle',
                         },
                         {
+                          'content': 'Failed to load course',
                           'variant': 'h3',
                           'type': 'typography',
-                          'content': 'Failed to load course',
                         },
                         {
-                          'type': 'typography',
                           'content': '@payload.error',
-                          'color': 'muted',
+                          'type': 'typography',
                           'variant': 'body',
+                          'color': 'muted',
                         },
                         {
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
                           'label': 'Retry',
                           'type': 'button',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'action': 'INIT',
                         },
                       ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -1081,8 +1225,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Course',
                     {
                       'emit': {
-                        'success': 'CourseLoaded',
                         'failure': 'CourseLoadFailed',
+                        'success': 'CourseLoaded',
                       },
                     },
                   ],
@@ -1091,20 +1235,21 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'modal',
                     {
                       'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
+                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
-                              'name': 'plus-circle',
                               'type': 'icon',
+                              'name': 'plus-circle',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'New Course',
-                              'variant': 'h3',
                             },
                           ],
                         },
@@ -1112,9 +1257,6 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                           'type': 'divider',
                         },
                         {
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
                           'fields': [
                             'title',
                             'description',
@@ -1123,9 +1265,11 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             'level',
                           ],
                           'submitEvent': 'SAVE',
+                          'mode': 'create',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
-                      'type': 'stack',
                       'gap': 'md',
                     },
                   ],
@@ -1403,21 +1547,22 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'fetch',
                     'Course',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'CourseLoaded',
                         'failure': 'CourseLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'direction': 'vertical',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
@@ -1425,23 +1570,19 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             },
                             {
                               'type': 'typography',
-                              'content': 'Edit Course',
                               'variant': 'h3',
+                              'content': 'Edit Course',
                             },
                           ],
                           'gap': 'sm',
-                          'direction': 'horizontal',
-                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
-                          'mode': 'edit',
                           'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
                           'entity': '@payload.row',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'title',
                             'description',
@@ -1449,8 +1590,11 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             'duration',
                             'level',
                           ],
+                          'mode': 'edit',
+                          'type': 'form-section',
                         },
                       ],
+                      'type': 'stack',
                       'gap': 'md',
                     },
                   ],
@@ -1492,8 +1636,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'CourseUpdateFailed',
                         'success': 'CourseUpdated',
+                        'failure': 'CourseUpdateFailed',
                       },
                     },
                   ],
@@ -1704,86 +1848,84 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'modal',
                     {
                       'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'align': 'center',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'eye',
                             },
                             {
-                              'variant': 'h3',
-                              'type': 'typography',
                               'content': '@entity.title',
+                              'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
-                          'gap': 'sm',
-                          'align': 'center',
                           'type': 'stack',
-                          'direction': 'horizontal',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'stack',
+                          'gap': 'md',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Title',
+                              'type': 'typography',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.title',
+                              'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
-                          'gap': 'md',
                         },
                         {
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
-                              'content': 'Description',
                               'type': 'typography',
+                              'content': 'Description',
+                              'variant': 'caption',
                             },
                             {
                               'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.description',
+                              'variant': 'body',
                             },
                           ],
                           'type': 'stack',
                           'gap': 'md',
                         },
                         {
-                          'gap': 'md',
-                          'type': 'stack',
                           'children': [
                             {
                               'type': 'typography',
-                              'variant': 'caption',
                               'content': 'Instructor',
+                              'variant': 'caption',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.instructor',
                               'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
+                          'gap': 'md',
                           'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
                           'type': 'stack',
-                          'gap': 'md',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                               'content': 'Duration',
                             },
                             {
@@ -1792,10 +1934,10 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                               'variant': 'body',
                             },
                           ],
+                          'gap': 'md',
                           'direction': 'horizontal',
                         },
                         {
-                          'gap': 'md',
                           'children': [
                             {
                               'type': 'typography',
@@ -1804,38 +1946,40 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             },
                             {
                               'type': 'typography',
-                              'variant': 'body',
                               'content': '@entity.level',
+                              'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
                           'justify': 'end',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'button',
                               'variant': 'primary',
-                              'icon': 'edit',
+                              'type': 'button',
                               'label': 'Edit',
+                              'icon': 'edit',
                               'action': 'EDIT',
                             },
                             {
-                              'variant': 'ghost',
                               'label': 'Close',
-                              'type': 'button',
                               'action': 'CLOSE',
+                              'variant': 'ghost',
+                              'type': 'button',
                             },
                           ],
+                          'gap': 'sm',
+                          'type': 'stack',
                         },
                       ],
+                      'direction': 'vertical',
                       'type': 'stack',
                     },
                   ],
@@ -2066,8 +2210,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Course',
                     {
                       'emit': {
-                        'success': 'CourseLoaded',
                         'failure': 'CourseLoadFailed',
+                        'success': 'CourseLoaded',
                       },
                     },
                   ],
@@ -2098,55 +2242,55 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
                       'type': 'stack',
                       'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'direction': 'horizontal',
                           'align': 'center',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'alert-triangle',
                             },
                             {
-                              'content': 'Delete Course',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
+                              'content': 'Delete Course',
                             },
                           ],
                           'type': 'stack',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'message': 'This action cannot be undone.',
                           'variant': 'error',
                           'type': 'alert',
+                          'message': 'This action cannot be undone.',
                         },
                         {
-                          'justify': 'end',
                           'type': 'stack',
-                          'direction': 'horizontal',
                           'gap': 'sm',
                           'children': [
                             {
                               'variant': 'ghost',
                               'label': 'Cancel',
-                              'type': 'button',
                               'action': 'CANCEL',
+                              'type': 'button',
                             },
                             {
-                              'label': 'Delete',
                               'variant': 'danger',
-                              'action': 'CONFIRM_DELETE',
+                              'label': 'Delete',
                               'type': 'button',
+                              'action': 'CONFIRM_DELETE',
                               'icon': 'check',
                             },
                           ],
+                          'justify': 'end',
+                          'direction': 'horizontal',
                         },
                       ],
                     },
@@ -2165,8 +2309,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'success': 'CourseDeleted',
                         'failure': 'CourseDeleteFailed',
+                        'success': 'CourseDeleted',
                       },
                     },
                   ],
@@ -2220,8 +2364,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Course',
                     {
                       'emit': {
-                        'failure': 'CourseLoadFailed',
                         'success': 'CourseLoaded',
+                        'failure': 'CourseLoadFailed',
                       },
                     },
                   ],
@@ -2249,8 +2393,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Course',
                     {
                       'emit': {
-                        'success': 'CourseLoaded',
                         'failure': 'CourseLoadFailed',
+                        'success': 'CourseLoaded',
                       },
                     },
                   ],
@@ -2538,36 +2682,35 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'padding': 'lg',
                           'type': 'container',
+                          'padding': 'lg',
+                          'maxWidth': 'lg',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'lg',
                               'children': [
                                 {
+                                  'type': 'stack',
                                   'align': 'center',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'user-plus',
+                                      'type': 'icon',
                                     },
                                     {
-                                      'content': 'Course Enrollment',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Course Enrollment',
                                     },
                                   ],
                                   'direction': 'horizontal',
-                                  'type': 'stack',
                                   'gap': 'sm',
                                 },
                                 {
-                                  'count': 2,
                                   'currentIndex': 0,
+                                  'count': 2,
                                   'type': 'progress-dots',
                                 },
                                 {
@@ -2582,60 +2725,61 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'typography',
                                   'variant': 'h3',
                                   'content': 'Student Info',
-                                  'type': 'typography',
                                 },
                                 {
-                                  'type': 'form-section',
-                                  'cancelEvent': 'INIT',
                                   'mode': 'create',
-                                  'submitEvent': 'NEXT',
                                   'fields': [
                                     'studentName',
                                     'email',
                                   ],
+                                  'type': 'form-section',
+                                  'submitEvent': 'NEXT',
+                                  'cancelEvent': 'INIT',
                                 },
                                 {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'icon': 'arrow-right',
                                       'variant': 'primary',
                                       'label': 'Next',
-                                      'type': 'button',
                                       'action': 'NEXT',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
                                     },
                                   ],
-                                  'justify': 'end',
                                   'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
+                                  'justify': 'end',
                                 },
                               ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
-                          'maxWidth': 'lg',
                         },
                       ],
                       'navItems': [
                         {
-                          'href': '/courses',
-                          'label': 'Courses',
                           'icon': 'book-open',
+                          'label': 'Courses',
+                          'href': '/courses',
                         },
                         {
-                          'label': 'Enroll',
                           'href': '/enroll',
                           'icon': 'layout-list',
+                          'label': 'Enroll',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Progress',
+                          'icon': 'layout-list',
                           'href': '/progress',
                         },
                       ],
                       'appName': 'LMS',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2661,52 +2805,35 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     {
                       'type': 'dashboard-layout',
                       'appName': 'LMS',
-                      'navItems': [
-                        {
-                          'label': 'Courses',
-                          'href': '/courses',
-                          'icon': 'book-open',
-                        },
-                        {
-                          'label': 'Enroll',
-                          'icon': 'layout-list',
-                          'href': '/enroll',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/progress',
-                          'label': 'Progress',
-                        },
-                      ],
                       'children': [
                         {
-                          'maxWidth': 'lg',
+                          'type': 'container',
                           'children': [
                             {
+                              'direction': 'vertical',
                               'type': 'stack',
                               'gap': 'lg',
-                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'user-plus',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Course Enrollment',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
+                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'align': 'center',
                                 },
                                 {
-                                  'count': 2,
                                   'currentIndex': 1,
+                                  'count': 2,
                                   'type': 'progress-dots',
                                 },
                                 {
@@ -2721,46 +2848,63 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'divider',
                                 },
                                 {
-                                  'variant': 'h3',
-                                  'type': 'typography',
                                   'content': 'Course Selection',
+                                  'type': 'typography',
+                                  'variant': 'h3',
                                 },
                                 {
+                                  'mode': 'create',
+                                  'type': 'form-section',
+                                  'cancelEvent': 'PREV',
+                                  'submitEvent': 'NEXT',
                                   'fields': [
                                     'courseId',
                                   ],
-                                  'submitEvent': 'NEXT',
-                                  'type': 'form-section',
-                                  'cancelEvent': 'PREV',
-                                  'mode': 'create',
                                 },
                                 {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
                                       'icon': 'arrow-left',
-                                      'type': 'button',
                                       'label': 'Back',
-                                      'action': 'PREV',
+                                      'type': 'button',
                                       'variant': 'ghost',
+                                      'action': 'PREV',
                                     },
                                     {
-                                      'icon': 'arrow-right',
                                       'label': 'Next',
-                                      'action': 'NEXT',
+                                      'icon': 'arrow-right',
                                       'type': 'button',
                                       'variant': 'primary',
+                                      'action': 'NEXT',
                                     },
                                   ],
-                                  'justify': 'end',
-                                  'direction': 'horizontal',
                                   'type': 'stack',
-                                  'gap': 'sm',
+                                  'justify': 'end',
                                 },
                               ],
                             },
                           ],
-                          'type': 'container',
+                          'maxWidth': 'lg',
                           'padding': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'href': '/courses',
+                          'label': 'Courses',
+                          'icon': 'book-open',
+                        },
+                        {
+                          'label': 'Enroll',
+                          'href': '/enroll',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Progress',
+                          'href': '/progress',
                         },
                       ],
                     },
@@ -2777,8 +2921,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Enrollment',
                     {
                       'emit': {
-                        'success': 'EnrollmentLoaded',
                         'failure': 'EnrollmentLoadFailed',
+                        'success': 'EnrollmentLoaded',
                       },
                     },
                   ],
@@ -2791,31 +2935,32 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                         {
                           'type': 'stack',
                           'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'gap': 'sm',
                               'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'gap': 'sm',
                               'children': [
                                 {
                                   'name': 'user-plus',
                                   'type': 'icon',
                                 },
                                 {
-                                  'variant': 'h2',
                                   'type': 'typography',
                                   'content': 'Course Enrollment',
+                                  'variant': 'h2',
                                 },
                               ],
-                              'direction': 'horizontal',
-                              'align': 'center',
                             },
                             {
-                              'type': 'badge',
                               'label': 'Review',
+                              'type': 'badge',
                             },
                             {
-                              'currentStep': 2,
                               'type': 'wizard-progress',
+                              'currentStep': 2,
                               'steps': [
                                 'Student Info',
                                 'Course Selection',
@@ -2826,66 +2971,66 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                             },
                             {
                               'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'children': [
                                 {
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'variant': 'caption',
                                       'type': 'typography',
                                       'content': 'Student Name',
+                                      'variant': 'caption',
                                     },
                                     {
-                                      'variant': 'body',
                                       'content': '@entity.studentName',
                                       'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                  ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                },
+                                {
+                                  'justify': 'between',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Email',
+                                      'variant': 'caption',
+                                    },
+                                    {
+                                      'variant': 'body',
+                                      'content': '@entity.email',
+                                      'type': 'typography',
                                     },
                                   ],
                                   'type': 'stack',
-                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                 },
                                 {
+                                  'justify': 'between',
                                   'direction': 'horizontal',
                                   'gap': 'md',
                                   'children': [
                                     {
-                                      'content': 'Email',
                                       'type': 'typography',
                                       'variant': 'caption',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@entity.email',
-                                      'variant': 'body',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'justify': 'between',
-                                },
-                                {
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'justify': 'between',
-                                  'children': [
-                                    {
                                       'content': 'Course Id',
-                                      'variant': 'caption',
-                                      'type': 'typography',
                                     },
                                     {
+                                      'variant': 'body',
                                       'type': 'typography',
                                       'content': '@entity.courseId',
-                                      'variant': 'body',
                                     },
                                   ],
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                                 {
-                                  'type': 'stack',
                                   'justify': 'between',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'type': 'stack',
                                   'children': [
                                     {
                                       'type': 'typography',
@@ -2894,55 +3039,54 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                     },
                                     {
                                       'content': '@entity.enrolledAt',
-                                      'variant': 'body',
                                       'type': 'typography',
+                                      'variant': 'body',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                 },
                                 {
                                   'gap': 'md',
                                   'type': 'stack',
+                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'children': [
                                     {
+                                      'content': 'Status',
                                       'type': 'typography',
                                       'variant': 'caption',
-                                      'content': 'Status',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': '@entity.status',
+                                      'type': 'typography',
                                       'variant': 'body',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                             {
-                              'showNext': false,
                               'showComplete': true,
-                              'type': 'wizard-navigation',
-                              'showBack': true,
+                              'showNext': false,
                               'currentStep': 2,
                               'totalSteps': 3,
+                              'type': 'wizard-navigation',
+                              'showBack': true,
                             },
                           ],
-                          'gap': 'lg',
                         },
                       ],
                       'navItems': [
                         {
-                          'href': '/courses',
                           'label': 'Courses',
+                          'href': '/courses',
                           'icon': 'book-open',
                         },
                         {
-                          'icon': 'layout-list',
-                          'label': 'Enroll',
                           'href': '/enroll',
+                          'label': 'Enroll',
+                          'icon': 'layout-list',
                         },
                         {
                           'label': 'Progress',
@@ -2974,40 +3118,36 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'appName': 'LMS',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
                                       'name': 'user-plus',
                                     },
                                     {
+                                      'type': 'typography',
                                       'content': 'Course Enrollment',
                                       'variant': 'h2',
-                                      'type': 'typography',
                                     },
                                   ],
-                                  'align': 'center',
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'gap': 'sm',
                                 },
                                 {
-                                  'currentIndex': 0,
                                   'type': 'progress-dots',
+                                  'currentIndex': 0,
                                   'count': 2,
                                 },
                                 {
-                                  'type': 'wizard-progress',
                                   'currentStep': 0,
+                                  'type': 'wizard-progress',
                                   'steps': [
                                     'Student Info',
                                     'Course Selection',
@@ -3017,61 +3157,65 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'divider',
                                 },
                                 {
-                                  'content': 'Student Info',
                                   'type': 'typography',
+                                  'content': 'Student Info',
                                   'variant': 'h3',
                                 },
                                 {
+                                  'type': 'form-section',
+                                  'cancelEvent': 'INIT',
+                                  'mode': 'create',
+                                  'submitEvent': 'NEXT',
                                   'fields': [
                                     'studentName',
                                     'email',
                                   ],
-                                  'mode': 'create',
-                                  'type': 'form-section',
-                                  'submitEvent': 'NEXT',
-                                  'cancelEvent': 'INIT',
                                 },
                                 {
-                                  'children': [
-                                    {
-                                      'label': 'Next',
-                                      'type': 'button',
-                                      'action': 'NEXT',
-                                      'variant': 'primary',
-                                      'icon': 'arrow-right',
-                                    },
-                                  ],
                                   'direction': 'horizontal',
-                                  'justify': 'end',
                                   'type': 'stack',
                                   'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'icon': 'arrow-right',
+                                      'variant': 'primary',
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                    },
+                                  ],
+                                  'justify': 'end',
                                 },
                               ],
+                              'type': 'stack',
                               'direction': 'vertical',
+                              'gap': 'lg',
                             },
                           ],
                           'maxWidth': 'lg',
-                          'padding': 'lg',
                           'type': 'container',
+                          'padding': 'lg',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'book-open',
                           'label': 'Courses',
                           'href': '/courses',
+                          'icon': 'book-open',
                         },
                         {
+                          'icon': 'layout-list',
                           'label': 'Enroll',
                           'href': '/enroll',
-                          'icon': 'layout-list',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Progress',
                           'href': '/progress',
+                          'icon': 'layout-list',
                         },
                       ],
+                      'appName': 'LMS',
                     },
                   ],
                 ],
@@ -3095,31 +3239,51 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'href': '/courses',
+                          'icon': 'book-open',
+                          'label': 'Courses',
+                        },
+                        {
+                          'href': '/enroll',
+                          'icon': 'layout-list',
+                          'label': 'Enroll',
+                        },
+                        {
+                          'label': 'Progress',
+                          'href': '/progress',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'LMS',
                       'children': [
                         {
                           'padding': 'lg',
+                          'maxWidth': 'lg',
                           'type': 'container',
                           'children': [
                             {
-                              'gap': 'lg',
                               'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'user-plus',
-                                    },
-                                    {
-                                      'content': 'Course Enrollment',
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                    },
-                                  ],
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
                                   'align': 'center',
                                   'type': 'stack',
-                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'name': 'user-plus',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Course Enrollment',
+                                      'variant': 'h2',
+                                    },
+                                  ],
                                 },
                                 {
                                   'count': 2,
@@ -3127,78 +3291,58 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'progress-dots',
                                 },
                                 {
-                                  'type': 'wizard-progress',
-                                  'currentStep': 1,
                                   'steps': [
                                     'Student Info',
                                     'Course Selection',
                                   ],
+                                  'currentStep': 1,
+                                  'type': 'wizard-progress',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'content': 'Course Selection',
                                   'variant': 'h3',
                                   'type': 'typography',
+                                  'content': 'Course Selection',
                                 },
                                 {
+                                  'cancelEvent': 'PREV',
+                                  'type': 'form-section',
                                   'fields': [
                                     'courseId',
                                   ],
-                                  'type': 'form-section',
-                                  'cancelEvent': 'PREV',
                                   'mode': 'create',
                                   'submitEvent': 'NEXT',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'type': 'button',
-                                      'label': 'Back',
-                                      'variant': 'ghost',
-                                      'action': 'PREV',
                                       'icon': 'arrow-left',
+                                      'label': 'Back',
+                                      'action': 'PREV',
+                                      'type': 'button',
+                                      'variant': 'ghost',
                                     },
                                     {
-                                      'variant': 'primary',
-                                      'action': 'NEXT',
-                                      'label': 'Next',
-                                      'icon': 'arrow-right',
                                       'type': 'button',
+                                      'label': 'Next',
+                                      'action': 'NEXT',
+                                      'variant': 'primary',
+                                      'icon': 'arrow-right',
                                     },
                                   ],
                                   'justify': 'end',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                 },
                               ],
-                              'direction': 'vertical',
                             },
                           ],
-                          'maxWidth': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Courses',
-                          'icon': 'book-open',
-                          'href': '/courses',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/enroll',
-                          'label': 'Enroll',
-                        },
-                        {
-                          'label': 'Progress',
-                          'icon': 'layout-list',
-                          'href': '/progress',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'LMS',
                     },
                   ],
                 ],
@@ -3230,32 +3374,15 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'main',
                     {
                       'appName': 'LMS',
-                      'navItems': [
-                        {
-                          'icon': 'book-open',
-                          'label': 'Courses',
-                          'href': '/courses',
-                        },
-                        {
-                          'href': '/enroll',
-                          'icon': 'layout-list',
-                          'label': 'Enroll',
-                        },
-                        {
-                          'href': '/progress',
-                          'icon': 'layout-list',
-                          'label': 'Progress',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'stack',
                           'align': 'center',
-                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
                               'content': 'Enrolled!',
@@ -3263,20 +3390,37 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                             {
-                              'content': 'You have been successfully enrolled in the course.',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
+                              'content': 'You have been successfully enrolled in the course.',
                             },
                             {
+                              'type': 'button',
+                              'action': 'RESTART',
+                              'variant': 'primary',
                               'icon': 'refresh-cw',
                               'label': 'Start New',
-                              'action': 'RESTART',
-                              'type': 'button',
-                              'variant': 'primary',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'lg',
+                          'direction': 'vertical',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Courses',
+                          'icon': 'book-open',
+                          'href': '/courses',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/enroll',
+                          'label': 'Enroll',
+                        },
+                        {
+                          'href': '/progress',
+                          'label': 'Progress',
+                          'icon': 'layout-list',
                         },
                       ],
                     },
@@ -3302,11 +3446,12 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'appName': 'LMS',
                       'navItems': [
                         {
-                          'label': 'Courses',
                           'icon': 'book-open',
                           'href': '/courses',
+                          'label': 'Courses',
                         },
                         {
                           'icon': 'layout-list',
@@ -3314,13 +3459,11 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                           'label': 'Enroll',
                         },
                         {
+                          'href': '/progress',
                           'icon': 'layout-list',
                           'label': 'Progress',
-                          'href': '/progress',
                         },
                       ],
-                      'appName': 'LMS',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'maxWidth': 'lg',
@@ -3328,78 +3471,79 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                           'type': 'container',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'lg',
                               'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'direction': 'horizontal',
                                   'gap': 'sm',
-                                  'type': 'stack',
                                   'align': 'center',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'name': 'user-plus',
                                       'type': 'icon',
+                                      'name': 'user-plus',
                                     },
                                     {
                                       'content': 'Course Enrollment',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                 },
                                 {
                                   'currentIndex': 0,
-                                  'type': 'progress-dots',
                                   'count': 2,
+                                  'type': 'progress-dots',
                                 },
                                 {
-                                  'currentStep': 0,
-                                  'type': 'wizard-progress',
                                   'steps': [
                                     'Student Info',
                                     'Course Selection',
                                   ],
+                                  'type': 'wizard-progress',
+                                  'currentStep': 0,
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'typography',
-                                  'content': 'Student Info',
                                   'variant': 'h3',
+                                  'content': 'Student Info',
+                                  'type': 'typography',
                                 },
                                 {
+                                  'type': 'form-section',
+                                  'mode': 'create',
+                                  'cancelEvent': 'INIT',
+                                  'submitEvent': 'NEXT',
                                   'fields': [
                                     'studentName',
                                     'email',
                                   ],
-                                  'type': 'form-section',
-                                  'submitEvent': 'NEXT',
-                                  'cancelEvent': 'INIT',
-                                  'mode': 'create',
                                 },
                                 {
+                                  'type': 'stack',
                                   'justify': 'end',
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'type': 'button',
-                                      'icon': 'arrow-right',
-                                      'action': 'NEXT',
                                       'variant': 'primary',
+                                      'action': 'NEXT',
                                       'label': 'Next',
+                                      'icon': 'arrow-right',
+                                      'type': 'button',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                 },
                               ],
                             },
                           ],
                         },
                       ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3423,35 +3567,36 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'padding': 'lg',
+                          'type': 'container',
+                          'maxWidth': 'lg',
                           'children': [
                             {
-                              'direction': 'vertical',
-                              'gap': 'lg',
                               'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'type': 'stack',
-                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'user-plus',
+                                      'type': 'icon',
                                     },
                                     {
-                                      'variant': 'h2',
                                       'type': 'typography',
                                       'content': 'Course Enrollment',
+                                      'variant': 'h2',
                                     },
                                   ],
+                                  'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
                                 },
                                 {
-                                  'count': 2,
                                   'type': 'progress-dots',
+                                  'count': 2,
                                   'currentIndex': 0,
                                 },
                                 {
@@ -3459,68 +3604,67 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                     'Student Info',
                                     'Course Selection',
                                   ],
-                                  'currentStep': 0,
                                   'type': 'wizard-progress',
+                                  'currentStep': 0,
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'typography',
                                   'content': 'Student Info',
                                   'variant': 'h3',
-                                  'type': 'typography',
                                 },
                                 {
-                                  'type': 'form-section',
                                   'mode': 'create',
-                                  'submitEvent': 'NEXT',
+                                  'type': 'form-section',
+                                  'cancelEvent': 'INIT',
                                   'fields': [
                                     'studentName',
                                     'email',
                                   ],
-                                  'cancelEvent': 'INIT',
+                                  'submitEvent': 'NEXT',
                                 },
                                 {
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'justify': 'end',
                                   'children': [
                                     {
-                                      'type': 'button',
                                       'icon': 'arrow-right',
-                                      'action': 'NEXT',
+                                      'type': 'button',
                                       'variant': 'primary',
                                       'label': 'Next',
+                                      'action': 'NEXT',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'sm',
+                                  'type': 'stack',
                                 },
                               ],
+                              'direction': 'vertical',
                             },
                           ],
-                          'maxWidth': 'lg',
-                          'padding': 'lg',
-                          'type': 'container',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'book-open',
+                          'label': 'Courses',
+                          'href': '/courses',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/enroll',
+                          'label': 'Enroll',
+                        },
+                        {
+                          'label': 'Progress',
+                          'icon': 'layout-list',
+                          'href': '/progress',
                         },
                       ],
                       'appName': 'LMS',
-                      'navItems': [
-                        {
-                          'href': '/courses',
-                          'icon': 'book-open',
-                          'label': 'Courses',
-                        },
-                        {
-                          'label': 'Enroll',
-                          'icon': 'layout-list',
-                          'href': '/enroll',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/progress',
-                          'label': 'Progress',
-                        },
-                      ],
                     },
                   ],
                 ],
@@ -3720,93 +3864,77 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'appName': 'LMS',
-                      'navItems': [
-                        {
-                          'href': '/courses',
-                          'label': 'Courses',
-                          'icon': 'book-open',
-                        },
-                        {
-                          'href': '/enroll',
-                          'label': 'Enroll',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Progress',
-                          'href': '/progress',
-                        },
-                      ],
                       'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Progress',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'gap': 'md',
-                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                           'content': 'Progress',
                                         },
                                       ],
                                     },
                                     {
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
                                       'type': 'button',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'type': 'typography',
                                                   'content': 'CourseName',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -3814,20 +3942,18 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                                   'content': '@entity.courseName',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                               'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'value': '@entity.lessonsCompleted',
                                           'label': 'LessonsCompleted',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'value': '@entity.totalLessons',
                                           'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
                                           'type': 'stat-display',
                                         },
                                         {
@@ -3840,6 +3966,7 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'children': [
                                             {
                                               'direction': 'vertical',
+                                              'type': 'stack',
                                               'gap': 'sm',
                                               'children': [
                                                 {
@@ -3848,20 +3975,17 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.lastActivity',
                                                 },
                                               ],
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                     },
                                   ],
-                                  'padding': 'md',
                                   'type': 'box',
                                 },
                                 {
@@ -3869,8 +3993,10 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                 },
                                 {
                                   'cols': 2,
+                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -3878,50 +4004,48 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
                                   'type': 'grid',
-                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
                                       'date': 'May',
                                       'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -3931,44 +4055,64 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'height': 200,
-                                  'type': 'graph-view',
-                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
+                                  'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
                                 },
                               ],
-                              'type': 'stack',
+                              'gap': 'lg',
+                              'direction': 'vertical',
                             },
                           ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'LMS',
+                      'navItems': [
+                        {
+                          'href': '/courses',
+                          'label': 'Courses',
+                          'icon': 'book-open',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/enroll',
+                          'label': 'Enroll',
+                        },
+                        {
+                          'href': '/progress',
+                          'label': 'Progress',
+                          'icon': 'layout-list',
                         },
                       ],
                     },
@@ -3994,30 +4138,33 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'appName': 'LMS',
                       'navItems': [
                         {
+                          'label': 'Courses',
                           'icon': 'book-open',
                           'href': '/courses',
-                          'label': 'Courses',
                         },
                         {
-                          'label': 'Enroll',
                           'href': '/enroll',
+                          'label': 'Enroll',
                           'icon': 'layout-list',
                         },
                         {
+                          'label': 'Progress',
                           'href': '/progress',
                           'icon': 'layout-list',
-                          'label': 'Progress',
                         },
                       ],
-                      'appName': 'LMS',
                       'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'items': [
@@ -4034,12 +4181,12 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                 {
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                       'gap': 'md',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
                                           'type': 'typography',
@@ -4047,55 +4194,56 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
                                       'action': 'REFRESH',
-                                      'label': 'Refresh',
+                                      'type': 'button',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
+                                      'label': 'Refresh',
                                     },
                                   ],
+                                  'gap': 'md',
                                   'justify': 'between',
                                   'type': 'stack',
                                   'direction': 'horizontal',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'content': 'CourseName',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'CourseName',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'content': '@entity.courseName',
+                                                  'variant': 'h3',
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                               'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
-                                          'value': '@entity.lessonsCompleted',
-                                          'type': 'stat-display',
                                           'label': 'LessonsCompleted',
+                                          'type': 'stat-display',
+                                          'value': '@entity.lessonsCompleted',
                                         },
                                         {
                                           'label': 'TotalLessons',
@@ -4103,29 +4251,29 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'value': '@entity.percentComplete',
-                                          'type': 'stat-display',
                                           'label': 'PercentComplete',
+                                          'type': 'stat-display',
+                                          'value': '@entity.percentComplete',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'content': 'LastActivity',
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'content': '@entity.lastActivity',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.lastActivity',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'gap': 'sm',
-                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
@@ -4134,48 +4282,46 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'cols': 3,
                                     },
                                   ],
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'grid',
                                   'gap': 'md',
                                   'children': [
                                     {
                                       'children': [
                                         {
+                                          'content': 'Chart View',
                                           'variant': 'caption',
                                           'type': 'typography',
-                                          'content': 'Chart View',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Graph View',
-                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'type': 'grid',
                                   'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'value': 15,
@@ -4186,61 +4332,59 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'height': 200,
+                                  'width': 400,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'type': 'graph-view',
-                                  'width': 400,
-                                  'height': 200,
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'lg',
                             },
                           ],
                         },
@@ -4259,8 +4403,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Progress',
                     {
                       'emit': {
-                        'success': 'ProgressLoaded',
                         'failure': 'ProgressLoadFailed',
+                        'success': 'ProgressLoaded',
                       },
                     },
                   ],
@@ -4268,16 +4412,16 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'appName': 'LMS',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'children': [
                             {
                               'gap': 'lg',
                               'direction': 'vertical',
-                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -4287,12 +4431,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'label': 'Progress',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
-                                  'gap': 'md',
-                                  'type': 'stack',
                                   'children': [
                                     {
                                       'type': 'stack',
@@ -4302,102 +4442,108 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'name': 'trending-up',
                                         },
                                         {
+                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Progress',
-                                          'variant': 'h2',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'variant': 'secondary',
                                       'action': 'REFRESH',
-                                      'label': 'Refresh',
+                                      'variant': 'secondary',
                                       'type': 'button',
+                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'type': 'box',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'children': [
-                                                {
-                                                  'variant': 'caption',
-                                                  'content': 'CourseName',
-                                                  'type': 'typography',
-                                                },
-                                                {
-                                                  'variant': 'h3',
-                                                  'type': 'typography',
-                                                  'content': '@entity.courseName',
-                                                },
-                                              ],
+                                              'gap': 'sm',
                                               'type': 'stack',
                                               'direction': 'vertical',
-                                              'gap': 'sm',
+                                              'children': [
+                                                {
+                                                  'content': 'CourseName',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.courseName',
+                                                  'type': 'typography',
+                                                  'variant': 'h3',
+                                                },
+                                              ],
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
-                                          'value': '@entity.lessonsCompleted',
                                           'label': 'LessonsCompleted',
                                           'type': 'stat-display',
+                                          'value': '@entity.lessonsCompleted',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'TotalLessons',
                                           'value': '@entity.totalLessons',
+                                          'type': 'stat-display',
                                         },
                                         {
+                                          'label': 'PercentComplete',
                                           'value': '@entity.percentComplete',
                                           'type': 'stat-display',
-                                          'label': 'PercentComplete',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
-                                                  'type': 'typography',
                                                   'content': 'LastActivity',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'content': '@entity.lastActivity',
                                                   'variant': 'h3',
+                                                  'content': '@entity.lastActivity',
+                                                  'type': 'typography',
                                                 },
                                               ],
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                             },
                                           ],
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                       'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
+                                  'type': 'grid',
+                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
@@ -4413,26 +4559,24 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
-                                          'content': 'Graph View',
                                           'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
-                                  'cols': 2,
-                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
@@ -4451,7 +4595,6 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
@@ -4467,17 +4610,17 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'height': 200,
                                   'type': 'graph-view',
+                                  'height': 200,
+                                  'width': 400,
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
                                   'nodes': [
@@ -4490,35 +4633,36 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
                                 },
                               ],
+                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'LMS',
                       'navItems': [
                         {
                           'icon': 'book-open',
-                          'href': '/courses',
                           'label': 'Courses',
+                          'href': '/courses',
                         },
                         {
                           'icon': 'layout-list',
-                          'label': 'Enroll',
                           'href': '/enroll',
+                          'label': 'Enroll',
                         },
                         {
-                          'icon': 'layout-list',
-                          'href': '/progress',
                           'label': 'Progress',
+                          'href': '/progress',
+                          'icon': 'layout-list',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -4548,8 +4692,12 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                         {
                           'children': [
                             {
+                              'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -4559,109 +4707,108 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'label': 'Progress',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'gap': 'md',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
                                   'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'name': 'trending-up',
                                           'type': 'icon',
                                         },
                                         {
+                                          'content': 'Progress',
                                           'variant': 'h2',
                                           'type': 'typography',
-                                          'content': 'Progress',
                                         },
                                       ],
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'label': 'Refresh',
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
+                                      'icon': 'refresh-cw',
                                       'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
                                     },
                                   ],
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 3,
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
                                                   'content': 'CourseName',
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                   'content': '@entity.courseName',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
-                                          'label': 'LessonsCompleted',
-                                          'type': 'stat-display',
                                           'value': '@entity.lessonsCompleted',
+                                          'type': 'stat-display',
+                                          'label': 'LessonsCompleted',
                                         },
                                         {
-                                          'value': '@entity.totalLessons',
                                           'label': 'TotalLessons',
                                           'type': 'stat-display',
+                                          'value': '@entity.totalLessons',
                                         },
                                         {
-                                          'type': 'stat-display',
-                                          'label': 'PercentComplete',
                                           'value': '@entity.percentComplete',
+                                          'label': 'PercentComplete',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'LastActivity',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.lastActivity',
                                                   'variant': 'h3',
+                                                  'content': '@entity.lastActivity',
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                       ],
-                                      'cols': 3,
                                       'type': 'simple-grid',
                                     },
                                   ],
@@ -4670,107 +4817,104 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'gap': 'md',
-                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Chart View',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
+                                  'cols': 2,
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'date': 'Mar',
                                       'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
                                       'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'type': 'graph-view',
+                                  'height': 200,
                                   'width': 400,
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
+                                  'type': 'graph-view',
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'lg',
                             },
                           ],
                           'type': 'scaled-diagram',
@@ -4778,19 +4922,19 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                       ],
                       'navItems': [
                         {
+                          'icon': 'book-open',
                           'label': 'Courses',
                           'href': '/courses',
-                          'icon': 'book-open',
                         },
                         {
-                          'href': '/enroll',
                           'label': 'Enroll',
+                          'href': '/enroll',
                           'icon': 'layout-list',
                         },
                         {
+                          'href': '/progress',
                           'label': 'Progress',
                           'icon': 'layout-list',
-                          'href': '/progress',
                         },
                       ],
                     },
@@ -4807,8 +4951,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'Progress',
                     {
                       'emit': {
-                        'success': 'ProgressLoaded',
                         'failure': 'ProgressLoadFailed',
+                        'success': 'ProgressLoaded',
                       },
                     },
                   ],
@@ -4816,77 +4960,73 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'LMS',
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Progress',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'gap': 'md',
                                   'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'trending-up',
+                                          'type': 'icon',
                                         },
                                         {
                                           'variant': 'h2',
-                                          'type': 'typography',
                                           'content': 'Progress',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
                                     },
                                     {
                                       'label': 'Refresh',
                                       'action': 'REFRESH',
+                                      'icon': 'refresh-cw',
                                       'variant': 'secondary',
                                       'type': 'button',
-                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'type': 'stack',
                                               'children': [
                                                 {
-                                                  'content': 'CourseName',
                                                   'variant': 'caption',
+                                                  'content': 'CourseName',
                                                   'type': 'typography',
                                                 },
                                                 {
@@ -4895,7 +5035,6 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
@@ -4905,14 +5044,14 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           'value': '@entity.lessonsCompleted',
                                         },
                                         {
-                                          'value': '@entity.totalLessons',
                                           'type': 'stat-display',
                                           'label': 'TotalLessons',
+                                          'value': '@entity.totalLessons',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'PercentComplete',
                                           'value': '@entity.percentComplete',
+                                          'label': 'PercentComplete',
                                         },
                                         {
                                           'type': 'card',
@@ -4922,14 +5061,14 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                               'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'content': 'LastActivity',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.lastActivity',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.lastActivity',
                                                 },
                                               ],
                                               'gap': 'sm',
@@ -4937,39 +5076,42 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                           ],
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                     },
                                   ],
+                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'gap': 'md',
-                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'variant': 'caption',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
+                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
@@ -4995,33 +5137,33 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                       'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
                                       'id': 'c',
@@ -5029,41 +5171,43 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                                     },
                                   ],
                                   'width': 400,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
-                                      'target': 'b',
                                       'source': 'a',
+                                      'target': 'b',
                                     },
                                     {
-                                      'target': 'c',
                                       'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
                                   'height': 200,
                                 },
                               ],
                               'direction': 'vertical',
-                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
+                      'appName': 'LMS',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Courses',
                           'icon': 'book-open',
                           'href': '/courses',
+                          'label': 'Courses',
                         },
                         {
-                          'label': 'Enroll',
+                          'icon': 'layout-list',
                           'href': '/enroll',
-                          'icon': 'layout-list',
+                          'label': 'Enroll',
                         },
                         {
-                          'label': 'Progress',
                           'icon': 'layout-list',
+                          'label': 'Progress',
                           'href': '/progress',
                         },
                       ],

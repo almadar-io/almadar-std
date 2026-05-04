@@ -23,6 +23,179 @@ const BEHAVIOR_PATH = 'std/behaviors/std-project-manager';
 const ALIAS = 'ProjectManager';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdProjectManagerEventKey = 'CREATE' | 'DELETE' | 'EDIT' | 'INIT' | 'SprintDeleteFailed' | 'SprintDeleted' | 'SprintSaveFailed' | 'SprintSaved' | 'SprintUpdateFailed' | 'SprintUpdated' | 'TaskDeleteFailed' | 'TaskDeleted' | 'TaskLoadFailed' | 'TaskLoaded' | 'TaskSaveFailed' | 'TaskSaved' | 'TaskUpdateFailed' | 'TaskUpdated' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdProjectManagerListenKey = 'TASK_CREATED' | 'TASK_UPDATED' | 'TASK_DELETED' | 'ASSIGN_TASK';
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdProjectManagerViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    description?: string;
+    assignee?: string;
+    priority?: string;
+    status?: string;
+    storyPoints?: number;
+    dueDate?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdProjectManagerEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    description?: string;
+    assignee?: string;
+    priority?: string;
+    status?: string;
+    storyPoints?: number;
+    dueDate?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdProjectManagerDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    description?: string;
+    assignee?: string;
+    priority?: string;
+    status?: string;
+    storyPoints?: number;
+    dueDate?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `TaskLoaded` event.
+ */
+export interface StdProjectManagerTaskLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `TaskLoadFailed` event.
+ */
+export interface StdProjectManagerTaskLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TaskSaved` event.
+ */
+export interface StdProjectManagerTaskSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TaskSaveFailed` event.
+ */
+export interface StdProjectManagerTaskSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TaskUpdated` event.
+ */
+export interface StdProjectManagerTaskUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TaskUpdateFailed` event.
+ */
+export interface StdProjectManagerTaskUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TaskDeleted` event.
+ */
+export interface StdProjectManagerTaskDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TaskDeleteFailed` event.
+ */
+export interface StdProjectManagerTaskDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `SprintSaved` event.
+ */
+export interface StdProjectManagerSprintSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `SprintSaveFailed` event.
+ */
+export interface StdProjectManagerSprintSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `SprintUpdated` event.
+ */
+export interface StdProjectManagerSprintUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `SprintUpdateFailed` event.
+ */
+export interface StdProjectManagerSprintUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `SprintDeleted` event.
+ */
+export interface StdProjectManagerSprintDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `SprintDeleteFailed` event.
+ */
+export interface StdProjectManagerSprintDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-project-manager descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +211,8 @@ export interface StdProjectManagerParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdProjectManagerEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +232,11 @@ export function stdProjectManagerTaskBrowseTrait(params: StdProjectManagerParams
     ref: `${ALIAS}.traits.TaskBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +247,11 @@ export function stdProjectManagerTaskCreateTrait(params: StdProjectManagerParams
     ref: `${ALIAS}.traits.TaskCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +262,11 @@ export function stdProjectManagerTaskEditTrait(params: StdProjectManagerParams):
     ref: `${ALIAS}.traits.TaskEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +277,11 @@ export function stdProjectManagerTaskViewTrait(params: StdProjectManagerParams):
     ref: `${ALIAS}.traits.TaskView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +292,11 @@ export function stdProjectManagerTaskDeleteTrait(params: StdProjectManagerParams
     ref: `${ALIAS}.traits.TaskDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -825,22 +998,22 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'direction': 'vertical',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
                           'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Loading…',
                           'color': 'muted',
+                          'content': 'Loading…',
+                          'type': 'typography',
                         },
                       ],
                       'className': 'py-12',
                       'gap': 'md',
                       'type': 'stack',
                       'align': 'center',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -854,63 +1027,64 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ProjectManagerApp',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
-                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
                               'align': 'center',
-                              'justify': 'between',
                               'children': [
                                 {
                                   'gap': 'sm',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'name': 'check-square',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Tasks',
-                                    },
-                                  ],
                                   'align': 'center',
                                   'direction': 'horizontal',
-                                },
-                                {
                                   'children': [
                                     {
-                                      'variant': 'primary',
-                                      'action': 'CREATE',
-                                      'icon': 'plus',
-                                      'type': 'button',
-                                      'label': 'Create Task',
+                                      'type': 'icon',
+                                      'name': 'check-square',
+                                    },
+                                    {
+                                      'type': 'typography',
+                                      'content': 'Tasks',
+                                      'variant': 'h2',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                },
+                                {
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                      'label': 'Create Task',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                  'type': 'stack',
                                 },
                               ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'simple-grid',
                               'cols': 1,
+                              'type': 'simple-grid',
                               'children': [
                                 {
-                                  'label': 'Total Tasks',
                                   'value': '@payload.data.length',
-                                  'icon': 'check-square',
                                   'type': 'stat-display',
+                                  'icon': 'check-square',
+                                  'label': 'Total Tasks',
                                 },
                               ],
                             },
@@ -918,49 +1092,20 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'type': 'divider',
                             },
                             {
-                              'entity': '@payload.data',
-                              'fields': [
-                                {
-                                  'name': 'title',
-                                  'icon': 'check-square',
-                                  'variant': 'h3',
-                                },
-                                {
-                                  'variant': 'badge',
-                                  'name': 'priority',
-                                },
-                                {
-                                  'variant': 'badge',
-                                  'name': 'status',
-                                },
-                                {
-                                  'name': 'assignee',
-                                  'variant': 'body',
-                                },
-                                {
-                                  'label': 'Points',
-                                  'format': 'number',
-                                  'name': 'storyPoints',
-                                  'variant': 'body',
-                                },
-                                {
-                                  'format': 'date',
-                                  'variant': 'caption',
-                                  'label': 'Due',
-                                  'name': 'dueDate',
-                                },
-                              ],
+                              'cols': 2,
+                              'gap': 'md',
                               'type': 'data-grid',
+                              'entity': '@payload.data',
                               'itemActions': [
                                 {
                                   'variant': 'ghost',
-                                  'label': 'View',
                                   'event': 'VIEW',
+                                  'label': 'View',
                                 },
                                 {
                                   'event': 'EDIT',
-                                  'label': 'Edit',
                                   'variant': 'ghost',
+                                  'label': 'Edit',
                                 },
                                 {
                                   'label': 'Delete',
@@ -968,31 +1113,59 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'variant': 'danger',
                                 },
                               ],
-                              'cols': 2,
-                              'gap': 'md',
+                              'fields': [
+                                {
+                                  'name': 'title',
+                                  'icon': 'check-square',
+                                  'variant': 'h3',
+                                },
+                                {
+                                  'name': 'priority',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'name': 'status',
+                                  'variant': 'badge',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'assignee',
+                                },
+                                {
+                                  'name': 'storyPoints',
+                                  'variant': 'body',
+                                  'label': 'Points',
+                                  'format': 'number',
+                                },
+                                {
+                                  'name': 'dueDate',
+                                  'label': 'Due',
+                                  'variant': 'caption',
+                                  'format': 'date',
+                                },
+                              ],
                             },
                           ],
+                          'direction': 'vertical',
+                          'type': 'stack',
                           'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ProjectManagerApp',
                       'navItems': [
                         {
                           'href': '/tasks',
-                          'label': 'Tasks',
                           'icon': 'check-square',
+                          'label': 'Tasks',
                         },
                         {
                           'label': 'Sprints',
-                          'href': '/sprints',
                           'icon': 'zap',
+                          'href': '/sprints',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Burndown',
                           'href': '/burndown',
+                          'icon': 'layout-list',
                         },
                       ],
                     },
@@ -1008,11 +1181,14 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
-                          'name': 'alert-triangle',
                           'color': 'destructive',
                           'type': 'icon',
+                          'name': 'alert-triangle',
                         },
                         {
                           'content': 'Failed to load task',
@@ -1020,24 +1196,21 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                           'variant': 'h3',
                         },
                         {
-                          'color': 'muted',
-                          'content': '@payload.error',
                           'type': 'typography',
+                          'content': '@payload.error',
                           'variant': 'body',
+                          'color': 'muted',
                         },
                         {
-                          'label': 'Retry',
                           'icon': 'rotate-ccw',
-                          'action': 'INIT',
                           'variant': 'primary',
+                          'label': 'Retry',
+                          'action': 'INIT',
                           'type': 'button',
                         },
                       ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
                       'className': 'py-12',
-                      'gap': 'md',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -1246,31 +1419,31 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'direction': 'vertical',
-                      'gap': 'md',
                       'children': [
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'name': 'plus-circle',
                               'type': 'icon',
+                              'name': 'plus-circle',
                             },
                             {
                               'content': 'Create Task',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'sm',
                           'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'mode': 'create',
                           'fields': [
                             'title',
                             'description',
@@ -1280,11 +1453,11 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                             'storyPoints',
                             'dueDate',
                           ],
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'type': 'stack',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1561,36 +1734,36 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'fetch',
                     'Task',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'TaskLoaded',
                         'failure': 'TaskLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
                       'gap': 'md',
                       'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
                           'children': [
                             {
-                              'name': 'edit',
                               'type': 'icon',
+                              'name': 'edit',
                             },
                             {
-                              'type': 'typography',
                               'content': 'Edit Task',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
                           'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
@@ -1598,7 +1771,6 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                         {
                           'mode': 'edit',
                           'type': 'form-section',
-                          'entity': '@payload.row',
                           'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
                           'fields': [
@@ -1610,6 +1782,7 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                             'storyPoints',
                             'dueDate',
                           ],
+                          'entity': '@payload.row',
                         },
                       ],
                     },
@@ -1846,8 +2019,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Task',
                     {
                       'emit': {
-                        'success': 'TaskLoaded',
                         'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
                       },
                     },
                   ],
@@ -1873,36 +2046,33 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'align': 'center',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
-                              'variant': 'h3',
                               'content': '@entity.title',
+                              'variant': 'h3',
                               'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Title',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
@@ -1910,81 +2080,82 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'content': '@entity.title',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'content': 'Description',
                               'variant': 'caption',
+                              'type': 'typography',
                             },
                             {
                               'variant': 'body',
-                              'content': '@entity.description',
                               'type': 'typography',
+                              'content': '@entity.description',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'md',
                           'type': 'stack',
                         },
                         {
                           'gap': 'md',
-                          'type': 'stack',
                           'children': [
                             {
+                              'type': 'typography',
                               'variant': 'caption',
                               'content': 'Assignee',
-                              'type': 'typography',
                             },
                             {
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.assignee',
+                              'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
+                          'type': 'stack',
                           'direction': 'horizontal',
                         },
                         {
                           'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'content': 'Priority',
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'content': '@entity.priority',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.priority',
                             },
                           ],
-                          'gap': 'md',
-                          'type': 'stack',
                         },
                         {
-                          'type': 'stack',
                           'children': [
                             {
+                              'type': 'typography',
                               'content': 'Status',
                               'variant': 'caption',
-                              'type': 'typography',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                               'content': '@entity.status',
                             },
                           ],
                           'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'variant': 'caption',
@@ -1992,55 +2163,57 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'content': 'Story Points',
                             },
                             {
-                              'type': 'typography',
                               'content': '@entity.storyPoints',
+                              'type': 'typography',
                               'variant': 'body',
                             },
                           ],
                         },
                         {
+                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'typography',
-                              'content': 'Due Date',
                               'variant': 'caption',
+                              'content': 'Due Date',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.dueDate',
                               'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
                           'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
                           'children': [
                             {
-                              'label': 'Edit',
                               'type': 'button',
+                              'action': 'EDIT',
                               'variant': 'primary',
                               'icon': 'edit',
-                              'action': 'EDIT',
+                              'label': 'Edit',
                             },
                             {
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'type': 'button',
                               'action': 'CLOSE',
+                              'type': 'button',
+                              'variant': 'ghost',
+                              'label': 'Close',
                             },
                           ],
-                          'type': 'stack',
                           'justify': 'end',
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'gap': 'sm',
                         },
                       ],
                       'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -2270,8 +2443,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Task',
                     {
                       'emit': {
-                        'success': 'TaskLoaded',
                         'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
                       },
                     },
                   ],
@@ -2291,11 +2464,11 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'fetch',
                     'Task',
                     {
-                      'emit': {
-                        'failure': 'TaskLoadFailed',
-                        'success': 'TaskLoaded',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'success': 'TaskLoaded',
+                        'failure': 'TaskLoadFailed',
+                      },
                     },
                   ],
                   [
@@ -2304,55 +2477,55 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     {
                       'type': 'stack',
                       'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'align': 'center',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'alert-triangle',
                             },
                             {
-                              'variant': 'h3',
                               'content': 'Delete Task',
                               'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'variant': 'error',
                           'message': 'This action cannot be undone.',
                           'type': 'alert',
+                          'variant': 'error',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'justify': 'end',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'ghost',
                               'action': 'CANCEL',
+                              'variant': 'ghost',
                               'type': 'button',
                               'label': 'Cancel',
                             },
                             {
                               'variant': 'danger',
-                              'action': 'CONFIRM_DELETE',
-                              'label': 'Delete',
-                              'type': 'button',
                               'icon': 'check',
+                              'type': 'button',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
                             },
                           ],
-                          'justify': 'end',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
                         },
                       ],
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -2369,8 +2542,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'failure': 'TaskDeleteFailed',
                         'success': 'TaskDeleted',
+                        'failure': 'TaskDeleteFailed',
                       },
                     },
                   ],
@@ -2391,8 +2564,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Task',
                     {
                       'emit': {
-                        'success': 'TaskLoaded',
                         'failure': 'TaskLoadFailed',
+                        'success': 'TaskLoaded',
                       },
                     },
                   ],
@@ -2835,8 +3008,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'failure': 'SprintLoadFailed',
                         'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
                       },
                     },
                   ],
@@ -2844,22 +3017,22 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'direction': 'vertical',
+                      'align': 'center',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
                           'variant': 'caption',
+                          'content': 'Loading…',
                           'type': 'typography',
                           'color': 'muted',
-                          'content': 'Loading…',
                         },
                       ],
-                      'align': 'center',
-                      'type': 'stack',
                       'gap': 'md',
-                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -2875,87 +3048,87 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     {
                       'navItems': [
                         {
+                          'href': '/tasks',
                           'label': 'Tasks',
                           'icon': 'check-square',
-                          'href': '/tasks',
                         },
                         {
-                          'label': 'Sprints',
                           'href': '/sprints',
+                          'label': 'Sprints',
                           'icon': 'zap',
                         },
                         {
-                          'label': 'Burndown',
                           'href': '/burndown',
                           'icon': 'layout-list',
+                          'label': 'Burndown',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'ProjectManagerApp',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'gap': 'lg',
                           'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'align': 'center',
-                              'gap': 'md',
                               'justify': 'between',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
                               'children': [
                                 {
+                                  'align': 'center',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
                                   'children': [
                                     {
                                       'name': 'zap',
                                       'type': 'icon',
                                     },
                                     {
-                                      'content': 'Sprints',
                                       'type': 'typography',
+                                      'content': 'Sprints',
                                       'variant': 'h2',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'align': 'center',
                                 },
                                 {
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'gap': 'sm',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'action': 'CREATE',
-                                      'variant': 'primary',
                                       'type': 'button',
+                                      'variant': 'primary',
                                       'icon': 'plus',
                                       'label': 'Create Sprint',
+                                      'action': 'CREATE',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'type': 'data-grid',
-                              'entity': '@payload.data',
+                              'gap': 'md',
                               'fields': [
                                 {
-                                  'variant': 'h3',
                                   'icon': 'zap',
                                   'name': 'name',
+                                  'variant': 'h3',
                                 },
                                 {
-                                  'variant': 'badge',
                                   'name': 'status',
+                                  'variant': 'badge',
                                 },
                                 {
-                                  'name': 'goal',
                                   'variant': 'body',
+                                  'name': 'goal',
                                 },
                                 {
                                   'label': 'Start',
@@ -2966,23 +3139,22 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                 {
                                   'name': 'endDate',
                                   'label': 'End',
-                                  'format': 'date',
                                   'variant': 'caption',
+                                  'format': 'date',
                                 },
                                 {
-                                  'format': 'number',
-                                  'label': 'Tasks',
                                   'variant': 'body',
+                                  'label': 'Tasks',
                                   'name': 'taskCount',
+                                  'format': 'number',
                                 },
                               ],
-                              'cols': 2,
-                              'gap': 'md',
+                              'entity': '@payload.data',
                               'itemActions': [
                                 {
-                                  'variant': 'ghost',
                                   'label': 'View',
                                   'event': 'VIEW',
+                                  'variant': 'ghost',
                                 },
                                 {
                                   'label': 'Edit',
@@ -2995,12 +3167,13 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'variant': 'danger',
                                 },
                               ],
+                              'cols': 2,
                             },
                           ],
                           'type': 'stack',
                         },
                       ],
-                      'appName': 'ProjectManagerApp',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3014,34 +3187,34 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'gap': 'md',
                       'align': 'center',
-                      'direction': 'vertical',
+                      'gap': 'md',
                       'className': 'py-12',
                       'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
+                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
-                          'type': 'icon',
                         },
                         {
+                          'variant': 'h3',
                           'content': 'Failed to load sprint',
                           'type': 'typography',
-                          'variant': 'h3',
                         },
                         {
-                          'content': '@payload.error',
-                          'variant': 'body',
                           'type': 'typography',
+                          'variant': 'body',
                           'color': 'muted',
+                          'content': '@payload.error',
                         },
                         {
                           'icon': 'rotate-ccw',
-                          'action': 'INIT',
-                          'variant': 'primary',
-                          'label': 'Retry',
                           'type': 'button',
+                          'action': 'INIT',
+                          'label': 'Retry',
+                          'variant': 'primary',
                         },
                       ],
                     },
@@ -3235,8 +3408,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'success': 'SprintLoaded',
                         'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
                       },
                     },
                   ],
@@ -3245,32 +3418,28 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'modal',
                     {
                       'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'plus-circle',
+                              'type': 'icon',
                             },
                             {
                               'content': 'Create Sprint',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
-                          'gap': 'sm',
+                          'type': 'stack',
                           'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
-                          'mode': 'create',
                           'fields': [
                             'name',
                             'startDate',
@@ -3279,9 +3448,13 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                             'status',
                             'taskCount',
                           ],
+                          'mode': 'create',
                           'submitEvent': 'SAVE',
+                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3322,8 +3495,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'SprintSaveFailed',
                         'success': 'SprintSaved',
+                        'failure': 'SprintSaveFailed',
                       },
                     },
                   ],
@@ -3533,8 +3706,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'failure': 'SprintLoadFailed',
                         'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
                       },
                     },
                   ],
@@ -3549,43 +3722,42 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'fetch',
                     'Sprint',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'failure': 'SprintLoadFailed',
                         'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
                       'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'edit',
+                              'type': 'icon',
                             },
                             {
+                              'type': 'typography',
                               'content': 'Edit Sprint',
                               'variant': 'h3',
-                              'type': 'typography',
                             },
                           ],
                           'gap': 'sm',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'mode': 'edit',
-                          'submitEvent': 'SAVE',
-                          'type': 'form-section',
                           'cancelEvent': 'CLOSE',
                           'fields': [
                             'name',
@@ -3596,9 +3768,10 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                             'taskCount',
                           ],
                           'entity': '@payload.row',
+                          'submitEvent': 'SAVE',
+                          'type': 'form-section',
                         },
                       ],
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -3639,8 +3812,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'SprintUpdateFailed',
                         'success': 'SprintUpdated',
+                        'failure': 'SprintUpdateFailed',
                       },
                     },
                   ],
@@ -3820,8 +3993,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'success': 'SprintLoaded',
                         'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
                       },
                     },
                   ],
@@ -3836,36 +4009,35 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'fetch',
                     'Sprint',
                     {
-                      'emit': {
-                        'success': 'SprintLoaded',
-                        'failure': 'SprintLoadFailed',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
-                      'type': 'stack',
                       'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'eye',
                             },
                             {
+                              'content': '@entity.name',
                               'type': 'typography',
                               'variant': 'h3',
-                              'content': '@entity.name',
                             },
                           ],
+                          'type': 'stack',
                           'gap': 'sm',
-                          'direction': 'horizontal',
                           'align': 'center',
                         },
                         {
@@ -3873,8 +4045,6 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                         },
                         {
                           'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'typography',
@@ -3882,31 +4052,34 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'variant': 'caption',
                             },
                             {
+                              'variant': 'body',
                               'type': 'typography',
                               'content': '@entity.name',
-                              'variant': 'body',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'content': 'Start Date',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'content': '@entity.startDate',
-                              'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
                           'type': 'stack',
                           'direction': 'horizontal',
+                        },
+                        {
+                          'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
+                          'children': [
+                            {
+                              'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Start Date',
+                            },
+                            {
+                              'type': 'typography',
+                              'content': '@entity.startDate',
+                              'variant': 'body',
+                            },
+                          ],
                         },
                         {
                           'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
                               'content': 'End Date',
@@ -3914,18 +4087,16 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'variant': 'caption',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.endDate',
+                              'type': 'typography',
                             },
                           ],
-                          'gap': 'md',
                           'type': 'stack',
                         },
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'variant': 'caption',
@@ -3933,11 +4104,12 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'type': 'typography',
                             },
                             {
+                              'content': '@entity.goal',
                               'type': 'typography',
                               'variant': 'body',
-                              'content': '@entity.goal',
                             },
                           ],
+                          'direction': 'horizontal',
                         },
                         {
                           'children': [
@@ -3947,24 +4119,22 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'content': 'Status',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.status',
+                              'type': 'typography',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'md',
                           'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
-                          'gap': 'md',
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
+                              'content': 'Task Count',
                               'type': 'typography',
                               'variant': 'caption',
-                              'content': 'Task Count',
                             },
                             {
                               'content': '@entity.taskCount',
@@ -3972,32 +4142,35 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'variant': 'body',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'sm',
-                          'justify': 'end',
+                          'type': 'stack',
                           'children': [
                             {
                               'label': 'Edit',
-                              'variant': 'primary',
                               'icon': 'edit',
-                              'action': 'EDIT',
+                              'variant': 'primary',
                               'type': 'button',
+                              'action': 'EDIT',
                             },
                             {
-                              'label': 'Close',
                               'action': 'CLOSE',
                               'variant': 'ghost',
                               'type': 'button',
+                              'label': 'Close',
                             },
                           ],
+                          'justify': 'end',
                         },
                       ],
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -4219,8 +4392,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'success': 'SprintLoaded',
                         'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
                       },
                     },
                   ],
@@ -4240,11 +4413,11 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'fetch',
                     'Sprint',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'failure': 'SprintLoadFailed',
                         'success': 'SprintLoaded',
+                        'failure': 'SprintLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
@@ -4252,6 +4425,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'modal',
                     {
                       'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
                       'children': [
                         {
                           'gap': 'sm',
@@ -4262,9 +4437,9 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                               'name': 'alert-triangle',
                             },
                             {
-                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Delete Sprint',
+                              'variant': 'h3',
                             },
                           ],
                           'type': 'stack',
@@ -4274,34 +4449,32 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                           'type': 'divider',
                         },
                         {
-                          'message': 'This action cannot be undone.',
-                          'variant': 'error',
                           'type': 'alert',
+                          'variant': 'error',
+                          'message': 'This action cannot be undone.',
                         },
                         {
+                          'direction': 'horizontal',
+                          'justify': 'end',
+                          'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'label': 'Cancel',
                               'type': 'button',
                               'variant': 'ghost',
+                              'label': 'Cancel',
                               'action': 'CANCEL',
                             },
                             {
                               'type': 'button',
+                              'label': 'Delete',
                               'action': 'CONFIRM_DELETE',
                               'variant': 'danger',
                               'icon': 'check',
-                              'label': 'Delete',
                             },
                           ],
-                          'gap': 'sm',
-                          'justify': 'end',
-                          'direction': 'horizontal',
-                          'type': 'stack',
                         },
                       ],
-                      'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -4340,8 +4513,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'success': 'SprintLoaded',
                         'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
                       },
                     },
                   ],
@@ -4373,8 +4546,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Sprint',
                     {
                       'emit': {
-                        'success': 'SprintLoaded',
                         'failure': 'SprintLoadFailed',
+                        'success': 'SprintLoaded',
                       },
                     },
                   ],
@@ -4607,8 +4780,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Burndown',
                     {
                       'emit': {
-                        'failure': 'BurndownLoadFailed',
                         'success': 'BurndownLoaded',
+                        'failure': 'BurndownLoadFailed',
                       },
                     },
                   ],
@@ -4616,21 +4789,19 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'children': [
                             {
                               'type': 'stack',
                               'direction': 'vertical',
-                              'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Burndown Chart',
@@ -4639,34 +4810,34 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                 },
                                 {
                                   'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'justify': 'between',
                                   'gap': 'md',
+                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'trending-down',
+                                          'type': 'icon',
                                         },
                                         {
+                                          'type': 'typography',
                                           'variant': 'h2',
                                           'content': 'Burndown Chart',
-                                          'type': 'typography',
                                         },
                                       ],
                                       'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
                                     },
                                     {
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
-                                      'type': 'button',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                       'action': 'REFRESH',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
@@ -4675,16 +4846,17 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 5,
                                       'children': [
                                         {
-                                          'label': 'TotalPoints',
                                           'value': '@entity.totalPoints',
+                                          'label': 'TotalPoints',
                                           'type': 'stat-display',
                                         },
                                         {
                                           'label': 'CompletedPoints',
-                                          'type': 'stat-display',
                                           'value': '@entity.completedPoints',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'value': '@entity.remainingPoints',
@@ -4692,9 +4864,9 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                           'label': 'RemainingPoints',
                                         },
                                         {
+                                          'type': 'stat-display',
                                           'label': 'Velocity',
                                           'value': '@entity.velocity',
-                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -4702,7 +4874,6 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                           'label': 'DaysRemaining',
                                         },
                                       ],
-                                      'cols': 5,
                                       'type': 'simple-grid',
                                     },
                                   ],
@@ -4712,33 +4883,34 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Chart View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'content': 'Graph View',
                                           'variant': 'caption',
-                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
@@ -4765,41 +4937,26 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'label': 'End',
-                                      'id': 'c',
-                                    },
-                                  ],
                                   'height': 200,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
@@ -4807,24 +4964,41 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                     },
                                   ],
                                   'type': 'graph-view',
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
                                   'width': 400,
                                 },
                               ],
+                              'gap': 'lg',
                             },
                           ],
                           'type': 'scaled-diagram',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'ProjectManagerApp',
                       'navItems': [
                         {
-                          'icon': 'check-square',
                           'href': '/tasks',
                           'label': 'Tasks',
+                          'icon': 'check-square',
                         },
                         {
-                          'label': 'Sprints',
-                          'href': '/sprints',
                           'icon': 'zap',
+                          'href': '/sprints',
+                          'label': 'Sprints',
                         },
                         {
                           'href': '/burndown',
@@ -4832,7 +5006,6 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                           'label': 'Burndown',
                         },
                       ],
-                      'appName': 'ProjectManagerApp',
                     },
                   ],
                 ],
@@ -4856,6 +5029,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ProjectManagerApp',
                       'navItems': [
                         {
                           'href': '/tasks',
@@ -4868,17 +5043,19 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                           'icon': 'zap',
                         },
                         {
-                          'icon': 'layout-list',
-                          'href': '/burndown',
                           'label': 'Burndown',
+                          'href': '/burndown',
+                          'icon': 'layout-list',
                         },
                       ],
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'label': 'Home',
@@ -4888,38 +5065,37 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'label': 'Burndown Chart',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'gap': 'md',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'trending-down',
                                         },
                                         {
+                                          'content': 'Burndown Chart',
                                           'type': 'typography',
                                           'variant': 'h2',
-                                          'content': 'Burndown Chart',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
                                       'label': 'Refresh',
+                                      'type': 'button',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'justify': 'between',
-                                  'direction': 'horizontal',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -4927,35 +5103,35 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                 {
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 5,
                                       'children': [
                                         {
+                                          'label': 'TotalPoints',
                                           'value': '@entity.totalPoints',
                                           'type': 'stat-display',
-                                          'label': 'TotalPoints',
                                         },
                                         {
-                                          'value': '@entity.completedPoints',
+                                          'type': 'stat-display',
                                           'label': 'CompletedPoints',
-                                          'type': 'stat-display',
+                                          'value': '@entity.completedPoints',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'RemainingPoints',
+                                          'type': 'stat-display',
                                           'value': '@entity.remainingPoints',
                                         },
                                         {
-                                          'value': '@entity.velocity',
-                                          'type': 'stat-display',
                                           'label': 'Velocity',
+                                          'type': 'stat-display',
+                                          'value': '@entity.velocity',
                                         },
                                         {
-                                          'label': 'DaysRemaining',
-                                          'value': '@entity.daysRemaining',
                                           'type': 'stat-display',
+                                          'value': '@entity.daysRemaining',
+                                          'label': 'DaysRemaining',
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                   'padding': 'md',
@@ -4965,6 +5141,7 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
                                   'type': 'grid',
                                   'children': [
                                     {
@@ -4972,8 +5149,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
@@ -4982,16 +5159,16 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'children': [
                                         {
                                           'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
                                   'cols': 2,
-                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
@@ -5002,8 +5179,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'date': 'Feb',
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
@@ -5014,11 +5191,10 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -5028,13 +5204,28 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'label': 'Current',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                 },
                                 {
                                   'height': 200,
+                                  'width': 400,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
                                   'type': 'graph-view',
                                   'edges': [
                                     {
@@ -5046,33 +5237,15 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'target': 'c',
                                     },
                                   ],
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'width': 400,
                                 },
                               ],
-                              'direction': 'vertical',
-                              'type': 'stack',
                               'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'ProjectManagerApp',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -5096,57 +5269,73 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'href': '/tasks',
+                          'label': 'Tasks',
+                          'icon': 'check-square',
+                        },
+                        {
+                          'href': '/sprints',
+                          'icon': 'zap',
+                          'label': 'Sprints',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Burndown',
+                          'href': '/burndown',
+                        },
+                      ],
                       'type': 'dashboard-layout',
+                      'appName': 'ProjectManagerApp',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'lg',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Burndown Chart',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'children': [
-                                        {
-                                          'name': 'trending-down',
-                                          'type': 'icon',
-                                        },
-                                        {
-                                          'type': 'typography',
-                                          'variant': 'h2',
-                                          'content': 'Burndown Chart',
-                                        },
-                                      ],
-                                      'gap': 'md',
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
-                                    },
-                                    {
-                                      'type': 'button',
-                                      'action': 'REFRESH',
-                                      'variant': 'secondary',
-                                      'label': 'Refresh',
-                                      'icon': 'refresh-cw',
-                                    },
-                                  ],
                                   'type': 'stack',
                                   'direction': 'horizontal',
                                   'justify': 'between',
+                                  'children': [
+                                    {
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'children': [
+                                        {
+                                          'type': 'icon',
+                                          'name': 'trending-down',
+                                        },
+                                        {
+                                          'content': 'Burndown Chart',
+                                          'variant': 'h2',
+                                          'type': 'typography',
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
+                                    },
+                                  ],
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -5156,35 +5345,35 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 5,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
+                                          'type': 'stat-display',
                                           'label': 'TotalPoints',
                                           'value': '@entity.totalPoints',
-                                          'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'CompletedPoints',
                                           'type': 'stat-display',
+                                          'label': 'CompletedPoints',
                                           'value': '@entity.completedPoints',
                                         },
                                         {
-                                          'value': '@entity.remainingPoints',
-                                          'type': 'stat-display',
                                           'label': 'RemainingPoints',
+                                          'type': 'stat-display',
+                                          'value': '@entity.remainingPoints',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'Velocity',
                                           'value': '@entity.velocity',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'label': 'DaysRemaining',
                                           'value': '@entity.daysRemaining',
+                                          'label': 'DaysRemaining',
                                         },
                                       ],
-                                      'type': 'simple-grid',
+                                      'cols': 5,
                                     },
                                   ],
                                 },
@@ -5197,8 +5386,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                     {
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                           'content': 'Chart View',
                                         },
                                       ],
@@ -5208,44 +5397,44 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
-                                  'gap': 'md',
                                   'type': 'grid',
+                                  'gap': 'md',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -5261,56 +5450,40 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   ],
                                 },
                                 {
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'width': 400,
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
-                                      'target': 'c',
                                       'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
-                                  'width': 400,
-                                  'height': 200,
                                 },
                               ],
                               'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
-                        },
-                      ],
-                      'appName': 'ProjectManagerApp',
-                      'navItems': [
-                        {
-                          'href': '/tasks',
-                          'icon': 'check-square',
-                          'label': 'Tasks',
-                        },
-                        {
-                          'icon': 'zap',
-                          'href': '/sprints',
-                          'label': 'Sprints',
-                        },
-                        {
-                          'label': 'Burndown',
-                          'icon': 'layout-list',
-                          'href': '/burndown',
                         },
                       ],
                     },
@@ -5336,38 +5509,20 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Tasks',
-                          'icon': 'check-square',
-                          'href': '/tasks',
-                        },
-                        {
-                          'icon': 'zap',
-                          'label': 'Sprints',
-                          'href': '/sprints',
-                        },
-                        {
-                          'href': '/burndown',
-                          'label': 'Burndown',
-                          'icon': 'layout-list',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
+                              'type': 'stack',
                               'gap': 'lg',
-                              'direction': 'vertical',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Burndown Chart',
@@ -5375,6 +5530,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   ],
                                 },
                                 {
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'justify': 'between',
                                   'children': [
                                     {
@@ -5384,41 +5541,40 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                           'type': 'icon',
                                         },
                                         {
-                                          'type': 'typography',
                                           'content': 'Burndown Chart',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'stack',
-                                      'gap': 'md',
                                       'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'variant': 'secondary',
-                                      'type': 'button',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'md',
-                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
                                       'cols': 5,
                                       'children': [
                                         {
-                                          'type': 'stat-display',
-                                          'value': '@entity.totalPoints',
                                           'label': 'TotalPoints',
+                                          'value': '@entity.totalPoints',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'stat-display',
@@ -5427,8 +5583,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                         },
                                         {
                                           'value': '@entity.remainingPoints',
-                                          'type': 'stat-display',
                                           'label': 'RemainingPoints',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'value': '@entity.velocity',
@@ -5436,22 +5592,23 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                           'label': 'Velocity',
                                         },
                                         {
-                                          'label': 'DaysRemaining',
-                                          'value': '@entity.daysRemaining',
                                           'type': 'stat-display',
+                                          'value': '@entity.daysRemaining',
+                                          'label': 'DaysRemaining',
                                         },
                                       ],
                                     },
                                   ],
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Chart View',
@@ -5459,23 +5616,22 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                           'variant': 'caption',
                                         },
                                       ],
-                                    },
-                                    {
-                                      'children': [
-                                        {
-                                          'content': 'Graph View',
-                                          'type': 'typography',
-                                          'variant': 'caption',
-                                        },
-                                      ],
                                       'type': 'card',
                                     },
+                                    {
+                                      'type': 'card',
+                                      'children': [
+                                        {
+                                          'variant': 'caption',
+                                          'type': 'typography',
+                                          'content': 'Graph View',
+                                        },
+                                      ],
+                                    },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'grid',
-                                  'cols': 2,
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -5486,8 +5642,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'value': 25,
@@ -5498,11 +5654,10 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
@@ -5518,38 +5673,56 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
-                                  'width': 400,
-                                  'nodes': [
-                                    {
-                                      'label': 'Start',
-                                      'id': 'a',
-                                    },
-                                    {
-                                      'label': 'Process',
-                                      'id': 'b',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
                                   'type': 'graph-view',
+                                  'height': 200,
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
                                 },
                               ],
-                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'check-square',
+                          'label': 'Tasks',
+                          'href': '/tasks',
+                        },
+                        {
+                          'icon': 'zap',
+                          'href': '/sprints',
+                          'label': 'Sprints',
+                        },
+                        {
+                          'href': '/burndown',
+                          'label': 'Burndown',
+                          'icon': 'layout-list',
                         },
                       ],
                       'appName': 'ProjectManagerApp',
@@ -5567,8 +5740,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'Burndown',
                     {
                       'emit': {
-                        'success': 'BurndownLoaded',
                         'failure': 'BurndownLoadFailed',
+                        'success': 'BurndownLoaded',
                       },
                     },
                   ],
@@ -5576,11 +5749,10 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Tasks',
                           'icon': 'check-square',
+                          'label': 'Tasks',
                           'href': '/tasks',
                         },
                         {
@@ -5595,12 +5767,12 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                         },
                       ],
                       'appName': 'ProjectManagerApp',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
                               'type': 'stack',
                               'children': [
                                 {
@@ -5616,149 +5788,166 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                   ],
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'gap': 'md',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'children': [
                                     {
                                       'direction': 'horizontal',
                                       'type': 'stack',
-                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'name': 'trending-down',
                                           'type': 'icon',
+                                          'name': 'trending-down',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'content': 'Burndown Chart',
+                                          'variant': 'h2',
                                           'type': 'typography',
                                         },
                                       ],
+                                      'gap': 'md',
                                     },
                                     {
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                       'variant': 'secondary',
                                       'icon': 'refresh-cw',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
-                                      'type': 'button',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'type': 'box',
                                   'children': [
                                     {
-                                      'cols': 5,
                                       'children': [
                                         {
-                                          'label': 'TotalPoints',
                                           'value': '@entity.totalPoints',
                                           'type': 'stat-display',
+                                          'label': 'TotalPoints',
                                         },
                                         {
-                                          'value': '@entity.completedPoints',
                                           'label': 'CompletedPoints',
+                                          'value': '@entity.completedPoints',
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'RemainingPoints',
+                                          'type': 'stat-display',
                                           'value': '@entity.remainingPoints',
-                                          'type': 'stat-display',
+                                          'label': 'RemainingPoints',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'Velocity',
+                                          'type': 'stat-display',
                                           'value': '@entity.velocity',
                                         },
                                         {
-                                          'label': 'DaysRemaining',
                                           'type': 'stat-display',
+                                          'label': 'DaysRemaining',
                                           'value': '@entity.daysRemaining',
                                         },
                                       ],
                                       'type': 'simple-grid',
+                                      'cols': 5,
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
                                   'gap': 'md',
                                   'children': [
                                     {
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'content': 'Graph View',
+                                          'type': 'typography',
                                           'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
                                   'type': 'grid',
+                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'date': 'Mar',
                                       'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
                                       'date': 'May',
                                       'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -5769,25 +5958,9 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
                                       'source': 'b',
                                     },
                                   ],
-                                  'nodes': [
-                                    {
-                                      'label': 'Start',
-                                      'id': 'a',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'width': 400,
-                                  'type': 'graph-view',
-                                  'height': 200,
                                 },
                               ],
+                              'direction': 'vertical',
                               'gap': 'lg',
                             },
                           ],

@@ -23,6 +23,89 @@ const BEHAVIOR_PATH = 'std/behaviors/std-service-research-assistant';
 const ALIAS = 'ServiceResearchAssistant';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdServiceResearchAssistantEventKey = 'FAILED' | 'INIT' | 'RESET' | 'ResearchCustomBearerApiCompleted' | 'ResearchCustomBearerApiFailed' | 'ResearchLlmCompleted' | 'ResearchLlmFailed' | 'ResearchRedisCompleted' | 'ResearchRedisFailed' | 'ResearchStorageCompleted' | 'ResearchStorageFailed' | 'ResearchYoutubeCompleted' | 'ResearchYoutubeFailed' | 'SEARCH' | 'SEARCH_COMPLETE' | 'SELECT_AND_SUMMARIZE' | 'SUMMARY_COMPLETE' | 'VIDEO_FETCHED';
+
+/**
+ * Payload shape for the `ResearchYoutubeCompleted` event.
+ */
+export interface StdServiceResearchAssistantResearchYoutubeCompletedPayload {
+  result?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ResearchYoutubeFailed` event.
+ */
+export interface StdServiceResearchAssistantResearchYoutubeFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ResearchLlmCompleted` event.
+ */
+export interface StdServiceResearchAssistantResearchLlmCompletedPayload {
+  result?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ResearchLlmFailed` event.
+ */
+export interface StdServiceResearchAssistantResearchLlmFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ResearchRedisCompleted` event.
+ */
+export interface StdServiceResearchAssistantResearchRedisCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ResearchRedisFailed` event.
+ */
+export interface StdServiceResearchAssistantResearchRedisFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ResearchStorageCompleted` event.
+ */
+export interface StdServiceResearchAssistantResearchStorageCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ResearchStorageFailed` event.
+ */
+export interface StdServiceResearchAssistantResearchStorageFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ResearchCustomBearerApiCompleted` event.
+ */
+export interface StdServiceResearchAssistantResearchCustomBearerApiCompletedPayload {
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Payload shape for the `ResearchCustomBearerApiFailed` event.
+ */
+export interface StdServiceResearchAssistantResearchCustomBearerApiFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-service-research-assistant descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +121,8 @@ export interface StdServiceResearchAssistantParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdServiceResearchAssistantEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +142,11 @@ export function stdServiceResearchAssistantTrait(params: StdServiceResearchAssis
     ref: `${ALIAS}.traits.ResearchPipeline`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -493,16 +576,73 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'name': 'search',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Content Research',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'content': 'Search YouTube for content to summarize',
+                                      'type': 'typography',
+                                      'variant': 'body',
+                                    },
+                                    {
+                                      'fields': [
+                                        'query',
+                                      ],
+                                      'mode': 'edit',
+                                      'type': 'form-section',
+                                      'entity': '@entity',
+                                      'submitEvent': 'SEARCH',
+                                    },
+                                  ],
+                                  'direction': 'vertical',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                              ],
+                              'type': 'card',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
-                          'icon': 'search',
                           'label': 'Research',
                           'href': '/research',
+                          'icon': 'search',
                         },
                         {
-                          'href': '/cache',
                           'icon': 'database',
                           'label': 'Cache',
+                          'href': '/cache',
                         },
                         {
                           'href': '/reports',
@@ -515,63 +655,6 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'label': 'Knowledge',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'search',
-                                },
-                                {
-                                  'content': 'Content Research',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'card',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'variant': 'body',
-                                      'content': 'Search YouTube for content to summarize',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'entity': '@entity',
-                                      'mode': 'edit',
-                                      'submitEvent': 'SEARCH',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                      'type': 'form-section',
-                                    },
-                                  ],
-                                  'direction': 'vertical',
-                                },
-                              ],
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -591,14 +674,14 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'youtube',
                     'search',
                     {
-                      'type': 'video',
                       'query': '@entity.query',
                       'maxResults': 5,
+                      'type': 'video',
                     },
                     {
                       'emit': {
-                        'failure': 'ResearchYoutubeFailed',
                         'success': 'ResearchYoutubeCompleted',
+                        'failure': 'ResearchYoutubeFailed',
                       },
                     },
                   ],
@@ -606,14 +689,10 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'gap': 'lg',
                           'align': 'center',
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
                               'type': 'icon',
@@ -621,30 +700,34 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                             },
                             {
                               'type': 'typography',
-                              'variant': 'h3',
                               'content': 'Searching YouTube...',
+                              'variant': 'h3',
                             },
                             {
                               'type': 'spinner',
                             },
                             {
-                              'content': '@entity.query',
                               'variant': 'caption',
                               'type': 'typography',
+                              'content': '@entity.query',
                             },
                           ],
+                          'direction': 'vertical',
+                          'type': 'stack',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
+                          'label': 'Research',
                           'href': '/research',
                           'icon': 'search',
-                          'label': 'Research',
                         },
                         {
-                          'label': 'Cache',
                           'icon': 'database',
                           'href': '/cache',
+                          'label': 'Cache',
                         },
                         {
                           'icon': 'file-text',
@@ -677,42 +760,64 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     {
                       'appName': 'ResearchAssistant',
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
+                        },
+                        {
+                          'icon': 'database',
+                          'label': 'Cache',
+                          'href': '/cache',
+                        },
+                        {
+                          'label': 'Reports',
+                          'icon': 'file-text',
+                          'href': '/reports',
+                        },
+                        {
+                          'href': '/knowledge',
+                          'icon': 'book-open',
+                          'label': 'Knowledge',
+                        },
+                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
                           'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'justify': 'between',
                               'direction': 'horizontal',
+                              'type': 'stack',
                               'align': 'center',
+                              'justify': 'between',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'name': 'video',
                                       'type': 'icon',
+                                      'name': 'video',
                                     },
                                     {
+                                      'content': 'Search Results',
                                       'type': 'typography',
                                       'variant': 'h2',
-                                      'content': 'Search Results',
                                     },
                                   ],
-                                  'align': 'center',
                                   'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
+                                  'direction': 'horizontal',
                                 },
                                 {
-                                  'label': 'New Search',
                                   'type': 'button',
                                   'variant': 'ghost',
-                                  'action': 'RESET',
                                   'icon': 'rotate-ccw',
+                                  'label': 'New Search',
+                                  'action': 'RESET',
                                 },
                               ],
-                              'type': 'stack',
                               'gap': 'sm',
                             },
                             {
@@ -722,9 +827,9 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'fields': [
                                 {
                                   'variant': 'h4',
-                                  'label': 'Title',
                                   'name': 'videoTitle',
                                   'icon': 'video',
+                                  'label': 'Title',
                                 },
                                 {
                                   'label': 'Description',
@@ -732,40 +837,18 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'name': 'videoDescription',
                                 },
                               ],
-                              'entity': '@payload.results',
-                              'type': 'data-grid',
                               'itemActions': [
                                 {
-                                  'label': 'Summarize',
-                                  'variant': 'primary',
                                   'event': 'SELECT_AND_SUMMARIZE',
+                                  'variant': 'primary',
+                                  'label': 'Summarize',
                                 },
                               ],
+                              'type': 'data-grid',
+                              'entity': '@payload.results',
                             },
                           ],
                           'type': 'stack',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
                         },
                       ],
                     },
@@ -791,61 +874,61 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ResearchAssistant',
                       'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/research',
+                          'label': 'Research',
+                          'icon': 'search',
+                        },
+                        {
+                          'href': '/cache',
+                          'icon': 'database',
+                          'label': 'Cache',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'href': '/reports',
+                          'label': 'Reports',
+                        },
+                        {
+                          'icon': 'book-open',
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
+                        },
+                      ],
                       'children': [
                         {
+                          'direction': 'vertical',
                           'type': 'stack',
-                          'align': 'center',
+                          'gap': 'lg',
                           'children': [
                             {
                               'name': 'alert-triangle',
                               'type': 'icon',
                             },
                             {
-                              'variant': 'h2',
-                              'content': 'Pipeline Error',
                               'type': 'typography',
+                              'content': 'Pipeline Error',
+                              'variant': 'h2',
                             },
                             {
-                              'variant': 'error',
-                              'message': '@entity.error',
                               'type': 'alert',
+                              'message': '@entity.error',
+                              'variant': 'error',
                             },
                             {
+                              'variant': 'primary',
                               'icon': 'rotate-ccw',
                               'label': 'Try Again',
                               'type': 'button',
                               'action': 'RESET',
-                              'variant': 'primary',
                             },
                           ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
+                          'align': 'center',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                        },
-                      ],
+                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -878,21 +961,23 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
                           'icon': 'search',
-                          'href': '/research',
                           'label': 'Research',
+                          'href': '/research',
                         },
                         {
-                          'label': 'Cache',
-                          'href': '/cache',
                           'icon': 'database',
+                          'href': '/cache',
+                          'label': 'Cache',
                         },
                         {
                           'icon': 'file-text',
-                          'label': 'Reports',
                           'href': '/reports',
+                          'label': 'Reports',
                         },
                         {
                           'label': 'Knowledge',
@@ -900,35 +985,33 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'book-open',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'align': 'center',
-                          'gap': 'lg',
-                          'type': 'stack',
                           'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'align': 'center',
                           'children': [
                             {
                               'name': 'cpu',
                               'type': 'icon',
                             },
                             {
+                              'type': 'typography',
                               'content': 'Fetching & summarizing...',
                               'variant': 'h3',
-                              'type': 'typography',
                             },
                             {
                               'type': 'spinner',
                             },
                             {
-                              'type': 'typography',
                               'content': '@entity.videoTitle',
+                              'type': 'typography',
                               'variant': 'caption',
                             },
                           ],
                         },
                       ],
-                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -947,35 +1030,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'icon': 'database',
-                          'href': '/cache',
-                          'label': 'Cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'type': 'stack',
+                              'align': 'center',
                               'children': [
                                 {
                                   'type': 'icon',
@@ -983,13 +1044,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                 },
                                 {
                                   'type': 'typography',
-                                  'content': 'Content Research',
                                   'variant': 'h2',
+                                  'content': 'Content Research',
                                 },
                               ],
-                              'align': 'center',
-                              'gap': 'sm',
                               'direction': 'horizontal',
+                              'gap': 'sm',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
@@ -998,34 +1059,56 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'type': 'card',
                               'children': [
                                 {
-                                  'direction': 'vertical',
                                   'type': 'stack',
-                                  'gap': 'md',
                                   'children': [
                                     {
                                       'variant': 'body',
-                                      'content': 'Search YouTube for content to summarize',
                                       'type': 'typography',
+                                      'content': 'Search YouTube for content to summarize',
                                     },
                                     {
+                                      'type': 'form-section',
                                       'fields': [
                                         'query',
                                       ],
-                                      'submitEvent': 'SEARCH',
-                                      'type': 'form-section',
                                       'entity': '@entity',
                                       'mode': 'edit',
+                                      'submitEvent': 'SEARCH',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'direction': 'vertical',
                                 },
                               ],
                             },
                           ],
-                          'gap': 'lg',
+                          'type': 'stack',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
+                      'navItems': [
+                        {
+                          'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
+                        },
+                        {
+                          'label': 'Cache',
+                          'href': '/cache',
+                          'icon': 'database',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'label': 'Reports',
+                          'href': '/reports',
+                        },
+                        {
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
+                          'icon': 'book-open',
+                        },
+                      ],
                       'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -1080,6 +1163,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
                           'label': 'Research',
@@ -1087,89 +1172,83 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'search',
                         },
                         {
+                          'href': '/cache',
                           'label': 'Cache',
                           'icon': 'database',
-                          'href': '/cache',
                         },
                         {
                           'label': 'Reports',
-                          'href': '/reports',
                           'icon': 'file-text',
+                          'href': '/reports',
                         },
                         {
-                          'label': 'Knowledge',
                           'href': '/knowledge',
                           'icon': 'book-open',
+                          'label': 'Knowledge',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
                           'gap': 'lg',
-                          'direction': 'vertical',
                           'children': [
                             {
                               'children': [
                                 {
+                                  'direction': 'horizontal',
                                   'gap': 'sm',
-                                  'align': 'center',
                                   'children': [
                                     {
                                       'name': 'check-circle',
                                       'type': 'icon',
                                     },
                                     {
-                                      'type': 'typography',
                                       'content': 'Research Complete',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
-                                  'direction': 'horizontal',
+                                  'align': 'center',
                                   'type': 'stack',
                                 },
                                 {
                                   'label': 'New Search',
-                                  'variant': 'ghost',
-                                  'type': 'button',
-                                  'icon': 'rotate-ccw',
                                   'action': 'RESET',
+                                  'icon': 'rotate-ccw',
+                                  'type': 'button',
+                                  'variant': 'ghost',
                                 },
                               ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
                               'align': 'center',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'sm',
                               'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'card',
                               'children': [
                                 {
-                                  'type': 'stack',
-                                  'gap': 'md',
                                   'direction': 'vertical',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'gap': 'sm',
-                                      'align': 'center',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'video',
                                         },
                                         {
-                                          'type': 'typography',
-                                          'content': '@entity.videoTitle',
                                           'variant': 'h3',
+                                          'content': '@entity.videoTitle',
+                                          'type': 'typography',
                                         },
                                       ],
                                       'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'align': 'center',
                                     },
                                     {
                                       'type': 'divider',
@@ -1180,15 +1259,19 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                       'variant': 'caption',
                                     },
                                     {
+                                      'type': 'typography',
                                       'content': '@entity.summary',
                                       'variant': 'body',
-                                      'type': 'typography',
                                     },
                                   ],
+                                  'type': 'stack',
                                 },
                               ],
+                              'type': 'card',
                             },
                           ],
+                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
                     },
@@ -1215,43 +1298,12 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Pipeline Error',
-                              'variant': 'h2',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': '@entity.error',
-                              'variant': 'error',
-                            },
-                            {
-                              'variant': 'primary',
-                              'type': 'button',
-                              'icon': 'rotate-ccw',
-                              'action': 'RESET',
-                              'label': 'Try Again',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                        },
-                      ],
                       'appName': 'ResearchAssistant',
                       'navItems': [
                         {
+                          'icon': 'search',
                           'label': 'Research',
                           'href': '/research',
-                          'icon': 'search',
                         },
                         {
                           'label': 'Cache',
@@ -1259,14 +1311,45 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'database',
                         },
                         {
-                          'href': '/reports',
-                          'label': 'Reports',
                           'icon': 'file-text',
+                          'label': 'Reports',
+                          'href': '/reports',
                         },
                         {
+                          'icon': 'book-open',
                           'label': 'Knowledge',
                           'href': '/knowledge',
-                          'icon': 'book-open',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'type': 'icon',
+                              'name': 'alert-triangle',
+                            },
+                            {
+                              'type': 'typography',
+                              'variant': 'h2',
+                              'content': 'Pipeline Error',
+                            },
+                            {
+                              'type': 'alert',
+                              'message': '@entity.error',
+                              'variant': 'error',
+                            },
+                            {
+                              'label': 'Try Again',
+                              'type': 'button',
+                              'action': 'RESET',
+                              'variant': 'primary',
+                              'icon': 'rotate-ccw',
+                            },
+                          ],
+                          'direction': 'vertical',
                         },
                       ],
                     },
@@ -1307,38 +1390,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'icon': 'database',
-                          'label': 'Cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'gap': 'sm',
                               'align': 'center',
+                              'direction': 'horizontal',
                               'children': [
                                 {
                                   'type': 'icon',
@@ -1346,21 +1404,20 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                 },
                                 {
                                   'type': 'typography',
-                                  'variant': 'h2',
                                   'content': 'Content Research',
+                                  'variant': 'h2',
                                 },
                               ],
                               'type': 'stack',
-                              'direction': 'horizontal',
+                              'gap': 'sm',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'type': 'card',
                               'children': [
                                 {
-                                  'gap': 'md',
-                                  'type': 'stack',
                                   'direction': 'vertical',
                                   'children': [
                                     {
@@ -1369,23 +1426,49 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                       'type': 'typography',
                                     },
                                     {
-                                      'entity': '@entity',
                                       'mode': 'edit',
                                       'type': 'form-section',
+                                      'entity': '@entity',
                                       'submitEvent': 'SEARCH',
                                       'fields': [
                                         'query',
                                       ],
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'type': 'stack',
                                 },
                               ],
-                              'type': 'card',
                             },
                           ],
-                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
+                      'navItems': [
+                        {
+                          'href': '/research',
+                          'icon': 'search',
+                          'label': 'Research',
+                        },
+                        {
+                          'icon': 'database',
+                          'label': 'Cache',
+                          'href': '/cache',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'href': '/reports',
+                          'label': 'Reports',
+                        },
+                        {
+                          'label': 'Knowledge',
+                          'icon': 'book-open',
+                          'href': '/knowledge',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -1410,42 +1493,40 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'main',
                     {
                       'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'href': '/research',
-                          'icon': 'search',
                           'label': 'Research',
+                          'icon': 'search',
+                          'href': '/research',
                         },
                         {
-                          'label': 'Cache',
                           'icon': 'database',
+                          'label': 'Cache',
                           'href': '/cache',
                         },
                         {
-                          'href': '/reports',
                           'icon': 'file-text',
                           'label': 'Reports',
+                          'href': '/reports',
                         },
                         {
+                          'href': '/knowledge',
                           'icon': 'book-open',
                           'label': 'Knowledge',
-                          'href': '/knowledge',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'align': 'center',
-                              'type': 'stack',
                               'gap': 'sm',
+                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'name': 'search',
                                   'type': 'icon',
+                                  'name': 'search',
                                 },
                                 {
                                   'variant': 'h2',
@@ -1453,7 +1534,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'content': 'Content Research',
                                 },
                               ],
-                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
@@ -1463,29 +1545,30 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'children': [
                                 {
                                   'direction': 'vertical',
-                                  'type': 'stack',
                                   'gap': 'md',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'content': 'Search YouTube for content to summarize',
                                       'type': 'typography',
+                                      'content': 'Search YouTube for content to summarize',
                                       'variant': 'body',
                                     },
                                     {
+                                      'mode': 'edit',
                                       'type': 'form-section',
+                                      'submitEvent': 'SEARCH',
                                       'entity': '@entity',
                                       'fields': [
                                         'query',
                                       ],
-                                      'submitEvent': 'SEARCH',
-                                      'mode': 'edit',
                                     },
                                   ],
                                 },
                               ],
                             },
                           ],
-                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
                     },
@@ -1737,8 +1820,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'CacheEntry',
                     {
                       'emit': {
-                        'failure': 'CacheEntryLoadFailed',
                         'success': 'CacheEntryLoaded',
+                        'failure': 'CacheEntryLoadFailed',
                       },
                     },
                   ],
@@ -1746,10 +1829,37 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'href': '/research',
+                          'label': 'Research',
+                          'icon': 'search',
+                        },
+                        {
+                          'label': 'Cache',
+                          'href': '/cache',
+                          'icon': 'database',
+                        },
+                        {
+                          'label': 'Reports',
+                          'href': '/reports',
+                          'icon': 'file-text',
+                        },
+                        {
+                          'href': '/knowledge',
+                          'icon': 'book-open',
+                          'label': 'Knowledge',
+                        },
+                      ],
+                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'align': 'center',
+                          'type': 'stack',
                           'children': [
                             {
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'icon',
@@ -1761,94 +1871,67 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'content': 'Redis Cache',
                                 },
                               ],
+                              'align': 'center',
                               'direction': 'horizontal',
                               'gap': 'md',
-                              'type': 'stack',
-                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'direction': 'vertical',
-                              'type': 'stack',
-                              'gap': 'md',
                               'children': [
                                 {
+                                  'type': 'input',
                                   'placeholder': 'cache-key',
-                                  'type': 'input',
                                 },
                                 {
-                                  'type': 'input',
                                   'placeholder': 'cache-value',
+                                  'type': 'input',
                                 },
                                 {
-                                  'type': 'input',
                                   'inputType': 'number',
+                                  'type': 'input',
                                   'placeholder': '3600',
                                 },
                               ],
+                              'direction': 'vertical',
+                              'gap': 'md',
+                              'type': 'stack',
                             },
                             {
+                              'justify': 'center',
                               'gap': 'sm',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'button',
-                                  'icon': 'download',
                                   'variant': 'primary',
                                   'label': 'Get',
+                                  'icon': 'download',
+                                  'type': 'button',
                                   'action': 'GET_KEY',
                                 },
                                 {
+                                  'label': 'Set',
+                                  'type': 'button',
                                   'icon': 'upload',
                                   'action': 'SET_KEY',
                                   'variant': 'primary',
-                                  'label': 'Set',
-                                  'type': 'button',
                                 },
                                 {
-                                  'label': 'Delete',
-                                  'icon': 'trash-2',
-                                  'variant': 'danger',
-                                  'type': 'button',
                                   'action': 'DELETE_KEY',
+                                  'variant': 'danger',
+                                  'icon': 'trash-2',
+                                  'type': 'button',
+                                  'label': 'Delete',
                                 },
                               ],
-                              'justify': 'center',
                               'direction': 'horizontal',
-                              'type': 'stack',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'align': 'center',
                           'direction': 'vertical',
+                          'gap': 'lg',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -1862,37 +1945,37 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Executing...',
-                          'message': 'Running redis operation...',
-                        },
-                      ],
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
-                          'href': '/research',
-                          'label': 'Research',
                           'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
                         },
                         {
                           'href': '/cache',
-                          'icon': 'database',
                           'label': 'Cache',
+                          'icon': 'database',
                         },
                         {
                           'href': '/reports',
-                          'icon': 'file-text',
                           'label': 'Reports',
+                          'icon': 'file-text',
                         },
                         {
-                          'label': 'Knowledge',
                           'href': '/knowledge',
+                          'label': 'Knowledge',
                           'icon': 'book-open',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
+                      'children': [
+                        {
+                          'message': 'Running redis operation...',
+                          'type': 'loading-state',
+                          'title': 'Executing...',
+                        },
+                      ],
                     },
                   ],
                   [
@@ -1920,23 +2003,24 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'title': 'Executing...',
-                          'message': 'Running redis operation...',
                           'type': 'loading-state',
+                          'message': 'Running redis operation...',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
+                          'icon': 'search',
                           'label': 'Research',
                           'href': '/research',
-                          'icon': 'search',
                         },
                         {
-                          'label': 'Cache',
                           'href': '/cache',
+                          'label': 'Cache',
                           'icon': 'database',
                         },
                         {
@@ -1945,12 +2029,11 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'href': '/reports',
                         },
                         {
+                          'label': 'Knowledge',
                           'href': '/knowledge',
                           'icon': 'book-open',
-                          'label': 'Knowledge',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
                     },
                   ],
                   [
@@ -1980,11 +2063,12 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
-                          'href': '/research',
-                          'icon': 'search',
                           'label': 'Research',
+                          'icon': 'search',
+                          'href': '/research',
                         },
                         {
                           'icon': 'database',
@@ -1992,9 +2076,9 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'href': '/cache',
                         },
                         {
-                          'href': '/reports',
                           'label': 'Reports',
                           'icon': 'file-text',
+                          'href': '/reports',
                         },
                         {
                           'href': '/knowledge',
@@ -2003,12 +2087,11 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
                       'children': [
                         {
-                          'title': 'Executing...',
                           'message': 'Running redis operation...',
                           'type': 'loading-state',
+                          'title': 'Executing...',
                         },
                       ],
                     },
@@ -2043,12 +2126,36 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
+                      'navItems': [
+                        {
+                          'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
+                        },
+                        {
+                          'icon': 'database',
+                          'label': 'Cache',
+                          'href': '/cache',
+                        },
+                        {
+                          'label': 'Reports',
+                          'icon': 'file-text',
+                          'href': '/reports',
+                        },
+                        {
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
+                          'icon': 'book-open',
+                        },
+                      ],
                       'children': [
                         {
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
                               'message': 'Operation complete',
@@ -2057,48 +2164,24 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                             },
                             {
                               'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.result',
                               'color': 'muted',
+                              'content': '@entity.result',
+                              'variant': 'body',
                             },
                             {
-                              'action': 'RESET',
                               'variant': 'ghost',
+                              'icon': 'rotate-ccw',
                               'type': 'button',
                               'label': 'Reset',
-                              'icon': 'rotate-ccw',
+                              'action': 'RESET',
                             },
                           ],
-                          'align': 'center',
                           'gap': 'lg',
-                          'type': 'stack',
+                          'align': 'center',
                           'direction': 'vertical',
+                          'type': 'stack',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'href': '/cache',
-                          'label': 'Cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2117,38 +2200,38 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'title': 'Redis Error',
-                          'message': '@entity.error',
-                          'onRetry': 'RESET',
-                          'type': 'error-state',
-                        },
-                      ],
                       'navItems': [
                         {
-                          'label': 'Research',
                           'href': '/research',
+                          'label': 'Research',
                           'icon': 'search',
                         },
                         {
-                          'icon': 'database',
                           'label': 'Cache',
                           'href': '/cache',
+                          'icon': 'database',
                         },
                         {
-                          'href': '/reports',
                           'label': 'Reports',
+                          'href': '/reports',
                           'icon': 'file-text',
                         },
                         {
+                          'href': '/knowledge',
                           'label': 'Knowledge',
                           'icon': 'book-open',
-                          'href': '/knowledge',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
+                      'children': [
+                        {
+                          'message': '@entity.error',
+                          'onRetry': 'RESET',
+                          'title': 'Redis Error',
+                          'type': 'error-state',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2162,11 +2245,12 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Research',
-                          'href': '/research',
                           'icon': 'search',
+                          'href': '/research',
+                          'label': 'Research',
                         },
                         {
                           'href': '/cache',
@@ -2174,46 +2258,50 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'label': 'Cache',
                         },
                         {
-                          'label': 'Reports',
-                          'icon': 'file-text',
                           'href': '/reports',
+                          'icon': 'file-text',
+                          'label': 'Reports',
                         },
                         {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
                           'href': '/knowledge',
+                          'label': 'Knowledge',
+                          'icon': 'book-open',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'align': 'center',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'horizontal',
                               'align': 'center',
                               'children': [
                                 {
-                                  'name': 'database',
                                   'type': 'icon',
+                                  'name': 'database',
                                 },
                                 {
-                                  'variant': 'h2',
                                   'type': 'typography',
+                                  'variant': 'h2',
                                   'content': 'Redis Cache',
                                 },
                               ],
+                              'type': 'stack',
                               'gap': 'md',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'type': 'stack',
+                              'gap': 'md',
                               'children': [
                                 {
-                                  'placeholder': 'cache-key',
                                   'type': 'input',
+                                  'placeholder': 'cache-key',
                                 },
                                 {
                                   'type': 'input',
@@ -2221,48 +2309,43 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                 },
                                 {
                                   'inputType': 'number',
-                                  'placeholder': '3600',
                                   'type': 'input',
+                                  'placeholder': '3600',
                                 },
                               ],
                               'direction': 'vertical',
-                              'gap': 'md',
-                              'type': 'stack',
                             },
                             {
-                              'type': 'stack',
                               'gap': 'sm',
-                              'justify': 'center',
-                              'direction': 'horizontal',
                               'children': [
                                 {
+                                  'type': 'button',
                                   'label': 'Get',
                                   'action': 'GET_KEY',
-                                  'type': 'button',
+                                  'variant': 'primary',
                                   'icon': 'download',
-                                  'variant': 'primary',
                                 },
                                 {
-                                  'action': 'SET_KEY',
-                                  'type': 'button',
-                                  'label': 'Set',
-                                  'variant': 'primary',
                                   'icon': 'upload',
+                                  'label': 'Set',
+                                  'action': 'SET_KEY',
+                                  'variant': 'primary',
+                                  'type': 'button',
                                 },
                                 {
+                                  'type': 'button',
                                   'label': 'Delete',
                                   'action': 'DELETE_KEY',
-                                  'icon': 'trash-2',
-                                  'type': 'button',
                                   'variant': 'danger',
+                                  'icon': 'trash-2',
                                 },
                               ],
+                              'direction': 'horizontal',
+                              'justify': 'center',
+                              'type': 'stack',
                             },
                           ],
-                          'direction': 'vertical',
                           'gap': 'lg',
-                          'type': 'stack',
-                          'align': 'center',
                         },
                       ],
                     },
@@ -2278,22 +2361,23 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ResearchAssistant',
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'search',
-                          'href': '/research',
                           'label': 'Research',
+                          'href': '/research',
+                          'icon': 'search',
                         },
                         {
                           'href': '/cache',
-                          'label': 'Cache',
                           'icon': 'database',
+                          'label': 'Cache',
                         },
                         {
+                          'href': '/reports',
                           'icon': 'file-text',
                           'label': 'Reports',
-                          'href': '/reports',
                         },
                         {
                           'label': 'Knowledge',
@@ -2303,34 +2387,28 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                       ],
                       'children': [
                         {
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
                           'children': [
                             {
-                              'gap': 'md',
-                              'align': 'center',
                               'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'name': 'database',
                                   'type': 'icon',
+                                  'name': 'database',
                                 },
                                 {
-                                  'content': 'Redis Cache',
-                                  'variant': 'h2',
                                   'type': 'typography',
+                                  'variant': 'h2',
+                                  'content': 'Redis Cache',
                                 },
                               ],
-                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'gap': 'md',
                               'children': [
                                 {
@@ -2342,45 +2420,50 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'type': 'input',
                                 },
                                 {
-                                  'inputType': 'number',
-                                  'placeholder': '3600',
                                   'type': 'input',
+                                  'placeholder': '3600',
+                                  'inputType': 'number',
                                 },
                               ],
+                              'direction': 'vertical',
+                              'type': 'stack',
                             },
                             {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'justify': 'center',
                               'children': [
                                 {
-                                  'label': 'Get',
-                                  'type': 'button',
-                                  'variant': 'primary',
                                   'action': 'GET_KEY',
+                                  'type': 'button',
+                                  'label': 'Get',
+                                  'variant': 'primary',
                                   'icon': 'download',
                                 },
                                 {
-                                  'type': 'button',
+                                  'action': 'SET_KEY',
                                   'icon': 'upload',
                                   'label': 'Set',
-                                  'action': 'SET_KEY',
+                                  'type': 'button',
                                   'variant': 'primary',
                                 },
                                 {
                                   'action': 'DELETE_KEY',
-                                  'label': 'Delete',
-                                  'variant': 'danger',
-                                  'type': 'button',
                                   'icon': 'trash-2',
+                                  'label': 'Delete',
+                                  'type': 'button',
+                                  'variant': 'danger',
                                 },
                               ],
+                              'justify': 'center',
+                              'gap': 'sm',
+                              'type': 'stack',
                               'direction': 'horizontal',
                             },
                           ],
+                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'align': 'center',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -2643,8 +2726,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'Report',
                     {
                       'emit': {
-                        'success': 'ReportLoaded',
                         'failure': 'ReportLoadFailed',
+                        'success': 'ReportLoaded',
                       },
                     },
                   ],
@@ -2652,103 +2735,20 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'hard-drive',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Report Storage',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'placeholder': 'bucket-name',
-                              'type': 'input',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'path/to/file.txt',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'path/prefix/',
-                            },
-                            {
-                              'placeholder': 'File content...',
-                              'type': 'textarea',
-                            },
-                            {
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'justify': 'center',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'UPLOAD_FILE',
-                                  'label': 'Upload',
-                                  'variant': 'primary',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'variant': 'secondary',
-                                  'type': 'button',
-                                  'icon': 'download',
-                                  'label': 'Download',
-                                  'action': 'DOWNLOAD_FILE',
-                                },
-                                {
-                                  'label': 'List',
-                                  'action': 'LIST_FILES',
-                                  'type': 'button',
-                                  'icon': 'list',
-                                  'variant': 'secondary',
-                                },
-                                {
-                                  'icon': 'trash-2',
-                                  'variant': 'danger',
-                                  'type': 'button',
-                                  'label': 'Delete',
-                                  'action': 'DELETE_FILE',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'align': 'stretch',
-                          'direction': 'vertical',
-                        },
-                      ],
                       'navItems': [
                         {
-                          'href': '/research',
-                          'label': 'Research',
                           'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
                         },
                         {
+                          'label': 'Cache',
                           'href': '/cache',
                           'icon': 'database',
-                          'label': 'Cache',
                         },
                         {
-                          'icon': 'file-text',
                           'label': 'Reports',
+                          'icon': 'file-text',
                           'href': '/reports',
                         },
                         {
@@ -2757,7 +2757,90 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'href': '/knowledge',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'align': 'stretch',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'name': 'hard-drive',
+                                  'type': 'icon',
+                                },
+                                {
+                                  'content': 'Report Storage',
+                                  'type': 'typography',
+                                  'variant': 'h2',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'input',
+                              'placeholder': 'bucket-name',
+                            },
+                            {
+                              'placeholder': 'path/to/file.txt',
+                              'type': 'input',
+                            },
+                            {
+                              'type': 'input',
+                              'placeholder': 'path/prefix/',
+                            },
+                            {
+                              'type': 'textarea',
+                              'placeholder': 'File content...',
+                            },
+                            {
+                              'justify': 'center',
+                              'children': [
+                                {
+                                  'action': 'UPLOAD_FILE',
+                                  'label': 'Upload',
+                                  'variant': 'primary',
+                                  'type': 'button',
+                                  'icon': 'upload',
+                                },
+                                {
+                                  'variant': 'secondary',
+                                  'label': 'Download',
+                                  'type': 'button',
+                                  'action': 'DOWNLOAD_FILE',
+                                  'icon': 'download',
+                                },
+                                {
+                                  'icon': 'list',
+                                  'action': 'LIST_FILES',
+                                  'label': 'List',
+                                  'type': 'button',
+                                  'variant': 'secondary',
+                                },
+                                {
+                                  'icon': 'trash-2',
+                                  'variant': 'danger',
+                                  'action': 'DELETE_FILE',
+                                  'type': 'button',
+                                  'label': 'Delete',
+                                },
+                              ],
+                              'gap': 'sm',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                            },
+                          ],
+                          'gap': 'lg',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -2771,12 +2854,18 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'title': 'Processing...',
+                          'message': 'Executing storage operation on report...',
+                          'type': 'loading-state',
+                        },
+                      ],
                       'navItems': [
                         {
+                          'icon': 'search',
                           'label': 'Research',
                           'href': '/research',
-                          'icon': 'search',
                         },
                         {
                           'href': '/cache',
@@ -2789,18 +2878,12 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'file-text',
                         },
                         {
-                          'label': 'Knowledge',
                           'href': '/knowledge',
+                          'label': 'Knowledge',
                           'icon': 'book-open',
                         },
                       ],
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'message': 'Executing storage operation on report...',
-                          'title': 'Processing...',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
                     },
                   ],
@@ -2809,9 +2892,9 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'storage',
                     'upload',
                     {
+                      'content': '@entity.content',
                       'key': '@entity.fileKey',
                       'bucket': '@entity.bucket',
-                      'content': '@entity.content',
                     },
                     {
                       'emit': {
@@ -2838,18 +2921,17 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'type': 'loading-state',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'search',
-                          'href': '/research',
                           'label': 'Research',
+                          'href': '/research',
+                          'icon': 'search',
                         },
                         {
+                          'label': 'Cache',
                           'href': '/cache',
                           'icon': 'database',
-                          'label': 'Cache',
                         },
                         {
                           'href': '/reports',
@@ -2857,11 +2939,12 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'file-text',
                         },
                         {
-                          'href': '/knowledge',
                           'label': 'Knowledge',
+                          'href': '/knowledge',
                           'icon': 'book-open',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
                     },
                   ],
                   [
@@ -2874,8 +2957,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     },
                     {
                       'emit': {
-                        'success': 'ResearchStorageCompleted',
                         'failure': 'ResearchStorageFailed',
+                        'success': 'ResearchStorageCompleted',
                       },
                     },
                   ],
@@ -2890,19 +2973,19 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'appName': 'ResearchAssistant',
                       'children': [
                         {
+                          'message': 'Executing storage operation on report...',
                           'type': 'loading-state',
                           'title': 'Processing...',
-                          'message': 'Executing storage operation on report...',
                         },
                       ],
-                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'href': '/research',
                           'label': 'Research',
+                          'href': '/research',
                           'icon': 'search',
                         },
                         {
@@ -2911,14 +2994,14 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'database',
                         },
                         {
-                          'href': '/reports',
                           'label': 'Reports',
                           'icon': 'file-text',
+                          'href': '/reports',
                         },
                         {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
                           'icon': 'book-open',
+                          'href': '/knowledge',
+                          'label': 'Knowledge',
                         },
                       ],
                     },
@@ -2928,8 +3011,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'storage',
                     'list',
                     {
-                      'prefix': '@entity.prefix',
                       'bucket': '@entity.bucket',
+                      'prefix': '@entity.prefix',
                     },
                     {
                       'emit': {
@@ -2949,37 +3032,37 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ResearchAssistant',
+                      'children': [
+                        {
+                          'message': 'Executing storage operation on report...',
+                          'type': 'loading-state',
+                          'title': 'Processing...',
+                        },
+                      ],
                       'navItems': [
                         {
-                          'href': '/research',
-                          'label': 'Research',
                           'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
                         },
                         {
-                          'icon': 'database',
-                          'label': 'Cache',
                           'href': '/cache',
+                          'label': 'Cache',
+                          'icon': 'database',
                         },
                         {
                           'href': '/reports',
-                          'icon': 'file-text',
                           'label': 'Reports',
+                          'icon': 'file-text',
                         },
                         {
-                          'label': 'Knowledge',
                           'href': '/knowledge',
+                          'label': 'Knowledge',
                           'icon': 'book-open',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'title': 'Processing...',
-                          'message': 'Executing storage operation on report...',
-                          'type': 'loading-state',
-                        },
-                      ],
                     },
                   ],
                   [
@@ -2987,13 +3070,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'storage',
                     'delete',
                     {
-                      'bucket': '@entity.bucket',
                       'key': '@entity.fileKey',
+                      'bucket': '@entity.bucket',
                     },
                     {
                       'emit': {
-                        'success': 'ResearchStorageCompleted',
                         'failure': 'ResearchStorageFailed',
+                        'success': 'ResearchStorageCompleted',
                       },
                     },
                   ],
@@ -3018,12 +3101,14 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'align': 'center',
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
                               'message': 'Operation completed successfully',
@@ -3031,26 +3116,24 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'variant': 'success',
                             },
                             {
-                              'variant': 'body',
                               'type': 'typography',
                               'content': '@entity.result',
                               'color': 'muted',
+                              'variant': 'body',
                             },
                             {
-                              'label': 'Back',
-                              'icon': 'rotate-ccw',
                               'type': 'button',
-                              'action': 'RESET',
+                              'label': 'Back',
                               'variant': 'ghost',
+                              'action': 'RESET',
+                              'icon': 'rotate-ccw',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
                           'direction': 'vertical',
-                          'align': 'center',
+                          'type': 'stack',
+                          'gap': 'lg',
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
                       'navItems': [
                         {
@@ -3059,19 +3142,19 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'href': '/research',
                         },
                         {
-                          'label': 'Cache',
-                          'href': '/cache',
                           'icon': 'database',
+                          'href': '/cache',
+                          'label': 'Cache',
                         },
                         {
+                          'label': 'Reports',
                           'href': '/reports',
                           'icon': 'file-text',
-                          'label': 'Reports',
                         },
                         {
-                          'label': 'Knowledge',
                           'icon': 'book-open',
                           'href': '/knowledge',
+                          'label': 'Knowledge',
                         },
                       ],
                     },
@@ -3097,50 +3180,50 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                        },
-                      ],
                       'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
+                      'navItems': [
+                        {
+                          'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
+                        },
+                        {
+                          'href': '/cache',
+                          'icon': 'database',
+                          'label': 'Cache',
+                        },
+                        {
+                          'href': '/reports',
+                          'icon': 'file-text',
+                          'label': 'Reports',
+                        },
+                        {
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
+                          'icon': 'book-open',
+                        },
+                      ],
                       'children': [
                         {
                           'direction': 'vertical',
-                          'type': 'stack',
                           'gap': 'lg',
-                          'align': 'center',
                           'children': [
                             {
+                              'message': '@entity.error',
                               'type': 'error-state',
                               'title': 'Operation Failed',
-                              'message': '@entity.error',
                             },
                             {
-                              'label': 'Back',
                               'action': 'RESET',
                               'type': 'button',
-                              'icon': 'rotate-ccw',
+                              'label': 'Back',
                               'variant': 'ghost',
+                              'icon': 'rotate-ccw',
                             },
                           ],
+                          'align': 'center',
+                          'type': 'stack',
                         },
                       ],
                     },
@@ -3161,6 +3244,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
                           'href': '/research',
@@ -3168,14 +3253,14 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'search',
                         },
                         {
-                          'label': 'Cache',
                           'href': '/cache',
                           'icon': 'database',
+                          'label': 'Cache',
                         },
                         {
                           'icon': 'file-text',
-                          'label': 'Reports',
                           'href': '/reports',
+                          'label': 'Reports',
                         },
                         {
                           'label': 'Knowledge',
@@ -3183,87 +3268,85 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'href': '/knowledge',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
                       'children': [
                         {
-                          'type': 'stack',
-                          'align': 'stretch',
+                          'gap': 'lg',
                           'children': [
                             {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
                               'children': [
                                 {
-                                  'name': 'hard-drive',
                                   'type': 'icon',
+                                  'name': 'hard-drive',
                                 },
                                 {
+                                  'type': 'typography',
                                   'content': 'Report Storage',
                                   'variant': 'h2',
-                                  'type': 'typography',
                                 },
                               ],
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
                               'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'input',
                               'placeholder': 'bucket-name',
+                              'type': 'input',
                             },
                             {
                               'placeholder': 'path/to/file.txt',
                               'type': 'input',
                             },
                             {
-                              'placeholder': 'path/prefix/',
                               'type': 'input',
+                              'placeholder': 'path/prefix/',
                             },
                             {
-                              'type': 'textarea',
                               'placeholder': 'File content...',
+                              'type': 'textarea',
                             },
                             {
                               'type': 'stack',
-                              'direction': 'horizontal',
                               'justify': 'center',
+                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'label': 'Upload',
-                                  'icon': 'upload',
+                                  'variant': 'primary',
                                   'action': 'UPLOAD_FILE',
                                   'type': 'button',
-                                  'variant': 'primary',
+                                  'icon': 'upload',
+                                  'label': 'Upload',
                                 },
                                 {
                                   'type': 'button',
-                                  'variant': 'secondary',
                                   'icon': 'download',
-                                  'label': 'Download',
-                                  'action': 'DOWNLOAD_FILE',
-                                },
-                                {
                                   'variant': 'secondary',
-                                  'action': 'LIST_FILES',
-                                  'type': 'button',
-                                  'icon': 'list',
-                                  'label': 'List',
+                                  'action': 'DOWNLOAD_FILE',
+                                  'label': 'Download',
                                 },
                                 {
-                                  'label': 'Delete',
-                                  'icon': 'trash-2',
+                                  'type': 'button',
+                                  'action': 'LIST_FILES',
+                                  'label': 'List',
+                                  'icon': 'list',
+                                  'variant': 'secondary',
+                                },
+                                {
                                   'type': 'button',
                                   'variant': 'danger',
+                                  'icon': 'trash-2',
+                                  'label': 'Delete',
                                   'action': 'DELETE_FILE',
                                 },
                               ],
                               'gap': 'sm',
                             },
                           ],
-                          'gap': 'lg',
+                          'align': 'stretch',
+                          'type': 'stack',
                           'direction': 'vertical',
                         },
                       ],
@@ -3285,64 +3368,39 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
                       'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
                       'children': [
                         {
                           'direction': 'vertical',
-                          'align': 'stretch',
-                          'type': 'stack',
-                          'gap': 'lg',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'align': 'center',
-                              'direction': 'horizontal',
                               'children': [
                                 {
-                                  'type': 'icon',
                                   'name': 'hard-drive',
+                                  'type': 'icon',
                                 },
                                 {
+                                  'content': 'Report Storage',
                                   'variant': 'h2',
                                   'type': 'typography',
-                                  'content': 'Report Storage',
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'placeholder': 'bucket-name',
                               'type': 'input',
+                              'placeholder': 'bucket-name',
                             },
                             {
-                              'placeholder': 'path/to/file.txt',
                               'type': 'input',
+                              'placeholder': 'path/to/file.txt',
                             },
                             {
                               'type': 'input',
@@ -3354,41 +3412,66 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                             },
                             {
                               'type': 'stack',
-                              'gap': 'sm',
                               'direction': 'horizontal',
+                              'gap': 'sm',
                               'justify': 'center',
                               'children': [
                                 {
+                                  'variant': 'primary',
                                   'label': 'Upload',
                                   'type': 'button',
-                                  'variant': 'primary',
-                                  'action': 'UPLOAD_FILE',
                                   'icon': 'upload',
+                                  'action': 'UPLOAD_FILE',
                                 },
                                 {
-                                  'label': 'Download',
+                                  'icon': 'download',
                                   'type': 'button',
+                                  'label': 'Download',
                                   'action': 'DOWNLOAD_FILE',
                                   'variant': 'secondary',
-                                  'icon': 'download',
                                 },
                                 {
+                                  'variant': 'secondary',
+                                  'action': 'LIST_FILES',
                                   'type': 'button',
                                   'label': 'List',
-                                  'action': 'LIST_FILES',
-                                  'variant': 'secondary',
                                   'icon': 'list',
                                 },
                                 {
+                                  'label': 'Delete',
                                   'icon': 'trash-2',
                                   'action': 'DELETE_FILE',
                                   'type': 'button',
-                                  'label': 'Delete',
                                   'variant': 'danger',
                                 },
                               ],
                             },
                           ],
+                          'align': 'stretch',
+                          'type': 'stack',
+                          'gap': 'lg',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'search',
+                          'label': 'Research',
+                          'href': '/research',
+                        },
+                        {
+                          'label': 'Cache',
+                          'href': '/cache',
+                          'icon': 'database',
+                        },
+                        {
+                          'label': 'Reports',
+                          'href': '/reports',
+                          'icon': 'file-text',
+                        },
+                        {
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
+                          'icon': 'book-open',
                         },
                       ],
                     },
@@ -3654,16 +3737,17 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'main',
                     {
                       'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'search',
                           'label': 'Research',
                           'href': '/research',
+                          'icon': 'search',
                         },
                         {
-                          'label': 'Cache',
-                          'icon': 'database',
                           'href': '/cache',
+                          'icon': 'database',
+                          'label': 'Cache',
                         },
                         {
                           'label': 'Reports',
@@ -3671,16 +3755,16 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'file-text',
                         },
                         {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
                           'icon': 'book-open',
+                          'label': 'Knowledge',
+                          'href': '/knowledge',
                         },
                       ],
                       'children': [
                         {
                           'gap': 'lg',
-                          'type': 'stack',
                           'align': 'center',
+                          'type': 'stack',
                           'children': [
                             {
                               'name': 'shield',
@@ -3692,23 +3776,23 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'type': 'typography',
                             },
                             {
-                              'type': 'input',
                               'placeholder': '/users',
+                              'type': 'input',
                             },
                             {
                               'type': 'select',
                               'options': [
                                 {
-                                  'value': 'GET',
                                   'label': 'GET',
+                                  'value': 'GET',
                                 },
                                 {
                                   'value': 'POST',
                                   'label': 'POST',
                                 },
                                 {
-                                  'value': 'PUT',
                                   'label': 'PUT',
+                                  'value': 'PUT',
                                 },
                                 {
                                   'value': 'DELETE',
@@ -3721,17 +3805,16 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'placeholder': 'JSON request body',
                             },
                             {
-                              'action': 'CALL_API',
-                              'label': 'Send Request',
                               'type': 'button',
-                              'icon': 'send',
                               'variant': 'primary',
+                              'label': 'Send Request',
+                              'action': 'CALL_API',
+                              'icon': 'send',
                             },
                           ],
                           'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3745,16 +3828,25 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'message': 'Sending request to knowledgequery endpoint...',
+                          'title': 'Calling API...',
+                          'type': 'loading-state',
+                        },
+                      ],
+                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
-                          'label': 'Research',
                           'icon': 'search',
+                          'label': 'Research',
                           'href': '/research',
                         },
                         {
-                          'icon': 'database',
-                          'label': 'Cache',
                           'href': '/cache',
+                          'label': 'Cache',
+                          'icon': 'database',
                         },
                         {
                           'icon': 'file-text',
@@ -3767,15 +3859,6 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'book-open',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'title': 'Calling API...',
-                          'type': 'loading-state',
-                          'message': 'Sending request to knowledgequery endpoint...',
-                        },
-                      ],
                     },
                   ],
                   [
@@ -3784,13 +3867,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'execute',
                     {
                       'endpoint': '@entity.endpoint',
-                      'method': '@entity.method',
                       'body': '@entity.requestBody',
+                      'method': '@entity.method',
                     },
                     {
                       'emit': {
-                        'success': 'ResearchCustomBearerApiCompleted',
                         'failure': 'ResearchCustomBearerApiFailed',
+                        'success': 'ResearchCustomBearerApiCompleted',
                       },
                     },
                   ],
@@ -3817,24 +3900,21 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     {
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
                           'gap': 'lg',
                           'children': [
                             {
-                              'name': 'check-circle',
                               'type': 'icon',
+                              'name': 'check-circle',
                             },
                             {
+                              'variant': 'h2',
                               'type': 'typography',
                               'content': 'Response',
-                              'variant': 'h2',
                             },
                             {
+                              'type': 'badge',
                               'variant': 'info',
                               'label': '@entity.statusCode',
-                              'type': 'badge',
                             },
                             {
                               'code': '@entity.responseData',
@@ -3842,26 +3922,30 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                               'type': 'code-block',
                             },
                             {
-                              'type': 'button',
-                              'label': 'New Request',
                               'variant': 'ghost',
+                              'type': 'button',
                               'action': 'RESET',
+                              'label': 'New Request',
                               'icon': 'rotate-ccw',
                             },
                           ],
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'align': 'center',
                         },
                       ],
                       'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Research',
                           'href': '/research',
+                          'label': 'Research',
                           'icon': 'search',
                         },
                         {
-                          'href': '/cache',
                           'icon': 'database',
                           'label': 'Cache',
+                          'href': '/cache',
                         },
                         {
                           'icon': 'file-text',
@@ -3869,12 +3953,11 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'label': 'Reports',
                         },
                         {
-                          'icon': 'book-open',
-                          'href': '/knowledge',
                           'label': 'Knowledge',
+                          'href': '/knowledge',
+                          'icon': 'book-open',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3893,21 +3976,21 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'appName': 'ResearchAssistant',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'message': '@entity.error',
+                          'onRetry': 'RETRY',
                           'title': 'Request Failed',
                           'type': 'error-state',
-                          'onRetry': 'RETRY',
+                          'message': '@entity.error',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
                       'navItems': [
                         {
-                          'label': 'Research',
-                          'href': '/research',
                           'icon': 'search',
+                          'href': '/research',
+                          'label': 'Research',
                         },
                         {
                           'href': '/cache',
@@ -3938,24 +4021,46 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'label': 'Research',
+                          'href': '/research',
+                          'icon': 'search',
+                        },
+                        {
+                          'icon': 'database',
+                          'href': '/cache',
+                          'label': 'Cache',
+                        },
+                        {
+                          'href': '/reports',
+                          'icon': 'file-text',
+                          'label': 'Reports',
+                        },
+                        {
+                          'href': '/knowledge',
+                          'label': 'Knowledge',
+                          'icon': 'book-open',
+                        },
+                      ],
                       'children': [
                         {
-                          'align': 'center',
                           'children': [
                             {
-                              'name': 'shield',
                               'type': 'icon',
+                              'name': 'shield',
                             },
                             {
-                              'type': 'typography',
-                              'variant': 'h2',
                               'content': 'Bearer API Tester',
+                              'variant': 'h2',
+                              'type': 'typography',
                             },
                             {
-                              'type': 'input',
                               'placeholder': '/users',
+                              'type': 'input',
                             },
                             {
+                              'type': 'select',
                               'options': [
                                 {
                                   'label': 'GET',
@@ -3974,45 +4079,23 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'value': 'DELETE',
                                 },
                               ],
-                              'type': 'select',
                             },
                             {
-                              'placeholder': 'JSON request body',
                               'type': 'textarea',
+                              'placeholder': 'JSON request body',
                             },
                             {
+                              'variant': 'primary',
+                              'label': 'Send Request',
+                              'type': 'button',
                               'icon': 'send',
                               'action': 'CALL_API',
-                              'variant': 'primary',
-                              'type': 'button',
-                              'label': 'Send Request',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'lg',
+                          'align': 'center',
                           'direction': 'vertical',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'icon': 'search',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
+                          'gap': 'lg',
+                          'type': 'stack',
                         },
                       ],
                       'type': 'dashboard-layout',
@@ -4030,61 +4113,60 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                     'render-ui',
                     'main',
                     {
-                      'appName': 'ResearchAssistant',
                       'type': 'dashboard-layout',
                       'children': [
                         {
                           'align': 'center',
-                          'gap': 'lg',
+                          'type': 'stack',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'name': 'shield',
                               'type': 'icon',
+                              'name': 'shield',
                             },
                             {
                               'variant': 'h2',
-                              'type': 'typography',
                               'content': 'Bearer API Tester',
+                              'type': 'typography',
                             },
                             {
                               'type': 'input',
                               'placeholder': '/users',
                             },
                             {
+                              'type': 'select',
                               'options': [
                                 {
                                   'value': 'GET',
                                   'label': 'GET',
                                 },
                                 {
-                                  'value': 'POST',
                                   'label': 'POST',
+                                  'value': 'POST',
                                 },
                                 {
                                   'label': 'PUT',
                                   'value': 'PUT',
                                 },
                                 {
-                                  'value': 'DELETE',
                                   'label': 'DELETE',
+                                  'value': 'DELETE',
                                 },
                               ],
-                              'type': 'select',
                             },
                             {
                               'type': 'textarea',
                               'placeholder': 'JSON request body',
                             },
                             {
+                              'action': 'CALL_API',
+                              'label': 'Send Request',
+                              'icon': 'send',
                               'type': 'button',
                               'variant': 'primary',
-                              'icon': 'send',
-                              'label': 'Send Request',
-                              'action': 'CALL_API',
                             },
                           ],
-                          'direction': 'vertical',
-                          'type': 'stack',
+                          'gap': 'lg',
                         },
                       ],
                       'navItems': [
@@ -4094,21 +4176,22 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'search',
                         },
                         {
-                          'icon': 'database',
-                          'href': '/cache',
                           'label': 'Cache',
+                          'href': '/cache',
+                          'icon': 'database',
                         },
                         {
-                          'label': 'Reports',
                           'icon': 'file-text',
+                          'label': 'Reports',
                           'href': '/reports',
                         },
                         {
                           'href': '/knowledge',
-                          'label': 'Knowledge',
                           'icon': 'book-open',
+                          'label': 'Knowledge',
                         },
                       ],
+                      'appName': 'ResearchAssistant',
                     },
                   ],
                 ],
@@ -4125,13 +4208,13 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                       'navItems': [
                         {
                           'label': 'Research',
-                          'icon': 'search',
                           'href': '/research',
+                          'icon': 'search',
                         },
                         {
+                          'icon': 'database',
                           'label': 'Cache',
                           'href': '/cache',
-                          'icon': 'database',
                         },
                         {
                           'label': 'Reports',
@@ -4144,28 +4227,28 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                           'icon': 'book-open',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'stack',
                           'align': 'center',
-                          'gap': 'lg',
                           'direction': 'vertical',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'shield',
+                              'type': 'icon',
                             },
                             {
-                              'content': 'Bearer API Tester',
                               'variant': 'h2',
                               'type': 'typography',
+                              'content': 'Bearer API Tester',
                             },
                             {
                               'type': 'input',
                               'placeholder': '/users',
                             },
                             {
-                              'type': 'select',
                               'options': [
                                 {
                                   'value': 'GET',
@@ -4184,22 +4267,22 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
                                   'value': 'DELETE',
                                 },
                               ],
+                              'type': 'select',
                             },
                             {
                               'type': 'textarea',
                               'placeholder': 'JSON request body',
                             },
                             {
-                              'action': 'CALL_API',
                               'variant': 'primary',
-                              'icon': 'send',
                               'type': 'button',
+                              'icon': 'send',
                               'label': 'Send Request',
+                              'action': 'CALL_API',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'appName': 'ResearchAssistant',
                     },
                   ],

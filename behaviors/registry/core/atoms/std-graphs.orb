@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string"
-                },
                 "value": {
                   "name": "value",
                   "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
                 }
               }
             }
@@ -81,14 +81,14 @@
                     "render-ui",
                     "main",
                     {
-                      "height": "@config.height",
-                      "title": "@config.title",
-                      "showValues": "@config.showValues",
                       "data": "@entity.chartData",
-                      "showLegend": "@config.showLegend",
                       "chartType": "@config.chartType",
+                      "subtitle": "@config.subtitle",
                       "type": "chart",
-                      "subtitle": "@config.subtitle"
+                      "showValues": "@config.showValues",
+                      "title": "@config.title",
+                      "height": "@config.height",
+                      "showLegend": "@config.showLegend"
                     }
                   ]
                 ]
@@ -115,6 +115,11 @@
                         "fn",
                         "entry",
                         {
+                          "label": [
+                            "object/get",
+                            "@entry",
+                            "0"
+                          ],
                           "value": [
                             "if",
                             [
@@ -190,11 +195,6 @@
                                 ]
                               ]
                             ]
-                          ],
-                          "label": [
-                            "object/get",
-                            "@entry",
-                            "0"
                           ]
                         }
                       ]
@@ -205,13 +205,13 @@
                     "main",
                     {
                       "chartType": "@config.chartType",
-                      "showLegend": "@config.showLegend",
-                      "subtitle": "@config.subtitle",
-                      "showValues": "@config.showValues",
                       "data": "@entity.chartData",
                       "height": "@config.height",
                       "type": "chart",
-                      "title": "@config.title"
+                      "title": "@config.title",
+                      "subtitle": "@config.subtitle",
+                      "showValues": "@config.showValues",
+                      "showLegend": "@config.showLegend"
                     }
                   ]
                 ]
@@ -219,17 +219,9 @@
             ]
           },
           "config": {
-            "aggregation": {
-              "type": "string",
-              "default": "count"
-            },
-            "valueField": {
+            "categoryField": {
               "type": "string",
               "default": ""
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true
             },
             "height": {
               "type": "number",
@@ -239,11 +231,18 @@
               "type": "boolean",
               "default": false
             },
-            "title": {
+            "aggregation": {
               "type": "string",
-              "default": ""
+              "default": "count",
+              "values": [
+                "count",
+                "sum",
+                "avg",
+                "min",
+                "max"
+              ]
             },
-            "categoryField": {
+            "title": {
               "type": "string",
               "default": ""
             },
@@ -251,9 +250,24 @@
               "type": "string",
               "default": ""
             },
+            "valueField": {
+              "type": "string",
+              "default": ""
+            },
             "chartType": {
               "type": "string",
-              "default": "bar"
+              "default": "bar",
+              "values": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut"
+              ]
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
             }
           },
           "scope": "instance"

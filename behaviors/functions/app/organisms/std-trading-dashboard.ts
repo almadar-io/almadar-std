@@ -23,6 +23,89 @@ const BEHAVIOR_PATH = 'std/behaviors/std-trading-dashboard';
 const ALIAS = 'TradingDashboard';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdTradingDashboardEventKey = 'INIT' | 'LOADED' | 'MarketFeedSaveFailed' | 'MarketFeedSaved' | 'PortfolioLoadFailed' | 'PortfolioLoaded' | 'REFRESH' | 'REFRESHED' | 'TradeOrderDeleteFailed' | 'TradeOrderDeleted' | 'TradeOrderSaveFailed' | 'TradeOrderSaved' | 'TradeOrderUpdateFailed' | 'TradeOrderUpdated';
+
+/**
+ * Payload shape for the `PortfolioLoaded` event.
+ */
+export interface StdTradingDashboardPortfolioLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `PortfolioLoadFailed` event.
+ */
+export interface StdTradingDashboardPortfolioLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderSaved` event.
+ */
+export interface StdTradingDashboardTradeOrderSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderSaveFailed` event.
+ */
+export interface StdTradingDashboardTradeOrderSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderUpdated` event.
+ */
+export interface StdTradingDashboardTradeOrderUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderUpdateFailed` event.
+ */
+export interface StdTradingDashboardTradeOrderUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderDeleted` event.
+ */
+export interface StdTradingDashboardTradeOrderDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `TradeOrderDeleteFailed` event.
+ */
+export interface StdTradingDashboardTradeOrderDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `MarketFeedSaved` event.
+ */
+export interface StdTradingDashboardMarketFeedSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MarketFeedSaveFailed` event.
+ */
+export interface StdTradingDashboardMarketFeedSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-trading-dashboard descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +121,8 @@ export interface StdTradingDashboardParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdTradingDashboardEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +142,11 @@ export function stdTradingDashboardTrait(params: StdTradingDashboardParams): Tra
     ref: `${ALIAS}.traits.PortfolioDisplay`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -437,8 +520,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'Portfolio',
                     {
                       'emit': {
-                        'success': 'PortfolioLoaded',
                         'failure': 'PortfolioLoadFailed',
+                        'success': 'PortfolioLoaded',
                       },
                     },
                   ],
@@ -446,12 +529,31 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'href': '/portfolio',
+                          'label': 'Portfolio',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                        {
+                          'href': '/market',
+                          'icon': 'layout-list',
+                          'label': 'Market',
+                        },
+                      ],
+                      'appName': 'Trading Dashboard',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
                               'type': 'stack',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'items': [
@@ -466,16 +568,18 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'direction': 'horizontal',
                                   'type': 'stack',
                                   'justify': 'between',
                                   'gap': 'md',
                                   'children': [
                                     {
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'trending-up',
+                                          'type': 'icon',
                                         },
                                         {
                                           'variant': 'h2',
@@ -483,18 +587,16 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'type': 'typography',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'direction': 'horizontal',
-                                      'type': 'stack',
                                     },
                                     {
-                                      'label': 'Refresh',
+                                      'variant': 'secondary',
                                       'action': 'REFRESH',
                                       'type': 'button',
-                                      'variant': 'secondary',
+                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
@@ -503,6 +605,7 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 3,
                                       'type': 'simple-grid',
                                       'children': [
                                         {
@@ -511,13 +614,13 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'label': 'TotalValue',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'DailyChange',
                                           'value': '@entity.dailyChange',
+                                          'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'Positions',
                                           'value': '@entity.positions',
+                                          'label': 'Positions',
                                           'type': 'stat-display',
                                         },
                                         {
@@ -526,7 +629,6 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'type': 'stat-display',
                                         },
                                       ],
-                                      'cols': 3,
                                     },
                                   ],
                                   'type': 'box',
@@ -535,11 +637,11 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'gap': 'md',
+                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -547,76 +649,76 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'content': 'Chart View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'type': 'typography',
+                                          'content': 'Graph View',
                                           'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
                                       'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
+                                  'type': 'graph-view',
+                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'width': 400,
                                   'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -633,31 +735,12 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   ],
                                 },
                               ],
-                              'gap': 'lg',
                               'direction': 'vertical',
                             },
                           ],
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'Trading Dashboard',
-                      'navItems': [
-                        {
-                          'href': '/portfolio',
-                          'label': 'Portfolio',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Market',
-                          'href': '/market',
-                        },
-                      ],
                     },
                   ],
                 ],
@@ -681,6 +764,25 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'Trading Dashboard',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'href': '/portfolio',
+                          'label': 'Portfolio',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                        {
+                          'href': '/market',
+                          'icon': 'layout-list',
+                          'label': 'Market',
+                        },
+                      ],
                       'children': [
                         {
                           'type': 'scaled-diagram',
@@ -694,8 +796,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Portfolio',
@@ -704,40 +806,41 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                 },
                                 {
                                   'gap': 'md',
-                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'gap': 'md',
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'trending-up',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'content': 'Portfolio',
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
+                                          'content': 'Portfolio',
                                         },
                                       ],
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
+                                      'gap': 'md',
                                     },
                                     {
                                       'variant': 'secondary',
-                                      'icon': 'refresh-cw',
-                                      'action': 'REFRESH',
                                       'type': 'button',
+                                      'icon': 'refresh-cw',
                                       'label': 'Refresh',
+                                      'action': 'REFRESH',
                                     },
                                   ],
-                                  'justify': 'between',
-                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
@@ -745,8 +848,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'children': [
                                         {
                                           'label': 'TotalValue',
-                                          'value': '@entity.totalValue',
                                           'type': 'stat-display',
+                                          'value': '@entity.totalValue',
                                         },
                                         {
                                           'label': 'DailyChange',
@@ -754,30 +857,28 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'value': '@entity.dailyChange',
                                         },
                                         {
-                                          'label': 'Positions',
                                           'value': '@entity.positions',
                                           'type': 'stat-display',
+                                          'label': 'Positions',
                                         },
                                         {
-                                          'label': 'CashBalance',
-                                          'value': '@entity.cashBalance',
                                           'type': 'stat-display',
+                                          'value': '@entity.cashBalance',
+                                          'label': 'CashBalance',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'cols': 2,
+                                  'type': 'grid',
                                   'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Chart View',
@@ -785,16 +886,17 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
                                 },
@@ -802,24 +904,24 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
                                       'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
                                       'value': 25,
                                       'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'date': 'Jun',
@@ -831,42 +933,42 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
                                   'edges': [
                                     {
-                                      'target': 'b',
                                       'source': 'a',
+                                      'target': 'b',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
-                                  'width': 400,
+                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
+                                  'width': 400,
                                   'height': 200,
                                 },
                               ],
@@ -874,25 +976,6 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           ],
                         },
                       ],
-                      'navItems': [
-                        {
-                          'href': '/portfolio',
-                          'icon': 'layout-list',
-                          'label': 'Portfolio',
-                        },
-                        {
-                          'href': '/orders',
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                        },
-                        {
-                          'href': '/market',
-                          'icon': 'layout-list',
-                          'label': 'Market',
-                        },
-                      ],
-                      'appName': 'Trading Dashboard',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -916,11 +999,30 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
+                      'appName': 'Trading Dashboard',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Portfolio',
+                          'href': '/portfolio',
+                        },
+                        {
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                        },
+                        {
+                          'label': 'Market',
+                          'icon': 'layout-list',
+                          'href': '/market',
+                        },
+                      ],
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'stack',
+                              'gap': 'lg',
                               'direction': 'vertical',
                               'children': [
                                 {
@@ -937,157 +1039,160 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                 },
                                 {
                                   'type': 'stack',
-                                  'gap': 'md',
-                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
                                       'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
-                                          'variant': 'h2',
-                                          'content': 'Portfolio',
                                           'type': 'typography',
+                                          'content': 'Portfolio',
+                                          'variant': 'h2',
                                         },
                                       ],
                                     },
                                     {
+                                      'variant': 'secondary',
                                       'action': 'REFRESH',
                                       'type': 'button',
-                                      'icon': 'refresh-cw',
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                       'children': [
                                         {
-                                          'value': '@entity.totalValue',
                                           'label': 'TotalValue',
+                                          'value': '@entity.totalValue',
                                           'type': 'stat-display',
                                         },
                                         {
-                                          'label': 'DailyChange',
-                                          'type': 'stat-display',
                                           'value': '@entity.dailyChange',
+                                          'type': 'stat-display',
+                                          'label': 'DailyChange',
                                         },
                                         {
                                           'label': 'Positions',
-                                          'value': '@entity.positions',
                                           'type': 'stat-display',
+                                          'value': '@entity.positions',
                                         },
                                         {
-                                          'type': 'stat-display',
                                           'label': 'CashBalance',
                                           'value': '@entity.cashBalance',
+                                          'type': 'stat-display',
                                         },
                                       ],
+                                      'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'type': 'box',
                                   'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'content': 'Chart View',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'children': [
                                         {
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Graph View',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
                                   'cols': 2,
-                                  'gap': 'md',
-                                  'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'height': 200,
                                   'nodes': [
                                     {
                                       'label': 'Start',
                                       'id': 'a',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
+                                  'width': 400,
+                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'source': 'a',
@@ -1098,34 +1203,12 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'target': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
-                                  'width': 400,
-                                  'height': 200,
                                 },
                               ],
-                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
                           'type': 'scaled-diagram',
-                        },
-                      ],
-                      'appName': 'Trading Dashboard',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/portfolio',
-                          'icon': 'layout-list',
-                          'label': 'Portfolio',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                        {
-                          'label': 'Market',
-                          'icon': 'layout-list',
-                          'href': '/market',
                         },
                       ],
                     },
@@ -1151,108 +1234,92 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'appName': 'Trading Dashboard',
-                      'navItems': [
-                        {
-                          'icon': 'layout-list',
-                          'href': '/portfolio',
-                          'label': 'Portfolio',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                        {
-                          'label': 'Market',
-                          'href': '/market',
-                          'icon': 'layout-list',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'children': [
                             {
-                              'direction': 'vertical',
+                              'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Portfolio',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
                                       'type': 'stack',
-                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
-                                          'type': 'typography',
                                           'content': 'Portfolio',
+                                          'type': 'typography',
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'direction': 'horizontal',
+                                      'gap': 'md',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'variant': 'secondary',
-                                      'action': 'REFRESH',
                                       'type': 'button',
+                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'gap': 'md',
+                                  'justify': 'between',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'value': '@entity.totalValue',
                                           'type': 'stat-display',
+                                          'value': '@entity.totalValue',
                                           'label': 'TotalValue',
                                         },
                                         {
-                                          'label': 'DailyChange',
+                                          'type': 'stat-display',
                                           'value': '@entity.dailyChange',
-                                          'type': 'stat-display',
+                                          'label': 'DailyChange',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.positions',
                                           'label': 'Positions',
+                                          'value': '@entity.positions',
                                         },
                                         {
-                                          'label': 'CashBalance',
-                                          'value': '@entity.cashBalance',
                                           'type': 'stat-display',
+                                          'value': '@entity.cashBalance',
+                                          'label': 'CashBalance',
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                   'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -1266,14 +1333,13 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Chart View',
-                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -1281,34 +1347,35 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                           'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
                                 },
                                 {
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                   'type': 'line-chart',
@@ -1320,25 +1387,16 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'type': 'graph-view',
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
                                   'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -1349,18 +1407,43 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                 },
                               ],
-                              'gap': 'lg',
-                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
                           'type': 'scaled-diagram',
+                        },
+                      ],
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'href': '/portfolio',
+                          'label': 'Portfolio',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                          'href': '/orders',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Market',
+                          'href': '/market',
                         },
                       ],
                     },
@@ -1386,16 +1469,16 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Trading Dashboard',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
+                          'icon': 'layout-list',
                           'label': 'Portfolio',
                           'href': '/portfolio',
-                          'icon': 'layout-list',
                         },
                         {
-                          'href': '/orders',
                           'label': 'Orders',
+                          'href': '/orders',
                           'icon': 'clipboard-list',
                         },
                         {
@@ -1404,22 +1487,20 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'icon': 'layout-list',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'appName': 'Trading Dashboard',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
-                              'direction': 'vertical',
                               'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Portfolio',
@@ -1427,48 +1508,50 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   ],
                                 },
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'justify': 'between',
                                   'children': [
                                     {
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'name': 'trending-up',
                                           'type': 'icon',
+                                          'name': 'trending-up',
                                         },
                                         {
                                           'content': 'Portfolio',
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
                                       'gap': 'md',
                                       'type': 'stack',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'variant': 'secondary',
                                       'icon': 'refresh-cw',
                                       'action': 'REFRESH',
                                       'type': 'button',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'md',
-                                  'justify': 'between',
-                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
-                                          'label': 'TotalValue',
-                                          'type': 'stat-display',
                                           'value': '@entity.totalValue',
+                                          'type': 'stat-display',
+                                          'label': 'TotalValue',
                                         },
                                         {
                                           'value': '@entity.dailyChange',
@@ -1477,35 +1560,34 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.positions',
                                           'label': 'Positions',
+                                          'value': '@entity.positions',
                                         },
                                         {
-                                          'value': '@entity.cashBalance',
-                                          'type': 'stat-display',
                                           'label': 'CashBalance',
+                                          'type': 'stat-display',
+                                          'value': '@entity.cashBalance',
                                         },
                                       ],
-                                      'cols': 3,
-                                      'type': 'simple-grid',
                                     },
                                   ],
-                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
                                   'gap': 'md',
+                                  'type': 'grid',
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'type': 'typography',
                                           'content': 'Chart View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
@@ -1520,7 +1602,6 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
@@ -1534,8 +1615,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
                                       'date': 'Apr',
@@ -1546,25 +1627,37 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'type': 'graph-view',
+                                  'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -1575,25 +1668,15 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'id': 'b',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
-                                    },
-                                  ],
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
+                                      'id': 'c',
                                     },
                                   ],
                                   'width': 400,
-                                  'type': 'graph-view',
-                                  'height': 200,
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
                         },
@@ -1898,8 +1981,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'failure': 'TradeOrderLoadFailed',
                         'success': 'TradeOrderLoaded',
+                        'failure': 'TradeOrderLoadFailed',
                       },
                     },
                   ],
@@ -1907,22 +1990,22 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'type': 'stack',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
+                          'type': 'typography',
                           'content': 'Loading orders…',
                           'variant': 'caption',
                           'color': 'muted',
-                          'type': 'typography',
                         },
                       ],
                       'gap': 'md',
+                      'direction': 'vertical',
                       'align': 'center',
                       'className': 'py-12',
-                      'direction': 'vertical',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -1936,26 +2019,20 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'Trading Dashboard',
                       'children': [
                         {
                           'className': 'max-w-5xl mx-auto w-full',
+                          'gap': 'lg',
                           'direction': 'vertical',
                           'type': 'stack',
-                          'gap': 'lg',
                           'children': [
                             {
+                              'gap': 'md',
                               'justify': 'between',
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
                               'children': [
                                 {
                                   'gap': 'sm',
-                                  'direction': 'horizontal',
                                   'align': 'center',
-                                  'type': 'stack',
                                   'children': [
                                     {
                                       'name': 'shopping-cart',
@@ -1967,84 +2044,88 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                       'type': 'typography',
                                     },
                                   ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'variant': 'primary',
                                       'type': 'button',
+                                      'variant': 'primary',
                                       'action': 'CREATE',
                                       'label': 'Create TradeOrder',
                                       'icon': 'plus',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
                                 },
                               ],
-                              'gap': 'md',
+                              'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'type': 'data-list',
                               'entity': '@payload.data',
                               'fields': [
                                 {
-                                  'icon': 'trending-up',
                                   'variant': 'h3',
                                   'name': 'symbol',
+                                  'icon': 'trending-up',
                                 },
                                 {
-                                  'variant': 'badge',
                                   'name': 'side',
+                                  'variant': 'badge',
                                 },
                                 {
+                                  'name': 'quantity',
                                   'variant': 'body',
                                   'format': 'number',
-                                  'name': 'quantity',
                                 },
                                 {
-                                  'variant': 'h4',
                                   'format': 'currency',
                                   'name': 'price',
+                                  'variant': 'h4',
                                 },
                               ],
+                              'variant': 'card',
+                              'gap': 'sm',
                               'itemActions': [
                                 {
+                                  'variant': 'ghost',
                                   'label': 'View',
                                   'event': 'VIEW',
-                                  'variant': 'ghost',
                                 },
                                 {
                                   'event': 'EDIT',
-                                  'variant': 'ghost',
                                   'label': 'Edit',
+                                  'variant': 'ghost',
                                 },
                                 {
-                                  'variant': 'danger',
                                   'label': 'Delete',
                                   'event': 'DELETE',
+                                  'variant': 'danger',
                                 },
                               ],
-                              'type': 'data-list',
-                              'gap': 'sm',
-                              'variant': 'card',
                             },
                           ],
                         },
                       ],
                       'navItems': [
                         {
-                          'icon': 'layout-list',
-                          'label': 'Portfolio',
                           'href': '/portfolio',
+                          'label': 'Portfolio',
+                          'icon': 'layout-list',
                         },
                         {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
                           'href': '/orders',
+                          'label': 'Orders',
+                          'icon': 'clipboard-list',
                         },
                         {
                           'href': '/market',
@@ -2052,6 +2133,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'label': 'Market',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Trading Dashboard',
                     },
                   ],
                 ],
@@ -2065,10 +2148,7 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'icon',
@@ -2076,25 +2156,28 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'color': 'destructive',
                         },
                         {
+                          'content': 'Failed to load orders',
                           'type': 'typography',
                           'variant': 'h3',
-                          'content': 'Failed to load orders',
                         },
                         {
-                          'type': 'typography',
                           'color': 'muted',
+                          'type': 'typography',
                           'content': '@payload.error',
                           'variant': 'body',
                         },
                         {
-                          'variant': 'primary',
-                          'label': 'Retry',
-                          'icon': 'rotate-ccw',
                           'type': 'button',
+                          'label': 'Retry',
                           'action': 'INIT',
+                          'variant': 'primary',
+                          'icon': 'rotate-ccw',
                         },
                       ],
-                      'className': 'py-12',
+                      'align': 'center',
+                      'type': 'stack',
+                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2286,8 +2369,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
                     },
                   ],
@@ -2295,41 +2378,41 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'plus-circle',
+                              'type': 'icon',
                             },
                             {
-                              'variant': 'h3',
                               'content': 'Create TradeOrder',
+                              'variant': 'h3',
                               'type': 'typography',
                             },
                           ],
                           'type': 'stack',
                           'gap': 'sm',
-                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
                           'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
                           'fields': [
                             'symbol',
                             'side',
                             'quantity',
                             'price',
                           ],
+                          'mode': 'create',
                         },
                       ],
+                      'gap': 'md',
+                      'direction': 'vertical',
                       'type': 'stack',
                     },
                   ],
@@ -2582,8 +2665,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
                     },
                   ],
@@ -2598,35 +2681,33 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'fetch',
                     'TradeOrder',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
                       'type': 'stack',
-                      'gap': 'md',
                       'children': [
                         {
+                          'type': 'stack',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
-                              'content': 'Edit TradeOrder',
                               'variant': 'h3',
                               'type': 'typography',
+                              'content': 'Edit TradeOrder',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'gap': 'sm',
                         },
                         {
@@ -2634,18 +2715,20 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                         },
                         {
                           'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'symbol',
                             'side',
                             'quantity',
                             'price',
                           ],
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
                           'mode': 'edit',
+                          'type': 'form-section',
                           'entity': '@payload.row',
                         },
                       ],
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -2857,8 +2940,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
                     },
                   ],
@@ -2873,11 +2956,11 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'fetch',
                     'TradeOrder',
                     {
-                      'emit': {
-                        'success': 'TradeOrderLoaded',
-                        'failure': 'TradeOrderLoadFailed',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
+                      },
                     },
                   ],
                   [
@@ -2885,25 +2968,23 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'modal',
                     {
                       'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'children': [
                         {
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
                               'content': '@entity.symbol',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
                           'direction': 'horizontal',
-                          'type': 'stack',
                           'align': 'center',
                           'gap': 'sm',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
@@ -2911,14 +2992,14 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                         {
                           'children': [
                             {
-                              'type': 'typography',
-                              'content': 'Symbol',
                               'variant': 'caption',
+                              'content': 'Symbol',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.symbol',
                               'variant': 'body',
+                              'content': '@entity.symbol',
                             },
                           ],
                           'direction': 'horizontal',
@@ -2926,6 +3007,7 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'variant': 'caption',
@@ -2933,16 +3015,17 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                               'content': 'Side',
                             },
                             {
-                              'content': '@entity.side',
                               'type': 'typography',
                               'variant': 'body',
+                              'content': '@entity.side',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                         },
                         {
+                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'variant': 'caption',
@@ -2950,57 +3033,57 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                               'type': 'typography',
                             },
                             {
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.quantity',
+                              'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
                           'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
                           'gap': 'md',
-                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'typography',
-                              'content': 'Price',
                               'variant': 'caption',
+                              'content': 'Price',
                             },
                             {
                               'variant': 'body',
-                              'content': '@entity.price',
                               'type': 'typography',
+                              'content': '@entity.price',
                             },
                           ],
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
                           'children': [
                             {
                               'variant': 'primary',
-                              'type': 'button',
                               'icon': 'edit',
+                              'type': 'button',
                               'label': 'Edit',
                               'action': 'EDIT',
                             },
                             {
-                              'type': 'button',
                               'label': 'Close',
-                              'action': 'CLOSE',
                               'variant': 'ghost',
+                              'type': 'button',
+                              'action': 'CLOSE',
                             },
                           ],
-                          'gap': 'sm',
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'justify': 'end',
+                          'gap': 'sm',
                         },
                       ],
+                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3243,11 +3326,11 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'fetch',
                     'TradeOrder',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'failure': 'TradeOrderLoadFailed',
                         'success': 'TradeOrderLoaded',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
@@ -3256,50 +3339,50 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     {
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
-                              'name': 'alert-triangle',
                               'type': 'icon',
+                              'name': 'alert-triangle',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Delete TradeOrder',
-                              'variant': 'h3',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'alert',
-                          'variant': 'error',
                           'message': 'This action cannot be undone.',
+                          'variant': 'error',
+                          'type': 'alert',
                         },
                         {
                           'children': [
                             {
-                              'variant': 'ghost',
                               'type': 'button',
-                              'label': 'Cancel',
                               'action': 'CANCEL',
+                              'variant': 'ghost',
+                              'label': 'Cancel',
                             },
                             {
-                              'type': 'button',
-                              'action': 'CONFIRM_DELETE',
-                              'label': 'Delete',
                               'variant': 'danger',
+                              'type': 'button',
                               'icon': 'check',
+                              'label': 'Delete',
+                              'action': 'CONFIRM_DELETE',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'justify': 'end',
+                          'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'sm',
                         },
                       ],
                       'gap': 'md',
@@ -3321,8 +3404,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'failure': 'TradeOrderDeleteFailed',
                         'success': 'TradeOrderDeleted',
+                        'failure': 'TradeOrderDeleteFailed',
                       },
                     },
                   ],
@@ -3376,8 +3459,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
                     },
                   ],
@@ -3405,8 +3488,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'TradeOrder',
                     {
                       'emit': {
-                        'success': 'TradeOrderLoaded',
                         'failure': 'TradeOrderLoadFailed',
+                        'success': 'TradeOrderLoaded',
                       },
                     },
                   ],
@@ -3646,68 +3729,68 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Trading Dashboard',
-                      'navItems': [
-                        {
-                          'href': '/portfolio',
-                          'label': 'Portfolio',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                        {
-                          'label': 'Market',
-                          'href': '/market',
-                          'icon': 'layout-list',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'align': 'center',
                           'type': 'stack',
+                          'align': 'center',
                           'children': [
                             {
-                              'align': 'center',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'icon',
                                   'name': 'activity',
+                                  'type': 'icon',
                                 },
                                 {
-                                  'content': 'MarketFeed',
-                                  'type': 'typography',
                                   'variant': 'h2',
+                                  'type': 'typography',
+                                  'content': 'MarketFeed',
                                 },
                               ],
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'gap': 'md',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'color': 'muted',
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': 'Ready to start marketfeed operation.',
+                              'type': 'typography',
+                              'variant': 'body',
                             },
                             {
+                              'action': 'START',
                               'type': 'button',
                               'variant': 'primary',
-                              'action': 'START',
-                              'icon': 'play',
                               'label': 'Start',
+                              'icon': 'play',
                             },
                           ],
-                          'direction': 'vertical',
                           'gap': 'lg',
+                          'direction': 'vertical',
                         },
                       ],
+                      'navItems': [
+                        {
+                          'label': 'Portfolio',
+                          'href': '/portfolio',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                          'label': 'Orders',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Market',
+                          'href': '/market',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Trading Dashboard',
                     },
                   ],
                 ],
@@ -3721,27 +3804,6 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'Trading Dashboard',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'title': 'Connecting to market feed...',
-                              'type': 'loading-state',
-                              'message': 'Processing marketfeed...',
-                            },
-                            {
-                              'type': 'skeleton',
-                              'variant': 'text',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                      ],
                       'navItems': [
                         {
                           'icon': 'layout-list',
@@ -3749,16 +3811,37 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'href': '/portfolio',
                         },
                         {
+                          'href': '/orders',
                           'label': 'Orders',
                           'icon': 'clipboard-list',
-                          'href': '/orders',
                         },
                         {
-                          'href': '/market',
                           'label': 'Market',
                           'icon': 'layout-list',
+                          'href': '/market',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'children': [
+                        {
+                          'gap': 'lg',
+                          'align': 'center',
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'type': 'loading-state',
+                              'title': 'Connecting to market feed...',
+                              'message': 'Processing marketfeed...',
+                            },
+                            {
+                              'variant': 'text',
+                              'type': 'skeleton',
+                            },
+                          ],
+                          'type': 'stack',
+                        },
+                      ],
+                      'appName': 'Trading Dashboard',
                     },
                   ],
                 ],
@@ -3784,18 +3867,16 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Trading Dashboard',
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'href': '/portfolio',
                           'label': 'Portfolio',
+                          'href': '/portfolio',
                           'icon': 'layout-list',
                         },
                         {
                           'label': 'Orders',
-                          'icon': 'clipboard-list',
                           'href': '/orders',
+                          'icon': 'clipboard-list',
                         },
                         {
                           'icon': 'layout-list',
@@ -3805,38 +3886,40 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                       ],
                       'children': [
                         {
-                          'direction': 'vertical',
                           'type': 'stack',
+                          'direction': 'vertical',
                           'align': 'center',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'check-circle',
+                              'type': 'icon',
                             },
                             {
-                              'message': 'Market feed connected.',
-                              'type': 'alert',
                               'variant': 'success',
+                              'type': 'alert',
+                              'message': 'Market feed connected.',
                             },
                             {
+                              'type': 'stack',
                               'children': [
                                 {
                                   'label': 'Reset',
                                   'action': 'RESET',
-                                  'variant': 'ghost',
                                   'icon': 'rotate-ccw',
                                   'type': 'button',
+                                  'variant': 'ghost',
                                 },
                               ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'justify': 'center',
                               'direction': 'horizontal',
+                              'justify': 'center',
+                              'gap': 'sm',
                             },
                           ],
                           'gap': 'lg',
                         },
                       ],
+                      'appName': 'Trading Dashboard',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3850,55 +3933,17 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'message': 'Market feed disconnected.',
-                              'onRetry': 'RETRY',
-                              'title': 'Operation Failed',
-                              'type': 'error-state',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'justify': 'center',
-                              'children': [
-                                {
-                                  'icon': 'refresh-cw',
-                                  'type': 'button',
-                                  'action': 'RETRY',
-                                  'variant': 'primary',
-                                  'label': 'Retry',
-                                },
-                                {
-                                  'type': 'button',
-                                  'icon': 'rotate-ccw',
-                                  'variant': 'ghost',
-                                  'action': 'RESET',
-                                  'label': 'Reset',
-                                },
-                              ],
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
+                      'appName': 'Trading Dashboard',
                       'navItems': [
                         {
+                          'label': 'Portfolio',
                           'href': '/portfolio',
                           'icon': 'layout-list',
-                          'label': 'Portfolio',
                         },
                         {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
                           'label': 'Orders',
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
                         },
                         {
                           'href': '/market',
@@ -3906,7 +3951,45 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           'icon': 'layout-list',
                         },
                       ],
-                      'appName': 'Trading Dashboard',
+                      'children': [
+                        {
+                          'children': [
+                            {
+                              'title': 'Operation Failed',
+                              'type': 'error-state',
+                              'onRetry': 'RETRY',
+                              'message': 'Market feed disconnected.',
+                            },
+                            {
+                              'direction': 'horizontal',
+                              'justify': 'center',
+                              'children': [
+                                {
+                                  'type': 'button',
+                                  'icon': 'refresh-cw',
+                                  'variant': 'primary',
+                                  'label': 'Retry',
+                                  'action': 'RETRY',
+                                },
+                                {
+                                  'icon': 'rotate-ccw',
+                                  'label': 'Reset',
+                                  'action': 'RESET',
+                                  'variant': 'ghost',
+                                  'type': 'button',
+                                },
+                              ],
+                              'type': 'stack',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
+                          'align': 'center',
+                          'direction': 'vertical',
+                          'type': 'stack',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -3921,32 +4004,19 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'main',
                     {
                       'appName': 'Trading Dashboard',
-                      'navItems': [
-                        {
-                          'href': '/portfolio',
-                          'label': 'Portfolio',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                        {
-                          'label': 'Market',
-                          'icon': 'layout-list',
-                          'href': '/market',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'children': [
                             {
+                              'direction': 'horizontal',
+                              'gap': 'md',
                               'type': 'stack',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'name': 'activity',
                                   'type': 'icon',
+                                  'name': 'activity',
                                 },
                                 {
                                   'type': 'typography',
@@ -3954,34 +4024,47 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                                   'variant': 'h2',
                                 },
                               ],
-                              'gap': 'md',
-                              'align': 'center',
-                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'typography',
                               'color': 'muted',
                               'variant': 'body',
+                              'type': 'typography',
                               'content': 'Ready to start marketfeed operation.',
                             },
                             {
-                              'label': 'Start',
-                              'action': 'START',
                               'type': 'button',
-                              'variant': 'primary',
+                              'label': 'Start',
                               'icon': 'play',
+                              'variant': 'primary',
+                              'action': 'START',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'lg',
                           'align': 'center',
+                          'gap': 'lg',
+                          'type': 'stack',
                           'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Portfolio',
+                          'href': '/portfolio',
+                        },
+                        {
+                          'label': 'Orders',
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'href': '/market',
+                          'icon': 'layout-list',
+                          'label': 'Market',
+                        },
+                      ],
                     },
                   ],
                 ],
@@ -3995,68 +4078,68 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Trading Dashboard',
-                      'navItems': [
-                        {
-                          'label': 'Portfolio',
-                          'href': '/portfolio',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Market',
-                          'href': '/market',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'gap': 'lg',
                           'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
                           'align': 'center',
                           'children': [
                             {
-                              'direction': 'horizontal',
                               'gap': 'md',
                               'type': 'stack',
+                              'align': 'center',
+                              'direction': 'horizontal',
                               'children': [
                                 {
                                   'type': 'icon',
                                   'name': 'activity',
                                 },
                                 {
-                                  'type': 'typography',
                                   'content': 'MarketFeed',
+                                  'type': 'typography',
                                   'variant': 'h2',
                                 },
                               ],
-                              'align': 'center',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'typography',
                               'content': 'Ready to start marketfeed operation.',
-                              'color': 'muted',
+                              'type': 'typography',
                               'variant': 'body',
+                              'color': 'muted',
                             },
                             {
+                              'action': 'START',
                               'icon': 'play',
                               'variant': 'primary',
                               'label': 'Start',
-                              'action': 'START',
                               'type': 'button',
                             },
                           ],
-                          'type': 'stack',
                         },
                       ],
+                      'navItems': [
+                        {
+                          'href': '/portfolio',
+                          'icon': 'layout-list',
+                          'label': 'Portfolio',
+                        },
+                        {
+                          'icon': 'clipboard-list',
+                          'href': '/orders',
+                          'label': 'Orders',
+                        },
+                        {
+                          'href': '/market',
+                          'label': 'Market',
+                          'icon': 'layout-list',
+                        },
+                      ],
+                      'appName': 'Trading Dashboard',
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -4071,30 +4154,14 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'layout-list',
-                          'href': '/portfolio',
-                          'label': 'Portfolio',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/market',
-                          'label': 'Market',
-                        },
-                      ],
                       'children': [
                         {
+                          'gap': 'lg',
                           'children': [
                             {
                               'type': 'loading-state',
-                              'message': 'Processing marketfeed...',
                               'title': 'Connecting to market feed...',
+                              'message': 'Processing marketfeed...',
                             },
                             {
                               'type': 'skeleton',
@@ -4103,11 +4170,27 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
                           ],
                           'direction': 'vertical',
                           'align': 'center',
-                          'gap': 'lg',
                           'type': 'stack',
                         },
                       ],
                       'appName': 'Trading Dashboard',
+                      'navItems': [
+                        {
+                          'label': 'Portfolio',
+                          'href': '/portfolio',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'label': 'Orders',
+                          'href': '/orders',
+                          'icon': 'clipboard-list',
+                        },
+                        {
+                          'label': 'Market',
+                          'icon': 'layout-list',
+                          'href': '/market',
+                        },
+                      ],
                     },
                   ],
                 ],

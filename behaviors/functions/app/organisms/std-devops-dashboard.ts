@@ -23,6 +23,74 @@ const BEHAVIOR_PATH = 'std/behaviors/std-devops-dashboard';
 const ALIAS = 'DevopsDashboard';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdDevopsDashboardEventKey = 'FAILURE' | 'INIT' | 'LogEntryDeleteFailed' | 'LogEntryDeleted' | 'LogEntrySaveFailed' | 'LogEntrySaved' | 'LogEntryUpdateFailed' | 'LogEntryUpdated' | 'RESET' | 'SUCCESS' | 'ServiceNodeLoadFailed' | 'ServiceNodeLoaded' | 'TIMEOUT';
+
+/**
+ * Payload shape for the `ServiceNodeLoaded` event.
+ */
+export interface StdDevopsDashboardServiceNodeLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `ServiceNodeLoadFailed` event.
+ */
+export interface StdDevopsDashboardServiceNodeLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `LogEntrySaved` event.
+ */
+export interface StdDevopsDashboardLogEntrySavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `LogEntrySaveFailed` event.
+ */
+export interface StdDevopsDashboardLogEntrySaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `LogEntryUpdated` event.
+ */
+export interface StdDevopsDashboardLogEntryUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `LogEntryUpdateFailed` event.
+ */
+export interface StdDevopsDashboardLogEntryUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `LogEntryDeleted` event.
+ */
+export interface StdDevopsDashboardLogEntryDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `LogEntryDeleteFailed` event.
+ */
+export interface StdDevopsDashboardLogEntryDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-devops-dashboard descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +106,8 @@ export interface StdDevopsDashboardParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdDevopsDashboardEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +127,11 @@ export function stdDevopsDashboardTrait(params: StdDevopsDashboardParams): Trait
     ref: `${ALIAS}.traits.ServiceNodeCircuitBreaker`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -414,7 +482,77 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'children': [
+                                {
+                                  'align': 'center',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'ServiceNode',
+                                      'type': 'typography',
+                                      'variant': 'h2',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                },
+                              ],
+                              'gap': 'md',
+                              'align': 'center',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'children': [
+                                {
+                                  'value': '@entity.failureCount',
+                                  'label': 'Failures',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                              'type': 'simple-grid',
+                              'cols': 2,
+                            },
+                            {
+                              'max': '@entity.threshold',
+                              'min': 0,
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                            },
+                          ],
+                          'direction': 'vertical',
+                        },
+                      ],
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
@@ -424,91 +562,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                         },
                         {
                           'href': '/alerts',
-                          'icon': 'bell',
                           'label': 'Alerts',
+                          'icon': 'bell',
                         },
                         {
                           'icon': 'terminal',
-                          'label': 'Logs',
                           'href': '/logs',
+                          'label': 'Logs',
                         },
                         {
-                          'label': 'Metrics',
                           'href': '/metrics',
                           'icon': 'layout-list',
+                          'label': 'Metrics',
                         },
                       ],
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'server',
-                                    },
-                                    {
-                                      'content': 'ServiceNode',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'align': 'center',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'label': 'Circuit Closed',
-                                  'type': 'status-dot',
-                                  'pulse': false,
-                                  'status': 'online',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'variant': 'success',
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'type': 'alert',
-                            },
-                            {
-                              'cols': 2,
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Failures',
-                                  'value': '@entity.failureCount',
-                                },
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Successes',
-                                  'value': '@entity.successCount',
-                                },
-                              ],
-                              'type': 'simple-grid',
-                            },
-                            {
-                              'max': '@entity.threshold',
-                              'min': 0,
-                              'value': '@entity.failureCount',
-                              'type': 'meter',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                        },
-                      ],
+                      'appName': 'DevOps Dashboard',
                     },
                   ],
                 ],
@@ -522,95 +590,95 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'direction': 'vertical',
                           'type': 'stack',
+                          'direction': 'vertical',
                           'gap': 'lg',
                           'children': [
                             {
-                              'direction': 'horizontal',
                               'type': 'stack',
-                              'align': 'center',
                               'gap': 'md',
                               'justify': 'between',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'name': 'alert-triangle',
                                       'type': 'icon',
+                                      'name': 'alert-triangle',
                                     },
                                     {
                                       'variant': 'h2',
-                                      'type': 'typography',
                                       'content': 'ServiceNode',
+                                      'type': 'typography',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'type': 'stack',
                                 },
                                 {
-                                  'label': 'Circuit Open',
-                                  'type': 'status-dot',
                                   'status': 'critical',
                                   'pulse': true,
+                                  'type': 'status-dot',
+                                  'label': 'Circuit Open',
                                 },
                               ],
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             {
                               'type': 'alert',
-                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
                               'variant': 'error',
+                              'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
                             },
                             {
                               'cols': 2,
-                              'type': 'simple-grid',
                               'children': [
                                 {
-                                  'value': '@entity.failureCount',
                                   'type': 'stat-display',
                                   'label': 'Failures',
+                                  'value': '@entity.failureCount',
                                 },
                                 {
                                   'value': '@entity.successCount',
-                                  'type': 'stat-display',
                                   'label': 'Successes',
+                                  'type': 'stat-display',
                                 },
                               ],
+                              'type': 'simple-grid',
                             },
                             {
-                              'value': '@entity.failureCount',
-                              'max': '@entity.threshold',
                               'min': 0,
+                              'max': '@entity.threshold',
+                              'value': '@entity.failureCount',
                               'type': 'meter',
                             },
                             {
-                              'label': 'Reset',
-                              'action': 'RESET',
-                              'type': 'button',
                               'icon': 'rotate-ccw',
+                              'action': 'RESET',
                               'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Reset',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Services',
                           'href': '/services',
+                          'label': 'Services',
                           'icon': 'server',
                         },
                         {
-                          'icon': 'bell',
                           'label': 'Alerts',
                           'href': '/alerts',
+                          'icon': 'bell',
                         },
                         {
                           'label': 'Logs',
@@ -619,8 +687,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                         },
                         {
                           'label': 'Metrics',
-                          'icon': 'layout-list',
                           'href': '/metrics',
+                          'icon': 'layout-list',
                         },
                       ],
                       'appName': 'DevOps Dashboard',
@@ -638,100 +706,100 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'main',
                     {
                       'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'label': 'Services',
+                          'icon': 'server',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
                       'children': [
                         {
-                          'type': 'stack',
-                          'gap': 'lg',
                           'direction': 'vertical',
+                          'gap': 'lg',
+                          'type': 'stack',
                           'children': [
                             {
-                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'type': 'stack',
+                              'align': 'center',
+                              'justify': 'between',
                               'children': [
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
                                   'children': [
                                     {
-                                      'name': 'server',
                                       'type': 'icon',
+                                      'name': 'server',
                                     },
                                     {
-                                      'variant': 'h2',
                                       'type': 'typography',
+                                      'variant': 'h2',
                                       'content': 'ServiceNode',
                                     },
                                   ],
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'gap': 'md',
                                 },
                                 {
                                   'status': 'online',
+                                  'pulse': false,
                                   'type': 'status-dot',
                                   'label': 'Circuit Closed',
-                                  'pulse': false,
                                 },
                               ],
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'justify': 'between',
-                              'type': 'stack',
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'variant': 'success',
                               'type': 'alert',
+                              'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
                             },
                             {
-                              'cols': 2,
                               'children': [
                                 {
-                                  'type': 'stat-display',
                                   'label': 'Failures',
                                   'value': '@entity.failureCount',
+                                  'type': 'stat-display',
                                 },
                                 {
+                                  'value': '@entity.successCount',
                                   'type': 'stat-display',
                                   'label': 'Successes',
-                                  'value': '@entity.successCount',
                                 },
                               ],
                               'type': 'simple-grid',
+                              'cols': 2,
                             },
                             {
-                              'max': '@entity.threshold',
+                              'min': 0,
                               'type': 'meter',
                               'value': '@entity.failureCount',
-                              'min': 0,
+                              'max': '@entity.threshold',
                             },
                           ],
                         },
                       ],
-                      'navItems': [
-                        {
-                          'icon': 'server',
-                          'label': 'Services',
-                          'href': '/services',
-                        },
-                        {
-                          'href': '/alerts',
-                          'label': 'Alerts',
-                          'icon': 'bell',
-                        },
-                        {
-                          'label': 'Logs',
-                          'href': '/logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'label': 'Metrics',
-                          'icon': 'layout-list',
-                          'href': '/metrics',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -745,20 +813,20 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'vertical',
                           'children': [
                             {
+                              'direction': 'horizontal',
                               'gap': 'md',
+                              'type': 'stack',
                               'align': 'center',
                               'justify': 'between',
-                              'direction': 'horizontal',
-                              'type': 'stack',
                               'children': [
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'align': 'center',
                                   'children': [
                                     {
@@ -766,20 +834,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'name': 'activity',
                                     },
                                     {
+                                      'variant': 'h2',
                                       'type': 'typography',
                                       'content': 'ServiceNode',
-                                      'variant': 'h2',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'gap': 'md',
                                 },
                                 {
-                                  'status': 'warning',
+                                  'type': 'status-dot',
                                   'pulse': true,
                                   'label': 'Circuit Half-Open',
-                                  'type': 'status-dot',
+                                  'status': 'warning',
                                 },
                               ],
                             },
@@ -787,51 +853,53 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                               'type': 'divider',
                             },
                             {
-                              'variant': 'warning',
-                              'message': 'Testing recovery. Limited requests are being allowed through.',
                               'type': 'alert',
+                              'message': 'Testing recovery. Limited requests are being allowed through.',
+                              'variant': 'warning',
                             },
                             {
-                              'type': 'simple-grid',
+                              'cols': 2,
                               'children': [
                                 {
-                                  'label': 'Failures',
-                                  'type': 'stat-display',
                                   'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
                                 },
                                 {
+                                  'type': 'stat-display',
                                   'label': 'Successes',
                                   'value': '@entity.successCount',
-                                  'type': 'stat-display',
                                 },
                               ],
-                              'cols': 2,
+                              'type': 'simple-grid',
                             },
                           ],
+                          'direction': 'vertical',
                           'gap': 'lg',
+                          'type': 'stack',
                         },
                       ],
-                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'icon': 'server',
                           'label': 'Services',
+                          'icon': 'server',
                           'href': '/services',
                         },
                         {
-                          'label': 'Alerts',
                           'href': '/alerts',
+                          'label': 'Alerts',
                           'icon': 'bell',
                         },
                         {
-                          'href': '/logs',
                           'icon': 'terminal',
+                          'href': '/logs',
                           'label': 'Logs',
                         },
                         {
-                          'href': '/metrics',
-                          'icon': 'layout-list',
                           'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
                         },
                       ],
                     },
@@ -847,89 +915,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'appName': 'DevOps Dashboard',
                       'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'server',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'ServiceNode',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'pulse': false,
-                                  'status': 'online',
-                                  'type': 'status-dot',
-                                  'label': 'Circuit Closed',
-                                },
-                              ],
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'variant': 'success',
-                              'type': 'alert',
-                            },
-                            {
-                              'cols': 2,
-                              'type': 'simple-grid',
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Failures',
-                                  'value': '@entity.failureCount',
-                                },
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Successes',
-                                  'value': '@entity.successCount',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'meter',
-                              'min': 0,
-                              'value': '@entity.failureCount',
-                              'max': '@entity.threshold',
-                            },
-                          ],
-                        },
-                      ],
+                      'appName': 'DevOps Dashboard',
                       'navItems': [
                         {
                           'href': '/services',
-                          'icon': 'server',
                           'label': 'Services',
+                          'icon': 'server',
                         },
                         {
-                          'label': 'Alerts',
-                          'href': '/alerts',
                           'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
                         },
                         {
                           'icon': 'terminal',
@@ -940,6 +937,77 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'href': '/metrics',
                           'label': 'Metrics',
                           'icon': 'layout-list',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'children': [
+                            {
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'type': 'stack',
+                              'justify': 'between',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'children': [
+                                    {
+                                      'name': 'server',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'content': 'ServiceNode',
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'type': 'status-dot',
+                                  'status': 'online',
+                                  'label': 'Circuit Closed',
+                                  'pulse': false,
+                                },
+                              ],
+                              'align': 'center',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'variant': 'success',
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                            },
+                            {
+                              'cols': 2,
+                              'type': 'simple-grid',
+                              'children': [
+                                {
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                  'type': 'stat-display',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                            },
+                            {
+                              'type': 'meter',
+                              'max': '@entity.threshold',
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                            },
+                          ],
+                          'gap': 'lg',
+                          'type': 'stack',
                         },
                       ],
                     },
@@ -955,100 +1023,100 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'icon': 'server',
-                          'label': 'Services',
-                          'href': '/services',
-                        },
-                        {
-                          'href': '/alerts',
-                          'label': 'Alerts',
-                          'icon': 'bell',
-                        },
-                        {
-                          'href': '/logs',
-                          'label': 'Logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
-                          'href': '/metrics',
-                        },
-                      ],
-                      'appName': 'DevOps Dashboard',
                       'children': [
                         {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
                               'justify': 'between',
-                              'gap': 'md',
+                              'align': 'center',
                               'children': [
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                   'align': 'center',
-                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'server',
+                                      'type': 'icon',
                                     },
                                     {
                                       'type': 'typography',
-                                      'content': 'ServiceNode',
                                       'variant': 'h2',
+                                      'content': 'ServiceNode',
                                     },
                                   ],
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                 },
                                 {
+                                  'type': 'status-dot',
                                   'status': 'online',
                                   'pulse': false,
-                                  'type': 'status-dot',
                                   'label': 'Circuit Closed',
                                 },
                               ],
-                              'align': 'center',
                               'direction': 'horizontal',
                               'type': 'stack',
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
+                              'variant': 'success',
                               'message': 'Service is healthy. All requests are being processed.',
                               'type': 'alert',
-                              'variant': 'success',
                             },
                             {
+                              'cols': 2,
+                              'type': 'simple-grid',
                               'children': [
                                 {
-                                  'value': '@entity.failureCount',
                                   'type': 'stat-display',
+                                  'value': '@entity.failureCount',
                                   'label': 'Failures',
                                 },
                                 {
-                                  'label': 'Successes',
-                                  'type': 'stat-display',
                                   'value': '@entity.successCount',
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
                                 },
                               ],
-                              'type': 'simple-grid',
-                              'cols': 2,
                             },
                             {
-                              'max': '@entity.threshold',
                               'min': 0,
-                              'value': '@entity.failureCount',
                               'type': 'meter',
+                              'max': '@entity.threshold',
+                              'value': '@entity.failureCount',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
                         },
                       ],
+                      'navItems': [
+                        {
+                          'label': 'Services',
+                          'href': '/services',
+                          'icon': 'server',
+                        },
+                        {
+                          'icon': 'bell',
+                          'href': '/alerts',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'icon': 'terminal',
+                          'href': '/logs',
+                          'label': 'Logs',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
                       'type': 'dashboard-layout',
                     },
                   ],
@@ -1063,108 +1131,108 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
                       'appName': 'DevOps Dashboard',
                       'children': [
                         {
                           'direction': 'vertical',
+                          'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'align': 'center',
                               'justify': 'between',
+                              'direction': 'horizontal',
                               'children': [
                                 {
+                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'align': 'center',
                                   'children': [
                                     {
                                       'name': 'alert-triangle',
                                       'type': 'icon',
                                     },
                                     {
-                                      'content': 'ServiceNode',
                                       'variant': 'h2',
+                                      'content': 'ServiceNode',
                                       'type': 'typography',
                                     },
                                   ],
-                                  'align': 'center',
                                   'gap': 'md',
-                                  'type': 'stack',
                                 },
                                 {
-                                  'label': 'Circuit Open',
                                   'status': 'critical',
                                   'type': 'status-dot',
+                                  'label': 'Circuit Open',
                                   'pulse': true,
                                 },
                               ],
+                              'type': 'stack',
+                              'align': 'center',
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'alert',
                               'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                              'type': 'alert',
                               'variant': 'error',
                             },
                             {
-                              'type': 'simple-grid',
                               'children': [
                                 {
+                                  'value': '@entity.failureCount',
                                   'type': 'stat-display',
                                   'label': 'Failures',
-                                  'value': '@entity.failureCount',
                                 },
                                 {
+                                  'type': 'stat-display',
                                   'label': 'Successes',
                                   'value': '@entity.successCount',
-                                  'type': 'stat-display',
                                 },
                               ],
+                              'type': 'simple-grid',
                               'cols': 2,
                             },
                             {
-                              'value': '@entity.failureCount',
-                              'type': 'meter',
-                              'max': '@entity.threshold',
                               'min': 0,
+                              'type': 'meter',
+                              'value': '@entity.failureCount',
+                              'max': '@entity.threshold',
                             },
                             {
                               'icon': 'rotate-ccw',
-                              'action': 'RESET',
                               'label': 'Reset',
+                              'action': 'RESET',
                               'type': 'button',
                               'variant': 'ghost',
                             },
                           ],
-                          'gap': 'lg',
-                          'type': 'stack',
                         },
                       ],
-                      'navItems': [
-                        {
-                          'label': 'Services',
-                          'icon': 'server',
-                          'href': '/services',
-                        },
-                        {
-                          'icon': 'bell',
-                          'href': '/alerts',
-                          'label': 'Alerts',
-                        },
-                        {
-                          'icon': 'terminal',
-                          'label': 'Logs',
-                          'href': '/logs',
-                        },
-                        {
-                          'href': '/metrics',
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -1178,78 +1246,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'server',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'ServiceNode',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'pulse': false,
-                                  'label': 'Circuit Closed',
-                                  'type': 'status-dot',
-                                  'status': 'online',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'message': 'Service is healthy. All requests are being processed.',
-                              'variant': 'success',
-                              'type': 'alert',
-                            },
-                            {
-                              'cols': 2,
-                              'children': [
-                                {
-                                  'value': '@entity.failureCount',
-                                  'type': 'stat-display',
-                                  'label': 'Failures',
-                                },
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Successes',
-                                  'value': '@entity.successCount',
-                                },
-                              ],
-                              'type': 'simple-grid',
-                            },
-                            {
-                              'max': '@entity.threshold',
-                              'min': 0,
-                              'type': 'meter',
-                              'value': '@entity.failureCount',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'DevOps Dashboard',
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
@@ -1258,9 +1254,9 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'label': 'Services',
                         },
                         {
-                          'label': 'Alerts',
                           'href': '/alerts',
                           'icon': 'bell',
+                          'label': 'Alerts',
                         },
                         {
                           'href': '/logs',
@@ -1268,9 +1264,81 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'icon': 'terminal',
                         },
                         {
-                          'icon': 'layout-list',
                           'label': 'Metrics',
+                          'icon': 'layout-list',
                           'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
+                      'children': [
+                        {
+                          'type': 'stack',
+                          'direction': 'vertical',
+                          'gap': 'lg',
+                          'children': [
+                            {
+                              'gap': 'md',
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'server',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'ServiceNode',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
+                                  'gap': 'md',
+                                },
+                                {
+                                  'status': 'online',
+                                  'pulse': false,
+                                  'label': 'Circuit Closed',
+                                  'type': 'status-dot',
+                                },
+                              ],
+                              'justify': 'between',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'message': 'Service is healthy. All requests are being processed.',
+                              'type': 'alert',
+                              'variant': 'success',
+                            },
+                            {
+                              'type': 'simple-grid',
+                              'cols': 2,
+                              'children': [
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Failures',
+                                  'value': '@entity.failureCount',
+                                },
+                                {
+                                  'type': 'stat-display',
+                                  'label': 'Successes',
+                                  'value': '@entity.successCount',
+                                },
+                              ],
+                            },
+                            {
+                              'value': '@entity.failureCount',
+                              'min': 0,
+                              'max': '@entity.threshold',
+                              'type': 'meter',
+                            },
+                          ],
                         },
                       ],
                     },
@@ -1454,12 +1522,36 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
+                              'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'items': [
@@ -1474,17 +1566,17 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'direction': 'horizontal',
                                   'justify': 'between',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'gap': 'md',
+                                      'type': 'stack',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'alert-triangle',
+                                          'type': 'icon',
                                         },
                                         {
                                           'type': 'typography',
@@ -1494,15 +1586,15 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       ],
                                     },
                                     {
-                                      'icon': 'refresh-cw',
                                       'type': 'button',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
+                                  'direction': 'horizontal',
                                   'type': 'stack',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -1510,6 +1602,7 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                 {
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
@@ -1517,20 +1610,20 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'children': [
                                             {
                                               'type': 'stack',
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'caption',
                                                   'content': 'Severity',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.severity',
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.severity',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
@@ -1539,9 +1632,9 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                             {
                                               'children': [
                                                 {
+                                                  'content': 'Message',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'Message',
                                                 },
                                                 {
                                                   'content': '@entity.message',
@@ -1549,8 +1642,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
                                               'type': 'stack',
                                             },
                                           ],
@@ -1560,9 +1653,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'content': 'Timestamp',
@@ -1570,26 +1660,27 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'variant': 'caption',
                                                 },
                                                 {
+                                                  'variant': 'h3',
                                                   'type': 'typography',
                                                   'content': '@entity.timestamp',
-                                                  'variant': 'h3',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'type': 'stack',
-                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Source',
                                                   'type': 'typography',
                                                   'variant': 'caption',
+                                                  'content': 'Source',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -1597,11 +1688,12 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'content': '@entity.source',
                                                 },
                                               ],
+                                              'gap': 'sm',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                     },
                                   ],
                                   'type': 'box',
@@ -1611,6 +1703,7 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
                                   'children': [
                                     {
                                       'children': [
@@ -1626,19 +1719,17 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
-                                  'cols': 2,
                                   'type': 'grid',
                                   'gap': 'md',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
@@ -1649,22 +1740,23 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'value': 25,
                                       'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
@@ -1673,72 +1765,48 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
-                                  'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'source': 'b',
+                                      'target': 'c',
+                                    },
+                                  ],
                                   'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'DevOps Dashboard',
-                      'navItems': [
-                        {
-                          'label': 'Services',
-                          'href': '/services',
-                          'icon': 'server',
-                        },
-                        {
-                          'label': 'Alerts',
-                          'icon': 'bell',
-                          'href': '/alerts',
-                        },
-                        {
-                          'label': 'Logs',
-                          'href': '/logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'href': '/metrics',
-                          'label': 'Metrics',
-                          'icon': 'layout-list',
-                        },
-                      ],
+                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -1762,10 +1830,11 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Services',
                           'href': '/services',
+                          'label': 'Services',
                           'icon': 'server',
                         },
                         {
@@ -1774,24 +1843,25 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'icon': 'bell',
                         },
                         {
-                          'icon': 'terminal',
                           'label': 'Logs',
                           'href': '/logs',
+                          'icon': 'terminal',
                         },
                         {
-                          'href': '/metrics',
                           'icon': 'layout-list',
                           'label': 'Metrics',
+                          'href': '/metrics',
                         },
                       ],
+                      'appName': 'DevOps Dashboard',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -1801,13 +1871,15 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'label': 'Alerts',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'type': 'stack',
-                                  'justify': 'between',
                                   'children': [
                                     {
                                       'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'type': 'icon',
@@ -1819,24 +1891,25 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'type': 'stack',
                                       'direction': 'horizontal',
                                     },
                                     {
-                                      'label': 'Refresh',
-                                      'type': 'button',
+                                      'variant': 'secondary',
                                       'icon': 'refresh-cw',
                                       'action': 'REFRESH',
-                                      'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'md',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'padding': 'md',
+                                  'type': 'box',
                                   'children': [
                                     {
                                       'cols': 3,
@@ -1847,25 +1920,28 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                             {
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'Severity',
-                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'h3',
                                                   'content': '@entity.severity',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                               'type': 'stack',
                                               'children': [
                                                 {
@@ -1874,44 +1950,39 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'content': '@entity.message',
                                                   'type': 'typography',
+                                                  'content': '@entity.message',
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'Timestamp',
                                                 },
                                                 {
+                                                  'content': '@entity.timestamp',
                                                   'type': 'typography',
                                                   'variant': 'h3',
-                                                  'content': '@entity.timestamp',
                                                 },
                                               ],
                                               'direction': 'vertical',
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
                                         {
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'content': 'Source',
@@ -1919,12 +1990,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'type': 'typography',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.source',
                                                 },
                                               ],
+                                              'type': 'stack',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                           'type': 'card',
@@ -1933,65 +2006,63 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'type': 'simple-grid',
                                     },
                                   ],
-                                  'type': 'box',
-                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'type': 'grid',
-                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'children': [
                                         {
+                                          'type': 'typography',
                                           'variant': 'caption',
                                           'content': 'Graph View',
-                                          'type': 'typography',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
+                                  'cols': 2,
+                                  'gap': 'md',
+                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
                                       'value': 19,
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
                                 },
@@ -2019,34 +2090,31 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
                                   'type': 'graph-view',
+                                  'height': 200,
+                                  'width': 400,
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'source': 'b',
                                       'target': 'c',
+                                      'source': 'b',
                                     },
                                   ],
-                                  'width': 400,
-                                  'height': 200,
                                 },
                               ],
-                              'gap': 'lg',
                               'type': 'stack',
+                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'DevOps Dashboard',
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -2061,8 +2129,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'AlertMetric',
                     {
                       'emit': {
-                        'success': 'AlertMetricLoaded',
                         'failure': 'AlertMetricLoadFailed',
+                        'success': 'AlertMetricLoaded',
                       },
                     },
                   ],
@@ -2070,16 +2138,17 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'navItems': [
                         {
-                          'label': 'Services',
-                          'icon': 'server',
                           'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
                         },
                         {
                           'label': 'Alerts',
-                          'icon': 'bell',
                           'href': '/alerts',
+                          'icon': 'bell',
                         },
                         {
                           'icon': 'terminal',
@@ -2087,8 +2156,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'label': 'Logs',
                         },
                         {
-                          'href': '/metrics',
                           'label': 'Metrics',
+                          'href': '/metrics',
                           'icon': 'layout-list',
                         },
                       ],
@@ -2098,6 +2167,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'children': [
                             {
                               'gap': 'lg',
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -2112,33 +2183,33 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   ],
                                 },
                                 {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'alert-triangle',
                                         },
                                         {
-                                          'content': 'Alerts',
                                           'type': 'typography',
                                           'variant': 'h2',
+                                          'content': 'Alerts',
                                         },
                                       ],
-                                      'type': 'stack',
                                     },
                                     {
-                                      'type': 'button',
-                                      'icon': 'refresh-cw',
                                       'action': 'REFRESH',
-                                      'label': 'Refresh',
+                                      'icon': 'refresh-cw',
                                       'variant': 'secondary',
+                                      'type': 'button',
+                                      'label': 'Refresh',
                                     },
                                   ],
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'gap': 'md',
                                   'justify': 'between',
                                 },
@@ -2147,7 +2218,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                 },
                                 {
                                   'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
                                       'cols': 3,
@@ -2158,9 +2228,9 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                             {
                                               'children': [
                                                 {
-                                                  'content': 'Severity',
                                                   'type': 'typography',
                                                   'variant': 'caption',
+                                                  'content': 'Severity',
                                                 },
                                                 {
                                                   'type': 'typography',
@@ -2168,40 +2238,41 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'content': '@entity.severity',
                                                 },
                                               ],
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'type': 'stack',
-                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'content': 'Message',
                                                   'variant': 'caption',
+                                                  'content': 'Message',
+                                                  'type': 'typography',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.message',
-                                                  'type': 'typography',
                                                 },
                                               ],
                                               'type': 'stack',
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
                                               'type': 'stack',
                                               'direction': 'vertical',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
@@ -2209,61 +2280,60 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'content': '@entity.timestamp',
                                                   'variant': 'h3',
+                                                  'content': '@entity.timestamp',
+                                                  'type': 'typography',
                                                 },
                                               ],
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'type': 'stack',
-                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'Source',
-                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'content': '@entity.source',
                                                   'type': 'typography',
                                                   'variant': 'h3',
-                                                  'content': '@entity.source',
                                                 },
                                               ],
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
                                       'type': 'simple-grid',
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
                                   'gap': 'md',
-                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                           'content': 'Chart View',
                                         },
                                       ],
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
@@ -2271,15 +2341,16 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'typography',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
+                                  'cols': 2,
+                                  'type': 'grid',
                                 },
                                 {
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
                                       'date': 'Feb',
@@ -2290,22 +2361,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'value': 15,
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                   'type': 'line-chart',
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
@@ -2316,19 +2386,9 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'type': 'graph-view',
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
                                   'nodes': [
                                     {
                                       'label': 'Start',
@@ -2343,17 +2403,25 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'id': 'c',
                                     },
                                   ],
-                                  'width': 400,
                                   'height': 200,
+                                  'edges': [
+                                    {
+                                      'source': 'a',
+                                      'target': 'b',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
+                                  'width': 400,
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
                       'appName': 'DevOps Dashboard',
                     },
                   ],
@@ -2378,17 +2446,16 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
-                              'gap': 'lg',
                               'type': 'stack',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'href': '/',
@@ -2398,37 +2465,38 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'label': 'Alerts',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'type': 'stack',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
                                       'type': 'stack',
                                       'gap': 'md',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'alert-triangle',
                                         },
                                         {
-                                          'variant': 'h2',
-                                          'type': 'typography',
                                           'content': 'Alerts',
+                                          'type': 'typography',
+                                          'variant': 'h2',
                                         },
                                       ],
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
-                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
+                                      'type': 'button',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
                                   'justify': 'between',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
@@ -2443,6 +2511,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
@@ -2456,8 +2526,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
@@ -2465,21 +2533,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Message',
                                                   'type': 'typography',
+                                                  'content': 'Message',
                                                   'variant': 'caption',
                                                 },
                                                 {
+                                                  'variant': 'h3',
                                                   'content': '@entity.message',
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'type': 'stack',
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
@@ -2493,14 +2561,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'content': 'Timestamp',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'content': '@entity.timestamp',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                               'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                           'type': 'card',
@@ -2508,18 +2576,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                         {
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Source',
                                                   'variant': 'caption',
                                                   'type': 'typography',
+                                                  'content': 'Source',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'content': '@entity.source',
                                                   'type': 'typography',
+                                                  'content': '@entity.source',
                                                 },
                                               ],
                                               'gap': 'sm',
@@ -2537,17 +2605,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'divider',
                                 },
                                 {
-                                  'cols': 2,
-                                  'type': 'grid',
-                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
                                     },
@@ -2556,41 +2621,44 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'type': 'typography',
                                           'content': 'Graph View',
+                                          'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'date': 'Jun',
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
@@ -2599,32 +2667,33 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                   'type': 'chart-legend',
                                 },
                                 {
+                                  'height': 200,
+                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
-                                  'width': 400,
                                   'nodes': [
                                     {
                                       'id': 'a',
                                       'label': 'Start',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
                                       'label': 'End',
@@ -2632,19 +2701,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                     },
                                   ],
                                   'type': 'graph-view',
-                                  'height': 200,
                                 },
                               ],
+                              'gap': 'lg',
+                              'direction': 'vertical',
                             },
                           ],
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'appName': 'DevOps Dashboard',
                       'navItems': [
                         {
-                          'label': 'Services',
                           'icon': 'server',
+                          'label': 'Services',
                           'href': '/services',
                         },
                         {
@@ -2653,14 +2721,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'label': 'Alerts',
                         },
                         {
-                          'href': '/logs',
                           'label': 'Logs',
                           'icon': 'terminal',
+                          'href': '/logs',
                         },
                         {
                           'label': 'Metrics',
-                          'icon': 'layout-list',
                           'href': '/metrics',
+                          'icon': 'layout-list',
                         },
                       ],
                     },
@@ -2686,12 +2754,35 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'href': '/alerts',
+                          'icon': 'bell',
+                          'label': 'Alerts',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
                               'type': 'stack',
-                              'direction': 'vertical',
                               'gap': 'lg',
                               'children': [
                                 {
@@ -2707,11 +2798,12 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   ],
                                 },
                                 {
+                                  'type': 'stack',
                                   'direction': 'horizontal',
                                   'justify': 'between',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'gap': 'md',
                                       'type': 'stack',
                                       'children': [
                                         {
@@ -2719,40 +2811,36 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'icon',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'content': 'Alerts',
+                                          'variant': 'h2',
                                           'type': 'typography',
                                         },
                                       ],
                                       'direction': 'horizontal',
+                                      'gap': 'md',
                                     },
                                     {
                                       'icon': 'refresh-cw',
-                                      'label': 'Refresh',
-                                      'type': 'button',
                                       'action': 'REFRESH',
+                                      'type': 'button',
                                       'variant': 'secondary',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'cols': 3,
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -2760,11 +2848,12 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'content': 'Severity',
                                                 },
                                                 {
-                                                  'content': '@entity.severity',
                                                   'type': 'typography',
                                                   'variant': 'h3',
+                                                  'content': '@entity.severity',
                                                 },
                                               ],
+                                              'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
@@ -2773,80 +2862,82 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'type': 'stack',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'content': 'Message',
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'variant': 'h3',
                                                   'content': '@entity.message',
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                   'content': 'Timestamp',
                                                 },
                                                 {
-                                                  'content': '@entity.timestamp',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
+                                                  'content': '@entity.timestamp',
                                                 },
                                               ],
+                                              'gap': 'sm',
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'Source',
+                                                  'variant': 'caption',
                                                 },
                                                 {
+                                                  'content': '@entity.source',
                                                   'type': 'typography',
                                                   'variant': 'h3',
-                                                  'content': '@entity.source',
                                                 },
                                               ],
                                               'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
-                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
+                                  'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
@@ -2854,20 +2945,20 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'children': [
                                         {
-                                          'variant': 'caption',
-                                          'content': 'Graph View',
                                           'type': 'typography',
+                                          'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                   ],
                                   'cols': 2,
+                                  'gap': 'md',
                                   'type': 'grid',
                                 },
                                 {
@@ -2886,12 +2977,12 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'value': 30,
@@ -2903,74 +2994,51 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                 },
                                 {
-                                  'edges': [
-                                    {
-                                      'source': 'a',
-                                      'target': 'b',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
-                                  'width': 400,
                                   'height': 200,
+                                  'width': 400,
+                                  'type': 'graph-view',
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
                                       'id': 'b',
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'type': 'graph-view',
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                 },
                               ],
+                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Services',
-                          'href': '/services',
-                          'icon': 'server',
-                        },
-                        {
-                          'icon': 'bell',
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                        },
-                        {
-                          'icon': 'terminal',
-                          'href': '/logs',
-                          'label': 'Logs',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/metrics',
-                          'label': 'Metrics',
-                        },
-                      ],
-                      'appName': 'DevOps Dashboard',
                     },
                   ],
                 ],
@@ -3267,8 +3335,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'LogEntry',
                     {
                       'emit': {
-                        'success': 'LogEntryLoaded',
                         'failure': 'LogEntryLoadFailed',
+                        'success': 'LogEntryLoaded',
                       },
                     },
                   ],
@@ -3276,22 +3344,22 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'align': 'center',
                       'type': 'stack',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'gap': 'md',
+                      'align': 'center',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
                           'type': 'typography',
-                          'variant': 'caption',
                           'color': 'muted',
+                          'variant': 'caption',
                           'content': 'Loading…',
                         },
                       ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -3305,24 +3373,41 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'appName': 'DevOps Dashboard',
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                          'href': '/logs',
+                        },
+                        {
+                          'href': '/metrics',
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
                       'type': 'dashboard-layout',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'type': 'stack',
                           'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'gap': 'md',
                               'direction': 'horizontal',
-                              'type': 'stack',
-                              'justify': 'between',
+                              'gap': 'md',
                               'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
-                                  'align': 'center',
                                   'children': [
                                     {
                                       'type': 'icon',
@@ -3330,28 +3415,32 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                     },
                                     {
                                       'content': 'Logs',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
                                   'gap': 'sm',
+                                  'type': 'stack',
+                                  'align': 'center',
                                   'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'stack',
                                   'children': [
                                     {
-                                      'variant': 'primary',
                                       'label': 'Create LogEntry',
                                       'action': 'CREATE',
                                       'type': 'button',
                                       'icon': 'plus',
+                                      'variant': 'primary',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
                                 },
                               ],
+                              'justify': 'between',
+                              'type': 'stack',
                             },
                             {
                               'type': 'divider',
@@ -3365,64 +3454,43 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                 },
                                 {
                                   'event': 'EDIT',
-                                  'variant': 'ghost',
                                   'label': 'Edit',
+                                  'variant': 'ghost',
                                 },
                                 {
-                                  'label': 'Delete',
                                   'variant': 'danger',
                                   'event': 'DELETE',
+                                  'label': 'Delete',
                                 },
                               ],
                               'fields': [
                                 {
                                   'name': 'message',
-                                  'variant': 'h4',
                                   'icon': 'file-text',
+                                  'variant': 'h4',
                                 },
                                 {
-                                  'variant': 'badge',
                                   'name': 'level',
+                                  'variant': 'badge',
                                 },
                                 {
-                                  'variant': 'body',
                                   'name': 'service',
+                                  'variant': 'body',
                                 },
                                 {
-                                  'variant': 'caption',
-                                  'name': 'timestamp',
                                   'format': 'date',
+                                  'name': 'timestamp',
+                                  'variant': 'caption',
                                 },
                               ],
-                              'entity': '@payload.data',
-                              'gap': 'sm',
                               'type': 'data-list',
+                              'entity': '@payload.data',
                               'variant': 'compact',
+                              'gap': 'sm',
                             },
                           ],
-                        },
-                      ],
-                      'appName': 'DevOps Dashboard',
-                      'navItems': [
-                        {
-                          'icon': 'server',
-                          'href': '/services',
-                          'label': 'Services',
-                        },
-                        {
-                          'icon': 'bell',
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                        },
-                        {
-                          'label': 'Logs',
-                          'href': '/logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'href': '/metrics',
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
                     },
@@ -3438,36 +3506,36 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'gap': 'md',
+                      'align': 'center',
+                      'className': 'py-12',
                       'children': [
                         {
-                          'type': 'icon',
-                          'color': 'destructive',
                           'name': 'alert-triangle',
+                          'color': 'destructive',
+                          'type': 'icon',
                         },
                         {
-                          'type': 'typography',
                           'variant': 'h3',
                           'content': 'Failed to load logentry',
+                          'type': 'typography',
                         },
                         {
                           'color': 'muted',
+                          'variant': 'body',
                           'type': 'typography',
                           'content': '@payload.error',
-                          'variant': 'body',
                         },
                         {
-                          'action': 'INIT',
                           'type': 'button',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
                           'label': 'Retry',
+                          'action': 'INIT',
+                          'icon': 'rotate-ccw',
+                          'variant': 'primary',
                         },
                       ],
-                      'direction': 'vertical',
                       'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-12',
+                      'direction': 'vertical',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3659,8 +3727,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'LogEntry',
                     {
                       'emit': {
-                        'failure': 'LogEntryLoadFailed',
                         'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
                       },
                     },
                   ],
@@ -3668,20 +3736,23 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
+                          'gap': 'sm',
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'plus-circle',
                               'type': 'icon',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Create LogEntry',
-                              'variant': 'h3',
                             },
                           ],
                         },
@@ -3689,21 +3760,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'type': 'divider',
                         },
                         {
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
+                          'mode': 'create',
                           'fields': [
                             'level',
                             'message',
                             'timestamp',
                             'service',
                           ],
+                          'submitEvent': 'SAVE',
                           'type': 'form-section',
-                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
                         },
                       ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3955,8 +4023,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'LogEntry',
                     {
                       'emit': {
-                        'failure': 'LogEntryLoadFailed',
                         'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
                       },
                     },
                   ],
@@ -3982,12 +4050,10 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'type': 'stack',
+                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
@@ -3995,18 +4061,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                             },
                             {
                               'type': 'typography',
-                              'variant': 'h3',
                               'content': 'Edit LogEntry',
+                              'variant': 'h3',
                             },
                           ],
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'entity': '@payload.row',
-                          'mode': 'edit',
                           'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'level',
                             'message',
@@ -4014,11 +4080,13 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                             'service',
                           ],
                           'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
+                          'entity': '@payload.row',
+                          'mode': 'edit',
                         },
                       ],
-                      'gap': 'md',
                       'direction': 'vertical',
+                      'gap': 'md',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -4059,8 +4127,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'LogEntryUpdated',
                         'failure': 'LogEntryUpdateFailed',
+                        'success': 'LogEntryUpdated',
                       },
                     },
                   ],
@@ -4246,21 +4314,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'fetch',
                     'LogEntry',
                     {
-                      'id': '@payload.id',
                       'emit': {
                         'failure': 'LogEntryLoadFailed',
                         'success': 'LogEntryLoaded',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
+                      'direction': 'vertical',
                       'children': [
                         {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'children': [
                             {
                               'name': 'eye',
@@ -4268,12 +4336,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                             },
                             {
                               'type': 'typography',
-                              'variant': 'h3',
                               'content': '@entity.level',
+                              'variant': 'h3',
                             },
                           ],
-                          'align': 'center',
                           'type': 'stack',
+                          'direction': 'horizontal',
+                          'align': 'center',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
@@ -4283,25 +4353,25 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Level',
+                              'variant': 'caption',
                               'type': 'typography',
                             },
                             {
-                              'content': '@entity.level',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
+                              'content': '@entity.level',
                             },
                           ],
                           'gap': 'md',
                         },
                         {
-                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Message',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'variant': 'body',
@@ -4309,17 +4379,15 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                               'content': '@entity.message',
                             },
                           ],
-                          'type': 'stack',
                           'gap': 'md',
+                          'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
+                              'variant': 'caption',
                               'content': 'Timestamp',
                               'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
                               'type': 'typography',
@@ -4327,12 +4395,11 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                               'content': '@entity.timestamp',
                             },
                           ],
-                          'gap': 'md',
-                        },
-                        {
+                          'direction': 'horizontal',
                           'gap': 'md',
                           'type': 'stack',
-                          'direction': 'horizontal',
+                        },
+                        {
                           'children': [
                             {
                               'type': 'typography',
@@ -4340,39 +4407,40 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                               'content': 'Service',
                             },
                             {
-                              'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.service',
+                              'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
-                          'justify': 'end',
+                          'type': 'stack',
                           'children': [
                             {
-                              'label': 'Edit',
-                              'type': 'button',
                               'action': 'EDIT',
                               'variant': 'primary',
+                              'type': 'button',
                               'icon': 'edit',
+                              'label': 'Edit',
                             },
                             {
                               'variant': 'ghost',
                               'type': 'button',
-                              'label': 'Close',
                               'action': 'CLOSE',
+                              'label': 'Close',
                             },
                           ],
                           'gap': 'sm',
-                          'type': 'stack',
+                          'direction': 'horizontal',
+                          'justify': 'end',
                         },
                       ],
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
                     },
                   ],
@@ -4616,11 +4684,11 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'fetch',
                     'LogEntry',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'failure': 'LogEntryLoadFailed',
                         'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
@@ -4630,49 +4698,49 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                       'children': [
                         {
                           'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'alert-triangle',
+                              'type': 'icon',
                             },
                             {
+                              'type': 'typography',
                               'content': 'Delete LogEntry',
                               'variant': 'h3',
-                              'type': 'typography',
                             },
                           ],
                           'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'type': 'alert',
                           'variant': 'error',
                           'message': 'This action cannot be undone.',
-                          'type': 'alert',
                         },
                         {
                           'children': [
                             {
                               'label': 'Cancel',
+                              'action': 'CANCEL',
                               'type': 'button',
                               'variant': 'ghost',
-                              'action': 'CANCEL',
                             },
                             {
-                              'variant': 'danger',
-                              'icon': 'check',
-                              'type': 'button',
-                              'label': 'Delete',
                               'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'label': 'Delete',
                             },
                           ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
                           'justify': 'end',
                           'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                       ],
                       'type': 'stack',
@@ -4749,8 +4817,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'LogEntry',
                     {
                       'emit': {
-                        'failure': 'LogEntryLoadFailed',
                         'success': 'LogEntryLoaded',
+                        'failure': 'LogEntryLoadFailed',
                       },
                     },
                   ],
@@ -4974,166 +5042,164 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
                       'navItems': [
                         {
                           'label': 'Services',
-                          'icon': 'server',
                           'href': '/services',
+                          'icon': 'server',
                         },
                         {
                           'icon': 'bell',
-                          'label': 'Alerts',
                           'href': '/alerts',
+                          'label': 'Alerts',
                         },
                         {
+                          'icon': 'terminal',
                           'href': '/logs',
                           'label': 'Logs',
-                          'icon': 'terminal',
                         },
                         {
-                          'label': 'Metrics',
                           'href': '/metrics',
                           'icon': 'layout-list',
+                          'label': 'Metrics',
                         },
                       ],
+                      'appName': 'DevOps Dashboard',
+                      'type': 'dashboard-layout',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
                               'type': 'stack',
-                              'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Metrics',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'direction': 'horizontal',
                                   'type': 'stack',
                                   'gap': 'md',
                                   'justify': 'between',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
+                                      'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'activity',
                                         },
                                         {
+                                          'variant': 'h2',
                                           'content': 'Metrics',
                                           'type': 'typography',
-                                          'variant': 'h2',
                                         },
                                       ],
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
                                     },
                                     {
                                       'variant': 'secondary',
-                                      'icon': 'refresh-cw',
-                                      'type': 'button',
-                                      'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'type': 'button',
+                                      'icon': 'refresh-cw',
+                                      'action': 'REFRESH',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
+                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'type': 'typography',
-                                                  'content': 'Name',
                                                   'variant': 'caption',
+                                                  'content': 'Name',
                                                 },
                                                 {
                                                   'type': 'typography',
-                                                  'variant': 'h3',
                                                   'content': '@entity.name',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
                                         {
-                                          'value': '@entity.value',
                                           'type': 'stat-display',
                                           'label': 'Value',
+                                          'value': '@entity.value',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'content': 'Unit',
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.unit',
                                                 },
                                               ],
                                               'type': 'stack',
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
                                               'type': 'stack',
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'variant': 'caption',
                                                   'content': 'Trend',
                                                   'type': 'typography',
-                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.trend',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                       ],
-                                      'cols': 3,
-                                      'type': 'simple-grid',
                                     },
                                   ],
-                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
@@ -5143,73 +5209,71 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                     {
                                       'children': [
                                         {
-                                          'type': 'typography',
                                           'variant': 'caption',
+                                          'type': 'typography',
                                           'content': 'Chart View',
                                         },
                                       ],
                                       'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
+                                          'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
-                                  'cols': 2,
                                   'gap': 'md',
+                                  'cols': 2,
                                   'type': 'grid',
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'date': 'Jan',
                                       'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
                                       'date': 'Mar',
                                     },
                                     {
-                                      'value': 25,
                                       'date': 'Apr',
+                                      'value': 25,
                                     },
                                     {
                                       'value': 22,
                                       'date': 'May',
                                     },
                                     {
-                                      'value': 30,
                                       'date': 'Jun',
+                                      'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'label': 'Previous',
                                       'color': 'muted',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
-                                  'width': 400,
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -5220,6 +5284,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'target': 'c',
                                     },
                                   ],
+                                  'height': 200,
+                                  'width': 400,
                                   'type': 'graph-view',
                                   'nodes': [
                                     {
@@ -5227,21 +5293,23 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'id': 'a',
                                     },
                                     {
-                                      'label': 'Process',
                                       'id': 'b',
+                                      'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
                                 },
                               ],
+                              'gap': 'lg',
+                              'direction': 'vertical',
                             },
                           ],
+                          'type': 'scaled-diagram',
                         },
                       ],
-                      'appName': 'DevOps Dashboard',
                     },
                   ],
                 ],
@@ -5265,13 +5333,35 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'server',
+                          'label': 'Services',
+                          'href': '/services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'href': '/alerts',
+                          'icon': 'bell',
+                        },
+                        {
+                          'href': '/logs',
+                          'label': 'Logs',
+                          'icon': 'terminal',
+                        },
+                        {
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                          'icon': 'layout-list',
+                        },
+                      ],
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
                               'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'items': [
@@ -5286,45 +5376,48 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'justify': 'between',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'type': 'stack',
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'name': 'activity',
                                           'type': 'icon',
+                                          'name': 'activity',
                                         },
                                         {
                                           'content': 'Metrics',
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'label': 'Refresh',
-                                      'type': 'button',
-                                      'variant': 'secondary',
                                       'action': 'REFRESH',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'box',
                                   'children': [
                                     {
+                                      'cols': 3,
                                       'type': 'simple-grid',
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
                                               'type': 'stack',
@@ -5336,71 +5429,68 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'content': 'Name',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'h3',
                                                   'content': '@entity.name',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
                                               'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.value',
                                           'label': 'Value',
+                                          'value': '@entity.value',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Unit',
                                                   'variant': 'caption',
+                                                  'content': 'Unit',
                                                   'type': 'typography',
                                                 },
                                                 {
                                                   'content': '@entity.unit',
-                                                  'type': 'typography',
                                                   'variant': 'h3',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'Trend',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.trend',
+                                                  'type': 'typography',
                                                 },
                                               ],
                                             },
                                           ],
                                         },
                                       ],
-                                      'cols': 3,
                                     },
                                   ],
                                   'padding': 'md',
-                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
@@ -5411,7 +5501,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
@@ -5419,16 +5508,17 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Graph View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
                                 },
@@ -5436,12 +5526,12 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
                                       'value': 15,
@@ -5462,21 +5552,19 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
-                                  'type': 'graph-view',
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -5487,11 +5575,10 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'label': 'Process',
                                     },
                                     {
-                                      'id': 'c',
                                       'label': 'End',
+                                      'id': 'c',
                                     },
                                   ],
-                                  'width': 400,
                                   'edges': [
                                     {
                                       'source': 'a',
@@ -5502,37 +5589,18 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'target': 'c',
                                     },
                                   ],
+                                  'height': 200,
+                                  'type': 'graph-view',
+                                  'width': 400,
                                 },
                               ],
                               'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'appName': 'DevOps Dashboard',
-                      'navItems': [
-                        {
-                          'icon': 'server',
-                          'label': 'Services',
-                          'href': '/services',
-                        },
-                        {
-                          'label': 'Alerts',
-                          'icon': 'bell',
-                          'href': '/alerts',
-                        },
-                        {
-                          'label': 'Logs',
-                          'href': '/logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'href': '/metrics',
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
-                        },
-                      ],
                     },
                   ],
                 ],
@@ -5547,8 +5615,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'SystemMetric',
                     {
                       'emit': {
-                        'failure': 'SystemMetricLoadFailed',
                         'success': 'SystemMetricLoaded',
+                        'failure': 'SystemMetricLoadFailed',
                       },
                     },
                   ],
@@ -5556,44 +5624,43 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
                       'navItems': [
                         {
-                          'icon': 'server',
                           'label': 'Services',
                           'href': '/services',
+                          'icon': 'server',
                         },
                         {
-                          'href': '/alerts',
                           'label': 'Alerts',
                           'icon': 'bell',
+                          'href': '/alerts',
                         },
                         {
                           'href': '/logs',
-                          'label': 'Logs',
                           'icon': 'terminal',
+                          'label': 'Logs',
                         },
                         {
-                          'icon': 'layout-list',
-                          'label': 'Metrics',
                           'href': '/metrics',
+                          'label': 'Metrics',
+                          'icon': 'layout-list',
                         },
                       ],
-                      'appName': 'DevOps Dashboard',
-                      'type': 'dashboard-layout',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
                               'direction': 'vertical',
-                              'gap': 'lg',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'items': [
                                     {
-                                      'href': '/',
                                       'label': 'Home',
+                                      'href': '/',
                                     },
                                     {
                                       'label': 'Metrics',
@@ -5602,14 +5669,10 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'breadcrumb',
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
                                   'gap': 'md',
-                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
@@ -5617,20 +5680,24 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                         },
                                         {
                                           'variant': 'h2',
-                                          'content': 'Metrics',
                                           'type': 'typography',
+                                          'content': 'Metrics',
                                         },
                                       ],
+                                      'type': 'stack',
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'variant': 'secondary',
-                                      'type': 'button',
-                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
+                                      'type': 'button',
+                                      'label': 'Refresh',
+                                      'action': 'REFRESH',
                                     },
                                   ],
+                                  'type': 'stack',
+                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
@@ -5640,27 +5707,27 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
+                                      'cols': 3,
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'Name',
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Name',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'content': '@entity.name',
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                 },
                                               ],
                                               'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
@@ -5672,21 +5739,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                         {
                                           'children': [
                                             {
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'content': 'Unit',
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'content': '@entity.unit',
                                                   'type': 'typography',
+                                                  'content': '@entity.unit',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                               'gap': 'sm',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                           'type': 'card',
@@ -5695,9 +5762,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -5705,16 +5769,19 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                   'variant': 'caption',
                                                 },
                                                 {
-                                                  'content': '@entity.trend',
                                                   'type': 'typography',
+                                                  'content': '@entity.trend',
                                                   'variant': 'h3',
                                                 },
                                               ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                       ],
-                                      'cols': 3,
+                                      'type': 'simple-grid',
                                     },
                                   ],
                                 },
@@ -5722,19 +5789,19 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'divider',
                                 },
                                 {
+                                  'cols': 2,
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Chart View',
+                                          'variant': 'caption',
+                                          'type': 'typography',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
                                           'content': 'Graph View',
@@ -5742,21 +5809,21 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'variant': 'caption',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                   ],
                                   'type': 'grid',
                                   'gap': 'md',
-                                  'cols': 2,
                                 },
                                 {
                                   'data': [
                                     {
-                                      'value': 12,
                                       'date': 'Jan',
+                                      'value': 12,
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
                                       'value': 15,
@@ -5767,8 +5834,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'value': 25,
                                     },
                                     {
-                                      'value': 22,
                                       'date': 'May',
+                                      'value': 22,
                                     },
                                     {
                                       'date': 'Jun',
@@ -5781,8 +5848,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'label': 'Previous',
@@ -5791,35 +5858,36 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   ],
                                 },
                                 {
+                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
+                                  'type': 'graph-view',
                                   'height': 200,
                                   'nodes': [
                                     {
-                                      'id': 'a',
                                       'label': 'Start',
+                                      'id': 'a',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
-                                  'type': 'graph-view',
-                                  'width': 400,
                                 },
                               ],
+                              'gap': 'lg',
                             },
                           ],
                         },
@@ -5847,55 +5915,34 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Services',
-                          'href': '/services',
-                          'icon': 'server',
-                        },
-                        {
-                          'label': 'Alerts',
-                          'href': '/alerts',
-                          'icon': 'bell',
-                        },
-                        {
-                          'href': '/logs',
-                          'label': 'Logs',
-                          'icon': 'terminal',
-                        },
-                        {
-                          'label': 'Metrics',
-                          'icon': 'layout-list',
-                          'href': '/metrics',
-                        },
-                      ],
-                      'appName': 'DevOps Dashboard',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
                               'gap': 'lg',
-                              'type': 'stack',
+                              'direction': 'vertical',
                               'children': [
                                 {
+                                  'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Metrics',
                                     },
                                   ],
-                                  'type': 'breadcrumb',
                                 },
                                 {
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'gap': 'md',
+                                  'type': 'stack',
                                   'children': [
                                     {
+                                      'direction': 'horizontal',
                                       'children': [
                                         {
                                           'type': 'icon',
@@ -5903,32 +5950,27 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                         },
                                         {
                                           'content': 'Metrics',
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                       'type': 'stack',
                                       'gap': 'md',
                                     },
                                     {
-                                      'variant': 'secondary',
                                       'type': 'button',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
+                                      'variant': 'secondary',
+                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
                                       'type': 'simple-grid',
@@ -5938,92 +5980,90 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'content': 'Name',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'content': '@entity.name',
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'gap': 'sm',
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
                                           'label': 'Value',
-                                          'type': 'stat-display',
                                           'value': '@entity.value',
+                                          'type': 'stat-display',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'content': 'Unit',
                                                   'type': 'typography',
+                                                  'content': 'Unit',
                                                   'variant': 'caption',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.unit',
-                                                  'type': 'typography',
                                                 },
                                               ],
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'type': 'stack',
                                             },
                                           ],
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
                                               'direction': 'vertical',
                                               'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'type': 'typography',
                                                   'content': 'Trend',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
                                                   'content': '@entity.trend',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
-                                  'cols': 2,
-                                  'gap': 'md',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'content': 'Chart View',
                                           'type': 'typography',
-                                          'variant': 'caption',
                                         },
                                       ],
                                     },
@@ -6031,20 +6071,23 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                           'content': 'Graph View',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'grid',
+                                  'gap': 'md',
+                                  'cols': 2,
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'value': 19,
@@ -6059,8 +6102,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'date': 'Jun',
@@ -6069,17 +6112,17 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   ],
                                 },
                                 {
+                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'color': 'primary',
                                       'label': 'Current',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
-                                  'type': 'chart-legend',
                                 },
                                 {
                                   'nodes': [
@@ -6088,15 +6131,14 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'id': 'a',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'id': 'c',
                                       'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -6108,13 +6150,39 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                     },
                                   ],
                                   'type': 'graph-view',
+                                  'height': 200,
                                   'width': 400,
                                 },
                               ],
+                              'type': 'stack',
                             },
                           ],
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'href': '/services',
+                          'icon': 'server',
+                          'label': 'Services',
+                        },
+                        {
+                          'label': 'Alerts',
+                          'icon': 'bell',
+                          'href': '/alerts',
+                        },
+                        {
+                          'href': '/logs',
+                          'icon': 'terminal',
+                          'label': 'Logs',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Metrics',
+                          'href': '/metrics',
+                        },
+                      ],
+                      'appName': 'DevOps Dashboard',
                     },
                   ],
                 ],
@@ -6138,35 +6206,35 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                     'render-ui',
                     'main',
                     {
-                      'type': 'dashboard-layout',
-                      'appName': 'DevOps Dashboard',
                       'navItems': [
                         {
-                          'href': '/services',
                           'icon': 'server',
                           'label': 'Services',
+                          'href': '/services',
                         },
                         {
-                          'icon': 'bell',
                           'href': '/alerts',
+                          'icon': 'bell',
                           'label': 'Alerts',
                         },
                         {
+                          'icon': 'terminal',
                           'label': 'Logs',
                           'href': '/logs',
-                          'icon': 'terminal',
                         },
                         {
                           'icon': 'layout-list',
-                          'label': 'Metrics',
                           'href': '/metrics',
+                          'label': 'Metrics',
                         },
                       ],
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
+                              'gap': 'lg',
+                              'direction': 'vertical',
                               'children': [
                                 {
                                   'items': [
@@ -6181,9 +6249,13 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'breadcrumb',
                                 },
                                 {
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'justify': 'between',
                                   'children': [
                                     {
+                                      'type': 'stack',
+                                      'gap': 'md',
                                       'children': [
                                         {
                                           'name': 'activity',
@@ -6196,19 +6268,15 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                         },
                                       ],
                                       'direction': 'horizontal',
-                                      'type': 'stack',
-                                      'gap': 'md',
                                     },
                                     {
-                                      'variant': 'secondary',
                                       'type': 'button',
-                                      'icon': 'refresh-cw',
-                                      'label': 'Refresh',
                                       'action': 'REFRESH',
+                                      'label': 'Refresh',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                   'type': 'stack',
                                 },
                                 {
@@ -6219,65 +6287,64 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'box',
                                   'children': [
                                     {
-                                      'cols': 3,
                                       'type': 'simple-grid',
+                                      'cols': 3,
                                       'children': [
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'Name',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.name',
                                                 },
                                               ],
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'type': 'stat-display',
-                                          'value': '@entity.value',
                                           'label': 'Value',
+                                          'value': '@entity.value',
                                         },
                                         {
                                           'children': [
                                             {
-                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'content': 'Unit',
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
+                                                  'content': 'Unit',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'content': '@entity.unit',
                                                   'type': 'typography',
+                                                  'content': '@entity.unit',
                                                 },
                                               ],
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'gap': 'sm',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                               'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
@@ -6286,12 +6353,13 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                                 },
                                                 {
                                                   'type': 'typography',
-                                                  'content': '@entity.trend',
                                                   'variant': 'h3',
+                                                  'content': '@entity.trend',
                                                 },
                                               ],
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                       ],
                                     },
@@ -6301,66 +6369,66 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Chart View',
                                           'type': 'typography',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'content': 'Graph View',
                                           'variant': 'caption',
+                                          'content': 'Graph View',
                                           'type': 'typography',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
                                   'cols': 2,
                                   'gap': 'md',
                                 },
                                 {
-                                  'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'value': 19,
                                       'date': 'Feb',
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
                                       'date': 'Apr',
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
                                       'date': 'Jun',
                                     },
                                   ],
+                                  'type': 'line-chart',
                                 },
                                 {
                                   'items': [
                                     {
-                                      'label': 'Current',
                                       'color': 'primary',
+                                      'label': 'Current',
                                     },
                                     {
                                       'color': 'muted',
@@ -6370,22 +6438,6 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'width': 400,
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'type': 'graph-view',
                                   'edges': [
                                     {
                                       'target': 'b',
@@ -6396,16 +6448,32 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
                                       'source': 'b',
                                     },
                                   ],
+                                  'nodes': [
+                                    {
+                                      'label': 'Start',
+                                      'id': 'a',
+                                    },
+                                    {
+                                      'id': 'b',
+                                      'label': 'Process',
+                                    },
+                                    {
+                                      'label': 'End',
+                                      'id': 'c',
+                                    },
+                                  ],
+                                  'width': 400,
                                   'height': 200,
+                                  'type': 'graph-view',
                                 },
                               ],
-                              'direction': 'vertical',
-                              'gap': 'lg',
+                              'type': 'stack',
                             },
                           ],
-                          'type': 'scaled-diagram',
                         },
                       ],
+                      'type': 'dashboard-layout',
+                      'appName': 'DevOps Dashboard',
                     },
                   ],
                 ],

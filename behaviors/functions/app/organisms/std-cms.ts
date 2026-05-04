@@ -23,6 +23,205 @@ const BEHAVIOR_PATH = 'std/behaviors/std-cms';
 const ALIAS = 'Cms';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdCmsEventKey = 'ArticleDeleteFailed' | 'ArticleDeleted' | 'ArticleLoadFailed' | 'ArticleLoaded' | 'ArticleSaveFailed' | 'ArticleSaved' | 'ArticleUpdateFailed' | 'ArticleUpdated' | 'CATEGORIZE' | 'CREATE' | 'CategoryDeleteFailed' | 'CategoryDeleted' | 'CategorySaveFailed' | 'CategorySaved' | 'CategoryUpdateFailed' | 'CategoryUpdated' | 'DELETE' | 'EDIT' | 'INIT' | 'MediaAssetSaveFailed' | 'MediaAssetSaved' | 'PUBLISH' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdCmsListenKey = 'ARTICLE_CREATED' | 'ARTICLE_UPDATED' | 'ARTICLE_DELETED';
+
+/**
+ * Payload shape for the `PUBLISH` event.
+ */
+export interface StdCmsPublishPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CATEGORIZE` event.
+ */
+export interface StdCmsCategorizePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdCmsViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    slug: string;
+    content?: string;
+    author?: string;
+    status?: string;
+    publishedAt?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `EDIT` event.
+ */
+export interface StdCmsEditPayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    slug: string;
+    content?: string;
+    author?: string;
+    status?: string;
+    publishedAt?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `DELETE` event.
+ */
+export interface StdCmsDeletePayload {
+  id: string;
+  row?: {
+    id: string;
+    title: string;
+    slug: string;
+    content?: string;
+    author?: string;
+    status?: string;
+    publishedAt?: string;
+    pendingId?: string;
+  };
+}
+
+/**
+ * Payload shape for the `ArticleLoaded` event.
+ */
+export interface StdCmsArticleLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `ArticleLoadFailed` event.
+ */
+export interface StdCmsArticleLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ArticleSaved` event.
+ */
+export interface StdCmsArticleSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ArticleSaveFailed` event.
+ */
+export interface StdCmsArticleSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ArticleUpdated` event.
+ */
+export interface StdCmsArticleUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ArticleUpdateFailed` event.
+ */
+export interface StdCmsArticleUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ArticleDeleted` event.
+ */
+export interface StdCmsArticleDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ArticleDeleteFailed` event.
+ */
+export interface StdCmsArticleDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `MediaAssetSaved` event.
+ */
+export interface StdCmsMediaAssetSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MediaAssetSaveFailed` event.
+ */
+export interface StdCmsMediaAssetSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CategorySaved` event.
+ */
+export interface StdCmsCategorySavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CategorySaveFailed` event.
+ */
+export interface StdCmsCategorySaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CategoryUpdated` event.
+ */
+export interface StdCmsCategoryUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CategoryUpdateFailed` event.
+ */
+export interface StdCmsCategoryUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `CategoryDeleted` event.
+ */
+export interface StdCmsCategoryDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `CategoryDeleteFailed` event.
+ */
+export interface StdCmsCategoryDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-cms descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +237,8 @@ export interface StdCmsParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdCmsEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +258,11 @@ export function stdCmsArticleBrowseTrait(params: StdCmsParams): TraitReference {
     ref: `${ALIAS}.traits.ArticleBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +273,11 @@ export function stdCmsArticleCreateTrait(params: StdCmsParams): TraitReference {
     ref: `${ALIAS}.traits.ArticleCreate`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +288,11 @@ export function stdCmsArticleEditTrait(params: StdCmsParams): TraitReference {
     ref: `${ALIAS}.traits.ArticleEdit`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -104,11 +303,11 @@ export function stdCmsArticleViewTrait(params: StdCmsParams): TraitReference {
     ref: `${ALIAS}.traits.ArticleView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -119,11 +318,11 @@ export function stdCmsArticleDeleteTrait(params: StdCmsParams): TraitReference {
     ref: `${ALIAS}.traits.ArticleDelete`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -872,22 +1071,22 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'align': 'center',
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'className': 'py-12',
+                      'type': 'stack',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'content': 'Loading…',
                           'color': 'muted',
-                          'variant': 'caption',
                           'type': 'typography',
+                          'variant': 'caption',
+                          'content': 'Loading…',
                         },
                       ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
                     },
                   ],
                 ],
@@ -902,86 +1101,68 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'CmsApp',
                       'children': [
                         {
+                          'type': 'stack',
+                          'gap': 'lg',
                           'children': [
                             {
-                              'type': 'stack',
-                              'justify': 'between',
                               'children': [
                                 {
                                   'align': 'center',
                                   'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'file-text',
+                                      'type': 'icon',
                                     },
                                     {
+                                      'content': 'Articles',
                                       'variant': 'h2',
                                       'type': 'typography',
-                                      'content': 'Articles',
                                     },
                                   ],
-                                  'gap': 'sm',
                                 },
                                 {
-                                  'type': 'stack',
-                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'label': 'Create Article',
                                       'variant': 'primary',
                                       'icon': 'plus',
-                                      'type': 'button',
                                       'action': 'CREATE',
+                                      'type': 'button',
+                                      'label': 'Create Article',
                                     },
                                   ],
+                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'gap': 'sm',
                                 },
                               ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
+                              'type': 'stack',
                               'align': 'center',
+                              'direction': 'horizontal',
+                              'justify': 'between',
+                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Delete',
-                                  'variant': 'danger',
-                                  'event': 'DELETE',
-                                },
-                              ],
-                              'type': 'data-list',
-                              'entity': '@payload.data',
                               'fields': [
                                 {
-                                  'name': 'title',
                                   'variant': 'h3',
                                   'icon': 'file-text',
+                                  'name': 'title',
                                 },
                                 {
                                   'name': 'status',
                                   'variant': 'badge',
                                 },
                                 {
-                                  'name': 'author',
                                   'variant': 'body',
+                                  'name': 'author',
                                 },
                                 {
                                   'variant': 'caption',
@@ -989,21 +1170,39 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                                 },
                                 {
                                   'name': 'publishedAt',
+                                  'label': 'Published',
                                   'format': 'date',
                                   'variant': 'caption',
-                                  'label': 'Published',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'event': 'EDIT',
+                                  'label': 'Edit',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'label': 'Delete',
+                                  'variant': 'danger',
                                 },
                               ],
                               'variant': 'card',
                               'gap': 'sm',
+                              'type': 'data-list',
                             },
                           ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
                           'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
+                      'appName': 'CmsApp',
                       'navItems': [
                         {
                           'label': 'CMS Hub',
@@ -1016,8 +1215,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           'label': 'Articles',
                         },
                         {
-                          'label': 'Media',
                           'href': '/media',
+                          'label': 'Media',
                           'icon': 'image',
                         },
                         {
@@ -1039,36 +1238,36 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'stack',
                       'align': 'center',
+                      'direction': 'vertical',
+                      'className': 'py-12',
+                      'gap': 'md',
                       'children': [
                         {
+                          'color': 'destructive',
                           'type': 'icon',
                           'name': 'alert-triangle',
-                          'color': 'destructive',
                         },
                         {
                           'variant': 'h3',
-                          'content': 'Failed to load article',
                           'type': 'typography',
+                          'content': 'Failed to load article',
                         },
                         {
-                          'color': 'muted',
-                          'variant': 'body',
-                          'type': 'typography',
                           'content': '@payload.error',
+                          'type': 'typography',
+                          'variant': 'body',
+                          'color': 'muted',
                         },
                         {
                           'type': 'button',
                           'icon': 'rotate-ccw',
                           'label': 'Retry',
-                          'variant': 'primary',
                           'action': 'INIT',
+                          'variant': 'primary',
                         },
                       ],
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1268,8 +1467,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Article',
                     {
                       'emit': {
-                        'success': 'ArticleLoaded',
                         'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
                       },
                     },
                   ],
@@ -1277,12 +1476,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
+                      'type': 'stack',
                       'children': [
                         {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
@@ -1294,6 +1490,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'type': 'typography',
                             },
                           ],
+                          'gap': 'sm',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
@@ -1307,14 +1506,14 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             'status',
                             'publishedAt',
                           ],
-                          'cancelEvent': 'CLOSE',
                           'type': 'form-section',
-                          'mode': 'create',
+                          'cancelEvent': 'CLOSE',
                           'submitEvent': 'SAVE',
+                          'mode': 'create',
                         },
                       ],
                       'gap': 'md',
-                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1591,41 +1790,45 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'fetch',
                     'Article',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'ArticleLoaded',
                         'failure': 'ArticleLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'edit',
                             },
                             {
-                              'variant': 'h3',
                               'content': 'Edit Article',
+                              'variant': 'h3',
                               'type': 'typography',
                             },
                           ],
                           'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
                           'entity': '@payload.row',
                           'mode': 'edit',
+                          'type': 'form-section',
+                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
                           'fields': [
                             'title',
@@ -1635,12 +1838,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             'status',
                             'publishedAt',
                           ],
-                          'submitEvent': 'SAVE',
                         },
                       ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1844,8 +2043,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Article',
                     {
                       'emit': {
-                        'success': 'ArticleLoaded',
                         'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
                       },
                     },
                   ],
@@ -1901,14 +2100,11 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
                           'gap': 'sm',
-                          'align': 'center',
                           'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'name': 'eye',
@@ -1920,16 +2116,20 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'variant': 'h3',
                             },
                           ],
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
-                              'variant': 'caption',
-                              'type': 'typography',
                               'content': 'Title',
+                              'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'content': '@entity.title',
@@ -1937,14 +2137,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
-                          'gap': 'md',
                           'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'content': 'Slug',
@@ -1952,28 +2147,30 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                               'content': '@entity.slug',
                             },
                           ],
+                          'direction': 'horizontal',
+                          'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
                           'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'typography',
                               'content': 'Content',
+                              'type': 'typography',
                               'variant': 'caption',
                             },
                             {
+                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.content',
-                              'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
                         },
                         {
                           'children': [
@@ -1983,74 +2180,76 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'variant': 'caption',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.author',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
+                          'gap': 'md',
                           'direction': 'horizontal',
                           'type': 'stack',
-                          'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
                               'type': 'typography',
                               'content': 'Status',
+                              'variant': 'caption',
                             },
                             {
-                              'content': '@entity.status',
                               'variant': 'body',
                               'type': 'typography',
+                              'content': '@entity.status',
                             },
                           ],
                           'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
                         },
                         {
                           'children': [
                             {
-                              'type': 'typography',
-                              'content': 'Published At',
                               'variant': 'caption',
+                              'content': 'Published At',
+                              'type': 'typography',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.publishedAt',
                               'variant': 'body',
+                              'content': '@entity.publishedAt',
                             },
                           ],
                           'gap': 'md',
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'icon': 'edit',
-                              'label': 'Edit',
-                              'variant': 'primary',
-                              'action': 'EDIT',
-                              'type': 'button',
-                            },
-                            {
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'action': 'CLOSE',
-                              'label': 'Close',
-                            },
-                          ],
                           'justify': 'end',
                           'type': 'stack',
                           'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'label': 'Edit',
+                              'variant': 'primary',
+                              'icon': 'edit',
+                              'action': 'EDIT',
+                            },
+                            {
+                              'action': 'CLOSE',
+                              'variant': 'ghost',
+                              'type': 'button',
+                              'label': 'Close',
+                            },
+                          ],
+                          'gap': 'sm',
                         },
                       ],
+                      'type': 'stack',
+                      'direction': 'vertical',
                       'gap': 'md',
                     },
                   ],
@@ -2304,8 +2503,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     {
                       'id': '@payload.id',
                       'emit': {
-                        'failure': 'ArticleLoadFailed',
                         'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
                       },
                     },
                   ],
@@ -2313,10 +2512,10 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'gap': 'md',
+                      'type': 'stack',
                       'children': [
                         {
-                          'align': 'center',
-                          'type': 'stack',
                           'children': [
                             {
                               'name': 'alert-triangle',
@@ -2324,45 +2523,45 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             },
                             {
                               'variant': 'h3',
-                              'content': 'Delete Article',
                               'type': 'typography',
+                              'content': 'Delete Article',
                             },
                           ],
-                          'direction': 'horizontal',
                           'gap': 'sm',
+                          'align': 'center',
+                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'message': 'This action cannot be undone.',
                           'variant': 'error',
+                          'message': 'This action cannot be undone.',
                           'type': 'alert',
                         },
                         {
-                          'children': [
-                            {
-                              'action': 'CANCEL',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'label': 'Cancel',
-                            },
-                            {
-                              'variant': 'danger',
-                              'icon': 'check',
-                              'type': 'button',
-                              'label': 'Delete',
-                              'action': 'CONFIRM_DELETE',
-                            },
-                          ],
-                          'justify': 'end',
                           'type': 'stack',
                           'direction': 'horizontal',
+                          'children': [
+                            {
+                              'type': 'button',
+                              'action': 'CANCEL',
+                              'label': 'Cancel',
+                              'variant': 'ghost',
+                            },
+                            {
+                              'action': 'CONFIRM_DELETE',
+                              'type': 'button',
+                              'icon': 'check',
+                              'variant': 'danger',
+                              'label': 'Delete',
+                            },
+                          ],
                           'gap': 'sm',
+                          'justify': 'end',
                         },
                       ],
-                      'type': 'stack',
-                      'gap': 'md',
                       'direction': 'vertical',
                     },
                   ],
@@ -2380,8 +2579,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'success': 'ArticleDeleted',
                         'failure': 'ArticleDeleteFailed',
+                        'success': 'ArticleDeleted',
                       },
                     },
                   ],
@@ -2435,8 +2634,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Article',
                     {
                       'emit': {
-                        'success': 'ArticleLoaded',
                         'failure': 'ArticleLoadFailed',
+                        'success': 'ArticleLoaded',
                       },
                     },
                   ],
@@ -2464,8 +2663,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Article',
                     {
                       'emit': {
-                        'failure': 'ArticleLoadFailed',
                         'success': 'ArticleLoaded',
+                        'failure': 'ArticleLoadFailed',
                       },
                     },
                   ],
@@ -2685,8 +2884,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'MediaAsset',
                     {
                       'emit': {
-                        'failure': 'MediaAssetLoadFailed',
                         'success': 'MediaAssetLoaded',
+                        'failure': 'MediaAssetLoadFailed',
                       },
                     },
                   ],
@@ -2695,21 +2894,21 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'main',
                     {
                       'type': 'stack',
+                      'gap': 'md',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'color': 'muted',
                           'type': 'typography',
                           'variant': 'caption',
+                          'color': 'muted',
                           'content': 'Loading…',
                         },
                       ],
                       'direction': 'vertical',
                       'align': 'center',
-                      'gap': 'md',
-                      'className': 'py-12',
                     },
                   ],
                 ],
@@ -2725,104 +2924,95 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     {
                       'navItems': [
                         {
-                          'icon': 'layout-grid',
                           'label': 'CMS Hub',
+                          'icon': 'layout-grid',
                           'href': '/cms-hub',
                         },
                         {
-                          'href': '/articles',
                           'label': 'Articles',
                           'icon': 'file-text',
+                          'href': '/articles',
                         },
                         {
-                          'href': '/media',
                           'label': 'Media',
                           'icon': 'image',
+                          'href': '/media',
                         },
                         {
-                          'icon': 'folder',
                           'href': '/categories',
                           'label': 'Categories',
+                          'icon': 'folder',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'CmsApp',
                       'children': [
                         {
-                          'direction': 'vertical',
-                          'className': 'max-w-5xl mx-auto w-full',
+                          'type': 'stack',
                           'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
                               'align': 'center',
                               'children': [
                                 {
-                                  'align': 'center',
-                                  'gap': 'sm',
-                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'align': 'center',
                                   'children': [
                                     {
-                                      'type': 'icon',
                                       'name': 'image',
+                                      'type': 'icon',
                                     },
                                     {
                                       'content': 'Media Library',
-                                      'type': 'typography',
                                       'variant': 'h2',
+                                      'type': 'typography',
                                     },
                                   ],
                                 },
                                 {
-                                  'type': 'stack',
                                   'gap': 'sm',
+                                  'direction': 'horizontal',
+                                  'type': 'stack',
                                   'children': [
                                     {
-                                      'variant': 'primary',
                                       'icon': 'plus',
-                                      'label': 'Create MediaAsset',
                                       'type': 'button',
                                       'action': 'CREATE',
+                                      'variant': 'primary',
+                                      'label': 'Create MediaAsset',
                                     },
                                   ],
-                                  'direction': 'horizontal',
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'cols': 3,
-                              'type': 'data-grid',
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                              ],
+                              'entity': '@payload.data',
                               'fields': [
                                 {
-                                  'label': 'File',
-                                  'variant': 'h3',
                                   'name': 'fileName',
+                                  'variant': 'h3',
                                   'icon': 'image',
+                                  'label': 'File',
                                 },
                                 {
-                                  'name': 'fileType',
                                   'label': 'Type',
                                   'variant': 'badge',
+                                  'name': 'fileType',
                                 },
                                 {
-                                  'variant': 'body',
-                                  'name': 'fileSize',
-                                  'format': 'number',
                                   'label': 'Size',
+                                  'variant': 'body',
+                                  'format': 'number',
+                                  'name': 'fileSize',
                                 },
                                 {
                                   'name': 'altText',
@@ -2830,13 +3020,22 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                                   'variant': 'caption',
                                 },
                               ],
+                              'cols': 3,
+                              'type': 'data-grid',
                               'gap': 'md',
-                              'entity': '@payload.data',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                              ],
                             },
                           ],
-                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
                         },
                       ],
+                      'appName': 'CmsApp',
                     },
                   ],
                 ],
@@ -2854,32 +3053,32 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                       'gap': 'md',
                       'children': [
                         {
-                          'type': 'icon',
                           'color': 'destructive',
                           'name': 'alert-triangle',
+                          'type': 'icon',
                         },
                         {
-                          'content': 'Failed to load mediaasset',
                           'variant': 'h3',
                           'type': 'typography',
+                          'content': 'Failed to load mediaasset',
                         },
                         {
-                          'color': 'muted',
-                          'variant': 'body',
                           'content': '@payload.error',
+                          'variant': 'body',
                           'type': 'typography',
+                          'color': 'muted',
                         },
                         {
+                          'action': 'INIT',
                           'type': 'button',
                           'label': 'Retry',
-                          'action': 'INIT',
-                          'variant': 'primary',
                           'icon': 'rotate-ccw',
+                          'variant': 'primary',
                         },
                       ],
-                      'direction': 'vertical',
                       'align': 'center',
                       'className': 'py-12',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3047,8 +3246,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'MediaAsset',
                     {
                       'emit': {
-                        'success': 'MediaAssetLoaded',
                         'failure': 'MediaAssetLoadFailed',
+                        'success': 'MediaAssetLoaded',
                       },
                     },
                   ],
@@ -3074,32 +3273,32 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'modal',
                     {
                       'type': 'stack',
-                      'direction': 'vertical',
                       'gap': 'md',
                       'children': [
                         {
+                          'gap': 'sm',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'plus-circle',
                             },
                             {
-                              'content': 'New MediaAsset',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
+                              'content': 'New MediaAsset',
                             },
                           ],
-                          'gap': 'sm',
-                          'type': 'stack',
                           'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'mode': 'create',
                           'type': 'form-section',
+                          'submitEvent': 'SAVE',
                           'cancelEvent': 'CLOSE',
+                          'mode': 'create',
                           'fields': [
                             'fileName',
                             'fileType',
@@ -3108,9 +3307,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             'altText',
                             'uploadedAt',
                           ],
-                          'submitEvent': 'SAVE',
                         },
                       ],
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3151,8 +3350,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'success': 'MediaAssetSaved',
                         'failure': 'MediaAssetSaveFailed',
+                        'success': 'MediaAssetSaved',
                       },
                     },
                   ],
@@ -3290,8 +3489,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'MediaAsset',
                     {
                       'emit': {
-                        'success': 'MediaAssetLoaded',
                         'failure': 'MediaAssetLoadFailed',
+                        'success': 'MediaAssetLoaded',
                       },
                     },
                   ],
@@ -3336,135 +3535,132 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'fetch',
                     'MediaAsset',
                     {
-                      'emit': {
-                        'success': 'MediaAssetLoaded',
-                        'failure': 'MediaAssetLoadFailed',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'failure': 'MediaAssetLoadFailed',
+                        'success': 'MediaAssetLoaded',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
                       'children': [
                         {
                           'type': 'stack',
                           'gap': 'sm',
-                          'direction': 'horizontal',
                           'align': 'center',
                           'children': [
                             {
-                              'name': 'eye',
                               'type': 'icon',
+                              'name': 'eye',
                             },
                             {
-                              'type': 'typography',
-                              'content': '@entity.fileName',
                               'variant': 'h3',
+                              'content': '@entity.fileName',
+                              'type': 'typography',
                             },
                           ],
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
-                              'variant': 'caption',
-                              'type': 'typography',
                               'content': 'File Name',
+                              'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'content': '@entity.fileName',
                               'type': 'typography',
+                              'content': '@entity.fileName',
                               'variant': 'body',
                             },
                           ],
-                          'gap': 'md',
                         },
                         {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'content': 'File Type',
+                              'type': 'typography',
                               'variant': 'caption',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.fileType',
                               'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'md',
+                          'direction': 'horizontal',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
                               'content': 'File Size',
                             },
                             {
+                              'type': 'typography',
+                              'variant': 'body',
                               'content': '@entity.fileSize',
-                              'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
                           'gap': 'md',
+                          'type': 'stack',
                         },
                         {
-                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
+                              'type': 'typography',
+                              'variant': 'caption',
                               'content': 'Url',
-                              'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.url',
                               'variant': 'body',
+                              'content': '@entity.url',
                             },
                           ],
-                          'direction': 'horizontal',
                           'type': 'stack',
+                          'gap': 'md',
                         },
                         {
                           'direction': 'horizontal',
                           'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
                               'type': 'typography',
+                              'variant': 'caption',
                               'content': 'Alt Text',
                             },
                             {
+                              'type': 'typography',
                               'variant': 'body',
                               'content': '@entity.altText',
-                              'type': 'typography',
                             },
                           ],
-                          'gap': 'md',
                         },
                         {
+                          'type': 'stack',
                           'gap': 'md',
                           'direction': 'horizontal',
-                          'type': 'stack',
                           'children': [
                             {
+                              'variant': 'caption',
                               'content': 'Uploaded At',
                               'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
                               'content': '@entity.uploadedAt',
@@ -3477,20 +3673,23 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           'type': 'divider',
                         },
                         {
+                          'type': 'stack',
                           'gap': 'sm',
                           'children': [
                             {
                               'type': 'button',
-                              'label': 'Close',
                               'variant': 'ghost',
                               'action': 'CLOSE',
+                              'label': 'Close',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'justify': 'end',
+                          'direction': 'horizontal',
                         },
                       ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3870,22 +4069,22 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'stack',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
+                          'color': 'muted',
                           'type': 'typography',
                           'variant': 'caption',
-                          'color': 'muted',
                           'content': 'Loading…',
                         },
                       ],
-                      'align': 'center',
-                      'direction': 'vertical',
                       'className': 'py-12',
-                      'type': 'stack',
+                      'align': 'center',
                       'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -3901,19 +4100,19 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     {
                       'navItems': [
                         {
-                          'href': '/cms-hub',
                           'icon': 'layout-grid',
+                          'href': '/cms-hub',
                           'label': 'CMS Hub',
                         },
                         {
-                          'href': '/articles',
                           'label': 'Articles',
+                          'href': '/articles',
                           'icon': 'file-text',
                         },
                         {
-                          'href': '/media',
-                          'icon': 'image',
                           'label': 'Media',
+                          'icon': 'image',
+                          'href': '/media',
                         },
                         {
                           'icon': 'folder',
@@ -3921,105 +4120,105 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           'href': '/categories',
                         },
                       ],
+                      'type': 'dashboard-layout',
                       'appName': 'CmsApp',
                       'children': [
                         {
+                          'className': 'max-w-5xl mx-auto w-full',
                           'type': 'stack',
                           'children': [
                             {
                               'type': 'stack',
+                              'direction': 'horizontal',
+                              'gap': 'md',
+                              'justify': 'between',
                               'align': 'center',
                               'children': [
                                 {
-                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'gap': 'sm',
                                   'children': [
                                     {
-                                      'name': 'folder',
                                       'type': 'icon',
+                                      'name': 'folder',
                                     },
                                     {
+                                      'variant': 'h2',
                                       'type': 'typography',
                                       'content': 'Categories',
-                                      'variant': 'h2',
                                     },
                                   ],
-                                  'gap': 'sm',
-                                  'align': 'center',
                                 },
                                 {
-                                  'gap': 'sm',
                                   'type': 'stack',
-                                  'direction': 'horizontal',
                                   'children': [
                                     {
-                                      'icon': 'plus',
-                                      'label': 'Create Category',
-                                      'action': 'CREATE',
                                       'variant': 'primary',
+                                      'label': 'Create Category',
+                                      'icon': 'plus',
+                                      'action': 'CREATE',
                                       'type': 'button',
                                     },
                                   ],
+                                  'gap': 'sm',
+                                  'direction': 'horizontal',
                                 },
                               ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'gap': 'md',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'data-list',
-                              'gap': 'sm',
-                              'itemActions': [
-                                {
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                  'label': 'View',
-                                },
-                                {
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                  'label': 'Edit',
-                                },
-                                {
-                                  'variant': 'danger',
-                                  'event': 'DELETE',
-                                  'label': 'Delete',
-                                },
-                              ],
                               'variant': 'card',
+                              'entity': '@payload.data',
+                              'gap': 'sm',
                               'fields': [
                                 {
                                   'name': 'name',
-                                  'icon': 'folder',
                                   'variant': 'h3',
+                                  'icon': 'folder',
                                 },
                                 {
-                                  'variant': 'badge',
                                   'label': 'Articles',
-                                  'format': 'number',
                                   'name': 'articleCount',
+                                  'variant': 'badge',
+                                  'format': 'number',
                                 },
                                 {
-                                  'name': 'description',
                                   'variant': 'body',
+                                  'name': 'description',
                                 },
                                 {
                                   'name': 'slug',
                                   'variant': 'caption',
                                 },
                               ],
-                              'entity': '@payload.data',
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                                {
+                                  'label': 'Edit',
+                                  'variant': 'ghost',
+                                  'event': 'EDIT',
+                                },
+                                {
+                                  'event': 'DELETE',
+                                  'variant': 'danger',
+                                  'label': 'Delete',
+                                },
+                              ],
                             },
                           ],
                           'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
                           'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
                     },
                   ],
                 ],
@@ -4033,9 +4232,7 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'gap': 'md',
                       'className': 'py-12',
-                      'align': 'center',
                       'children': [
                         {
                           'color': 'destructive',
@@ -4044,25 +4241,27 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                         },
                         {
                           'variant': 'h3',
-                          'content': 'Failed to load category',
                           'type': 'typography',
+                          'content': 'Failed to load category',
                         },
                         {
+                          'variant': 'body',
+                          'type': 'typography',
                           'color': 'muted',
                           'content': '@payload.error',
-                          'type': 'typography',
-                          'variant': 'body',
                         },
                         {
-                          'action': 'INIT',
-                          'label': 'Retry',
                           'icon': 'rotate-ccw',
-                          'type': 'button',
+                          'label': 'Retry',
                           'variant': 'primary',
+                          'action': 'INIT',
+                          'type': 'button',
                         },
                       ],
                       'type': 'stack',
                       'direction': 'vertical',
+                      'gap': 'md',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -4254,8 +4453,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Category',
                     {
                       'emit': {
-                        'success': 'CategoryLoaded',
                         'failure': 'CategoryLoadFailed',
+                        'success': 'CategoryLoaded',
                       },
                     },
                   ],
@@ -4263,30 +4462,30 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'gap': 'md',
                       'children': [
                         {
                           'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'plus-circle',
+                              'type': 'icon',
                             },
                             {
-                              'variant': 'h3',
-                              'type': 'typography',
                               'content': 'Create Category',
+                              'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
-                          'type': 'form-section',
+                          'cancelEvent': 'CLOSE',
                           'fields': [
                             'name',
                             'slug',
@@ -4294,12 +4493,12 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             'parentCategory',
                             'articleCount',
                           ],
-                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
+                          'mode': 'create',
+                          'submitEvent': 'SAVE',
                         },
                       ],
-                      'gap': 'md',
                       'type': 'stack',
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -4340,8 +4539,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'CategorySaveFailed',
                         'success': 'CategorySaved',
+                        'failure': 'CategorySaveFailed',
                       },
                     },
                   ],
@@ -4578,13 +4777,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'gap': 'md',
                       'direction': 'vertical',
                       'children': [
                         {
-                          'type': 'stack',
-                          'gap': 'sm',
                           'children': [
                             {
                               'type': 'icon',
@@ -4592,17 +4787,21 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             },
                             {
                               'content': 'Edit Category',
-                              'variant': 'h3',
                               'type': 'typography',
+                              'variant': 'h3',
                             },
                           ],
+                          'gap': 'sm',
                           'direction': 'horizontal',
+                          'type': 'stack',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'cancelEvent': 'CLOSE',
                           'type': 'form-section',
+                          'submitEvent': 'SAVE',
                           'fields': [
                             'name',
                             'slug',
@@ -4612,10 +4811,10 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           ],
                           'mode': 'edit',
                           'entity': '@payload.row',
-                          'cancelEvent': 'CLOSE',
-                          'submitEvent': 'SAVE',
                         },
                       ],
+                      'gap': 'md',
+                      'type': 'stack',
                     },
                   ],
                 ],
@@ -4656,8 +4855,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     '@payload.data',
                     {
                       'emit': {
-                        'failure': 'CategoryUpdateFailed',
                         'success': 'CategoryUpdated',
+                        'failure': 'CategoryUpdateFailed',
                       },
                     },
                   ],
@@ -4812,8 +5011,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Category',
                     {
                       'emit': {
-                        'failure': 'CategoryLoadFailed',
                         'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
                       },
                     },
                   ],
@@ -4853,33 +5052,34 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'fetch',
                     'Category',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'CategoryLoaded',
                         'failure': 'CategoryLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
+                          'type': 'stack',
                           'align': 'center',
                           'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'h3',
                               'content': '@entity.name',
+                              'type': 'typography',
                             },
                           ],
                         },
@@ -4887,25 +5087,26 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           'type': 'divider',
                         },
                         {
-                          'type': 'stack',
                           'direction': 'horizontal',
                           'children': [
                             {
-                              'content': 'Name',
                               'type': 'typography',
+                              'content': 'Name',
                               'variant': 'caption',
                             },
                             {
                               'type': 'typography',
-                              'content': '@entity.name',
                               'variant': 'body',
+                              'content': '@entity.name',
                             },
                           ],
                           'gap': 'md',
+                          'type': 'stack',
                         },
                         {
-                          'gap': 'md',
                           'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'typography',
@@ -4913,14 +5114,15 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'content': 'Slug',
                             },
                             {
+                              'variant': 'body',
                               'content': '@entity.slug',
                               'type': 'typography',
-                              'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
                         },
                         {
+                          'gap': 'md',
+                          'direction': 'horizontal',
                           'children': [
                             {
                               'variant': 'caption',
@@ -4929,47 +5131,45 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                             },
                             {
                               'content': '@entity.description',
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                             },
                           ],
                           'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
+                          'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
-                              'content': 'Parent Category',
                               'variant': 'caption',
+                              'content': 'Parent Category',
                               'type': 'typography',
                             },
                             {
                               'content': '@entity.parentCategory',
-                              'variant': 'body',
                               'type': 'typography',
+                              'variant': 'body',
                             },
                           ],
-                          'gap': 'md',
-                          'direction': 'horizontal',
                         },
                         {
+                          'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
-                              'content': 'Article Count',
                               'type': 'typography',
                               'variant': 'caption',
+                              'content': 'Article Count',
                             },
                             {
                               'variant': 'body',
-                              'type': 'typography',
                               'content': '@entity.articleCount',
+                              'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
@@ -4977,27 +5177,26 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                         {
                           'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'sm',
+                          'justify': 'end',
                           'children': [
                             {
-                              'icon': 'edit',
-                              'type': 'button',
                               'variant': 'primary',
                               'label': 'Edit',
                               'action': 'EDIT',
+                              'type': 'button',
+                              'icon': 'edit',
                             },
                             {
                               'variant': 'ghost',
-                              'label': 'Close',
                               'action': 'CLOSE',
+                              'label': 'Close',
                               'type': 'button',
                             },
                           ],
-                          'gap': 'sm',
-                          'justify': 'end',
                         },
                       ],
                       'direction': 'vertical',
-                      'type': 'stack',
                     },
                   ],
                 ],
@@ -5219,8 +5418,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Category',
                     {
                       'emit': {
-                        'failure': 'CategoryLoadFailed',
                         'success': 'CategoryLoaded',
+                        'failure': 'CategoryLoadFailed',
                       },
                     },
                   ],
@@ -5251,13 +5450,9 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'align': 'center',
-                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'type': 'icon',
@@ -5269,38 +5464,42 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'variant': 'h3',
                             },
                           ],
-                          'type': 'stack',
+                          'align': 'center',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'variant': 'error',
                           'message': 'This action cannot be undone.',
                           'type': 'alert',
-                          'variant': 'error',
                         },
                         {
-                          'type': 'stack',
                           'children': [
                             {
-                              'variant': 'ghost',
-                              'label': 'Cancel',
                               'action': 'CANCEL',
                               'type': 'button',
+                              'label': 'Cancel',
+                              'variant': 'ghost',
                             },
                             {
-                              'type': 'button',
-                              'action': 'CONFIRM_DELETE',
-                              'variant': 'danger',
                               'label': 'Delete',
                               'icon': 'check',
+                              'variant': 'danger',
+                              'type': 'button',
+                              'action': 'CONFIRM_DELETE',
                             },
                           ],
-                          'justify': 'end',
+                          'type': 'stack',
                           'direction': 'horizontal',
                           'gap': 'sm',
+                          'justify': 'end',
                         },
                       ],
+                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
                     },
                   ],
@@ -5318,8 +5517,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     '@entity.pendingId',
                     {
                       'emit': {
-                        'success': 'CategoryDeleted',
                         'failure': 'CategoryDeleteFailed',
+                        'success': 'CategoryDeleted',
                       },
                     },
                   ],
@@ -5340,8 +5539,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'Category',
                     {
                       'emit': {
-                        'success': 'CategoryLoaded',
                         'failure': 'CategoryLoadFailed',
+                        'success': 'CategoryLoaded',
                       },
                     },
                   ],
@@ -5472,18 +5671,18 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
             'tabs': [
               {
                 'label': 'Articles',
-                'icon': 'file-text',
                 'id': 'articles',
+                'icon': 'file-text',
               },
               {
-                'icon': 'image',
-                'label': 'Media',
                 'id': 'media',
+                'label': 'Media',
+                'icon': 'image',
               },
               {
+                'id': 'categories',
                 'label': 'Categories',
                 'icon': 'folder',
-                'id': 'categories',
               },
             ],
           },
@@ -5541,12 +5740,11 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
-                      'appName': 'CmsApp',
                       'navItems': [
                         {
-                          'label': 'CMS Hub',
-                          'href': '/cms-hub',
                           'icon': 'layout-grid',
+                          'href': '/cms-hub',
+                          'label': 'CMS Hub',
                         },
                         {
                           'icon': 'file-text',
@@ -5554,25 +5752,25 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                           'label': 'Articles',
                         },
                         {
-                          'icon': 'image',
                           'label': 'Media',
                           'href': '/media',
+                          'icon': 'image',
                         },
                         {
-                          'label': 'Categories',
                           'href': '/categories',
                           'icon': 'folder',
+                          'label': 'Categories',
                         },
                       ],
                       'children': [
                         {
+                          'type': 'stack',
                           'gap': 'lg',
+                          'direction': 'vertical',
                           'children': [
                             {
-                              'gap': 'sm',
-                              'direction': 'horizontal',
                               'align': 'center',
-                              'type': 'stack',
+                              'gap': 'sm',
                               'children': [
                                 {
                                   'type': 'icon',
@@ -5584,37 +5782,38 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                                   'type': 'typography',
                                 },
                               ],
+                              'type': 'stack',
+                              'direction': 'horizontal',
                             },
                             {
                               'type': 'divider',
                             },
                             '@trait.CmsHubTabs',
                             {
-                              'className': 'p-4 border rounded-md',
                               'direction': 'vertical',
+                              'className': 'p-4 border rounded-md',
                               'children': [
                                 {
-                                  'type': 'typography',
                                   'variant': 'overline',
-                                  'content': 'Active section',
                                   'color': 'secondary',
+                                  'content': 'Active section',
+                                  'type': 'typography',
                                 },
                                 {
                                   'type': 'typography',
-                                  'variant': 'h3',
                                   'content': '@entity.section',
+                                  'variant': 'h3',
                                 },
                               ],
-                              'gap': 'sm',
                               'type': 'stack',
+                              'gap': 'sm',
                             },
                           ],
-                          'type': 'stack',
                           'className': 'max-w-5xl mx-auto w-full',
-                          'direction': 'vertical',
                         },
                       ],
                       'type': 'dashboard-layout',
+                      'appName': 'CmsApp',
                     },
                   ],
                 ],
@@ -5633,37 +5832,14 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                     'render-ui',
                     'main',
                     {
+                      'type': 'dashboard-layout',
                       'appName': 'CmsApp',
-                      'navItems': [
-                        {
-                          'icon': 'layout-grid',
-                          'label': 'CMS Hub',
-                          'href': '/cms-hub',
-                        },
-                        {
-                          'href': '/articles',
-                          'label': 'Articles',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'href': '/media',
-                          'label': 'Media',
-                          'icon': 'image',
-                        },
-                        {
-                          'label': 'Categories',
-                          'icon': 'folder',
-                          'href': '/categories',
-                        },
-                      ],
                       'children': [
                         {
+                          'type': 'stack',
                           'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
                               'children': [
                                 {
                                   'type': 'icon',
@@ -5671,11 +5847,14 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                                 },
                                 {
                                   'variant': 'h2',
-                                  'content': 'CMS Hub',
                                   'type': 'typography',
+                                  'content': 'CMS Hub',
                                 },
                               ],
+                              'gap': 'sm',
+                              'type': 'stack',
                               'direction': 'horizontal',
+                              'align': 'center',
                             },
                             {
                               'type': 'divider',
@@ -5686,14 +5865,14 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'className': 'p-4 border rounded-md',
                               'children': [
                                 {
-                                  'variant': 'overline',
-                                  'type': 'typography',
                                   'color': 'secondary',
                                   'content': 'Active section',
+                                  'type': 'typography',
+                                  'variant': 'overline',
                                 },
                                 {
-                                  'variant': 'h3',
                                   'type': 'typography',
+                                  'variant': 'h3',
                                   'content': '@entity.section',
                                 },
                               ],
@@ -5701,12 +5880,32 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
                               'direction': 'vertical',
                             },
                           ],
-                          'direction': 'vertical',
                           'gap': 'lg',
-                          'type': 'stack',
+                          'direction': 'vertical',
                         },
                       ],
-                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'icon': 'layout-grid',
+                          'label': 'CMS Hub',
+                          'href': '/cms-hub',
+                        },
+                        {
+                          'icon': 'file-text',
+                          'label': 'Articles',
+                          'href': '/articles',
+                        },
+                        {
+                          'label': 'Media',
+                          'icon': 'image',
+                          'href': '/media',
+                        },
+                        {
+                          'label': 'Categories',
+                          'href': '/categories',
+                          'icon': 'folder',
+                        },
+                      ],
                     },
                   ],
                 ],

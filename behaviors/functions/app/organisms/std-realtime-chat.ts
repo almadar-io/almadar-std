@@ -23,6 +23,109 @@ const BEHAVIOR_PATH = 'std/behaviors/std-realtime-chat';
 const ALIAS = 'RealtimeChat';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdRealtimeChatEventKey = 'COMPOSE' | 'ChannelDeleteFailed' | 'ChannelDeleted' | 'ChannelSaveFailed' | 'ChannelSaved' | 'ChannelUpdateFailed' | 'ChannelUpdated' | 'ChatMessageLoadFailed' | 'ChatMessageLoaded' | 'ChatMessageSaveFailed' | 'ChatMessageSaved' | 'INIT' | 'VIEW';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdRealtimeChatListenKey = 'SEND';
+
+/**
+ * Payload shape for the `VIEW` event.
+ */
+export interface StdRealtimeChatViewPayload {
+  id: string;
+  row?: {
+    id: string;
+    sender: string;
+    content: string;
+    channel?: string;
+    timestamp?: string;
+  };
+}
+
+/**
+ * Payload shape for the `ChatMessageLoaded` event.
+ */
+export interface StdRealtimeChatChatMessageLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `ChatMessageLoadFailed` event.
+ */
+export interface StdRealtimeChatChatMessageLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ChatMessageSaved` event.
+ */
+export interface StdRealtimeChatChatMessageSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ChatMessageSaveFailed` event.
+ */
+export interface StdRealtimeChatChatMessageSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ChannelSaved` event.
+ */
+export interface StdRealtimeChatChannelSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ChannelSaveFailed` event.
+ */
+export interface StdRealtimeChatChannelSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ChannelUpdated` event.
+ */
+export interface StdRealtimeChatChannelUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ChannelUpdateFailed` event.
+ */
+export interface StdRealtimeChatChannelUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `ChannelDeleted` event.
+ */
+export interface StdRealtimeChatChannelDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ChannelDeleteFailed` event.
+ */
+export interface StdRealtimeChatChannelDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-realtime-chat descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +141,8 @@ export interface StdRealtimeChatParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdRealtimeChatEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +162,11 @@ export function stdRealtimeChatChatMessageBrowseTrait(params: StdRealtimeChatPar
     ref: `${ALIAS}.traits.ChatMessageBrowse`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +177,11 @@ export function stdRealtimeChatChatMessageComposeTrait(params: StdRealtimeChatPa
     ref: `${ALIAS}.traits.ChatMessageCompose`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -89,11 +192,11 @@ export function stdRealtimeChatChatMessageViewTrait(params: StdRealtimeChatParam
     ref: `${ALIAS}.traits.ChatMessageView`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -493,8 +596,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'ChatMessage',
                     {
                       'emit': {
-                        'success': 'ChatMessageLoaded',
                         'failure': 'ChatMessageLoadFailed',
+                        'success': 'ChatMessageLoaded',
                       },
                     },
                   ],
@@ -502,22 +605,22 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'type': 'stack',
+                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
-                          'content': 'Loading…',
-                          'variant': 'caption',
                           'type': 'typography',
                           'color': 'muted',
+                          'content': 'Loading…',
+                          'variant': 'caption',
                         },
                       ],
-                      'align': 'center',
-                      'className': 'py-12',
                       'gap': 'md',
                       'direction': 'vertical',
-                      'type': 'stack',
+                      'align': 'center',
                     },
                   ],
                 ],
@@ -531,107 +634,107 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'href': '/channels',
+                          'label': 'Channels',
+                          'icon': 'hash',
+                        },
+                        {
+                          'href': '/online',
+                          'icon': 'layout-list',
+                          'label': 'Online',
+                        },
+                      ],
+                      'type': 'dashboard-layout',
+                      'appName': 'Realtime Chat',
                       'children': [
                         {
                           'direction': 'vertical',
                           'type': 'stack',
+                          'gap': 'lg',
+                          'className': 'max-w-5xl mx-auto w-full',
                           'children': [
                             {
-                              'direction': 'horizontal',
                               'align': 'center',
-                              'gap': 'md',
-                              'justify': 'between',
                               'children': [
                                 {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'message-circle',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Chat',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'gap': 'sm',
                                   'type': 'stack',
                                   'direction': 'horizontal',
+                                  'align': 'center',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'name': 'message-circle',
+                                      'type': 'icon',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'type': 'typography',
+                                      'content': 'Chat',
+                                    },
+                                  ],
                                 },
                                 {
                                   'children': [
                                     {
+                                      'label': 'Compose',
                                       'action': 'COMPOSE',
                                       'variant': 'primary',
-                                      'label': 'Compose',
                                       'icon': 'edit',
                                       'type': 'button',
                                     },
                                   ],
                                   'gap': 'sm',
-                                  'direction': 'horizontal',
                                   'type': 'stack',
+                                  'direction': 'horizontal',
                                 },
                               ],
                               'type': 'stack',
+                              'gap': 'md',
+                              'direction': 'horizontal',
+                              'justify': 'between',
                             },
                             {
                               'type': 'divider',
                             },
                             {
-                              'type': 'data-list',
+                              'variant': 'message',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'label': 'View',
+                                  'variant': 'ghost',
+                                },
+                              ],
+                              'entity': '@payload.data',
                               'fields': [
                                 {
-                                  'variant': 'h4',
                                   'name': 'sender',
+                                  'variant': 'h4',
                                 },
                                 {
                                   'name': 'content',
                                   'variant': 'body',
                                 },
                                 {
-                                  'name': 'timestamp',
                                   'variant': 'caption',
+                                  'name': 'timestamp',
                                   'format': 'date',
                                 },
                               ],
-                              'entity': '@payload.data',
-                              'gap': 'sm',
-                              'itemActions': [
-                                {
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                  'label': 'View',
-                                },
-                              ],
-                              'variant': 'message',
                               'senderField': 'sender',
+                              'gap': 'sm',
+                              'type': 'data-list',
                             },
                           ],
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'gap': 'lg',
                         },
                       ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Chat',
-                          'href': '/chat',
-                        },
-                        {
-                          'icon': 'hash',
-                          'label': 'Channels',
-                          'href': '/channels',
-                        },
-                        {
-                          'href': '/online',
-                          'label': 'Online',
-                          'icon': 'layout-list',
-                        },
-                      ],
-                      'appName': 'Realtime Chat',
                     },
                   ],
                 ],
@@ -645,36 +748,36 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
+                      'align': 'center',
+                      'type': 'stack',
                       'direction': 'vertical',
+                      'gap': 'md',
                       'className': 'py-12',
                       'children': [
                         {
-                          'type': 'icon',
                           'name': 'alert-triangle',
+                          'type': 'icon',
                           'color': 'destructive',
                         },
                         {
-                          'variant': 'h3',
                           'content': 'Failed to load chatmessage',
                           'type': 'typography',
+                          'variant': 'h3',
                         },
                         {
-                          'variant': 'body',
                           'type': 'typography',
+                          'variant': 'body',
                           'color': 'muted',
                           'content': '@payload.error',
                         },
                         {
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'action': 'INIT',
                           'type': 'button',
+                          'variant': 'primary',
+                          'action': 'INIT',
                           'label': 'Retry',
+                          'icon': 'rotate-ccw',
                         },
                       ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
                     },
                   ],
                 ],
@@ -846,8 +949,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'ChatMessage',
                     {
                       'emit': {
-                        'failure': 'ChatMessageLoadFailed',
                         'success': 'ChatMessageLoaded',
+                        'failure': 'ChatMessageLoadFailed',
                       },
                     },
                   ],
@@ -862,42 +965,42 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'direction': 'vertical',
+                      'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'edit',
+                              'type': 'icon',
                             },
                             {
                               'content': 'New ChatMessage',
-                              'type': 'typography',
                               'variant': 'h3',
+                              'type': 'typography',
                             },
                           ],
                           'gap': 'sm',
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'type': 'form-section',
                           'cancelEvent': 'CLOSE',
+                          'submitEvent': 'SEND',
+                          'mode': 'create',
                           'fields': [
                             'sender',
                             'content',
                             'channel',
                             'timestamp',
                           ],
-                          'submitEvent': 'SEND',
-                          'mode': 'create',
+                          'type': 'form-section',
                         },
                       ],
-                      'type': 'stack',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1131,8 +1234,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     {
                       'id': '@payload.id',
                       'emit': {
-                        'failure': 'ChatMessageLoadFailed',
                         'success': 'ChatMessageLoaded',
+                        'failure': 'ChatMessageLoadFailed',
                       },
                     },
                   ],
@@ -1140,17 +1243,15 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
-                      'type': 'stack',
                       'children': [
                         {
-                          'gap': 'sm',
                           'direction': 'horizontal',
                           'type': 'stack',
+                          'align': 'center',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
                               'type': 'typography',
@@ -1158,7 +1259,7 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                               'content': '@entity.sender',
                             },
                           ],
-                          'align': 'center',
+                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
@@ -1166,55 +1267,58 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                         {
                           'type': 'stack',
                           'direction': 'horizontal',
-                          'gap': 'md',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Sender',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'content': '@entity.sender',
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.sender',
                             },
                           ],
+                          'gap': 'md',
                         },
                         {
-                          'direction': 'horizontal',
+                          'gap': 'md',
                           'type': 'stack',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Content',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
                               'content': '@entity.content',
                             },
                           ],
-                          'gap': 'md',
+                          'direction': 'horizontal',
                         },
                         {
                           'direction': 'horizontal',
+                          'type': 'stack',
+                          'gap': 'md',
                           'children': [
                             {
+                              'content': 'Channel',
                               'variant': 'caption',
                               'type': 'typography',
-                              'content': 'Channel',
                             },
                             {
-                              'content': '@entity.channel',
                               'type': 'typography',
+                              'content': '@entity.channel',
                               'variant': 'body',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'md',
                         },
                         {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
                               'variant': 'caption',
@@ -1222,33 +1326,32 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                               'type': 'typography',
                             },
                             {
-                              'content': '@entity.timestamp',
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.timestamp',
                             },
                           ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'direction': 'horizontal',
-                          'justify': 'end',
                           'children': [
                             {
-                              'type': 'button',
+                              'variant': 'ghost',
                               'label': 'Close',
                               'action': 'CLOSE',
-                              'variant': 'ghost',
+                              'type': 'button',
                             },
                           ],
-                          'gap': 'sm',
+                          'justify': 'end',
                           'type': 'stack',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                         },
                       ],
+                      'gap': 'md',
+                      'type': 'stack',
                       'direction': 'vertical',
                     },
                   ],
@@ -1591,8 +1694,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'Channel',
                     {
                       'emit': {
-                        'failure': 'ChannelLoadFailed',
                         'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
                       },
                     },
                   ],
@@ -1600,22 +1703,22 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
                       'align': 'center',
-                      'className': 'py-12',
                       'children': [
                         {
                           'type': 'spinner',
                         },
                         {
+                          'content': 'Loading…',
                           'color': 'muted',
                           'type': 'typography',
                           'variant': 'caption',
-                          'content': 'Loading…',
                         },
                       ],
+                      'gap': 'md',
+                      'type': 'stack',
+                      'className': 'py-12',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -1629,112 +1732,13 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'children': [
-                        {
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'hash',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'Channels',
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'children': [
-                                    {
-                                      'icon': 'plus',
-                                      'type': 'button',
-                                      'label': 'Create Channel',
-                                      'variant': 'primary',
-                                      'action': 'CREATE',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                              ],
-                              'justify': 'between',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'variant': 'card',
-                              'gap': 'sm',
-                              'type': 'data-list',
-                              'fields': [
-                                {
-                                  'icon': 'hash',
-                                  'name': 'name',
-                                  'variant': 'h3',
-                                },
-                                {
-                                  'variant': 'badge',
-                                  'label': 'Members',
-                                  'name': 'memberCount',
-                                  'format': 'number',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'name': 'description',
-                                },
-                                {
-                                  'label': 'Private',
-                                  'format': 'boolean',
-                                  'variant': 'body',
-                                  'name': 'isPrivate',
-                                },
-                              ],
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'variant': 'danger',
-                                  'event': 'DELETE',
-                                  'label': 'Delete',
-                                },
-                              ],
-                              'entity': '@payload.data',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
                       'appName': 'Realtime Chat',
                       'type': 'dashboard-layout',
                       'navItems': [
                         {
+                          'icon': 'layout-list',
                           'href': '/chat',
                           'label': 'Chat',
-                          'icon': 'layout-list',
                         },
                         {
                           'label': 'Channels',
@@ -1742,9 +1746,108 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                           'icon': 'hash',
                         },
                         {
-                          'label': 'Online',
                           'icon': 'layout-list',
+                          'label': 'Online',
                           'href': '/online',
+                        },
+                      ],
+                      'children': [
+                        {
+                          'direction': 'vertical',
+                          'type': 'stack',
+                          'className': 'max-w-5xl mx-auto w-full',
+                          'children': [
+                            {
+                              'justify': 'between',
+                              'type': 'stack',
+                              'gap': 'md',
+                              'align': 'center',
+                              'children': [
+                                {
+                                  'direction': 'horizontal',
+                                  'align': 'center',
+                                  'type': 'stack',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'icon',
+                                      'name': 'hash',
+                                    },
+                                    {
+                                      'variant': 'h2',
+                                      'content': 'Channels',
+                                      'type': 'typography',
+                                    },
+                                  ],
+                                },
+                                {
+                                  'direction': 'horizontal',
+                                  'gap': 'sm',
+                                  'children': [
+                                    {
+                                      'type': 'button',
+                                      'action': 'CREATE',
+                                      'label': 'Create Channel',
+                                      'variant': 'primary',
+                                      'icon': 'plus',
+                                    },
+                                  ],
+                                  'type': 'stack',
+                                },
+                              ],
+                              'direction': 'horizontal',
+                            },
+                            {
+                              'type': 'divider',
+                            },
+                            {
+                              'type': 'data-list',
+                              'itemActions': [
+                                {
+                                  'event': 'VIEW',
+                                  'variant': 'ghost',
+                                  'label': 'View',
+                                },
+                                {
+                                  'variant': 'ghost',
+                                  'label': 'Edit',
+                                  'event': 'EDIT',
+                                },
+                                {
+                                  'label': 'Delete',
+                                  'variant': 'danger',
+                                  'event': 'DELETE',
+                                },
+                              ],
+                              'entity': '@payload.data',
+                              'fields': [
+                                {
+                                  'icon': 'hash',
+                                  'variant': 'h3',
+                                  'name': 'name',
+                                },
+                                {
+                                  'variant': 'badge',
+                                  'format': 'number',
+                                  'name': 'memberCount',
+                                  'label': 'Members',
+                                },
+                                {
+                                  'variant': 'body',
+                                  'name': 'description',
+                                },
+                                {
+                                  'label': 'Private',
+                                  'variant': 'body',
+                                  'name': 'isPrivate',
+                                  'format': 'boolean',
+                                },
+                              ],
+                              'variant': 'card',
+                              'gap': 'sm',
+                            },
+                          ],
+                          'gap': 'lg',
                         },
                       ],
                     },
@@ -1760,36 +1863,36 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'className': 'py-12',
                       'align': 'center',
+                      'className': 'py-12',
                       'direction': 'vertical',
-                      'gap': 'md',
                       'type': 'stack',
                       'children': [
                         {
-                          'type': 'icon',
                           'name': 'alert-triangle',
                           'color': 'destructive',
+                          'type': 'icon',
                         },
                         {
+                          'content': 'Failed to load channel',
                           'type': 'typography',
                           'variant': 'h3',
-                          'content': 'Failed to load channel',
                         },
                         {
-                          'color': 'muted',
-                          'variant': 'body',
                           'content': '@payload.error',
                           'type': 'typography',
+                          'color': 'muted',
+                          'variant': 'body',
                         },
                         {
-                          'icon': 'rotate-ccw',
-                          'action': 'INIT',
                           'variant': 'primary',
+                          'action': 'INIT',
                           'type': 'button',
                           'label': 'Retry',
+                          'icon': 'rotate-ccw',
                         },
                       ],
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -1981,8 +2084,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'Channel',
                     {
                       'emit': {
-                        'success': 'ChannelLoaded',
                         'failure': 'ChannelLoadFailed',
+                        'success': 'ChannelLoaded',
                       },
                     },
                   ],
@@ -1990,42 +2093,42 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'modal',
                     {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
                       'children': [
                         {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
                           'children': [
                             {
                               'name': 'plus-circle',
                               'type': 'icon',
                             },
                             {
-                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Create Channel',
+                              'variant': 'h3',
                             },
                           ],
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
-                          'submitEvent': 'SAVE',
+                          'cancelEvent': 'CLOSE',
+                          'type': 'form-section',
                           'fields': [
                             'name',
                             'description',
                             'memberCount',
                             'isPrivate',
                           ],
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
                           'mode': 'create',
+                          'submitEvent': 'SAVE',
                         },
                       ],
+                      'type': 'stack',
+                      'gap': 'md',
+                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -2293,22 +2396,23 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'fetch',
                     'Channel',
                     {
+                      'id': '@payload.id',
                       'emit': {
                         'success': 'ChannelLoaded',
                         'failure': 'ChannelLoadFailed',
                       },
-                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
-                      'gap': 'md',
+                      'type': 'stack',
                       'direction': 'vertical',
                       'children': [
                         {
                           'type': 'stack',
+                          'gap': 'sm',
                           'direction': 'horizontal',
                           'children': [
                             {
@@ -2316,31 +2420,30 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                               'name': 'edit',
                             },
                             {
+                              'variant': 'h3',
                               'type': 'typography',
                               'content': 'Edit Channel',
-                              'variant': 'h3',
                             },
                           ],
-                          'gap': 'sm',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'type': 'form-section',
+                          'submitEvent': 'SAVE',
+                          'mode': 'edit',
                           'cancelEvent': 'CLOSE',
+                          'entity': '@payload.row',
                           'fields': [
                             'name',
                             'description',
                             'memberCount',
                             'isPrivate',
                           ],
-                          'submitEvent': 'SAVE',
-                          'mode': 'edit',
-                          'entity': '@payload.row',
                         },
                       ],
-                      'type': 'stack',
+                      'gap': 'md',
                     },
                   ],
                 ],
@@ -2568,26 +2671,28 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'fetch',
                     'Channel',
                     {
-                      'id': '@payload.id',
                       'emit': {
-                        'failure': 'ChannelLoadFailed',
                         'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
                       },
+                      'id': '@payload.id',
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
                       'type': 'stack',
                       'gap': 'md',
                       'children': [
                         {
-                          'align': 'center',
+                          'direction': 'horizontal',
+                          'gap': 'sm',
                           'children': [
                             {
-                              'type': 'icon',
                               'name': 'eye',
+                              'type': 'icon',
                             },
                             {
                               'variant': 'h3',
@@ -2595,36 +2700,35 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                               'type': 'typography',
                             },
                           ],
-                          'gap': 'sm',
                           'type': 'stack',
-                          'direction': 'horizontal',
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'gap': 'md',
+                          'direction': 'horizontal',
+                          'type': 'stack',
                           'children': [
                             {
-                              'content': 'Name',
-                              'type': 'typography',
                               'variant': 'caption',
+                              'type': 'typography',
+                              'content': 'Name',
                             },
                             {
-                              'content': '@entity.name',
-                              'type': 'typography',
                               'variant': 'body',
+                              'type': 'typography',
+                              'content': '@entity.name',
                             },
                           ],
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
                         },
                         {
                           'children': [
                             {
+                              'variant': 'caption',
                               'content': 'Description',
                               'type': 'typography',
-                              'variant': 'caption',
                             },
                             {
                               'content': '@entity.description',
@@ -2637,65 +2741,64 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                           'direction': 'horizontal',
                         },
                         {
+                          'type': 'stack',
                           'direction': 'horizontal',
+                          'gap': 'md',
                           'children': [
                             {
-                              'content': 'Member Count',
                               'type': 'typography',
                               'variant': 'caption',
+                              'content': 'Member Count',
                             },
                             {
-                              'variant': 'body',
                               'content': '@entity.memberCount',
+                              'variant': 'body',
                               'type': 'typography',
                             },
                           ],
-                          'type': 'stack',
-                          'gap': 'md',
                         },
                         {
-                          'direction': 'horizontal',
+                          'gap': 'md',
+                          'type': 'stack',
                           'children': [
                             {
-                              'variant': 'caption',
                               'content': 'Is Private',
                               'type': 'typography',
+                              'variant': 'caption',
                             },
                             {
                               'variant': 'body',
-                              'content': '@entity.isPrivate',
                               'type': 'typography',
+                              'content': '@entity.isPrivate',
                             },
                           ],
-                          'gap': 'md',
-                          'type': 'stack',
+                          'direction': 'horizontal',
                         },
                         {
                           'type': 'divider',
                         },
                         {
+                          'justify': 'end',
+                          'children': [
+                            {
+                              'label': 'Edit',
+                              'action': 'EDIT',
+                              'icon': 'edit',
+                              'variant': 'primary',
+                              'type': 'button',
+                            },
+                            {
+                              'variant': 'ghost',
+                              'action': 'CLOSE',
+                              'label': 'Close',
+                              'type': 'button',
+                            },
+                          ],
                           'direction': 'horizontal',
                           'gap': 'sm',
                           'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'action': 'EDIT',
-                              'label': 'Edit',
-                              'variant': 'primary',
-                              'icon': 'edit',
-                            },
-                            {
-                              'action': 'CLOSE',
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'label': 'Close',
-                            },
-                          ],
-                          'justify': 'end',
                         },
                       ],
-                      'direction': 'vertical',
                     },
                   ],
                 ],
@@ -2938,68 +3041,68 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'fetch',
                     'Channel',
                     {
-                      'emit': {
-                        'failure': 'ChannelLoadFailed',
-                        'success': 'ChannelLoaded',
-                      },
                       'id': '@payload.id',
+                      'emit': {
+                        'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
+                      },
                     },
                   ],
                   [
                     'render-ui',
                     'modal',
                     {
+                      'direction': 'vertical',
+                      'type': 'stack',
+                      'gap': 'md',
                       'children': [
                         {
-                          'align': 'center',
                           'children': [
                             {
                               'type': 'icon',
                               'name': 'alert-triangle',
                             },
                             {
+                              'type': 'typography',
                               'content': 'Delete Channel',
                               'variant': 'h3',
-                              'type': 'typography',
                             },
                           ],
                           'direction': 'horizontal',
                           'type': 'stack',
                           'gap': 'sm',
+                          'align': 'center',
                         },
                         {
                           'type': 'divider',
                         },
                         {
                           'variant': 'error',
-                          'message': 'This action cannot be undone.',
                           'type': 'alert',
+                          'message': 'This action cannot be undone.',
                         },
                         {
+                          'type': 'stack',
+                          'gap': 'sm',
+                          'direction': 'horizontal',
+                          'justify': 'end',
                           'children': [
                             {
+                              'action': 'CANCEL',
+                              'label': 'Cancel',
                               'type': 'button',
                               'variant': 'ghost',
-                              'label': 'Cancel',
-                              'action': 'CANCEL',
                             },
                             {
                               'type': 'button',
-                              'action': 'CONFIRM_DELETE',
-                              'icon': 'check',
-                              'variant': 'danger',
                               'label': 'Delete',
+                              'icon': 'check',
+                              'action': 'CONFIRM_DELETE',
+                              'variant': 'danger',
                             },
                           ],
-                          'type': 'stack',
-                          'justify': 'end',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
                         },
                       ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
                     },
                   ],
                 ],
@@ -3038,8 +3141,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'Channel',
                     {
                       'emit': {
-                        'failure': 'ChannelLoadFailed',
                         'success': 'ChannelLoaded',
+                        'failure': 'ChannelLoadFailed',
                       },
                     },
                   ],
@@ -3286,8 +3389,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'OnlineUser',
                     {
                       'emit': {
-                        'success': 'OnlineUserLoaded',
                         'failure': 'OnlineUserLoadFailed',
+                        'success': 'OnlineUserLoaded',
                       },
                     },
                   ],
@@ -3295,33 +3398,16 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'appName': 'Realtime Chat',
-                      'navItems': [
-                        {
-                          'icon': 'layout-list',
-                          'href': '/chat',
-                          'label': 'Chat',
-                        },
-                        {
-                          'href': '/channels',
-                          'icon': 'hash',
-                          'label': 'Channels',
-                        },
-                        {
-                          'label': 'Online',
-                          'href': '/online',
-                          'icon': 'layout-list',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
                       'children': [
                         {
+                          'type': 'scaled-diagram',
                           'children': [
                             {
+                              'type': 'stack',
+                              'direction': 'vertical',
                               'gap': 'lg',
                               'children': [
                                 {
-                                  'type': 'breadcrumb',
                                   'items': [
                                     {
                                       'label': 'Home',
@@ -3331,110 +3417,111 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'label': 'Online Users',
                                     },
                                   ],
+                                  'type': 'breadcrumb',
                                 },
                                 {
-                                  'gap': 'md',
+                                  'type': 'stack',
                                   'direction': 'horizontal',
-                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'gap': 'md',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'users',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'type': 'typography',
                                           'content': 'Online Users',
+                                          'type': 'typography',
                                           'variant': 'h2',
                                         },
                                       ],
+                                      'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'action': 'REFRESH',
-                                      'label': 'Refresh',
                                       'type': 'button',
+                                      'label': 'Refresh',
                                       'variant': 'secondary',
+                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
                                               'type': 'stack',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'variant': 'caption',
                                                   'content': 'Username',
+                                                  'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.username',
-                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'children': [
                                                 {
+                                                  'content': 'Status',
                                                   'type': 'typography',
                                                   'variant': 'caption',
-                                                  'content': 'Status',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.status',
-                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'type': 'stack',
+                                              'gap': 'sm',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
                                               'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'content': 'LastActive',
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
-                                                  'content': '@entity.lastActive',
                                                   'variant': 'h3',
+                                                  'content': '@entity.lastActive',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
@@ -3442,6 +3529,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                           'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
@@ -3449,52 +3538,50 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                                 {
-                                                  'content': '@entity.avatar',
                                                   'variant': 'h3',
+                                                  'content': '@entity.avatar',
                                                   'type': 'typography',
                                                 },
                                               ],
                                               'direction': 'vertical',
-                                              'type': 'stack',
-                                              'gap': 'sm',
                                             },
                                           ],
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                       'cols': 3,
                                     },
                                   ],
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
+                                  'gap': 'md',
                                   'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
+                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Chart View',
-                                          'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                   ],
-                                  'gap': 'md',
-                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
@@ -3526,20 +3613,32 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
                                       'label': 'Current',
                                       'color': 'primary',
                                     },
                                     {
-                                      'color': 'muted',
                                       'label': 'Previous',
+                                      'color': 'muted',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
+                                  'edges': [
+                                    {
+                                      'target': 'b',
+                                      'source': 'a',
+                                    },
+                                    {
+                                      'target': 'c',
+                                      'source': 'b',
+                                    },
+                                  ],
                                   'type': 'graph-view',
+                                  'height': 200,
+                                  'width': 400,
                                   'nodes': [
                                     {
                                       'id': 'a',
@@ -3550,29 +3649,33 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'label': 'Process',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
-                                  'edges': [
-                                    {
-                                      'target': 'b',
-                                      'source': 'a',
-                                    },
-                                    {
-                                      'source': 'b',
-                                      'target': 'c',
-                                    },
-                                  ],
-                                  'width': 400,
                                 },
                               ],
-                              'type': 'stack',
-                              'direction': 'vertical',
                             },
                           ],
-                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                      'type': 'dashboard-layout',
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'icon': 'layout-list',
+                          'href': '/chat',
+                        },
+                        {
+                          'label': 'Channels',
+                          'icon': 'hash',
+                          'href': '/channels',
+                        },
+                        {
+                          'label': 'Online',
+                          'href': '/online',
+                          'icon': 'layout-list',
                         },
                       ],
                     },
@@ -3598,32 +3701,11 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'render-ui',
                     'main',
                     {
-                      'navItems': [
-                        {
-                          'label': 'Chat',
-                          'href': '/chat',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/channels',
-                          'icon': 'hash',
-                          'label': 'Channels',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Online',
-                          'href': '/online',
-                        },
-                      ],
-                      'appName': 'Realtime Chat',
                       'children': [
                         {
-                          'type': 'scaled-diagram',
                           'children': [
                             {
-                              'type': 'stack',
                               'direction': 'vertical',
-                              'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -3638,35 +3720,35 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'justify': 'between',
                                   'children': [
                                     {
-                                      'type': 'stack',
                                       'children': [
                                         {
                                           'type': 'icon',
                                           'name': 'users',
                                         },
                                         {
-                                          'variant': 'h2',
                                           'type': 'typography',
                                           'content': 'Online Users',
+                                          'variant': 'h2',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                       'gap': 'md',
+                                      'direction': 'horizontal',
+                                      'type': 'stack',
                                     },
                                     {
-                                      'icon': 'refresh-cw',
-                                      'variant': 'secondary',
                                       'label': 'Refresh',
                                       'action': 'REFRESH',
                                       'type': 'button',
+                                      'variant': 'secondary',
+                                      'icon': 'refresh-cw',
                                     },
                                   ],
-                                  'type': 'stack',
+                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'gap': 'md',
+                                  'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
@@ -3676,61 +3758,60 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
-                                      'cols': 3,
                                       'children': [
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'Username',
-                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'content': '@entity.username',
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                 },
                                               ],
-                                              'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'content': 'Status',
                                                   'type': 'typography',
+                                                  'content': 'Status',
+                                                  'variant': 'caption',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'content': '@entity.status',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
-                                              'gap': 'sm',
                                               'type': 'stack',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
                                           'children': [
                                             {
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'content': 'LastActive',
+                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                 },
                                                 {
@@ -3739,7 +3820,6 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                             },
                                           ],
@@ -3750,8 +3830,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'type': 'stack',
                                               'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
                                                   'type': 'typography',
@@ -3768,6 +3848,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                           ],
                                         },
                                       ],
+                                      'type': 'simple-grid',
+                                      'cols': 3,
                                     },
                                   ],
                                 },
@@ -3775,16 +3857,18 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   'type': 'divider',
                                 },
                                 {
+                                  'type': 'grid',
+                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                           'type': 'typography',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
@@ -3797,16 +3881,14 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       ],
                                     },
                                   ],
-                                  'gap': 'md',
                                   'cols': 2,
-                                  'type': 'grid',
                                 },
                                 {
                                   'type': 'line-chart',
                                   'data': [
                                     {
-                                      'date': 'Jan',
                                       'value': 12,
+                                      'date': 'Jan',
                                     },
                                     {
                                       'date': 'Feb',
@@ -3821,20 +3903,20 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'value': 25,
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
-                                      'date': 'Jun',
                                       'value': 30,
+                                      'date': 'Jun',
                                     },
                                   ],
                                 },
                                 {
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
                                       'label': 'Previous',
@@ -3844,7 +3926,7 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   'type': 'chart-legend',
                                 },
                                 {
-                                  'height': 200,
+                                  'width': 400,
                                   'nodes': [
                                     {
                                       'label': 'Start',
@@ -3859,22 +3941,43 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'id': 'c',
                                     },
                                   ],
-                                  'width': 400,
                                   'edges': [
                                     {
-                                      'source': 'a',
                                       'target': 'b',
+                                      'source': 'a',
                                     },
                                     {
                                       'source': 'b',
                                       'target': 'c',
                                     },
                                   ],
+                                  'height': 200,
                                   'type': 'graph-view',
                                 },
                               ],
+                              'type': 'stack',
+                              'gap': 'lg',
                             },
                           ],
+                          'type': 'scaled-diagram',
+                        },
+                      ],
+                      'appName': 'Realtime Chat',
+                      'navItems': [
+                        {
+                          'href': '/chat',
+                          'icon': 'layout-list',
+                          'label': 'Chat',
+                        },
+                        {
+                          'icon': 'hash',
+                          'label': 'Channels',
+                          'href': '/channels',
+                        },
+                        {
+                          'icon': 'layout-list',
+                          'label': 'Online',
+                          'href': '/online',
                         },
                       ],
                       'type': 'dashboard-layout',
@@ -3892,8 +3995,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'OnlineUser',
                     {
                       'emit': {
-                        'failure': 'OnlineUserLoadFailed',
                         'success': 'OnlineUserLoaded',
+                        'failure': 'OnlineUserLoadFailed',
                       },
                     },
                   ],
@@ -3902,12 +4005,30 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'main',
                     {
                       'type': 'dashboard-layout',
-                      'appName': 'Realtime Chat',
+                      'navItems': [
+                        {
+                          'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'layout-list',
+                        },
+                        {
+                          'icon': 'hash',
+                          'label': 'Channels',
+                          'href': '/channels',
+                        },
+                        {
+                          'label': 'Online',
+                          'href': '/online',
+                          'icon': 'layout-list',
+                        },
+                      ],
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
+                              'direction': 'vertical',
+                              'type': 'stack',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
@@ -3922,90 +4043,87 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
                                   'gap': 'md',
+                                  'justify': 'between',
                                   'children': [
                                     {
                                       'gap': 'md',
+                                      'direction': 'horizontal',
                                       'type': 'stack',
                                       'children': [
                                         {
-                                          'name': 'users',
                                           'type': 'icon',
+                                          'name': 'users',
                                         },
                                         {
-                                          'type': 'typography',
                                           'variant': 'h2',
+                                          'type': 'typography',
                                           'content': 'Online Users',
                                         },
                                       ],
-                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'label': 'Refresh',
                                       'type': 'button',
                                       'action': 'REFRESH',
-                                      'variant': 'secondary',
+                                      'label': 'Refresh',
                                       'icon': 'refresh-cw',
+                                      'variant': 'secondary',
                                     },
                                   ],
-                                  'justify': 'between',
+                                  'direction': 'horizontal',
                                   'type': 'stack',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
-                                  'padding': 'md',
                                   'children': [
                                     {
-                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                               'children': [
                                                 {
                                                   'type': 'typography',
-                                                  'content': 'Username',
                                                   'variant': 'caption',
+                                                  'content': 'Username',
                                                 },
                                                 {
                                                   'variant': 'h3',
-                                                  'content': '@entity.username',
                                                   'type': 'typography',
+                                                  'content': '@entity.username',
                                                 },
                                               ],
                                               'type': 'stack',
+                                              'direction': 'vertical',
                                             },
                                           ],
                                           'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'gap': 'sm',
+                                              'type': 'stack',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
                                                   'variant': 'caption',
-                                                  'content': 'Status',
                                                   'type': 'typography',
+                                                  'content': 'Status',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.status',
-                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'children': [
@@ -4015,14 +4133,14 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                               'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'content': 'LastActive',
                                                   'type': 'typography',
                                                   'variant': 'caption',
+                                                  'content': 'LastActive',
                                                 },
                                                 {
-                                                  'content': '@entity.lastActive',
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
+                                                  'content': '@entity.lastActive',
                                                 },
                                               ],
                                             },
@@ -4030,43 +4148,45 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                           'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
                                               'children': [
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'caption',
                                                   'content': 'Avatar',
-                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                   'content': '@entity.avatar',
                                                 },
                                               ],
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
-                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
+                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'padding': 'md',
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'grid',
                                   'children': [
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                           'content': 'Chart View',
                                         },
                                       ],
@@ -4076,12 +4196,13 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'children': [
                                         {
                                           'content': 'Graph View',
-                                          'variant': 'caption',
                                           'type': 'typography',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
+                                  'type': 'grid',
                                   'gap': 'md',
                                   'cols': 2,
                                 },
@@ -4093,20 +4214,20 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'date': 'Jan',
                                     },
                                     {
-                                      'value': 19,
                                       'date': 'Feb',
+                                      'value': 19,
                                     },
                                     {
-                                      'date': 'Mar',
                                       'value': 15,
+                                      'date': 'Mar',
                                     },
                                     {
                                       'value': 25,
                                       'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'value': 30,
@@ -4115,72 +4236,54 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'type': 'chart-legend',
                                   'items': [
                                     {
-                                      'color': 'primary',
                                       'label': 'Current',
+                                      'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
+                                  'type': 'chart-legend',
                                 },
                                 {
-                                  'type': 'graph-view',
                                   'width': 400,
-                                  'nodes': [
-                                    {
-                                      'id': 'a',
-                                      'label': 'Start',
-                                    },
-                                    {
-                                      'id': 'b',
-                                      'label': 'Process',
-                                    },
-                                    {
-                                      'id': 'c',
-                                      'label': 'End',
-                                    },
-                                  ],
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'source': 'a',
                                       'target': 'b',
                                     },
                                     {
-                                      'target': 'c',
                                       'source': 'b',
+                                      'target': 'c',
                                     },
                                   ],
+                                  'height': 200,
+                                  'nodes': [
+                                    {
+                                      'id': 'a',
+                                      'label': 'Start',
+                                    },
+                                    {
+                                      'label': 'Process',
+                                      'id': 'b',
+                                    },
+                                    {
+                                      'id': 'c',
+                                      'label': 'End',
+                                    },
+                                  ],
+                                  'type': 'graph-view',
                                 },
                               ],
                               'gap': 'lg',
-                              'direction': 'vertical',
-                              'type': 'stack',
                             },
                           ],
                         },
                       ],
-                      'navItems': [
-                        {
-                          'href': '/chat',
-                          'icon': 'layout-list',
-                          'label': 'Chat',
-                        },
-                        {
-                          'href': '/channels',
-                          'label': 'Channels',
-                          'icon': 'hash',
-                        },
-                        {
-                          'label': 'Online',
-                          'href': '/online',
-                          'icon': 'layout-list',
-                        },
-                      ],
+                      'appName': 'Realtime Chat',
                     },
                   ],
                 ],
@@ -4195,8 +4298,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'OnlineUser',
                     {
                       'emit': {
-                        'failure': 'OnlineUserLoadFailed',
                         'success': 'OnlineUserLoaded',
+                        'failure': 'OnlineUserLoadFailed',
                       },
                     },
                   ],
@@ -4206,38 +4309,35 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     {
                       'navItems': [
                         {
-                          'icon': 'layout-list',
                           'label': 'Chat',
                           'href': '/chat',
+                          'icon': 'layout-list',
                         },
                         {
-                          'icon': 'hash',
                           'label': 'Channels',
                           'href': '/channels',
+                          'icon': 'hash',
                         },
                         {
-                          'icon': 'layout-list',
-                          'label': 'Online',
                           'href': '/online',
+                          'label': 'Online',
+                          'icon': 'layout-list',
                         },
                       ],
                       'type': 'dashboard-layout',
-                      'appName': 'Realtime Chat',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'direction': 'vertical',
                               'type': 'stack',
-                              'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Online Users',
@@ -4245,60 +4345,59 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
+                                  'type': 'stack',
                                   'direction': 'horizontal',
+                                  'justify': 'between',
+                                  'gap': 'md',
                                   'children': [
                                     {
-                                      'direction': 'horizontal',
                                       'gap': 'md',
+                                      'type': 'stack',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'users',
+                                          'type': 'icon',
                                         },
                                         {
-                                          'content': 'Online Users',
                                           'type': 'typography',
+                                          'content': 'Online Users',
                                           'variant': 'h2',
                                         },
                                       ],
-                                      'type': 'stack',
+                                      'direction': 'horizontal',
                                     },
                                     {
-                                      'type': 'button',
-                                      'action': 'REFRESH',
                                       'icon': 'refresh-cw',
-                                      'variant': 'secondary',
+                                      'action': 'REFRESH',
                                       'label': 'Refresh',
+                                      'type': 'button',
+                                      'variant': 'secondary',
                                     },
                                   ],
-                                  'justify': 'between',
-                                  'type': 'stack',
-                                  'gap': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'type': 'box',
                                   'padding': 'md',
                                   'children': [
                                     {
+                                      'type': 'simple-grid',
                                       'cols': 3,
                                       'children': [
                                         {
-                                          'type': 'card',
                                           'children': [
                                             {
                                               'children': [
                                                 {
                                                   'content': 'Username',
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'variant': 'h3',
                                                   'content': '@entity.username',
                                                   'type': 'typography',
+                                                  'variant': 'h3',
                                                 },
                                               ],
                                               'gap': 'sm',
@@ -4306,39 +4405,38 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                               'direction': 'vertical',
                                             },
                                           ],
+                                          'type': 'card',
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
-                                              'type': 'stack',
-                                              'gap': 'sm',
+                                              'direction': 'vertical',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
-                                                  'content': 'Status',
                                                   'variant': 'caption',
+                                                  'content': 'Status',
+                                                  'type': 'typography',
                                                 },
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.status',
+                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'direction': 'vertical',
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'gap': 'sm',
-                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'type': 'typography',
                                                   'variant': 'caption',
+                                                  'type': 'typography',
                                                   'content': 'LastActive',
                                                 },
                                                 {
@@ -4347,68 +4445,71 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                                   'content': '@entity.lastActive',
                                                 },
                                               ],
+                                              'gap': 'sm',
+                                              'type': 'stack',
                                               'direction': 'vertical',
                                             },
                                           ],
                                         },
                                         {
+                                          'type': 'card',
                                           'children': [
                                             {
+                                              'direction': 'vertical',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'content': 'Avatar',
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
+                                                  'content': 'Avatar',
                                                 },
                                                 {
+                                                  'type': 'typography',
                                                   'variant': 'h3',
                                                   'content': '@entity.avatar',
-                                                  'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'direction': 'vertical',
                                               'gap': 'sm',
                                             },
                                           ],
-                                          'type': 'card',
                                         },
                                       ],
-                                      'type': 'simple-grid',
                                     },
                                   ],
+                                  'type': 'box',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
                                   'gap': 'md',
+                                  'cols': 2,
+                                  'type': 'grid',
                                   'children': [
                                     {
-                                      'type': 'card',
                                       'children': [
                                         {
+                                          'content': 'Chart View',
                                           'type': 'typography',
                                           'variant': 'caption',
-                                          'content': 'Chart View',
                                         },
                                       ],
+                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
-                                          'variant': 'caption',
                                           'type': 'typography',
                                           'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
-                                  'type': 'grid',
-                                  'cols': 2,
                                 },
                                 {
+                                  'type': 'line-chart',
                                   'data': [
                                     {
                                       'value': 12,
@@ -4427,15 +4528,14 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'date': 'Apr',
                                     },
                                     {
-                                      'date': 'May',
                                       'value': 22,
+                                      'date': 'May',
                                     },
                                     {
                                       'date': 'Jun',
                                       'value': 30,
                                     },
                                   ],
-                                  'type': 'line-chart',
                                 },
                                 {
                                   'type': 'chart-legend',
@@ -4453,19 +4553,18 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                 {
                                   'nodes': [
                                     {
-                                      'label': 'Start',
                                       'id': 'a',
+                                      'label': 'Start',
                                     },
                                     {
                                       'label': 'Process',
                                       'id': 'b',
                                     },
                                     {
-                                      'label': 'End',
                                       'id': 'c',
+                                      'label': 'End',
                                     },
                                   ],
-                                  'height': 200,
                                   'edges': [
                                     {
                                       'source': 'a',
@@ -4476,14 +4575,18 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'source': 'b',
                                     },
                                   ],
-                                  'type': 'graph-view',
                                   'width': 400,
+                                  'height': 200,
+                                  'type': 'graph-view',
                                 },
                               ],
+                              'direction': 'vertical',
+                              'gap': 'lg',
                             },
                           ],
                         },
                       ],
+                      'appName': 'Realtime Chat',
                     },
                   ],
                 ],
@@ -4508,21 +4611,22 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                     'main',
                     {
                       'type': 'dashboard-layout',
+                      'appName': 'Realtime Chat',
                       'children': [
                         {
                           'type': 'scaled-diagram',
                           'children': [
                             {
-                              'gap': 'lg',
-                              'direction': 'vertical',
                               'type': 'stack',
+                              'direction': 'vertical',
+                              'gap': 'lg',
                               'children': [
                                 {
                                   'type': 'breadcrumb',
                                   'items': [
                                     {
-                                      'label': 'Home',
                                       'href': '/',
+                                      'label': 'Home',
                                     },
                                     {
                                       'label': 'Online Users',
@@ -4530,41 +4634,40 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                   ],
                                 },
                                 {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
                                   'children': [
                                     {
+                                      'type': 'stack',
+                                      'gap': 'md',
                                       'direction': 'horizontal',
                                       'children': [
                                         {
-                                          'type': 'icon',
                                           'name': 'users',
+                                          'type': 'icon',
                                         },
                                         {
                                           'type': 'typography',
-                                          'variant': 'h2',
                                           'content': 'Online Users',
+                                          'variant': 'h2',
                                         },
                                       ],
-                                      'gap': 'md',
-                                      'type': 'stack',
                                     },
                                     {
-                                      'type': 'button',
+                                      'action': 'REFRESH',
                                       'variant': 'secondary',
+                                      'type': 'button',
                                       'icon': 'refresh-cw',
                                       'label': 'Refresh',
-                                      'action': 'REFRESH',
                                     },
                                   ],
                                   'type': 'stack',
+                                  'gap': 'md',
+                                  'direction': 'horizontal',
                                   'justify': 'between',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'padding': 'md',
                                   'children': [
                                     {
                                       'cols': 3,
@@ -4573,14 +4676,13 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                           'type': 'card',
                                           'children': [
                                             {
-                                              'direction': 'vertical',
                                               'type': 'stack',
                                               'gap': 'sm',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
-                                                  'content': 'Username',
                                                   'type': 'typography',
+                                                  'content': 'Username',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'variant': 'h3',
@@ -4588,50 +4690,51 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                               ],
+                                              'direction': 'vertical',
                                             },
                                           ],
+                                        },
+                                        {
+                                          'children': [
+                                            {
+                                              'children': [
+                                                {
+                                                  'content': 'Status',
+                                                  'type': 'typography',
+                                                  'variant': 'caption',
+                                                },
+                                                {
+                                                  'content': '@entity.status',
+                                                  'variant': 'h3',
+                                                  'type': 'typography',
+                                                },
+                                              ],
+                                              'direction': 'vertical',
+                                              'type': 'stack',
+                                              'gap': 'sm',
+                                            },
+                                          ],
+                                          'type': 'card',
                                         },
                                         {
                                           'type': 'card',
                                           'children': [
                                             {
                                               'gap': 'sm',
-                                              'children': [
-                                                {
-                                                  'type': 'typography',
-                                                  'content': 'Status',
-                                                  'variant': 'caption',
-                                                },
-                                                {
-                                                  'type': 'typography',
-                                                  'variant': 'h3',
-                                                  'content': '@entity.status',
-                                                },
-                                              ],
-                                              'type': 'stack',
                                               'direction': 'vertical',
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          'type': 'card',
-                                          'children': [
-                                            {
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
                                                   'content': 'LastActive',
+                                                  'variant': 'caption',
                                                 },
                                                 {
                                                   'type': 'typography',
-                                                  'content': '@entity.lastActive',
                                                   'variant': 'h3',
+                                                  'content': '@entity.lastActive',
                                                 },
                                               ],
-                                              'type': 'stack',
-                                              'gap': 'sm',
-                                              'direction': 'vertical',
                                             },
                                           ],
                                         },
@@ -4641,10 +4744,11 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                             {
                                               'direction': 'vertical',
                                               'gap': 'sm',
+                                              'type': 'stack',
                                               'children': [
                                                 {
-                                                  'variant': 'caption',
                                                   'type': 'typography',
+                                                  'variant': 'caption',
                                                   'content': 'Avatar',
                                                 },
                                                 {
@@ -4653,7 +4757,6 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                                   'type': 'typography',
                                                 },
                                               ],
-                                              'type': 'stack',
                                             },
                                           ],
                                         },
@@ -4662,36 +4765,37 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                     },
                                   ],
                                   'type': 'box',
+                                  'padding': 'md',
                                 },
                                 {
                                   'type': 'divider',
                                 },
                                 {
-                                  'gap': 'md',
-                                  'cols': 2,
                                   'children': [
                                     {
+                                      'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'content': 'Chart View',
                                           'variant': 'caption',
+                                          'content': 'Chart View',
                                         },
                                       ],
-                                      'type': 'card',
                                     },
                                     {
                                       'type': 'card',
                                       'children': [
                                         {
                                           'type': 'typography',
-                                          'variant': 'caption',
                                           'content': 'Graph View',
+                                          'variant': 'caption',
                                         },
                                       ],
                                     },
                                   ],
                                   'type': 'grid',
+                                  'cols': 2,
+                                  'gap': 'md',
                                 },
                                 {
                                   'data': [
@@ -4700,16 +4804,16 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'value': 12,
                                     },
                                     {
-                                      'date': 'Feb',
                                       'value': 19,
+                                      'date': 'Feb',
                                     },
                                     {
-                                      'value': 15,
                                       'date': 'Mar',
+                                      'value': 15,
                                     },
                                     {
-                                      'date': 'Apr',
                                       'value': 25,
+                                      'date': 'Apr',
                                     },
                                     {
                                       'value': 22,
@@ -4729,8 +4833,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'color': 'primary',
                                     },
                                     {
-                                      'label': 'Previous',
                                       'color': 'muted',
+                                      'label': 'Previous',
                                     },
                                   ],
                                   'type': 'chart-legend',
@@ -4747,6 +4851,7 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                     },
                                   ],
                                   'height': 200,
+                                  'type': 'graph-view',
                                   'width': 400,
                                   'nodes': [
                                     {
@@ -4754,15 +4859,14 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                                       'label': 'Start',
                                     },
                                     {
-                                      'id': 'b',
                                       'label': 'Process',
+                                      'id': 'b',
                                     },
                                     {
                                       'label': 'End',
                                       'id': 'c',
                                     },
                                   ],
-                                  'type': 'graph-view',
                                 },
                               ],
                             },
@@ -4771,22 +4875,21 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                       ],
                       'navItems': [
                         {
-                          'icon': 'layout-list',
-                          'href': '/chat',
                           'label': 'Chat',
+                          'href': '/chat',
+                          'icon': 'layout-list',
                         },
                         {
+                          'label': 'Channels',
                           'href': '/channels',
                           'icon': 'hash',
-                          'label': 'Channels',
                         },
                         {
-                          'icon': 'layout-list',
                           'href': '/online',
                           'label': 'Online',
+                          'icon': 'layout-list',
                         },
                       ],
-                      'appName': 'Realtime Chat',
                     },
                   ],
                 ],

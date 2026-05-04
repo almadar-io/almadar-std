@@ -23,6 +23,59 @@ const BEHAVIOR_PATH = 'std/behaviors/std-agent-chat-thread';
 const ALIAS = 'AgentChatThread';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdAgentChatThreadEventKey = 'AgentChatThreadDeleteFailed' | 'AgentChatThreadDeleted' | 'AgentChatThreadLoadFailed' | 'AgentChatThreadLoaded' | 'AgentChatThreadSaveFailed' | 'AgentChatThreadSaved' | 'CANCEL_COMPOSE' | 'CLEAR' | 'COMPOSE' | 'INIT' | 'SEND';
+
+/**
+ * Payload shape for the `AgentChatThreadLoaded` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `AgentChatThreadLoadFailed` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentChatThreadSaved` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentChatThreadSaveFailed` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `AgentChatThreadDeleted` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `AgentChatThreadDeleteFailed` event.
+ */
+export interface StdAgentChatThreadAgentChatThreadDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-agent-chat-thread descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +91,8 @@ export interface StdAgentChatThreadParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdAgentChatThreadEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +112,11 @@ export function stdAgentChatThreadTrait(params: StdAgentChatThreadParams): Trait
     ref: `${ALIAS}.traits.AgentChatThreadThread`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

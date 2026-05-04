@@ -23,6 +23,102 @@ const BEHAVIOR_PATH = 'std/behaviors/std-rpg-game';
 const ALIAS = 'RpgGame';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdRpgGameEventKey = 'BattleStateLoadFailed' | 'BattleStateLoaded' | 'CLOSE' | 'END_TURN' | 'GAME_OVER' | 'INIT' | 'LOOT_DROPPED' | 'MissionUpdateFailed' | 'MissionUpdated' | 'NAVIGATE' | 'PAUSE' | 'RESTART' | 'RESUME' | 'RpgItemDeleteFailed' | 'RpgItemDeleted' | 'RpgItemSaveFailed' | 'RpgItemSaved' | 'RpgItemUpdateFailed' | 'RpgItemUpdated' | 'START';
+
+/**
+ * Closed set of event keys this trait listens for —
+ * derived from the .orb's `listens[]` block.
+ */
+export type StdRpgGameListenKey = 'ENCOUNTER_STARTED';
+
+/**
+ * Payload shape for the `LOOT_DROPPED` event.
+ */
+export interface StdRpgGameLootDroppedPayload {
+  itemId?: string;
+}
+
+/**
+ * Payload shape for the `BattleStateLoaded` event.
+ */
+export interface StdRpgGameBattleStateLoadedPayload {
+  data?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Payload shape for the `BattleStateLoadFailed` event.
+ */
+export interface StdRpgGameBattleStateLoadFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemSaved` event.
+ */
+export interface StdRpgGameRpgItemSavedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemSaveFailed` event.
+ */
+export interface StdRpgGameRpgItemSaveFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemUpdated` event.
+ */
+export interface StdRpgGameRpgItemUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemUpdateFailed` event.
+ */
+export interface StdRpgGameRpgItemUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemDeleted` event.
+ */
+export interface StdRpgGameRpgItemDeletedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `RpgItemDeleteFailed` event.
+ */
+export interface StdRpgGameRpgItemDeleteFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
+ * Payload shape for the `MissionUpdated` event.
+ */
+export interface StdRpgGameMissionUpdatedPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MissionUpdateFailed` event.
+ */
+export interface StdRpgGameMissionUpdateFailedPayload {
+  error?: string;
+  code?: string;
+}
+
+/**
  * Params for the std-rpg-game descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +134,8 @@ export interface StdRpgGameParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdRpgGameEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +155,11 @@ export function stdRpgGameBattleStateBattleFlowTrait(params: StdRpgGameParams): 
     ref: `${ALIAS}.traits.BattleStateBattleFlow`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
@@ -74,11 +170,11 @@ export function stdRpgGameBattleStateCombatLogTrait(params: StdRpgGameParams): T
     ref: `${ALIAS}.traits.BattleStateCombatLog`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 

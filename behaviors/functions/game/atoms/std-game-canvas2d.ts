@@ -23,6 +23,32 @@ const BEHAVIOR_PATH = 'std/behaviors/std-game-canvas2d';
 const ALIAS = 'GameCanvas2d';
 
 /**
+ * Closed set of event keys this trait recognises —
+ * derived from the .orb's `stateMachine.events[]` block
+ * (transition triggers + emit names). Use as the key type
+ * when passing an `events:` rename map at the call site.
+ */
+export type StdGameCanvas2dEventKey = 'GameCanvas2dLoadFailed' | 'GameCanvas2dLoaded' | 'INIT' | 'START' | 'STOP' | 'TICK';
+
+/**
+ * Payload shape for the `GameCanvas2dLoaded` event.
+ */
+export interface StdGameCanvas2dGameCanvas2dLoadedPayload {
+  id?: string;
+  name?: string;
+  description?: string;
+  status?: string;
+  createdAt?: string;
+}
+
+/**
+ * Payload shape for the `GameCanvas2dLoadFailed` event.
+ */
+export interface StdGameCanvas2dGameCanvas2dLoadFailedPayload {
+  message?: string;
+}
+
+/**
  * Params for the std-game-canvas2d descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -38,8 +64,8 @@ export interface StdGameCanvas2dParams {
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
+  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
+  events?: Partial<Record<StdGameCanvas2dEventKey, string>>;
   /** Per-event effect replacement (keys are POST-rename event names). */
   effects?: Record<string, unknown[]>;
   /** Replace the imported trait's `listens` array entirely. */
@@ -59,11 +85,11 @@ export function stdGameCanvas2dTrait(params: StdGameCanvas2dParams): TraitRefere
     ref: `${ALIAS}.traits.GameCanvas2dGameCanvas2d`,
     linkedEntity: params.entityName,
     ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
     ...(params.effects !== undefined ? { effects: params.effects as Record<string, never> } : {}),
     ...(params.listens !== undefined ? { listens: params.listens as never } : {}),
     ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
   });
 }
 
