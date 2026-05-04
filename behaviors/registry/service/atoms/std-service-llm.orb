@@ -305,12 +305,17 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.inputText",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "ServiceLlm",
                     {
                       "emit": {
-                        "success": "ServiceLlmLoaded",
-                        "failure": "ServiceLlmLoadFailed"
+                        "failure": "ServiceLlmLoadFailed",
+                        "success": "ServiceLlmLoaded"
                       }
                     }
                   ],
@@ -318,22 +323,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
-                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "brain"
+                              "name": "brain",
+                              "type": "icon"
                             },
                             {
+                              "content": "ServiceLlm LLM",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceLlm LLM"
+                              "type": "typography"
                             }
                           ],
                           "align": "center"
@@ -342,41 +345,43 @@
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Enter text for LLM processing...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Enter text for LLM processing..."
                         },
                         {
                           "gap": "sm",
+                          "type": "stack",
                           "justify": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Generate",
-                              "variant": "primary",
-                              "icon": "sparkles",
+                              "action": "GENERATE",
                               "type": "button",
-                              "action": "GENERATE"
+                              "icon": "sparkles",
+                              "variant": "primary",
+                              "label": "Generate"
                             },
                             {
-                              "type": "button",
-                              "label": "Classify",
                               "icon": "tag",
-                              "variant": "secondary",
-                              "action": "CLASSIFY"
+                              "type": "button",
+                              "action": "CLASSIFY",
+                              "label": "Classify",
+                              "variant": "secondary"
                             },
                             {
                               "action": "SUMMARIZE",
-                              "label": "Summarize",
                               "type": "button",
-                              "icon": "align-left",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "label": "Summarize",
+                              "icon": "align-left"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         }
                       ],
+                      "gap": "lg",
                       "type": "stack",
-                      "gap": "lg"
+                      "align": "stretch",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -409,8 +414,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceLlmLlmCompleted",
-                        "failure": "ServiceLlmLlmFailed"
+                        "failure": "ServiceLlmLlmFailed",
+                        "success": "ServiceLlmLlmCompleted"
                       }
                     }
                   ]
@@ -430,9 +435,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "loading-state",
                       "title": "Processing...",
-                      "message": "Running servicellm LLM task...",
-                      "type": "loading-state"
+                      "message": "Running servicellm LLM task..."
                     }
                   ],
                   [
@@ -440,17 +445,17 @@
                     "llm",
                     "classify",
                     {
+                      "text": "@entity.inputText",
                       "categories": [
                         "positive",
                         "negative",
                         "neutral"
-                      ],
-                      "text": "@entity.inputText"
+                      ]
                     },
                     {
                       "emit": {
-                        "success": "ServiceLlmLlmCompleted",
-                        "failure": "ServiceLlmLlmFailed"
+                        "failure": "ServiceLlmLlmFailed",
+                        "success": "ServiceLlmLlmCompleted"
                       }
                     }
                   ]
@@ -470,9 +475,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Running servicellm LLM task...",
                       "title": "Processing...",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "message": "Running servicellm LLM task..."
                     }
                   ],
                   [
@@ -484,8 +489,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "ServiceLlmLlmFailed",
-                        "success": "ServiceLlmLlmCompleted"
+                        "success": "ServiceLlmLlmCompleted",
+                        "failure": "ServiceLlmLlmFailed"
                       }
                     }
                   ]
@@ -510,10 +515,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
-                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -526,17 +530,18 @@
                         },
                         {
                           "content": "@entity.result",
-                          "variant": "body",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "label": "Start Over",
-                          "type": "button",
                           "variant": "ghost",
+                          "type": "button",
                           "icon": "rotate-ccw",
+                          "label": "Start Over",
                           "action": "RESET"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -560,40 +565,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
                           "onRetry": "RETRY",
+                          "type": "error-state",
                           "message": "@entity.error",
-                          "title": "LLM Failed",
-                          "type": "error-state"
+                          "title": "LLM Failed"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "icon": "refresh-cw",
-                              "type": "button",
                               "label": "Retry",
+                              "icon": "refresh-cw",
                               "variant": "primary",
+                              "type": "button",
                               "action": "RETRY"
                             },
                             {
-                              "label": "Reset",
-                              "icon": "rotate-ccw",
                               "type": "button",
+                              "variant": "ghost",
                               "action": "RESET",
-                              "variant": "ghost"
+                              "label": "Reset",
+                              "icon": "rotate-ccw"
                             }
                           ],
+                          "type": "stack",
                           "gap": "sm",
                           "justify": "center",
                           "direction": "horizontal"
                         }
                       ],
                       "gap": "lg",
-                      "align": "center"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -612,15 +617,15 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "stretch",
                       "type": "stack",
+                      "align": "stretch",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
@@ -631,46 +636,46 @@
                               "content": "ServiceLlm LLM",
                               "variant": "h2"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "textarea",
-                          "placeholder": "Enter text for LLM processing..."
+                          "placeholder": "Enter text for LLM processing...",
+                          "type": "textarea"
                         },
                         {
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "center",
                           "children": [
                             {
+                              "variant": "primary",
+                              "action": "GENERATE",
                               "icon": "sparkles",
                               "type": "button",
-                              "action": "GENERATE",
-                              "variant": "primary",
                               "label": "Generate"
                             },
                             {
-                              "action": "CLASSIFY",
-                              "type": "button",
                               "variant": "secondary",
                               "label": "Classify",
+                              "action": "CLASSIFY",
+                              "type": "button",
                               "icon": "tag"
                             },
                             {
                               "icon": "align-left",
-                              "label": "Summarize",
                               "action": "SUMMARIZE",
-                              "type": "button",
-                              "variant": "secondary"
+                              "label": "Summarize",
+                              "variant": "secondary",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "justify": "center",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -689,24 +694,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "stretch",
-                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "brain"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "ServiceLlm LLM"
                             }
                           ]
@@ -715,39 +716,43 @@
                           "type": "divider"
                         },
                         {
-                          "type": "textarea",
-                          "placeholder": "Enter text for LLM processing..."
+                          "placeholder": "Enter text for LLM processing...",
+                          "type": "textarea"
                         },
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "justify": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
+                              "action": "GENERATE",
                               "label": "Generate",
                               "variant": "primary",
-                              "action": "GENERATE",
+                              "type": "button",
                               "icon": "sparkles"
                             },
                             {
+                              "action": "CLASSIFY",
                               "variant": "secondary",
                               "type": "button",
                               "icon": "tag",
-                              "action": "CLASSIFY",
                               "label": "Classify"
                             },
                             {
-                              "type": "button",
-                              "label": "Summarize",
+                              "action": "SUMMARIZE",
                               "variant": "secondary",
                               "icon": "align-left",
-                              "action": "SUMMARIZE"
+                              "type": "button",
+                              "label": "Summarize"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -766,65 +771,65 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "stretch",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "brain",
                               "type": "icon"
                             },
                             {
-                              "content": "ServiceLlm LLM",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "ServiceLlm LLM"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Enter text for LLM processing...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Enter text for LLM processing..."
                         },
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
                               "icon": "sparkles",
+                              "label": "Generate",
                               "action": "GENERATE",
                               "type": "button",
-                              "variant": "primary",
-                              "label": "Generate"
+                              "variant": "primary"
                             },
                             {
-                              "type": "button",
                               "variant": "secondary",
                               "icon": "tag",
                               "label": "Classify",
+                              "type": "button",
                               "action": "CLASSIFY"
                             },
                             {
                               "action": "SUMMARIZE",
-                              "type": "button",
-                              "variant": "secondary",
                               "icon": "align-left",
-                              "label": "Summarize"
+                              "variant": "secondary",
+                              "label": "Summarize",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "center"
+                          "type": "stack"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]

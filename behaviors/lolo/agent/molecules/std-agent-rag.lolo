@@ -30,6 +30,9 @@ orbital AgentRagOrbital {
     prompt : string = ""
     provider : string = "anthropic"
     model : string = "claude-sonnet-4-20250514"
+    activeTab : string = ""
+    items : [object] = []
+
   }
 
   type AgentRagLoaded     = Event AgentRag                  "Fired when AgentRag finishes loading"
@@ -38,6 +41,7 @@ orbital AgentRagOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.query "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
       GENERATE -> retrieving
         (set @entity.status retrieving)
@@ -85,7 +89,7 @@ orbital AgentRagOrbital {
       FAILED { error : string! }
     }
   }
-  trait RagTabs = Tabs.traits.TabContentTabs -> AgentRag {
+  trait RagTabs = Tabs.traits.TabsItemTabs -> AgentRag {
   }
   trait RagMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentRag {
     emitsScope internal

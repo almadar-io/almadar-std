@@ -14,6 +14,9 @@ orbital TutorSessionOrbital {
     correctAnswers : number = 0
     sessionStatus : string = "idle"
     error : string = ""
+    activeTab : string = ""
+    items : [object] = []
+
   }
 
   type TutorSessionLoaded     = Event { data : [TutorSession] }                  "Fired when TutorSession finishes loading"
@@ -28,6 +31,7 @@ orbital TutorSessionOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.studentLevel "unknown")
         (fetch TutorSession { emit: { success: "TutorSessionLoaded", failure: "TutorSessionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap"}, { type: "typography", content: "Tutor", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "What topic would you like to learn about? The tutor will assess your level and guide you through it.", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "START_SESSION", fields: ["topic"] }] }] }] }] })
       START_SESSION -> assessing
@@ -100,6 +104,10 @@ orbital QuizQuestionOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.correctAnswer "")
+        (set @entity.isCorrect false)
+        (set @entity.options "")
+        (set @entity.question "")
         (fetch QuizQuestion { emit: { success: "QuizQuestionLoaded", failure: "QuizQuestionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle"}, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Waiting for a quiz to start...", variant: "body" }] }] })
       GENERATE_QUESTION -> quizzing
@@ -116,7 +124,7 @@ orbital QuizQuestionOrbital {
         (set @entity.quizStatus grading)
         (agent/generate @payload.studentAnswer)
         (emit QUIZ_GRADED)
-        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Answer Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.isCorrect" }] }, { type: "typography", content: "@entity.feedback", variant: "body" }, { type: "typography", content: "Correct answer", variant: "caption" }, { type: "typography", content: "@entity.correctAnswer", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Next Question", action: "NEXT_QUESTION", variant: "primary", icon: "arrow-right" }, { type: "button", label: "Back to Lesson", action: "BACK_TO_LESSON", variant: "ghost", icon: "book-open" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle"}, { type: "typography", content: "Answer Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.feedback" }] }, { type: "typography", content: "@entity.feedback", variant: "body" }, { type: "typography", content: "Correct answer", variant: "caption" }, { type: "typography", content: "@entity.correctAnswer", variant: "body" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Next Question", action: "NEXT_QUESTION", variant: "primary", icon: "arrow-right" }, { type: "button", label: "Back to Lesson", action: "BACK_TO_LESSON", variant: "ghost", icon: "book-open" }] }] }] })
     }
     state reviewing {
       NEXT_QUESTION -> quizzing
@@ -509,7 +517,7 @@ orbital TutorNavOrbital {
     sessionStatus : string = "idle"
     error : string = ""
   }
-  trait TutorTabs = Tabs.traits.TabContentTabs -> TutorSession {
+  trait TutorTabs = Tabs.traits.TabsItemTabs -> TutorSession {
   }
   page "/tutor/nav" -> TutorTabs
 }

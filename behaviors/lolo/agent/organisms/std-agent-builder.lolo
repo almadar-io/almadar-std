@@ -109,8 +109,6 @@ orbital BuildPlanOrbital {
     }
     emits {
       PLAN_READY -> external { id : string }
-      BuildTaskLoaded
-      BuildTaskLoadFailed
       BuildPlanSaved
       BuildPlanSaveFailed
       BuildLoopSaved
@@ -199,6 +197,8 @@ emits {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.model "claude-sonnet-4-20250514")
+        (set @entity.provider "anthropic")
         (fetch BuildPlan { emit: { success: "BuildPlanLoaded", failure: "BuildPlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildPlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
@@ -296,6 +296,7 @@ orbital BuildLoopOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.maxIterations 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] }] })
       EXECUTE -> planning
         (set @entity.status planning)
@@ -385,6 +386,7 @@ orbital BuildLoopOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.totalSteps 0)
         (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
@@ -439,6 +441,8 @@ orbital BuildLoopOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.model "claude-sonnet-4-20250514")
+        (set @entity.provider "anthropic")
         (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildLoop", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
@@ -509,6 +513,7 @@ orbital BuildLoopOrbital {
     initial: normal
     state normal {
       INIT -> normal
+        (set @entity.max 0)
         (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
@@ -574,7 +579,7 @@ orbital BuildLoopOrbital {
     }
     listens {
       BuildLoopLoadFailed { error : string, code : string }
-      UPDATE { current : string }
+      UPDATE { current : number }
       SchemaBuilder.RESET -> RESET
       ToolLoopStepProgress.RESET -> RESET
     }
@@ -612,6 +617,7 @@ orbital BuildFixOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.maxAttempts 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench"}, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] }] })
       FIX -> validating
         (set @entity.status validating)
@@ -693,7 +699,7 @@ orbital BuildFixOrbital {
       FixLoop.FIX_SUCCEEDED -> INIT
       FixLoop.FIX_FAILED -> INIT
       BuildLoopOrbital.SchemaBuilder.TOOL_LOOP_DONE -> FIX
-          VALIDATION_ERRORS { errors : string, count : string }
+          VALIDATION_ERRORS { errors : string, count : number }
           EXCEEDED_ATTEMPTS { error : string }
           FIX_GENERATED { fix : string }
           FAILED { error : string }
@@ -704,6 +710,7 @@ orbital BuildFixOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.totalSteps 0)
         (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
@@ -848,6 +855,8 @@ emits {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.model "claude-sonnet-4-20250514")
+        (set @entity.provider "anthropic")
         (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "BuildFix", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
@@ -923,6 +932,7 @@ orbital BuildSessionOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.sessionId "")
         (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
       LABEL -> open
         (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
@@ -956,6 +966,7 @@ orbital BuildSessionOrbital {
     initial: active
     state active {
       INIT -> active
+        (set @entity.sessionId "")
         (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)
@@ -1029,11 +1040,14 @@ orbital BuildTaskOrbital {
     attempts : number
     sessionId : string
     error : string = ""
+    activeTab : string = ""
+    items : [object] = []
+
   }
 
   type BuildTaskLoaded     = Event { data : [BuildTask] }                  "Fired when BuildTask finishes loading"
   type BuildTaskLoadFailed = Event { error : string, code : string } "Fired when BuildTask fails to load"
-  trait BuilderTabs = Tabs.traits.TabContentTabs -> BuildTask {
+  trait BuilderTabs = Tabs.traits.TabsItemTabs -> BuildTask {
   }
   page "/builder/nav" -> BuilderTabs
 }

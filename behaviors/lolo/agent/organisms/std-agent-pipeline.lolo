@@ -110,8 +110,6 @@ orbital PipelinePlanOrbital {
     emits {
       PLAN_READY -> external { plan: string, category: string }
       PIPELINE_PLANNED -> external { steps: string }
-      SessionTreeLoaded
-      SessionTreeLoadFailed
       PipelinePlanSaved
       PipelinePlanSaveFailed
       PipelineExecSaved
@@ -200,6 +198,8 @@ emits {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.model "claude-sonnet-4-20250514")
+        (set @entity.provider "anthropic")
         (fetch PipelinePlan { emit: { success: "PipelinePlanLoaded", failure: "PipelinePlanLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "PipelinePlan", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
@@ -237,7 +237,7 @@ emits {
         (fetch PipelinePlan { emit: { success: "PipelinePlanLoaded", failure: "PipelinePlanLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       PipelinePlanLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "PipelinePlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", action: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", action: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", action: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Pin", event: "PIN", variant: "ghost"}, { label: "Reinforce", event: "REINFORCE", variant: "ghost"}, { label: "Forget", event: "FORGET", variant: "danger"}], fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain"}, { type: "typography", content: "PipelinePlan Manager", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
       PipelinePlanLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load pipelineplan" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -297,6 +297,7 @@ orbital PipelineExecOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.maxIterations 0)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat"}, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] }] })
       EXECUTE -> planning
         (set @entity.status planning)
@@ -388,6 +389,7 @@ orbital PipelineExecOrbital {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.totalSteps 0)
         (fetch PipelineExec { emit: { success: "PipelineExecLoaded", failure: "PipelineExecLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered"}, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
@@ -442,6 +444,8 @@ orbital PipelineExecOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.model "claude-sonnet-4-20250514")
+        (set @entity.provider "anthropic")
         (fetch PipelineExec { emit: { success: "PipelineExecLoaded", failure: "PipelineExecLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles"}, { type: "typography", content: "PipelineExec", variant: "h2" }] }, { type: "button", label: "Open", action: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       GENERATE -> open
@@ -512,6 +516,7 @@ orbital PipelineExecOrbital {
     initial: normal
     state normal {
       INIT -> normal
+        (set @entity.max 0)
         (fetch PipelineExec { emit: { success: "PipelineExecLoaded", failure: "PipelineExecLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge"}, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
@@ -577,7 +582,7 @@ orbital PipelineExecOrbital {
     }
     listens {
       PipelineExecLoadFailed { error : string, code : string }
-      UPDATE { current : string }
+      UPDATE { current : number }
       PipelineExecutor.RESET -> RESET
       ToolLoopStepProgress.RESET -> RESET
     }
@@ -604,7 +609,7 @@ orbital PipelineSessionOrbital {
         (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       PipelineSessionLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost"}], fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
+        (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal"}, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", action: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", action: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", action: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
       PipelineSessionLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load pipelinesession" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -627,6 +632,7 @@ orbital PipelineSessionOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.sessionId "")
         (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
       LABEL -> open
         (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
@@ -660,6 +666,7 @@ orbital PipelineSessionOrbital {
     initial: active
     state active {
       INIT -> active
+        (set @entity.sessionId "")
         (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)

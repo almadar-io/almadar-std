@@ -134,7 +134,7 @@
                 "name": "Select Day",
                 "payloadSchema": [
                   {
-                    "name": "date",
+                    "name": "value",
                     "type": "string",
                     "required": true
                   }
@@ -172,20 +172,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "content": "Loading calendar…",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Loading calendar…"
+                          "variant": "caption"
                         }
                       ],
                       "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
                       "className": "py-12"
                     }
@@ -201,16 +201,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "gap": "md",
                           "justify": "between",
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "children": [
@@ -220,20 +215,22 @@
                                 },
                                 {
                                   "content": "CalendarEvents Calendar",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "align": "center",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
-                              "onSelect": "SELECT_DAY",
-                              "type": "date-range-selector"
+                              "type": "date-range-selector",
+                              "onSelect": "SELECT_DAY"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -245,17 +242,17 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Upcoming Events",
                           "variant": "h4",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Upcoming Events"
                         },
                         {
                           "fields": [
                             {
-                              "variant": "h4",
                               "label": "Event",
                               "icon": "calendar",
-                              "name": "name"
+                              "name": "name",
+                              "variant": "h4"
                             },
                             {
                               "label": "Time",
@@ -263,28 +260,31 @@
                               "variant": "badge"
                             },
                             {
-                              "format": "date",
+                              "variant": "caption",
                               "name": "date",
-                              "label": "Date",
-                              "variant": "caption"
+                              "format": "date",
+                              "label": "Date"
                             },
                             {
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "label": "Status",
+                              "name": "status"
                             }
                           ],
-                          "entity": "@payload.data",
                           "type": "data-list",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "event": "SELECT_DAY",
                               "icon": "eye",
-                              "label": "View"
+                              "label": "View",
+                              "event": "SELECT_DAY"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -299,35 +299,35 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "Failed to load",
-                          "type": "typography",
-                          "variant": "h3"
+                          "color": "destructive"
                         },
                         {
                           "type": "typography",
-                          "content": "@payload.error",
+                          "variant": "h3",
+                          "content": "Failed to load"
+                        },
+                        {
                           "color": "muted",
-                          "variant": "body"
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@payload.error"
                         },
                         {
                           "label": "Retry",
-                          "action": "INIT",
                           "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "type": "button"
+                          "action": "INIT",
+                          "type": "button",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -338,18 +338,23 @@
                 "event": "SELECT_DAY",
                 "effects": [
                   [
+                    "set",
+                    "@entity.date",
+                    "@payload.value"
+                  ],
+                  [
                     "fetch",
                     "CalendarEvent",
                     {
-                      "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
-                      },
                       "filter": [
                         "=",
                         "@entity.date",
-                        "@payload.date"
-                      ]
+                        "@payload.value"
+                      ],
+                      "emit": {
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
+                      }
                     }
                   ],
                   [

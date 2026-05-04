@@ -29,7 +29,8 @@ orbital CalendarEventOrbital {
     }
     state month-view {
       SELECT_DAY -> loading
-        (fetch CalendarEvent { filter: (= @entity.date @payload.date), emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
+        (set @entity.date @payload.value)
+        (fetch CalendarEvent { filter: (= @entity.date @payload.value), emit: { success: "CalendarEventLoaded", failure: "CalendarEventLoadFailed" } })
         (render-ui main { type: "spinner" })
     }
     state error {
@@ -43,7 +44,7 @@ emits {
     }
 
         listens {
-      SELECT_DAY  { date : string! }
+      SELECT_DAY  { value : string! }
       SELECT_SLOT { time : string! }
       CalendarEventLoadFailed { error : string, code : string }
     }

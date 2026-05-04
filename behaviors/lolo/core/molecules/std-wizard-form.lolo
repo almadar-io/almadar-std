@@ -43,6 +43,8 @@ orbital WizardFormOrbital {
           { type: "wizard-navigation", currentStep: 0, totalSteps: 3, showBack: false, showNext: true, showComplete: false, onNext: "NEXT" }
         ] })
       NEXT -> preferences
+        (set @entity.name @payload.data.name)
+        (set @entity.email @payload.data.email)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Sign-up" },
           { type: "wizard-progress", steps: ["Personal", "Preferences", "Review"], currentStep: 1 },
@@ -54,6 +56,7 @@ orbital WizardFormOrbital {
     }
     state preferences {
       NEXT -> review
+        (set @entity.theme @payload.data.theme)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Sign-up" },
           { type: "wizard-progress", steps: ["Personal", "Preferences", "Review"], currentStep: 2 },

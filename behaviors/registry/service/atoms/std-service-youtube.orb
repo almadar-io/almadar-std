@@ -340,6 +340,11 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.query",
+                    ""
+                  ],
+                  [
                     "fetch",
                     "ServiceYoutube",
                     {
@@ -354,42 +359,42 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
                               "name": "video"
                             },
                             {
+                              "type": "typography",
                               "content": "YouTube Search",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "Search YouTube videos..."
+                          "placeholder": "Search YouTube videos...",
+                          "type": "input"
                         },
                         {
-                          "action": "SEARCH",
-                          "variant": "primary",
-                          "label": "Search",
                           "type": "button",
-                          "icon": "search"
+                          "variant": "primary",
+                          "icon": "search",
+                          "action": "SEARCH",
+                          "label": "Search"
                         }
                       ],
-                      "align": "stretch",
                       "type": "stack",
-                      "gap": "lg"
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -413,9 +418,9 @@
                     "youtube",
                     "search",
                     {
+                      "maxResults": 10.0,
                       "type": "video",
-                      "query": "@entity.query",
-                      "maxResults": 10.0
+                      "query": "@entity.query"
                     },
                     {
                       "emit": {
@@ -440,25 +445,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "stretch",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "gap": "md",
                           "align": "center",
                           "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
-                              "name": "video",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "video"
                             },
                             {
                               "content": "Search Results",
-                              "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -466,33 +468,36 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Select a video to view details.",
                           "type": "typography",
+                          "content": "Select a video to view details.",
                           "variant": "body"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "justify": "center",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "action": "RESET",
-                              "variant": "ghost",
                               "label": "New Search",
-                              "icon": "rotate-ccw",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
                             },
                             {
-                              "type": "button",
                               "label": "Search Again",
+                              "type": "button",
                               "variant": "ghost",
-                              "action": "SEARCH",
-                              "icon": "search"
+                              "icon": "search",
+                              "action": "SEARCH"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "align": "stretch",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -516,40 +521,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
+                          "type": "error-state",
                           "onRetry": "SEARCH",
-                          "message": "@entity.error",
                           "title": "Search Failed",
-                          "type": "error-state"
+                          "message": "@entity.error"
                         },
                         {
-                          "gap": "sm",
-                          "justify": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "action": "SEARCH",
-                              "label": "Retry",
-                              "type": "button",
+                              "variant": "primary",
                               "icon": "refresh-cw",
-                              "variant": "primary"
+                              "type": "button",
+                              "label": "Retry"
                             },
                             {
-                              "action": "RESET",
+                              "type": "button",
                               "label": "Reset",
                               "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "type": "button"
+                              "action": "RESET",
+                              "icon": "rotate-ccw"
                             }
                           ],
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "gap": "sm",
                           "type": "stack"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -573,14 +578,14 @@
                     "youtube",
                     "search",
                     {
-                      "type": "video",
+                      "maxResults": 10.0,
                       "query": "@entity.query",
-                      "maxResults": 10.0
+                      "type": "video"
                     },
                     {
                       "emit": {
-                        "success": "ServiceYoutubeYoutubeCompleted",
-                        "failure": "ServiceYoutubeYoutubeFailed"
+                        "failure": "ServiceYoutubeYoutubeFailed",
+                        "success": "ServiceYoutubeYoutubeCompleted"
                       }
                     }
                   ]
@@ -600,8 +605,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Fetching video details...",
+                      "type": "loading-state",
                       "title": "Loading video..."
                     }
                   ],
@@ -614,8 +619,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceYoutubeYoutubeCompleted",
-                        "failure": "ServiceYoutubeYoutubeFailed"
+                        "failure": "ServiceYoutubeYoutubeFailed",
+                        "success": "ServiceYoutubeYoutubeCompleted"
                       }
                     }
                   ]
@@ -635,41 +640,41 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
                       "direction": "vertical",
                       "gap": "lg",
                       "type": "stack",
+                      "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "video",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "video"
                             },
                             {
-                              "content": "YouTube Search",
                               "variant": "h2",
+                              "content": "YouTube Search",
                               "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Search YouTube videos...",
-                          "type": "input"
+                          "type": "input",
+                          "placeholder": "Search YouTube videos..."
                         },
                         {
-                          "type": "button",
+                          "variant": "primary",
+                          "icon": "search",
                           "label": "Search",
                           "action": "SEARCH",
-                          "variant": "primary",
-                          "icon": "search"
+                          "type": "button"
                         }
                       ]
                     }
@@ -697,6 +702,7 @@
                     {
                       "children": [
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "video",
@@ -708,7 +714,6 @@
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "align": "center"
@@ -717,22 +722,22 @@
                           "type": "divider"
                         },
                         {
+                          "variant": "body",
                           "type": "typography",
-                          "content": "@entity.videoDescription",
-                          "variant": "body"
+                          "content": "@entity.videoDescription"
                         },
                         {
                           "type": "button",
-                          "icon": "arrow-left",
-                          "label": "Back to Results",
                           "variant": "ghost",
-                          "action": "BACK"
+                          "action": "BACK",
+                          "label": "Back to Results",
+                          "icon": "arrow-left"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "stretch"
+                      "align": "stretch",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -746,25 +751,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
                           "gap": "md",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "video"
                             },
                             {
-                              "content": "Search Results",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Search Results"
                             }
                           ]
                         },
@@ -772,33 +773,37 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
+                          "type": "typography",
                           "content": "Select a video to view details."
                         },
                         {
-                          "direction": "horizontal",
                           "justify": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "ghost",
+                              "type": "button",
                               "icon": "rotate-ccw",
-                              "label": "New Search",
                               "action": "RESET",
-                              "type": "button"
+                              "variant": "ghost",
+                              "label": "New Search"
                             },
                             {
-                              "variant": "ghost",
-                              "action": "SEARCH",
-                              "type": "button",
                               "label": "Search Again",
+                              "type": "button",
+                              "action": "SEARCH",
+                              "variant": "ghost",
                               "icon": "search"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -822,43 +827,43 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
-                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "video"
+                              "name": "video",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
+                              "content": "YouTube Search",
                               "type": "typography",
-                              "content": "YouTube Search"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center"
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Search YouTube videos...",
-                          "type": "input"
+                          "type": "input",
+                          "placeholder": "Search YouTube videos..."
                         },
                         {
-                          "label": "Search",
                           "type": "button",
+                          "variant": "primary",
                           "icon": "search",
-                          "action": "SEARCH",
-                          "variant": "primary"
+                          "label": "Search",
+                          "action": "SEARCH"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "stretch",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
