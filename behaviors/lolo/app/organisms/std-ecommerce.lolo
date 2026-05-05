@@ -462,7 +462,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
         ]})
       NEXT -> step2
         (set @entity.customerName @payload.data.customerName)
@@ -472,7 +472,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Shipping Address" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: ["shippingAddress"] }
         ]})
     }
     state step2 {
@@ -484,7 +484,9 @@ orbital CheckoutOrbital {
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Payment" },
           "@trait.CheckoutPayment",
-          { type: "wizard-navigation", currentStep: 2, totalSteps: 4, showBack: true, showNext: false, showComplete: false, onBack: "PREV" }
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "start", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }
+          ]}
         ]})
       PREV -> step1
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
@@ -492,22 +494,26 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
         ]})
     }
     state step3 {
       PAYMENT_DONE -> review
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Review" },
+          { type: "typography", variant: "h2", content: "Review your order" },
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 3 },
           { type: "divider" },
           { type: "stack", direction: "vertical", gap: "sm", children: [
             { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Customer" }, { type: "typography", variant: "body", content: "@entity.customerName" }] },
             { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] },
             { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Shipping" }, { type: "typography", variant: "body", content: "@entity.shippingAddress" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Order Total" }, { type: "typography", variant: "body", content: "@entity.orderTotal" }] }
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Order total" }, { type: "typography", variant: "body", content: "@entity.orderTotal" }] }
           ]},
-          { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showNext: false, showComplete: true, onBack: "PREV", onComplete: "COMPLETE" }
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" },
+            { type: "button", label: "Place order", action: "COMPLETE", variant: "primary", icon: "check" }
+          ]}
         ]})
       PREV -> step2
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
@@ -515,20 +521,20 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Shipping Address" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: ["shippingAddress"] }
         ]})
     }
     state review {
       COMPLETE -> complete
         (set @entity.status "placed")
-        (persist create Checkout @payload.data { emit: { success: "CheckoutSaved", failure: "CheckoutSaveFailed" } })
+        (persist create Checkout @entity { emit: { success: "CheckoutSaved", failure: "CheckoutSaveFailed" } })
         (emit ORDER_PLACED { id: "@entity.id" })
         (notify success "Order placed successfully")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-xl mx-auto w-full py-12", children: [
           { type: "icon", name: "check-circle" },
-          { type: "typography", variant: "h2", content: "Order Placed" },
+          { type: "typography", variant: "h2", content: "Order placed" },
           { type: "typography", variant: "body", color: "muted", content: "Your order is confirmed and on its way." },
-          { type: "button", label: "Start New", action: "RESTART", variant: "ghost", icon: "rotate-ccw" }
+          { type: "button", label: "Start new order", action: "RESTART", variant: "ghost", icon: "rotate-ccw" }
         ]})
       PREV -> step3
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
@@ -536,7 +542,10 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 2 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Payment" },
-          "@trait.CheckoutPayment"
+          "@trait.CheckoutPayment",
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "start", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }
+          ]}
         ]})
     }
     state complete {
@@ -551,7 +560,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
         ]})
     }
     emits {
@@ -570,7 +579,7 @@ orbital CheckoutOrbital {
       PAYMENT_DONE { result : object }
       PAYMENT_FAILED { error : string, code : string }
       NOOP { id : string, message : string }
-      COMPLETE { data : object! }
+      COMPLETE { }
       CheckoutSaveFailed { error : string, code : string }
     }
   }
