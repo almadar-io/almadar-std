@@ -1,7 +1,7 @@
 {
   "name": "std-graphs",
   "version": "1.0.0",
-  "description": "std-graphs — embeddable chart atom. Drops into a dashboard molecule\nalongside std-stats / std-browse; wire its ITEMS_LOADED listener to\nthe upstream collection's success emit, then configure `chartType` +\n`categoryField` + (`valueField` | `aggregation`) per call-site to\ndeclare WHAT to chart.\n\nAggregation runs in the lolo state machine: ITEMS_LOADED groups\n@payload.data by @config.categoryField (array/groupBy returns\n{<category>: [<rows>]}) then array/maps over (object/entries result)\nto apply the configured aggregation (count | sum | avg | min | max)\nper bucket. The resulting chart-data array of {label, value} drops\ninto the existing chart pattern with no aggregator component required.\n\nThe `ChartPoint` type alias narrows the entity field to the exact\nshape the `chart` pattern's `data` prop expects (`{label, value}`),\nso no `Record<string, unknown>` cast lands at the call site —\nschema authors keep strict typing end-to-end.",
+  "description": "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField and applies the configured aggregation (count|sum|avg|min|max) per bucket, emitting {label,value} points into the chart pattern. Drop into a dashboard alongside std-stats / std-browse.",
   "orbitals": [
     {
       "name": "GraphItemOrbital",
@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "value": {
-                  "name": "value",
-                  "type": "number"
-                },
                 "label": {
                   "name": "label",
                   "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number"
                 }
               }
             }
@@ -81,14 +81,14 @@
                     "render-ui",
                     "main",
                     {
-                      "data": "@entity.chartData",
-                      "chartType": "@config.chartType",
                       "subtitle": "@config.subtitle",
-                      "type": "chart",
-                      "showValues": "@config.showValues",
+                      "chartType": "@config.chartType",
+                      "showLegend": "@config.showLegend",
                       "title": "@config.title",
-                      "height": "@config.height",
-                      "showLegend": "@config.showLegend"
+                      "data": "@entity.chartData",
+                      "showValues": "@config.showValues",
+                      "type": "chart",
+                      "height": "@config.height"
                     }
                   ]
                 ]
@@ -207,11 +207,11 @@
                       "chartType": "@config.chartType",
                       "data": "@entity.chartData",
                       "height": "@config.height",
-                      "type": "chart",
-                      "title": "@config.title",
-                      "subtitle": "@config.subtitle",
                       "showValues": "@config.showValues",
-                      "showLegend": "@config.showLegend"
+                      "type": "chart",
+                      "showLegend": "@config.showLegend",
+                      "title": "@config.title",
+                      "subtitle": "@config.subtitle"
                     }
                   ]
                 ]
@@ -219,13 +219,28 @@
             ]
           },
           "config": {
-            "categoryField": {
+            "chartType": {
+              "type": "string",
+              "default": "bar",
+              "values": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut"
+              ]
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "subtitle": {
               "type": "string",
               "default": ""
             },
-            "height": {
-              "type": "number",
-              "default": 280.0
+            "valueField": {
+              "type": "string",
+              "default": ""
             },
             "showValues": {
               "type": "boolean",
@@ -242,32 +257,17 @@
                 "max"
               ]
             },
+            "categoryField": {
+              "type": "string",
+              "default": ""
+            },
+            "height": {
+              "type": "number",
+              "default": 280.0
+            },
             "title": {
               "type": "string",
               "default": ""
-            },
-            "subtitle": {
-              "type": "string",
-              "default": ""
-            },
-            "valueField": {
-              "type": "string",
-              "default": ""
-            },
-            "chartType": {
-              "type": "string",
-              "default": "bar",
-              "values": [
-                "bar",
-                "line",
-                "pie",
-                "area",
-                "donut"
-              ]
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true
             }
           },
           "scope": "instance"

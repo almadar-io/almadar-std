@@ -1,0 +1,230 @@
+{
+  "name": "std-stack-layout",
+  "version": "1.0.0",
+  "description": "std-stack-layout — minimal vertical-stack shell (header + browse + pagination)",
+  "orbitals": [
+    {
+      "name": "StackLayoutItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-pagination",
+          "as": "Pagination"
+        }
+      ],
+      "entity": {
+        "name": "StackLayoutItem",
+        "collection": "stacklayoutitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "StackLayoutBrowse",
+          "linkedEntity": "StackLayoutItem",
+          "config": {
+            "pageSize": 10.0,
+            "fields": [
+              {
+                "variant": "h5",
+                "label": "Name",
+                "name": "name"
+              },
+              {
+                "label": "Description",
+                "name": "description",
+                "variant": "caption"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "PAGE",
+              "triggers": "REFETCH_PAGE",
+              "source": {
+                "kind": "trait",
+                "trait": "StackLayoutPagination"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Pagination.traits.PagedItemPagination",
+          "name": "StackLayoutPagination",
+          "config": {
+            "event": "PAGE",
+            "pageSize": 10.0
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "StackLayoutBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "StackLayout",
+          "category": "interaction",
+          "linkedEntity": "StackLayoutItem",
+          "emits": [
+            {
+              "event": "StackLayoutItemLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "StackLayoutItemLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[StackLayoutItem]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "StackLayoutItemLoadFailed",
+                "name": "StackLayoutItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "StackLayoutItemLoaded",
+                "name": "StackLayoutItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[StackLayoutItem]"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StackLayoutItem",
+                    {
+                      "emit": {
+                        "success": "StackLayoutItemLoaded",
+                        "failure": "StackLayoutItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list"
+                            },
+                            {
+                              "content": "List",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.StackLayoutBrowse",
+                        "@trait.StackLayoutPagination"
+                      ],
+                      "gap": "md",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StackLayoutPage",
+          "path": "/stack-layout",
+          "traits": [
+            {
+              "ref": "StackLayout"
+            },
+            {
+              "ref": "StackLayoutBrowse"
+            },
+            {
+              "ref": "StackLayoutPagination"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

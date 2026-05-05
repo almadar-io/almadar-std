@@ -1,7 +1,7 @@
 {
   "name": "std-tabs",
   "version": "2.0.0",
-  "description": "std-tabs — embeddable tab-navigation atom. Drop into a layout\nmolecule to give the user a tabs strip that swaps which trait fills\nthe active tab's slot. Each tab points at a sibling trait via a\n@trait.X content reference; clicking a tab updates the atom's own\n@entity.activeTab and re-renders so only the matching trait's\noutput shows. Events remap at the call site (TAB_CHANGED -> Y) so\nthe host molecule can listen for routing, persistence, analytics.\n\nEach entry in `tabs` (all but `id` and `label` optional):\n- id      string!  stable tab id (used as activeTab key)\n- label   string!  visible tab text\n- icon    string   lucide icon name\n- badge   string   small badge in the tab strip (e.g. unread count)\n- content string   @trait.X reference for the panel body. The host\n                   molecule binds a sibling trait there; only the\n                   active tab's content renders at any time. Omit\n                   to leave the panel empty.\n\nConfig:\n- tabs        [TabSpec] = []\n- defaultTab  string = ''                       id of the initial active tab.\n                                                Falls back to tabs[0].id if blank.\n- variant     default|pills|underline = default visual style\n- orientation horizontal|vertical = horizontal  tab strip orientation\n\nCompiler statically unrolls array/map over @config.tabs so every\nTabSpec field is fully baked into the emitted props at codegen\ntime.",
+  "description": "std-tabs — embeddable tab-navigation atom. Renders a tabs strip from @config.tabs ([{id, label, icon?, badge?, content?}]); clicking a tab updates @entity.activeTab so only the matching @trait.X content shows. Events remap at the call site for routing, persistence, analytics.",
   "orbitals": [
     {
       "name": "TabsItemOrbital",
@@ -26,8 +26,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
+                "content": {
+                  "name": "content",
                   "type": "string"
                 },
                 "icon": {
@@ -38,12 +38,12 @@
                   "name": "badge",
                   "type": "string"
                 },
-                "content": {
-                  "name": "content",
-                  "type": "string"
-                },
                 "id": {
                   "name": "id",
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "type": "string"
                 }
               }
@@ -113,12 +113,12 @@
                     "render-ui",
                     "main",
                     {
-                      "tabChangeEvent": "TAB_CHANGED",
                       "orientation": "@config.orientation",
-                      "type": "tabs",
                       "activeTab": "@entity.activeTab",
-                      "items": "@entity.items",
-                      "variant": "@config.variant"
+                      "variant": "@config.variant",
+                      "tabChangeEvent": "TAB_CHANGED",
+                      "type": "tabs",
+                      "items": "@entity.items"
                     }
                   ]
                 ]
@@ -138,8 +138,8 @@
                     "main",
                     {
                       "tabChangeEvent": "TAB_CHANGED",
-                      "orientation": "@config.orientation",
                       "variant": "@config.variant",
+                      "orientation": "@config.orientation",
                       "items": "@entity.items",
                       "activeTab": "@entity.activeTab",
                       "type": "tabs"
@@ -150,13 +150,17 @@
             ]
           },
           "config": {
-            "defaultTab": {
-              "type": "string",
-              "default": ""
-            },
             "tabs": {
               "type": "[object]",
               "default": []
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
             },
             "variant": {
               "type": "string",
@@ -167,13 +171,9 @@
                 "underline"
               ]
             },
-            "orientation": {
+            "defaultTab": {
               "type": "string",
-              "default": "horizontal",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
+              "default": ""
             }
           },
           "scope": "instance"

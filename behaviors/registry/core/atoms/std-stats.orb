@@ -1,7 +1,7 @@
 {
   "name": "std-stats",
   "version": "2.0.0",
-  "description": "std-stats — embeddable analytics-card atom. Drop into a dashboard\nmolecule alongside std-browse / std-search / std-filter; wire its\nITEMS_LOADED listener to the upstream collection's success emit, then\nconfigure `metrics` per call-site to declare WHICH aggregations to\nshow.\n\nAggregation runs in the lolo state machine (no custom React component\nbeyond stat-display): the ITEMS_LOADED transition uses array/map over\n@config.metrics, applies the per-metric `filter` predicate to\n@payload.data, then dispatches the chosen aggregation kind. Cards\ndrop into a data-list whose renderItem maps each card to a\nstat-display pattern. The atom owns an auxiliary entity (StatsItem)\nfor UI state — explicit-binding rule applies: every @entity.X is set\nexplicitly via (set @entity.X ...) on each transition.\n\nEach entry in `metrics` (all but `label` optional):\n- label       string!                          card title\n- aggregation count|sum|avg|min|max  default count   what to compute\n- field       string                           numeric entity field for sum/avg/min/max\n- filter      SExpression                      row predicate (e.g. fn-form testing @row.status). Drops non-matching\n                                               rows BEFORE aggregation. Omitted = all rows. Compiler statically\n                                               unrolls array/map over @config.metrics so the fn-form is fully\n                                               specialized into pure TS at codegen time.\n- format      number|currency|percent default number   value formatting\n- variant     default|primary|success|warning|error|info   color\n- icon        string                                       lucide icon name\n- prefix      string                                       prepended to displayed value (e.g. \"≈ \")\n- suffix      string                                       appended (e.g. \" /mo\", \" ms\")\n- max         number                                       optional denominator. >0 renders \"value / max\".\n- target      number                                       optional progress target. >0 renders a progress bar.\n- trend       number                                       signed delta vs previous period. >0 ↑ green, <0 ↓ red.\n\nFor dynamic max/target/trend (computed against @payload.data),\nschema authors today must precompute and pass literal numbers; an\nSExpression-evaluating slot is a future extension.",
+  "description": "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max with optional filter, format, icon, max, target, trend) and renders one stat-display per entry. Drop into a dashboard alongside std-browse / std-search / std-filter.",
   "orbitals": [
     {
       "name": "StatsItemOrbital",
@@ -21,35 +21,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "value": {
-                  "name": "value",
-                  "type": "number"
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string"
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string"
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number"
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number"
-                },
                 "label": {
                   "name": "label",
                   "type": "string"
@@ -70,9 +41,38 @@
                     "info"
                   ]
                 },
+                "trend": {
+                  "name": "trend",
+                  "type": "number"
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string"
+                },
+                "max": {
+                  "name": "max",
+                  "type": "number"
+                },
                 "target": {
                   "name": "target",
                   "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number"
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string"
                 }
               }
             }
@@ -126,22 +126,22 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "@entity.cards",
-                      "type": "data-grid",
-                      "fields": [],
                       "renderItem": [
                         "fn",
                         "card",
                         {
-                          "label": "@card.label",
-                          "format": "@card.format",
-                          "variant": "@card.variant",
-                          "max": "@card.max",
                           "type": "stat-display",
                           "value": "@card.value",
-                          "icon": "@card.icon"
+                          "label": "@card.label",
+                          "max": "@card.max",
+                          "icon": "@card.icon",
+                          "variant": "@card.variant",
+                          "format": "@card.format"
                         }
-                      ]
+                      ],
+                      "entity": "@entity.cards",
+                      "fields": [],
+                      "type": "data-grid"
                     }
                   ]
                 ]
@@ -161,23 +161,10 @@
                         "fn",
                         "metric",
                         {
-                          "format": [
+                          "label": [
                             "object/get",
                             "@metric",
-                            "format",
-                            "number"
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@metric",
-                            "variant",
-                            "default"
-                          ],
-                          "target": [
-                            "object/get",
-                            "@metric",
-                            "target",
-                            0.0
+                            "label"
                           ],
                           "max": [
                             "object/get",
@@ -191,17 +178,17 @@
                             "trend",
                             0.0
                           ],
-                          "icon": [
-                            "object/get",
-                            "@metric",
-                            "icon",
-                            ""
-                          ],
                           "prefix": [
                             "object/get",
                             "@metric",
                             "prefix",
                             ""
+                          ],
+                          "format": [
+                            "object/get",
+                            "@metric",
+                            "format",
+                            "number"
                           ],
                           "suffix": [
                             "object/get",
@@ -209,10 +196,23 @@
                             "suffix",
                             ""
                           ],
-                          "label": [
+                          "variant": [
                             "object/get",
                             "@metric",
-                            "label"
+                            "variant",
+                            "default"
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@metric",
+                            "icon",
+                            ""
+                          ],
+                          "target": [
+                            "object/get",
+                            "@metric",
+                            "target",
+                            0.0
                           ],
                           "value": [
                             "if",
@@ -363,26 +363,26 @@
                     "render-ui",
                     "main",
                     {
+                      "fields": [],
+                      "type": "data-list",
+                      "entity": "@entity.cards",
                       "renderItem": [
                         "fn",
                         "card",
                         {
-                          "max": "@card.max",
-                          "label": "@card.label",
-                          "prefix": "@card.prefix",
+                          "suffix": "@card.suffix",
                           "type": "stat-display",
                           "target": "@card.target",
-                          "icon": "@card.icon",
-                          "format": "@card.format",
-                          "value": "@card.value",
                           "trend": "@card.trend",
                           "variant": "@card.variant",
-                          "suffix": "@card.suffix"
+                          "icon": "@card.icon",
+                          "format": "@card.format",
+                          "max": "@card.max",
+                          "label": "@card.label",
+                          "value": "@card.value",
+                          "prefix": "@card.prefix"
                         }
-                      ],
-                      "entity": "@entity.cards",
-                      "fields": [],
-                      "type": "data-list"
+                      ]
                     }
                   ]
                 ]
@@ -390,13 +390,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": ""
-            },
             "metrics": {
               "type": "[object]",
               "default": []
+            },
+            "title": {
+              "type": "string",
+              "default": ""
             }
           },
           "scope": "instance"

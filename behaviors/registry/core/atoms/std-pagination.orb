@@ -1,7 +1,7 @@
 {
   "name": "std-pagination",
   "version": "1.0.0",
-  "description": "std-pagination as a Function — single primitive: pagination control.\nThe Pagination UI component emits `{page}` for page changes; the atom's\nPAGE event payload matches that shape. ITEMS_LOADED accepts an upstream\ndata-loaded event payload `{data : [object]}` and derives totalPages =\nceil(len(data) / pageSize). Molecules wire e.g.\n`FilteredItemBrowse.BrowseItemLoaded -> ITEMS_LOADED` to keep the\npagination control in lockstep with the data hub. The PagedItem entity\npersists currentPage and the derived totalPages so reads from\n@entity.totalPages reflect the latest row count.",
+  "description": "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[object]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub.",
   "orbitals": [
     {
       "name": "PagedItemOrbital",
@@ -130,10 +130,10 @@
                     "main",
                     {
                       "type": "pagination",
-                      "totalPages": "@entity.totalPages",
                       "pageChangeEvent": "@config.event",
-                      "showPageSize": false,
-                      "currentPage": "@entity.currentPage"
+                      "currentPage": "@entity.currentPage",
+                      "totalPages": "@entity.totalPages",
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -148,10 +148,10 @@
                     "main",
                     {
                       "type": "pagination",
-                      "pageChangeEvent": "@config.event",
-                      "showPageSize": false,
                       "totalPages": "@entity.totalPages",
-                      "currentPage": "@entity.currentPage"
+                      "pageChangeEvent": "@config.event",
+                      "currentPage": "@entity.currentPage",
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -170,11 +170,11 @@
                     "render-ui",
                     "main",
                     {
+                      "currentPage": "@entity.currentPage",
+                      "showPageSize": false,
                       "totalPages": "@entity.totalPages",
                       "type": "pagination",
-                      "pageChangeEvent": "@config.event",
-                      "currentPage": "@entity.currentPage",
-                      "showPageSize": false
+                      "pageChangeEvent": "@config.event"
                     }
                   ]
                 ]
@@ -200,11 +200,11 @@
                     "render-ui",
                     "main",
                     {
-                      "pageChangeEvent": "@config.event",
-                      "showPageSize": false,
+                      "type": "pagination",
                       "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
                       "totalPages": "@entity.totalPages",
-                      "type": "pagination"
+                      "showPageSize": false
                     }
                   ]
                 ]
@@ -212,13 +212,13 @@
             ]
           },
           "config": {
-            "event": {
-              "type": "string",
-              "default": "PAGE"
-            },
             "pageSize": {
               "type": "number",
               "default": 10.0
+            },
+            "event": {
+              "type": "string",
+              "default": "PAGE"
             }
           },
           "scope": "instance"

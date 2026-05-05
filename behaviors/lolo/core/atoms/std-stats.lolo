@@ -1,39 +1,5 @@
 app std-stats "2.0.0"
-"std-stats — embeddable analytics-card atom. Drop into a dashboard
-molecule alongside std-browse / std-search / std-filter; wire its
-ITEMS_LOADED listener to the upstream collection's success emit, then
-configure `metrics` per call-site to declare WHICH aggregations to
-show.
-
-Aggregation runs in the lolo state machine (no custom React component
-beyond stat-display): the ITEMS_LOADED transition uses array/map over
-@config.metrics, applies the per-metric `filter` predicate to
-@payload.data, then dispatches the chosen aggregation kind. Cards
-drop into a data-list whose renderItem maps each card to a
-stat-display pattern. The atom owns an auxiliary entity (StatsItem)
-for UI state — explicit-binding rule applies: every @entity.X is set
-explicitly via (set @entity.X ...) on each transition.
-
-Each entry in `metrics` (all but `label` optional):
-- label       string!                          card title
-- aggregation count|sum|avg|min|max  default count   what to compute
-- field       string                           numeric entity field for sum/avg/min/max
-- filter      SExpression                      row predicate (e.g. fn-form testing @row.status). Drops non-matching
-                                               rows BEFORE aggregation. Omitted = all rows. Compiler statically
-                                               unrolls array/map over @config.metrics so the fn-form is fully
-                                               specialized into pure TS at codegen time.
-- format      number|currency|percent default number   value formatting
-- variant     default|primary|success|warning|error|info   color
-- icon        string                                       lucide icon name
-- prefix      string                                       prepended to displayed value (e.g. \"≈ \")
-- suffix      string                                       appended (e.g. \" /mo\", \" ms\")
-- max         number                                       optional denominator. >0 renders \"value / max\".
-- target      number                                       optional progress target. >0 renders a progress bar.
-- trend       number                                       signed delta vs previous period. >0 ↑ green, <0 ↓ red.
-
-For dynamic max/target/trend (computed against @payload.data),
-schema authors today must precompute and pass literal numbers; an
-SExpression-evaluating slot is a future extension."
+"std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max with optional filter, format, icon, max, target, trend) and renders one stat-display per entry. Drop into a dashboard alongside std-browse / std-search / std-filter."
 
 orbital StatsItemOrbital {
   type StatCard = {

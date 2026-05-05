@@ -1,21 +1,5 @@
 app std-graphs "1.0.0"
-"std-graphs — embeddable chart atom. Drops into a dashboard molecule
-alongside std-stats / std-browse; wire its ITEMS_LOADED listener to
-the upstream collection's success emit, then configure `chartType` +
-`categoryField` + (`valueField` | `aggregation`) per call-site to
-declare WHAT to chart.
-
-Aggregation runs in the lolo state machine: ITEMS_LOADED groups
-@payload.data by @config.categoryField (array/groupBy returns
-{<category>: [<rows>]}) then array/maps over (object/entries result)
-to apply the configured aggregation (count | sum | avg | min | max)
-per bucket. The resulting chart-data array of {label, value} drops
-into the existing chart pattern with no aggregator component required.
-
-The `ChartPoint` type alias narrows the entity field to the exact
-shape the `chart` pattern's `data` prop expects (`{label, value}`),
-so no `Record<string, unknown>` cast lands at the call site —
-schema authors keep strict typing end-to-end."
+"std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField and applies the configured aggregation (count|sum|avg|min|max) per bucket, emitting {label,value} points into the chart pattern. Drop into a dashboard alongside std-stats / std-browse."
 
 orbital GraphItemOrbital {
   type ChartPoint = { label : string!, value : number }

@@ -1,0 +1,252 @@
+{
+  "name": "std-tabs-layout",
+  "version": "1.0.0",
+  "description": "std-tabs-layout — generic tab-navigation shell (tabs strip + 2 swappable panels)",
+  "orbitals": [
+    {
+      "name": "TabsLayoutItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-tabs",
+          "as": "Tabs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "TabsLayoutItem",
+        "collection": "tabslayoutitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive"
+            ]
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Tabs.traits.TabsItemTabs",
+          "name": "TabsLayoutTabs",
+          "config": {
+            "defaultTab": "all",
+            "tabs": [
+              {
+                "label": "All",
+                "content": "@trait.TabsLayoutAllBrowse",
+                "id": "all"
+              },
+              {
+                "content": "@trait.TabsLayoutActiveBrowse",
+                "id": "active",
+                "label": "Active"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TabsLayoutAllBrowse",
+          "linkedEntity": "TabsLayoutItem",
+          "config": {
+            "fields": [
+              {
+                "label": "Name",
+                "variant": "h5",
+                "name": "name"
+              },
+              {
+                "label": "Description",
+                "name": "description",
+                "variant": "caption"
+              }
+            ],
+            "pageSize": 10.0
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TabsLayoutActiveBrowse",
+          "linkedEntity": "TabsLayoutItem",
+          "config": {
+            "pageSize": 10.0,
+            "fields": [
+              {
+                "name": "name",
+                "label": "Name",
+                "variant": "h5"
+              },
+              {
+                "name": "description",
+                "label": "Description",
+                "variant": "caption"
+              }
+            ]
+          }
+        },
+        {
+          "name": "TabsLayout",
+          "category": "interaction",
+          "linkedEntity": "TabsLayoutItem",
+          "emits": [
+            {
+              "event": "TabsLayoutItemLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TabsLayoutItemLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[TabsLayoutItem]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TabsLayoutItemLoadFailed",
+                "name": "TabsLayoutItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TabsLayoutItemLoaded",
+                "name": "TabsLayoutItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[TabsLayoutItem]"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TabsLayoutItem",
+                    {
+                      "emit": {
+                        "success": "TabsLayoutItemLoaded",
+                        "failure": "TabsLayoutItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "layout"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Tabbed View"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TabsLayoutTabs"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TabsLayoutPage",
+          "path": "/tabs-layout",
+          "traits": [
+            {
+              "ref": "TabsLayout"
+            },
+            {
+              "ref": "TabsLayoutTabs"
+            },
+            {
+              "ref": "TabsLayoutAllBrowse"
+            },
+            {
+              "ref": "TabsLayoutActiveBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

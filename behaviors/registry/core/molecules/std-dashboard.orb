@@ -1,7 +1,7 @@
 {
   "name": "std-dashboard",
   "version": "1.0.0",
-  "description": "std-dashboard — molecule composing std-stats + std-graphs + std-browse\ninto a typical dashboard view: stat cards across the top, two charts\nin the middle, data list at the bottom. Browse is the data hub — it\nfetches the rows, emits BrowseItemLoaded; Stats and Graphs both listen\nfor it via cross-trait `Browse.BrowseItemLoaded -> ITEMS_LOADED`. All\nthree atoms render into the layout's `main` slot via `@trait.X`\nplacement.",
+  "description": "std-dashboard — molecule composing std-stats + std-graphs + std-browse (stat cards top, charts middle, data list bottom). Browse is the data hub; Stats and Graphs listen for `BrowseItemLoaded -> ITEMS_LOADED`.",
   "orbitals": [
     {
       "name": "DashboardItemOrbital",
@@ -64,20 +64,20 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "DashboardSummary",
           "config": {
-            "title": "Summary",
             "metrics": [
               {
                 "aggregation": "count",
-                "label": "Total Items",
                 "icon": "list",
+                "label": "Total Items",
                 "variant": "primary",
                 "format": "number"
               },
               {
-                "aggregation": "count",
-                "icon": "check-circle",
-                "variant": "success",
                 "label": "Active",
+                "variant": "success",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -86,28 +86,28 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "format": "number"
+                ]
               },
               {
-                "variant": "info",
-                "field": "amount",
                 "aggregation": "sum",
                 "target": 10000.0,
+                "label": "Total Revenue",
+                "variant": "info",
                 "icon": "dollar-sign",
                 "format": "currency",
-                "label": "Total Revenue"
+                "field": "amount"
               },
               {
-                "variant": "default",
-                "label": "Avg Units",
                 "format": "number",
-                "suffix": " units",
+                "label": "Avg Units",
                 "icon": "trending-up",
+                "suffix": " units",
                 "field": "units",
-                "aggregation": "avg"
+                "aggregation": "avg",
+                "variant": "default"
               }
-            ]
+            ],
+            "title": "Summary"
           },
           "listens": [
             {
@@ -124,13 +124,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DashboardCategoryChart",
           "config": {
-            "showLegend": false,
-            "title": "Items by Category",
-            "chartType": "bar",
-            "aggregation": "count",
             "subtitle": "Count across categories",
+            "aggregation": "count",
+            "showLegend": false,
+            "chartType": "bar",
             "categoryField": "category",
-            "height": 280.0
+            "height": 280.0,
+            "title": "Items by Category"
           },
           "listens": [
             {
@@ -147,12 +147,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DashboardStatusChart",
           "config": {
+            "aggregation": "count",
             "categoryField": "status",
-            "showLegend": true,
-            "chartType": "donut",
-            "height": 280.0,
             "title": "Status Mix",
-            "aggregation": "count"
+            "chartType": "donut",
+            "showLegend": true,
+            "height": 280.0
           },
           "listens": [
             {
@@ -172,28 +172,28 @@
           "config": {
             "fields": [
               {
-                "label": "Name",
+                "name": "name",
                 "variant": "h4",
-                "name": "name"
+                "label": "Name"
               },
               {
+                "variant": "caption",
                 "name": "category",
-                "label": "Category",
-                "variant": "caption"
+                "label": "Category"
               },
               {
-                "name": "status",
                 "variant": "badge",
-                "label": "Status"
+                "label": "Status",
+                "name": "status"
               },
               {
-                "label": "Amount",
+                "variant": "caption",
                 "name": "amount",
-                "variant": "caption"
+                "label": "Amount"
               }
             ],
-            "pageSize": 100.0,
-            "displayPageSize": 5.0
+            "displayPageSize": 5.0,
+            "pageSize": 100.0
           }
         },
         {
@@ -274,8 +274,8 @@
                     "DashboardItem",
                     {
                       "emit": {
-                        "failure": "DashboardItemLoadFailed",
-                        "success": "DashboardItemLoaded"
+                        "success": "DashboardItemLoaded",
+                        "failure": "DashboardItemLoadFailed"
                       }
                     }
                   ],
@@ -283,51 +283,51 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "bar-chart-2",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "bar-chart-2"
                             },
                             {
-                              "type": "typography",
+                              "content": "Dashboard",
                               "variant": "h2",
-                              "content": "Dashboard"
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.DashboardSummary",
                         {
+                          "gap": "md",
+                          "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             "@trait.DashboardCategoryChart",
                             "@trait.DashboardStatusChart"
-                          ],
-                          "type": "simple-grid",
-                          "gap": "md",
-                          "cols": 2.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Recent Items",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Recent Items"
                         },
                         "@trait.DashboardItemBrowse"
                       ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]

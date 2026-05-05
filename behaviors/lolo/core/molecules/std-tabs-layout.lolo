@@ -1,0 +1,82 @@
+app std-tabs-layout "1.0.0"
+"std-tabs-layout — generic tab-navigation shell (tabs strip + 2 swappable panels)"
+;;
+;; Pure-structure layout-shell molecule. Composes std-tabs (tab strip
+;; atom) with two std-browse instances bound to the consumer entity.
+;; Each tab's `content: "@trait.X"` reference embeds one of the browse
+;; panels; std-tabs mirrors @entity.activeTab so only the active panel
+;; renders.
+;;
+;; Same composition pattern as std-master-detail-layout — every entity
+;; field stays inside the atoms (browse renders rows opaquely via its
+;; @config.fields). Safe to rebind to any consumer entity through the
+;; trait references' linkedEntity at the molecule call site.
+;;
+;; Default tabs: "All" + "Active". Override via call-site config on the
+;; TabsLayoutTabs trait. Two browse panels gives a useful starting
+;; point ("All items" vs "Active items") and consumers can rebind their
+;; events/listens to scope each panel differently. To go beyond two
+;; tabs, fork this shell or extend the tabs config + add more browse
+;; traits at the call site.
+
+orbital TabsLayoutItemOrbital {
+  uses Tabs   from "std/behaviors/std-tabs"
+  uses Browse from "std/behaviors/std-browse"
+
+  entity TabsLayoutItem [persistent: tabslayoutitems] {
+    id : string!
+    name : string
+    description : string
+    status : "active" | "inactive" = "active"
+  }
+  type TabsLayoutItemLoaded = Event { data : [TabsLayoutItem] }
+  type TabsLayoutItemLoadFailed = Event { error : string, code : string }
+
+  ;; Tabs atom keeps its own internal entity (TabsItem) — same pattern
+  ;; as std-filtered-list with Search/Filter/Pagination keeping their
+  ;; own UI-state containers. NO `-> TabsLayoutItem` rebind on Tabs;
+  ;; only the Browse panels rebind because Browse owns the rows.
+  trait TabsLayoutTabs = Tabs.traits.TabsItemTabs {
+    config: {
+      tabs: [
+        { id: "all",    label: "All",    content: "@trait.TabsLayoutAllBrowse" },
+        { id: "active", label: "Active", content: "@trait.TabsLayoutActiveBrowse" }
+      ],
+      defaultTab: "all"
+    }
+  }
+
+  trait TabsLayoutAllBrowse = Browse.traits.BrowseItemBrowse -> TabsLayoutItem {
+    config: {
+      pageSize: 10,
+      fields: [
+        { name: "name",        label: "Name",        variant: "h5" },
+        { name: "description", label: "Description", variant: "caption" }
+      ]
+    }
+  }
+
+  trait TabsLayoutActiveBrowse = Browse.traits.BrowseItemBrowse -> TabsLayoutItem {
+    config: {
+      pageSize: 10,
+      fields: [
+        { name: "name",        label: "Name",        variant: "h5" },
+        { name: "description", label: "Description", variant: "caption" }
+      ]
+    }
+  }
+
+  trait TabsLayout -> TabsLayoutItem [interaction, collection] {
+    state composing {
+      INIT -> composing
+        (fetch TabsLayoutItem { emit: { success: "TabsLayoutItemLoaded", failure: "TabsLayoutItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-6xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "layout" }, { type: "typography", variant: "h2", content: "Tabbed View" }] }, { type: "divider" }, "@trait.TabsLayoutTabs"] })
+    }
+    emits {
+      TabsLayoutItemLoadFailed
+      TabsLayoutItemLoaded
+    }
+  }
+
+  page "/tabs-layout" as TabsLayoutPage -> TabsLayout, TabsLayoutTabs, TabsLayoutAllBrowse, TabsLayoutActiveBrowse
+}

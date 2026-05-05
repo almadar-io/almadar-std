@@ -1,5 +1,28 @@
 # @almadar/std
 
+## 13.13.0
+
+### Added
+
+- **Two new layout-shell molecules** complete the layout-shell set
+  alongside `std-master-detail-layout` (13.12.0) and
+  `std-dashboard-grid-layout` (13.12.0):
+  - **`std-tabs-layout`** — generic tab-navigation shell. Composes
+    `std-tabs` (tab strip) with two `std-browse` panels. Default tabs
+    "All" / "Active"; rebind via call-site config. Each tab's
+    `content: "@trait.X"` reference embeds one of the browse panels so
+    only the active panel renders.
+  - **`std-stack-layout`** — minimal vertical-stack shell. Composes
+    `std-browse` + `std-pagination` with title chrome. Drops Search
+    and Filter from `std-filtered-list` for the simplest "show me a
+    list" prompt.
+- All 4 shells follow the same composition pattern: pure structure,
+  every entity field reference stays inside the atoms (browse renders
+  rows opaquely via `@config.fields`), atom-internal entities
+  (`TabsItem`, `PagedItem`) remain unbound, and the entire shell is
+  safe to rebind to any consumer entity through the trait references'
+  `linkedEntity` at the molecule call site.
+
 ## 5.2.0
 
 ### Changes

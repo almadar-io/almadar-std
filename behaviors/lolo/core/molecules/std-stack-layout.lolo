@@ -1,0 +1,67 @@
+app std-stack-layout "1.0.0"
+"std-stack-layout — minimal vertical-stack shell (header + browse + pagination)"
+;;
+;; Simplest layout-shell molecule. A title chrome + std-browse +
+;; std-pagination wired so paging refetches Browse with the new offset.
+;; Use this when the prompt is "show me a list of X" and nothing more —
+;; no search, no filter, no drawer, no tabs.
+;;
+;; Compared to std-filtered-list this drops Search and Filter, leaving
+;; just paginated browse. For richer compositions, pick std-filtered-list
+;; (search + filter + browse + pagination), std-master-detail-layout
+;; (browse + drawer), std-tabs-layout (tabs + browse panels), or
+;; std-dashboard-grid-layout (stats + graphs + browse).
+;;
+;; Pure structure — Browse renders rows opaquely via @config.fields,
+;; Pagination owns its internal PagedItem entity. Safe to rebind via
+;; linkedEntity at the call site for any consumer domain.
+
+orbital StackLayoutItemOrbital {
+  uses Browse     from "std/behaviors/std-browse"
+  uses Pagination from "std/behaviors/std-pagination"
+
+  entity StackLayoutItem [persistent: stacklayoutitems] {
+    id : string!
+    name : string
+    description : string
+  }
+  type StackLayoutItemLoaded = Event { data : [StackLayoutItem] }
+  type StackLayoutItemLoadFailed = Event { error : string, code : string }
+
+  trait StackLayoutBrowse = Browse.traits.BrowseItemBrowse -> StackLayoutItem {
+    config: {
+      pageSize: 10,
+      fields: [
+        { name: "name",        label: "Name",        variant: "h5" },
+        { name: "description", label: "Description", variant: "caption" }
+      ]
+    }
+    listens {
+      StackLayoutPagination.PAGE -> REFETCH_PAGE
+    }
+  }
+
+  trait StackLayoutPagination = Pagination.traits.PagedItemPagination {
+    config: {
+      pageSize: 10,
+      event: "PAGE"
+    }
+    listens {
+      StackLayoutBrowse.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait StackLayout -> StackLayoutItem [interaction, collection] {
+    state composing {
+      INIT -> composing
+        (fetch StackLayoutItem { emit: { success: "StackLayoutItemLoaded", failure: "StackLayoutItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", variant: "h2", content: "List" }] }, { type: "divider" }, "@trait.StackLayoutBrowse", "@trait.StackLayoutPagination"] })
+    }
+    emits {
+      StackLayoutItemLoadFailed
+      StackLayoutItemLoaded
+    }
+  }
+
+  page "/stack-layout" as StackLayoutPage -> StackLayout, StackLayoutBrowse, StackLayoutPagination
+}
