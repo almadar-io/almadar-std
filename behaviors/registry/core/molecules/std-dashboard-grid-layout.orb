@@ -1,160 +1,25 @@
 {
   "name": "std-dashboard-grid-layout",
-  "version": "1.0.0",
-  "description": "std-dashboard-grid-layout — std-stats + std-graphs + std-browse inside a dashboard-layout chrome with sidebar nav.",
+  "version": "2.0.0",
+  "description": "std-dashboard-grid-layout — dashboard-layout chrome with three trait config slots: statsTrait, graphsTrait, feedTrait.",
   "orbitals": [
     {
-      "name": "DashboardGridItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-stats",
-          "as": "Stats"
-        },
-        {
-          "from": "std/behaviors/std-graphs",
-          "as": "Graphs"
-        },
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        }
-      ],
+      "name": "DashboardGridLayoutOrbital",
       "entity": {
-        "name": "DashboardGridItem",
-        "collection": "dashboardgriditems",
-        "persistence": "persistent",
+        "name": "DashboardGridLayoutState",
+        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "label",
-            "type": "string"
-          },
-          {
-            "name": "amount",
-            "type": "number"
-          },
-          {
-            "name": "category",
-            "type": "string"
-          },
-          {
-            "name": "timestamp",
-            "type": "string"
           }
         ]
       },
       "traits": [
         {
-          "ref": "Stats.traits.StatsItemStats",
-          "name": "DashboardStats",
-          "config": {
-            "aggregations": [
-              {
-                "type": "sum",
-                "label": "Total",
-                "field": "amount"
-              },
-              {
-                "field": "amount",
-                "type": "avg",
-                "label": "Average"
-              },
-              {
-                "field": "id",
-                "type": "count",
-                "label": "Count"
-              }
-            ]
-          },
-          "listens": [
-            {
-              "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
-              "source": {
-                "kind": "trait",
-                "trait": "DashboardFeed"
-              }
-            }
-          ]
-        },
-        {
-          "ref": "Graphs.traits.GraphItemGraph",
-          "name": "DashboardGraphs",
-          "config": {
-            "chartType": "bar",
-            "valueField": "amount",
-            "categoryField": "category"
-          },
-          "listens": [
-            {
-              "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
-              "source": {
-                "kind": "trait",
-                "trait": "DashboardFeed"
-              }
-            }
-          ]
-        },
-        {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "DashboardFeed",
-          "linkedEntity": "DashboardGridItem",
-          "config": {
-            "pageSize": 10.0,
-            "fields": [
-              {
-                "name": "timestamp",
-                "label": "When",
-                "variant": "caption"
-              },
-              {
-                "name": "label",
-                "label": "Activity",
-                "variant": "h5"
-              },
-              {
-                "name": "amount",
-                "label": "Amount",
-                "variant": "badge"
-              }
-            ]
-          }
-        },
-        {
-          "name": "DashboardLayout",
+          "name": "DashboardGridLayout",
           "category": "interaction",
-          "linkedEntity": "DashboardGridItem",
-          "emits": [
-            {
-              "event": "DashboardGridItemLoadFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "DashboardGridItemLoaded",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[DashboardGridItem]"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -166,30 +31,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "DashboardGridItemLoadFailed",
-                "name": "DashboardGridItem load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "DashboardGridItemLoaded",
-                "name": "DashboardGridItem loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[DashboardGridItem]"
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -199,91 +40,63 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "DashboardGridItem",
-                    {
-                      "emit": {
-                        "failure": "DashboardGridItemLoadFailed",
-                        "success": "DashboardGridItemLoaded"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "navItems": [
-                        {
-                          "icon": "bar-chart-3",
-                          "href": "/dashboard",
-                          "label": "Dashboard"
-                        }
-                      ],
+                      "appName": "@config.appName",
+                      "type": "dashboard-layout",
+                      "navItems": "@config.navItems",
                       "children": [
+                        "@config.statsTrait",
+                        "@config.graphsTrait",
                         {
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical",
-                          "className": "max-w-6xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "bar-chart-3",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Dashboard",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            "@trait.DashboardStats",
-                            "@trait.DashboardGraphs",
-                            {
-                              "type": "typography",
-                              "variant": "h4",
-                              "content": "Recent Activity"
-                            },
-                            "@trait.DashboardFeed"
-                          ]
-                        }
-                      ],
-                      "appName": "Dashboard",
-                      "type": "dashboard-layout"
+                          "variant": "h4",
+                          "type": "typography",
+                          "content": "Recent Activity"
+                        },
+                        "@config.feedTrait"
+                      ]
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "config": {
+            "graphsTrait": {
+              "type": "trait"
+            },
+            "statsTrait": {
+              "type": "trait"
+            },
+            "appName": {
+              "type": "string",
+              "default": "Dashboard"
+            },
+            "navItems": {
+              "type": "[object]",
+              "default": [
+                {
+                  "icon": "bar-chart-3",
+                  "href": "/dashboard",
+                  "label": "Dashboard"
+                }
+              ]
+            },
+            "feedTrait": {
+              "type": "trait"
+            }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
         {
-          "name": "Dashboard",
+          "name": "DashboardGridLayoutPage",
           "path": "/dashboard",
           "traits": [
             {
-              "ref": "DashboardLayout"
-            },
-            {
-              "ref": "DashboardStats"
-            },
-            {
-              "ref": "DashboardGraphs"
-            },
-            {
-              "ref": "DashboardFeed"
+              "ref": "DashboardGridLayout"
             }
           ]
         }

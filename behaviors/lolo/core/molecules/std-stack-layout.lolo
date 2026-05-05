@@ -1,52 +1,23 @@
-app std-stack-layout "1.0.0"
-"std-stack-layout — minimal shell: header + std-browse + std-pagination."
+app std-stack-layout "2.0.0"
+"std-stack-layout — minimal chrome (title + divider) with one contentTrait config slot."
 
-orbital StackLayoutItemOrbital {
-  uses Browse     from "std/behaviors/std-browse"
-  uses Pagination from "std/behaviors/std-pagination"
-
-  entity StackLayoutItem [persistent: stacklayoutitems] {
+orbital StackLayoutOrbital {
+  entity StackLayoutState [runtime] {
     id : string!
-    name : string
-    description : string
-  }
-  type StackLayoutItemLoaded = Event { data : [StackLayoutItem] }
-  type StackLayoutItemLoadFailed = Event { error : string, code : string }
-
-  trait StackLayoutBrowse = Browse.traits.BrowseItemBrowse -> StackLayoutItem {
-    config: {
-      pageSize: 10,
-      fields: [
-        { name: "name",        label: "Name",        variant: "h5" },
-        { name: "description", label: "Description", variant: "caption" }
-      ]
-    }
-    listens {
-      StackLayoutPagination.PAGE -> REFETCH_PAGE
-    }
   }
 
-  trait StackLayoutPagination = Pagination.traits.PagedItemPagination {
-    config: {
-      pageSize: 10,
-      event: "PAGE"
+  trait StackLayout [interaction, instance] {
+    initial: composing
+    config {
+      contentTrait : trait
+      title        : string = "List"
+      icon         : string = "list"
     }
-    listens {
-      StackLayoutBrowse.BrowseItemLoaded -> ITEMS_LOADED
-    }
-  }
-
-  trait StackLayout -> StackLayoutItem [interaction, collection] {
     state composing {
       INIT -> composing
-        (fetch StackLayoutItem { emit: { success: "StackLayoutItemLoaded", failure: "StackLayoutItemLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", variant: "h2", content: "List" }] }, { type: "divider" }, "@trait.StackLayoutBrowse", "@trait.StackLayoutPagination"] })
-    }
-    emits {
-      StackLayoutItemLoadFailed
-      StackLayoutItemLoaded
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@config.icon" }, { type: "typography", variant: "h2", content: "@config.title" }] }, { type: "divider" }, "@config.contentTrait"] })
     }
   }
 
-  page "/stack-layout" as StackLayoutPage -> StackLayout, StackLayoutBrowse, StackLayoutPagination
+  page "/stack-layout" as StackLayoutPage -> StackLayout
 }

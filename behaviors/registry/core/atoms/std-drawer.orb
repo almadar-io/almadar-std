@@ -1,7 +1,7 @@
 {
   "name": "std-drawer",
-  "version": "2.0.0",
-  "description": "std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it.",
+  "version": "2.1.0",
+  "description": "std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it. Stateless: state lives in the OPEN payload, not the entity, so the trait stays safe under consumer entity rebinds.",
   "orbitals": [
     {
       "name": "DrawerContentOrbital",
@@ -13,11 +13,6 @@
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "selectedItemId",
-            "type": "string",
-            "default": ""
           }
         ]
       },
@@ -69,14 +64,7 @@
               {
                 "from": "closed",
                 "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.selectedItemId",
-                    ""
-                  ]
-                ]
+                "event": "INIT"
               },
               {
                 "from": "closed",
@@ -84,54 +72,49 @@
                 "event": "OPEN",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedItemId",
-                    "@payload.id"
-                  ],
-                  [
                     "render-ui",
                     "drawer",
                     {
-                      "onClose": "CLOSE",
                       "isOpen": true,
-                      "title": "@config.title",
+                      "position": "@config.position",
+                      "onClose": "CLOSE",
                       "type": "side-panel",
                       "width": "@config.width",
-                      "position": "@config.position",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "content": "@payload.name",
+                              "variant": "h4",
                               "type": "typography",
-                              "variant": "h4"
+                              "content": "@payload.name"
                             },
                             {
-                              "type": "typography",
                               "color": "muted",
                               "variant": "body",
-                              "content": "@payload.description"
+                              "content": "@payload.description",
+                              "type": "typography"
                             },
                             {
-                              "gap": "sm",
+                              "direction": "horizontal",
+                              "justify": "end",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "ghost",
+                                  "type": "button",
                                   "action": "CLOSE",
-                                  "label": "Close",
-                                  "type": "button"
+                                  "variant": "ghost",
+                                  "label": "Close"
                                 }
                               ],
-                              "justify": "end",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "title": "@config.title"
                     }
                   ]
                 ]
@@ -142,11 +125,6 @@
                 "event": "CLOSE",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedItemId",
-                    ""
-                  ],
-                  [
                     "render-ui",
                     "drawer",
                     null
@@ -156,6 +134,10 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Details"
+            },
             "width": {
               "type": "string",
               "default": "md",
@@ -173,10 +155,6 @@
                 "left",
                 "right"
               ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Details"
             }
           },
           "scope": "instance"

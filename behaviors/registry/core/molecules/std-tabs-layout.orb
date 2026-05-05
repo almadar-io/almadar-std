@@ -1,139 +1,35 @@
 {
   "name": "std-tabs-layout",
-  "version": "1.0.0",
-  "description": "std-tabs-layout — tabs strip + 2 swappable browse panels via @trait.X content refs. Default tabs: All / Active.",
+  "version": "2.0.0",
+  "description": "std-tabs-layout — chrome with std-tabs strip; consumer overrides config.tabs[].content with @trait.X references.",
   "orbitals": [
     {
-      "name": "TabsLayoutItemOrbital",
+      "name": "TabsLayoutOrbital",
       "uses": [
         {
           "from": "std/behaviors/std-tabs",
           "as": "Tabs"
-        },
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
         }
       ],
       "entity": {
-        "name": "TabsLayoutItem",
-        "collection": "tabslayoutitems",
-        "persistence": "persistent",
+        "name": "TabsLayoutState",
+        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "type": "string",
-            "default": "active",
-            "values": [
-              "active",
-              "inactive"
-            ]
           }
         ]
       },
       "traits": [
         {
           "ref": "Tabs.traits.TabsItemTabs",
-          "name": "TabsLayoutTabs",
-          "config": {
-            "tabs": [
-              {
-                "label": "All",
-                "content": "@trait.TabsLayoutAllBrowse",
-                "id": "all"
-              },
-              {
-                "label": "Active",
-                "id": "active",
-                "content": "@trait.TabsLayoutActiveBrowse"
-              }
-            ],
-            "defaultTab": "all"
-          }
-        },
-        {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "TabsLayoutAllBrowse",
-          "linkedEntity": "TabsLayoutItem",
-          "config": {
-            "pageSize": 10.0,
-            "fields": [
-              {
-                "variant": "h5",
-                "name": "name",
-                "label": "Name"
-              },
-              {
-                "name": "description",
-                "variant": "caption",
-                "label": "Description"
-              }
-            ]
-          }
-        },
-        {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "TabsLayoutActiveBrowse",
-          "linkedEntity": "TabsLayoutItem",
-          "config": {
-            "pageSize": 10.0,
-            "fields": [
-              {
-                "name": "name",
-                "variant": "h5",
-                "label": "Name"
-              },
-              {
-                "name": "description",
-                "label": "Description",
-                "variant": "caption"
-              }
-            ]
-          }
+          "name": "TabsLayoutTabs"
         },
         {
           "name": "TabsLayout",
           "category": "interaction",
-          "linkedEntity": "TabsLayoutItem",
-          "emits": [
-            {
-              "event": "TabsLayoutItemLoadFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TabsLayoutItemLoaded",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TabsLayoutItem]"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -145,30 +41,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "TabsLayoutItemLoadFailed",
-                "name": "TabsLayoutItem load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TabsLayoutItemLoaded",
-                "name": "TabsLayoutItem loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[TabsLayoutItem]"
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -178,36 +50,26 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "TabsLayoutItem",
-                    {
-                      "emit": {
-                        "success": "TabsLayoutItemLoaded",
-                        "failure": "TabsLayoutItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "layout",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
                               "variant": "h2",
                               "type": "typography",
-                              "content": "Tabbed View"
+                              "content": "@config.title"
                             }
                           ],
+                          "align": "center",
                           "gap": "sm"
                         },
                         {
@@ -215,16 +77,26 @@
                         },
                         "@trait.TabsLayoutTabs"
                       ],
+                      "gap": "md",
                       "className": "max-w-6xl mx-auto w-full",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Tabbed View"
+            },
+            "icon": {
+              "type": "string",
+              "default": "layout"
+            }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -237,12 +109,6 @@
             },
             {
               "ref": "TabsLayoutTabs"
-            },
-            {
-              "ref": "TabsLayoutAllBrowse"
-            },
-            {
-              "ref": "TabsLayoutActiveBrowse"
             }
           ]
         }

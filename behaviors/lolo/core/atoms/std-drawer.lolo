@@ -1,10 +1,9 @@
-app std-drawer "2.0.0"
-"std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it."
+app std-drawer "2.1.0"
+"std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it. Stateless: state lives in the OPEN payload, not the entity, so the trait stays safe under consumer entity rebinds."
 
 orbital DrawerContentOrbital {
   entity DrawerContent [runtime] {
-    id             : string!
-    selectedItemId : string = ""
+    id : string!
   }
 
   trait DrawerContentDrawer -> DrawerContent [interaction, instance] {
@@ -16,14 +15,11 @@ orbital DrawerContentOrbital {
     }
     state closed {
       INIT -> closed
-        (set @entity.selectedItemId "")
       OPEN -> open
-        (set @entity.selectedItemId @payload.id)
         (render-ui drawer { type: "side-panel", onClose: "CLOSE", title: "@config.title", isOpen: true, position: "@config.position", width: "@config.width", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "@payload.name" }, { type: "typography", variant: "body", color: "muted", content: "@payload.description" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] }] })
     }
     state open {
       CLOSE -> closed
-        (set @entity.selectedItemId "")
         (render-ui drawer null)
     }
     listens {

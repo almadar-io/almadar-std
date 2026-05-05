@@ -1,119 +1,25 @@
 {
   "name": "std-stack-layout",
-  "version": "1.0.0",
-  "description": "std-stack-layout — minimal shell: header + std-browse + std-pagination.",
+  "version": "2.0.0",
+  "description": "std-stack-layout — minimal chrome (title + divider) with one contentTrait config slot.",
   "orbitals": [
     {
-      "name": "StackLayoutItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        },
-        {
-          "from": "std/behaviors/std-pagination",
-          "as": "Pagination"
-        }
-      ],
+      "name": "StackLayoutOrbital",
       "entity": {
-        "name": "StackLayoutItem",
-        "collection": "stacklayoutitems",
-        "persistence": "persistent",
+        "name": "StackLayoutState",
+        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
           }
         ]
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "StackLayoutBrowse",
-          "linkedEntity": "StackLayoutItem",
-          "config": {
-            "fields": [
-              {
-                "variant": "h5",
-                "label": "Name",
-                "name": "name"
-              },
-              {
-                "label": "Description",
-                "variant": "caption",
-                "name": "description"
-              }
-            ],
-            "pageSize": 10.0
-          },
-          "listens": [
-            {
-              "event": "PAGE",
-              "triggers": "REFETCH_PAGE",
-              "source": {
-                "kind": "trait",
-                "trait": "StackLayoutPagination"
-              }
-            }
-          ]
-        },
-        {
-          "ref": "Pagination.traits.PagedItemPagination",
-          "name": "StackLayoutPagination",
-          "config": {
-            "pageSize": 10.0,
-            "event": "PAGE"
-          },
-          "listens": [
-            {
-              "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
-              "source": {
-                "kind": "trait",
-                "trait": "StackLayoutBrowse"
-              }
-            }
-          ]
-        },
-        {
           "name": "StackLayout",
           "category": "interaction",
-          "linkedEntity": "StackLayoutItem",
-          "emits": [
-            {
-              "event": "StackLayoutItemLoadFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "StackLayoutItemLoaded",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[StackLayoutItem]"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -125,30 +31,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "StackLayoutItemLoadFailed",
-                "name": "StackLayoutItem load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "StackLayoutItemLoaded",
-                "name": "StackLayoutItem loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[StackLayoutItem]"
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -158,54 +40,56 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "StackLayoutItem",
-                    {
-                      "emit": {
-                        "success": "StackLayoutItemLoaded",
-                        "failure": "StackLayoutItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "list",
+                              "name": "@config.icon",
                               "type": "icon"
                             },
                             {
-                              "content": "List",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h2"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
-                        "@trait.StackLayoutBrowse",
-                        "@trait.StackLayoutPagination"
+                        "@config.contentTrait"
                       ],
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md"
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "config": {
+            "contentTrait": {
+              "type": "trait"
+            },
+            "title": {
+              "type": "string",
+              "default": "List"
+            },
+            "icon": {
+              "type": "string",
+              "default": "list"
+            }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -215,12 +99,6 @@
           "traits": [
             {
               "ref": "StackLayout"
-            },
-            {
-              "ref": "StackLayoutBrowse"
-            },
-            {
-              "ref": "StackLayoutPagination"
             }
           ]
         }

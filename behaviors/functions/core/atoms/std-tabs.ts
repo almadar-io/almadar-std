@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-tabs';
@@ -46,12 +46,12 @@ export interface StdTabsTabChangedPayload {
 export interface StdTabsConfig {
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
-  /** Default: `[{"icon":"info","id":"overview","label":"Overview"},{"icon":"list","label":"Details","id":"details"},{"label":"Settings","id":"settings","icon":"settings"}]` */
-  tabs?: TraitConfig[];
-  /** Default: `"overview"` */
-  defaultTab?: string;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `"overview"` */
+  defaultTab?: string;
+  /** Default: `[{"id":"overview","icon":"info","label":"Overview"},{"icon":"list","id":"details","label":"Details"},{"label":"Settings","id":"settings","icon":"settings"}]` */
+  tabs?: TraitConfig[];
 }
 
 /**

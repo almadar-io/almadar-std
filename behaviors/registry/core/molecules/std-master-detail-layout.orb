@@ -1,100 +1,35 @@
 {
   "name": "std-master-detail-layout",
-  "version": "1.0.0",
-  "description": "std-master-detail-layout — two-pane shell: std-browse (master) + std-drawer (detail panel).",
+  "version": "2.0.0",
+  "description": "std-master-detail-layout — chrome with std-drawer side-panel + masterTrait config slot for the consumer's master list.",
   "orbitals": [
     {
-      "name": "MasterDetailItemOrbital",
+      "name": "MasterDetailLayoutOrbital",
       "uses": [
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        },
         {
           "from": "std/behaviors/std-drawer",
           "as": "Drawer"
         }
       ],
       "entity": {
-        "name": "MasterDetailItem",
-        "collection": "masterdetailitems",
-        "persistence": "persistent",
+        "name": "MasterDetailLayoutState",
+        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
             "type": "string",
             "required": true
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "description",
-            "type": "string"
           }
         ]
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "MasterDetailBrowse",
-          "linkedEntity": "MasterDetailItem",
-          "config": {
-            "pageSize": 10.0,
-            "fields": [
-              {
-                "name": "name",
-                "label": "Name",
-                "variant": "h5"
-              },
-              {
-                "label": "Description",
-                "name": "description",
-                "variant": "caption"
-              }
-            ]
-          }
-        },
-        {
           "ref": "Drawer.traits.DrawerContentDrawer",
-          "name": "MasterDetailDrawer",
-          "config": {
-            "placement": "right",
-            "width": "md",
-            "title": "Details"
-          }
+          "name": "MasterDetailDrawer"
         },
         {
           "name": "MasterDetailLayout",
           "category": "interaction",
-          "linkedEntity": "MasterDetailItem",
-          "emits": [
-            {
-              "event": "MasterDetailItemLoadFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "MasterDetailItemLoaded",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[MasterDetailItem]"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
@@ -106,30 +41,6 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "MasterDetailItemLoadFailed",
-                "name": "MasterDetailItem load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "MasterDetailItemLoaded",
-                "name": "MasterDetailItem loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[MasterDetailItem]"
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -139,66 +50,65 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "MasterDetailItem",
-                    {
-                      "emit": {
-                        "failure": "MasterDetailItemLoadFailed",
-                        "success": "MasterDetailItemLoaded"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "className": "max-w-6xl mx-auto w-full",
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "list",
+                              "name": "@config.icon",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "Master / Detail"
+                              "variant": "h2",
+                              "content": "@config.title"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
-                        "@trait.MasterDetailBrowse",
-                        "@trait.MasterDetailDrawer"
-                      ]
+                        "@config.masterTrait"
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "config": {
+            "masterTrait": {
+              "type": "trait"
+            },
+            "icon": {
+              "type": "string",
+              "default": "list"
+            },
+            "title": {
+              "type": "string",
+              "default": "Master / Detail"
+            }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
         {
-          "name": "MasterDetail",
+          "name": "MasterDetailPage",
           "path": "/master-detail",
           "traits": [
             {
               "ref": "MasterDetailLayout"
-            },
-            {
-              "ref": "MasterDetailBrowse"
             },
             {
               "ref": "MasterDetailDrawer"
