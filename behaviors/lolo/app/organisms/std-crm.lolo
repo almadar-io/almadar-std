@@ -2,6 +2,8 @@ app std-crm "1.0.0"
 "std-crm as a Function"
 
 orbital ContactOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Contact [runtime] {
     id : string!
     name : string = ""
@@ -10,6 +12,21 @@ orbital ContactOrbital {
     phone : string = ""
     status : "lead" | "prospect" | "customer" | "inactive" = "lead"
     pendingId : string = ""
+  }
+
+  trait ContactAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ContactBrowse",
+      appName: "CRM",
+      navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }],
+      searchEvent: "CONTACT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CONTACT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CONTACT_SEARCH
+      NOTIFY_CLICK: CONTACT_NOTIFICATIONS_OPEN
+    }
   }
 
   type ContactLoaded     = Event { data : [Contact] }                  "Fired when Contact finishes loading"
@@ -33,8 +50,13 @@ orbital ContactOrbital {
       INIT -> browsing
         (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      CONTACT_SEARCH -> browsing
+        (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      CONTACT_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to contacts", action: "INIT", variant: "ghost" }] })
       ContactLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Contacts", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Contact", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Contacts", value: "@payload.data.length", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "user" }, { name: "status", variant: "badge" }, { name: "company", variant: "body" }, { name: "email", variant: "caption" }, { name: "phone", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Contacts", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Contact", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Contacts", value: "@payload.data.length", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "user" }, { name: "status", variant: "badge" }, { name: "company", variant: "body" }, { name: "email", variant: "caption" }, { name: "phone", variant: "caption" }], variant: "card", gap: "sm" }] })
       ContactLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load contact" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -65,8 +87,12 @@ NoteSaved
       ContactCreate.CONTACT_CREATED -> INIT
       ContactEdit.CONTACT_UPDATED -> INIT
       ContactDelete.CONTACT_DELETED -> INIT
+      ContactAppLayout.CONTACT_SEARCH -> CONTACT_SEARCH
+      ContactAppLayout.CONTACT_NOTIFICATIONS_OPEN -> CONTACT_NOTIFICATIONS_OPEN
+      CONTACT_SEARCH { value : string }
+      CONTACT_NOTIFICATIONS_OPEN { id : string }
           ContactLoadFailed { error : string, code : string }
-    
+
       ContactSaveFailed { error : string, code : string }
       ContactUpdateFailed { error : string, code : string }
       ContactDeleteFailed { error : string, code : string }
@@ -218,7 +244,7 @@ ContactLoadFailed
           ContactLoadFailed { error : string, code : string }
     }
   }
-  page "/contacts" as ContactsPage -> ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
+  page "/contacts" as ContactsPage -> ContactAppLayout, ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
 }
 orbital DealOrbital {
   entity Deal [runtime] {

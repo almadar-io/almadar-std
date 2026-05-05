@@ -2,6 +2,8 @@ app std-healthcare "1.0.0"
 "std-healthcare as a Function"
 
 orbital PatientOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Patient [persistent: patients] {
     id : string!
     firstName : string!
@@ -11,6 +13,21 @@ orbital PatientOrbital {
     insuranceId : string
     status : "active" | "inactive" | "discharged" = "active"
     pendingId : string = ""
+  }
+
+  trait PatientAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.PatientBrowse",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }],
+      searchEvent: "PATIENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "PATIENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PATIENT_SEARCH
+      NOTIFY_CLICK: PATIENT_NOTIFICATIONS_OPEN
+    }
   }
 
   type PatientLoaded     = Event { data : [Patient] }                  "Fired when Patient finishes loading"
@@ -36,8 +53,13 @@ orbital PatientOrbital {
       INIT -> browsing
         (fetch Patient { emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PATIENT_SEARCH -> browsing
+        (fetch Patient { emit: { success: "PatientLoaded", failure: "PatientLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      PATIENT_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to patients", action: "INIT", variant: "ghost" }] })
       PatientLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Patients", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Patient", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Patients", value: "@payload.data.length", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "firstName", variant: "h3", icon: "user" }, { name: "lastName", variant: "h3" }, { name: "status", variant: "badge" }, { name: "dateOfBirth", label: "Date of Birth", variant: "body", format: "date" }, { name: "phone", variant: "caption" }, { name: "insuranceId", label: "Insurance ID", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Patients", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Patient", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Total Patients", value: "@payload.data.length", icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "firstName", variant: "h3", icon: "user" }, { name: "lastName", variant: "h3" }, { name: "status", variant: "badge" }, { name: "dateOfBirth", label: "Date of Birth", variant: "body", format: "date" }, { name: "phone", variant: "caption" }, { name: "insuranceId", label: "Insurance ID", variant: "caption" }], variant: "card", gap: "sm" }] })
       PatientLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load patient" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -70,11 +92,15 @@ PrescriptionSaved
       PatientEdit.PATIENT_UPDATED -> INIT
       PatientDelete.PATIENT_DELETED -> INIT
       IntakeFormOrbital.IntakeFormWizard.INTAKE_COMPLETE -> INIT
+      PatientAppLayout.PATIENT_SEARCH -> PATIENT_SEARCH
+      PatientAppLayout.PATIENT_NOTIFICATIONS_OPEN -> PATIENT_NOTIFICATIONS_OPEN
       VIEW { id : string!, row : Patient }
       EDIT { id : string!, row : Patient }
       DELETE { id : string!, row : Patient }
+      PATIENT_SEARCH { value : string }
+      PATIENT_NOTIFICATIONS_OPEN { id : string }
           PatientLoadFailed { error : string, code : string }
-    
+
       PatientSaveFailed { error : string, code : string }
       PatientUpdateFailed { error : string, code : string }
       PatientDeleteFailed { error : string, code : string }
@@ -230,7 +256,7 @@ PatientLoadFailed
       PatientBrowse.DELETE -> DELETE
     }
   }
-  page "/patients" as PatientsPage -> PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
+  page "/patients" as PatientsPage -> PatientAppLayout, PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
 }
 orbital AppointmentOrbital {
   entity Appointment [persistent: appointments] {

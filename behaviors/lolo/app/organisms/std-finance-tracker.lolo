@@ -2,6 +2,8 @@ app std-finance-tracker "1.0.0"
 "std-finance-tracker as a Function"
 
 orbital TransactionOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Transaction [persistent: transactions] {
     id : string!
     description : string!
@@ -9,6 +11,21 @@ orbital TransactionOrbital {
     category : string
     date : datetime
     pendingId : string = ""
+  }
+
+  trait TransactionAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.TransactionBrowse",
+      appName: "Finance Tracker",
+      navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }],
+      searchEvent: "TRANSACTION_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TRANSACTION_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TRANSACTION_SEARCH
+      NOTIFY_CLICK: TRANSACTION_NOTIFICATIONS_OPEN
+    }
   }
 
   type TransactionLoaded     = Event { data : [Transaction] }                  "Fired when Transaction finishes loading"
@@ -26,8 +43,13 @@ orbital TransactionOrbital {
       INIT -> browsing
         (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      TRANSACTION_SEARCH -> browsing
+        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      TRANSACTION_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to transactions", action: "INIT", variant: "ghost" }] })
       TransactionLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Transactions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Transaction", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "description", variant: "h3", icon: "credit-card" }, { name: "category", variant: "badge" }, { name: "amount", variant: "h4", format: "currency" }, { name: "date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Transactions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Transaction", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "description", variant: "h3", icon: "credit-card" }, { name: "category", variant: "badge" }, { name: "amount", variant: "h4", format: "currency" }, { name: "date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] })
       TransactionLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load transaction" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -51,11 +73,15 @@ FinanceReportSaved
       TransactionCreate.TRANSACTION_CREATED -> INIT
       TransactionEdit.TRANSACTION_UPDATED -> INIT
       TransactionDelete.TRANSACTION_DELETED -> INIT
+      TransactionAppLayout.TRANSACTION_SEARCH -> TRANSACTION_SEARCH
+      TransactionAppLayout.TRANSACTION_NOTIFICATIONS_OPEN -> TRANSACTION_NOTIFICATIONS_OPEN
       VIEW { id : string!, row : Transaction }
       EDIT { id : string!, row : Transaction }
       DELETE { id : string!, row : Transaction }
+      TRANSACTION_SEARCH { value : string }
+      TRANSACTION_NOTIFICATIONS_OPEN { id : string }
           TransactionLoadFailed { error : string, code : string }
-    
+
       TransactionSaveFailed { error : string, code : string }
       TransactionUpdateFailed { error : string, code : string }
       TransactionDeleteFailed { error : string, code : string }
@@ -206,7 +232,7 @@ TransactionLoadFailed
       TransactionBrowse.DELETE -> DELETE
     }
   }
-  page "/transactions" as TransactionsPage -> TransactionBrowse, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete
+  page "/transactions" as TransactionsPage -> TransactionAppLayout, TransactionBrowse, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete
 }
 orbital FinanceSummaryOrbital {
   entity FinanceSummary [runtime] {

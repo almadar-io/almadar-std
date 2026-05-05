@@ -2,6 +2,8 @@ app std-booking-system "1.0.0"
 "std-booking-system as a Function"
 
 orbital ProviderOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Provider [persistent: providers] {
     id : string!
     name : string!
@@ -11,6 +13,21 @@ orbital ProviderOrbital {
     rating : number = 0
     available : boolean = true
     pendingId : string = ""
+  }
+
+  trait BookingProviderAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ProviderBrowse",
+      appName: "BookingSystemApp",
+      navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }],
+      searchEvent: "BOOKING_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BOOKING_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BOOKING_SEARCH
+      NOTIFY_CLICK: BOOKING_NOTIFICATIONS_OPEN
+    }
   }
 
   type ProviderLoaded     = Event { data : [Provider] }                  "Fired when Provider finishes loading"
@@ -34,8 +51,13 @@ orbital ProviderOrbital {
       INIT -> browsing
         (fetch Provider { emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      BOOKING_SEARCH -> browsing
+        (fetch Provider { emit: { success: "ProviderLoaded", failure: "ProviderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      BOOKING_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to providers", action: "INIT", variant: "ghost" }] })
       ProviderLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "BookingSystemApp", navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Providers", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Provider", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "briefcase" }, { name: "specialty", variant: "badge" }, { name: "rating", variant: "body", format: "number" }, { name: "location", variant: "body" }, { name: "phone", variant: "caption" }], cols: 2, gap: "md" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase" }, { type: "typography", content: "Providers", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Provider", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "briefcase" }, { name: "specialty", variant: "badge" }, { name: "rating", variant: "body", format: "number" }, { name: "location", variant: "body" }, { name: "phone", variant: "caption" }], cols: 2, gap: "md" }] })
       ProviderLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load provider" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -66,11 +88,15 @@ AppointmentDeleted
       ProviderCreate.PROVIDER_CREATED -> INIT
       ProviderEdit.PROVIDER_UPDATED -> INIT
       ProviderDelete.PROVIDER_DELETED -> INIT
+      BookingProviderAppLayout.BOOKING_SEARCH -> BOOKING_SEARCH
+      BookingProviderAppLayout.BOOKING_NOTIFICATIONS_OPEN -> BOOKING_NOTIFICATIONS_OPEN
       VIEW { id : string!, row : Provider }
       EDIT { id : string!, row : Provider }
       DELETE { id : string!, row : Provider }
+      BOOKING_SEARCH { value : string }
+      BOOKING_NOTIFICATIONS_OPEN { id : string }
           ProviderLoadFailed { error : string, code : string }
-    
+
       ProviderSaveFailed { error : string, code : string }
       ProviderUpdateFailed { error : string, code : string }
       ProviderDeleteFailed { error : string, code : string }
@@ -225,7 +251,7 @@ ProviderLoadFailed
       ProviderBrowse.DELETE -> DELETE
     }
   }
-  page "/providers" as ProvidersPage -> ProviderBrowse, ProviderCreate, ProviderEdit, ProviderView, ProviderDelete
+  page "/providers" as ProvidersPage -> BookingProviderAppLayout, ProviderBrowse, ProviderCreate, ProviderEdit, ProviderView, ProviderDelete
 }
 orbital BookingOrbital {
   entity Booking [runtime] {

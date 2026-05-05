@@ -2,6 +2,8 @@ app std-ecommerce "1.0.0"
 "std-ecommerce as a Function"
 
 orbital ProductOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Product [persistent: products] {
     id : string!
     name : string!
@@ -11,6 +13,21 @@ orbital ProductOrbital {
     sku : string
     inStock : boolean = true
     pendingId : string = ""
+  }
+
+  trait ProductAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ProductBrowse",
+      appName: "EcommerceApp",
+      navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }],
+      searchEvent: "PRODUCT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "PRODUCT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PRODUCT_SEARCH
+      NOTIFY_CLICK: PRODUCT_NOTIFICATIONS_OPEN
+    }
   }
 
   type ProductLoaded     = Event { data : [Product] }                  "Fired when Product finishes loading"
@@ -38,8 +55,13 @@ orbital ProductOrbital {
       INIT -> browsing
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      PRODUCT_SEARCH -> browsing
+        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      PRODUCT_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to products", action: "INIT", variant: "ghost" }] })
       ProductLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "package" }, { name: "category", variant: "badge" }, { name: "price", variant: "h4", format: "currency" }, { name: "sku", variant: "caption" }, { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }], cols: 3, gap: "md" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "package" }, { name: "category", variant: "badge" }, { name: "price", variant: "h4", format: "currency" }, { name: "sku", variant: "caption" }, { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }], cols: 3, gap: "md" }] })
       ProductLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load product" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -74,9 +96,13 @@ OrderRecordDeleted
       ProductCreate.PRODUCT_CREATED -> INIT
       ProductEdit.PRODUCT_UPDATED -> INIT
       ProductDelete.PRODUCT_DELETED -> INIT
+      ProductAppLayout.PRODUCT_SEARCH -> PRODUCT_SEARCH
+      ProductAppLayout.PRODUCT_NOTIFICATIONS_OPEN -> PRODUCT_NOTIFICATIONS_OPEN
       VIEW { id : string!, row : Product }
       EDIT { id : string!, row : Product }
       DELETE { id : string!, row : Product }
+      PRODUCT_SEARCH { value : string }
+      PRODUCT_NOTIFICATIONS_OPEN { id : string }
           ProductLoadFailed { error : string, code : string }
     
       ProductSaveFailed { error : string, code : string }
@@ -235,7 +261,7 @@ ProductLoadFailed
       ProductBrowse.DELETE -> DELETE
     }
   }
-  page "/products" as ProductsPage -> ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
+  page "/products" as ProductsPage -> ProductAppLayout, ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
 }
 orbital CartItemOrbital {
   entity CartItem [persistent: cartitems] {

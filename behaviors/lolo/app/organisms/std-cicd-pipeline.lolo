@@ -2,6 +2,8 @@ app std-cicd-pipeline "1.0.0"
 "std-cicd-pipeline as a Function"
 
 orbital BuildOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Build [persistent: builds] {
     id : string!
     branch : string!
@@ -9,6 +11,21 @@ orbital BuildOrbital {
     commit : string
     triggeredBy : string
     pendingId : string = ""
+  }
+
+  trait BuildAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.BuildBrowse",
+      appName: "CI/CD Pipeline",
+      navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }],
+      searchEvent: "BUILD_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BUILD_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BUILD_SEARCH
+      NOTIFY_CLICK: BUILD_NOTIFICATIONS_OPEN
+    }
   }
 
   type BuildLoaded     = Event { data : [Build] }                  "Fired when Build finishes loading"
@@ -26,8 +43,13 @@ orbital BuildOrbital {
       INIT -> browsing
         (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading builds…" }] })
+      BUILD_SEARCH -> browsing
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
+      BUILD_NOTIFICATIONS_OPEN -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to builds", action: "INIT", variant: "ghost" }] })
       BuildLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] })
       BuildLoadFailed -> browsing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load builds" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
@@ -51,11 +73,15 @@ DeploymentSaved
       BuildCreate.BUILD_CREATED -> INIT
       BuildEdit.BUILD_UPDATED -> INIT
       BuildDelete.BUILD_DELETED -> INIT
+      BuildAppLayout.BUILD_SEARCH -> BUILD_SEARCH
+      BuildAppLayout.BUILD_NOTIFICATIONS_OPEN -> BUILD_NOTIFICATIONS_OPEN
       VIEW { id : string!, row : Build }
       EDIT { id : string!, row : Build }
       DELETE { id : string!, row : Build }
+      BUILD_SEARCH { value : string }
+      BUILD_NOTIFICATIONS_OPEN { id : string }
           BuildLoadFailed { error : string, code : string }
-    
+
       BuildSaveFailed { error : string, code : string }
       BuildUpdateFailed { error : string, code : string }
       BuildDeleteFailed { error : string, code : string }
@@ -206,7 +232,7 @@ BuildLoadFailed
       BuildBrowse.DELETE -> DELETE
     }
   }
-  page "/builds" as BuildsPage -> BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
+  page "/builds" as BuildsPage -> BuildAppLayout, BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
 }
 orbital StageOrbital {
   entity Stage [runtime] {
