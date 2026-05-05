@@ -529,7 +529,10 @@ orbital CheckoutOrbital {
         ]})
     }
     state review {
-      COMPLETE -> complete
+      ;; Guard: COMPLETE only fires from the review state if the wizard's
+      ;; entity is fully populated — protects against programmatic
+      ;; dispatches that try to place an order with missing fields.
+      COMPLETE -> complete when (and @entity.customerName @entity.email @entity.shippingAddress)
         (set @entity.status "placed")
         (persist create Checkout @entity { emit: { success: "CheckoutSaved", failure: "CheckoutSaveFailed" } })
         (emit ORDER_PLACED { id: "@entity.id" })
