@@ -72,9 +72,11 @@ export * from './agent/molecules/std-agent-rag.js';
 export * from './agent/molecules/std-agent-tool-loop.js';
 export * from './core/molecules/std-cart.js';
 export * from './core/molecules/std-dashboard.js';
+export * from './core/molecules/std-dashboard-grid-layout.js';
 export * from './core/molecules/std-filtered-list.js';
 export * from './core/molecules/std-form-advanced.js';
 export * from './core/molecules/std-list.js';
+export * from './core/molecules/std-master-detail-layout.js';
 export * from './probes/molecules/std-source-scope-probe.js';
 export * from './core/molecules/std-wizard-form.js';
 

@@ -1,0 +1,89 @@
+app std-dashboard-grid-layout "1.0.0"
+"std-dashboard-grid-layout — stats + charts + activity feed in a dashboard chrome"
+;;
+;; Generic layout-shell molecule replacing the broken std-dashboard.
+;; Composes std-stats (top stat-card row), std-graphs (mid charts row),
+;; and std-browse (bottom activity feed) inside a `dashboard-layout`
+;; chrome with sidebar nav + header.
+;;
+;; Pure structure — every reference to entity fields stays inside the
+;; atoms (stats/graphs aggregate from emitted payloads; browse renders
+;; rows opaquely). Safe to rebind to any consumer entity via the trait
+;; references' linkedEntity at the molecule call site.
+;;
+;; Why this exists: std-dashboard hardcoded `@entity.value`,
+;; `@entity.threshold`, `@entity.category` references in its trait body
+;; that don't auto-rewrite when consumers rebind to a custom entity
+;; (e.g. ServerHealth { hostname, cpu, memory }). This shell sidesteps
+;; that hazard by leaving all field semantics inside the atoms.
+
+orbital DashboardGridItemOrbital {
+  uses Stats  from "std/behaviors/std-stats"
+  uses Graphs from "std/behaviors/std-graphs"
+  uses Browse from "std/behaviors/std-browse"
+
+  entity DashboardGridItem [persistent: dashboardgriditems] {
+    id : string!
+    label : string
+    amount : number
+    category : string
+    timestamp : string
+  }
+  type DashboardGridItemLoaded = Event { data : [DashboardGridItem] }
+  type DashboardGridItemLoadFailed = Event { error : string, code : string }
+
+  ;; Stats and Graphs keep their own internal entities (StatsItem,
+  ;; GraphItem) as UI-state containers — same pattern as std-filtered-list
+  ;; with Search/Filter/Pagination. They listen for ITEMS_LOADED (mapped
+  ;; from DashboardLayout's DashboardGridItemLoaded) and aggregate from
+  ;; the payload. Only DashboardFeed rebinds to DashboardGridItem because
+  ;; it's the data renderer.
+  trait DashboardStats = Stats.traits.StatsItemStats {
+    config: {
+      aggregations: [
+        { field: "amount", type: "sum",   label: "Total" },
+        { field: "amount", type: "avg",   label: "Average" },
+        { field: "id",     type: "count", label: "Count" }
+      ]
+    }
+    listens {
+      DashboardFeed.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait DashboardGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      categoryField: "category",
+      valueField:    "amount",
+      chartType:     "bar"
+    }
+    listens {
+      DashboardFeed.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait DashboardFeed = Browse.traits.BrowseItemBrowse -> DashboardGridItem {
+    config: {
+      pageSize: 10,
+      fields: [
+        { name: "timestamp", label: "When",     variant: "caption" },
+        { name: "label",     label: "Activity", variant: "h5" },
+        { name: "amount",    label: "Amount",   variant: "badge" }
+      ]
+    }
+  }
+
+  trait DashboardLayout -> DashboardGridItem [interaction, collection] {
+    state composing {
+      INIT -> composing
+        (fetch DashboardGridItem { emit: { success: "DashboardGridItemLoaded", failure: "DashboardGridItemLoadFailed" } })
+        (render-ui main { type: "dashboard-layout", appName: "Dashboard", navItems: [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "bar-chart-3" }, { type: "typography", variant: "h2", content: "Dashboard" }] }, { type: "divider" }, "@trait.DashboardStats", "@trait.DashboardGraphs", { type: "typography", variant: "h4", content: "Recent Activity" }, "@trait.DashboardFeed"] }] })
+    }
+    emits {
+      DashboardGridItemLoadFailed
+      DashboardGridItemLoaded
+    }
+  }
+
+  page "/dashboard" as Dashboard -> DashboardLayout, DashboardStats, DashboardGraphs, DashboardFeed
+}

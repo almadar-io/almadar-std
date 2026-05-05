@@ -1,0 +1,211 @@
+{
+  "name": "std-master-detail-layout",
+  "version": "1.0.0",
+  "description": "std-master-detail-layout — generic two-pane shell (browse + drawer)",
+  "orbitals": [
+    {
+      "name": "MasterDetailItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-drawer",
+          "as": "Drawer"
+        }
+      ],
+      "entity": {
+        "name": "MasterDetailItem",
+        "collection": "masterdetailitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "MasterDetailBrowse",
+          "linkedEntity": "MasterDetailItem",
+          "config": {
+            "fields": [
+              {
+                "name": "name",
+                "label": "Name",
+                "variant": "h5"
+              },
+              {
+                "variant": "caption",
+                "name": "description",
+                "label": "Description"
+              }
+            ],
+            "pageSize": 10.0
+          }
+        },
+        {
+          "ref": "Drawer.traits.DrawerContentDrawer",
+          "name": "MasterDetailDrawer",
+          "config": {
+            "title": "Details",
+            "width": "md",
+            "placement": "right"
+          }
+        },
+        {
+          "name": "MasterDetailLayout",
+          "category": "interaction",
+          "linkedEntity": "MasterDetailItem",
+          "emits": [
+            {
+              "event": "MasterDetailItemLoadFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MasterDetailItemLoaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[MasterDetailItem]"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MasterDetailItemLoadFailed",
+                "name": "MasterDetailItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MasterDetailItemLoaded",
+                "name": "MasterDetailItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[MasterDetailItem]"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "MasterDetailItem",
+                    {
+                      "emit": {
+                        "success": "MasterDetailItemLoaded",
+                        "failure": "MasterDetailItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-6xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "list",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Master / Detail",
+                              "variant": "h2",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.MasterDetailBrowse",
+                        "@trait.MasterDetailDrawer"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MasterDetail",
+          "path": "/master-detail",
+          "traits": [
+            {
+              "ref": "MasterDetailLayout"
+            },
+            {
+              "ref": "MasterDetailBrowse"
+            },
+            {
+              "ref": "MasterDetailDrawer"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

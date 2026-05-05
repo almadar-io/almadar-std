@@ -1,0 +1,59 @@
+app std-master-detail-layout "1.0.0"
+"std-master-detail-layout — generic two-pane shell (browse + drawer)"
+;;
+;; Generic layout-shell molecule. Composes std-browse (master list, left)
+;; with std-drawer (detail panel, right). The MasterDetailLayout owns the
+;; chrome and the (fetch <Entity>) call; std-browse renders the rows;
+;; std-drawer opens when a row is selected.
+;;
+;; Wiring: browse emits ITEM_SELECTED on row click; drawer listens and
+;; transitions to its `open` state with the selected item id as payload.
+;; Pure structure — every reference to entity fields stays inside the
+;; atoms (which read fields opaquely via @entity.id and emit-payload).
+;; Safe to rebind to any consumer entity through `linkedEntity` overrides
+;; on the trait references at the call site.
+
+orbital MasterDetailItemOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Drawer from "std/behaviors/std-drawer"
+
+  entity MasterDetailItem [persistent: masterdetailitems] {
+    id : string!
+    name : string
+    description : string
+  }
+  type MasterDetailItemLoaded = Event { data : [MasterDetailItem] }
+  type MasterDetailItemLoadFailed = Event { error : string, code : string }
+
+  trait MasterDetailBrowse = Browse.traits.BrowseItemBrowse -> MasterDetailItem {
+    config: {
+      pageSize: 10,
+      fields: [
+        { name: "name",        label: "Name",        variant: "h5" },
+        { name: "description", label: "Description", variant: "caption" }
+      ]
+    }
+  }
+
+  trait MasterDetailDrawer = Drawer.traits.DrawerContentDrawer {
+    config: {
+      placement: "right",
+      width: "md",
+      title: "Details"
+    }
+  }
+
+  trait MasterDetailLayout -> MasterDetailItem [interaction, collection] {
+    state composing {
+      INIT -> composing
+        (fetch MasterDetailItem { emit: { success: "MasterDetailItemLoaded", failure: "MasterDetailItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-6xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list" }, { type: "typography", variant: "h2", content: "Master / Detail" }] }, { type: "divider" }, "@trait.MasterDetailBrowse", "@trait.MasterDetailDrawer"] })
+    }
+    emits {
+      MasterDetailItemLoadFailed
+      MasterDetailItemLoaded
+    }
+  }
+
+  page "/master-detail" as MasterDetail -> MasterDetailLayout, MasterDetailBrowse, MasterDetailDrawer
+}
