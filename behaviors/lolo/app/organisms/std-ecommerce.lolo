@@ -479,8 +479,12 @@ orbital CheckoutOrbital {
         ]})
     }
     state step2 {
-      ;; Guard: step2 -> step3 only when shippingAddress is supplied.
-      NEXT -> step3 when @payload.data.shippingAddress
+      ;; Guard: step2 -> step3 requires step1 to have committed
+      ;; customerName + email to @entity AND the current submission to
+      ;; carry shippingAddress. Prevents misuse — a programmatic NEXT
+      ;; emitted before step1 was visited would leave @entity blank, so
+      ;; the guard fails and the wizard stays at step2.
+      NEXT -> step3 when (and @entity.customerName @entity.email @payload.data.shippingAddress)
         (set @entity.shippingAddress @payload.data.shippingAddress)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Checkout" },
@@ -502,7 +506,12 @@ orbital CheckoutOrbital {
         ]})
     }
     state step3 {
-      PAYMENT_DONE -> review
+      ;; Guard: PAYMENT_DONE -> review requires @entity to carry
+      ;; customerName + email + shippingAddress (committed by step1
+      ;; and step2). Stripe fires PAYMENT_DONE; the guard ensures the
+      ;; preceding wizard steps were actually completed before we
+      ;; advance to review.
+      PAYMENT_DONE -> review when (and @entity.customerName @entity.email @entity.shippingAddress)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Review your order" },
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 3 },
