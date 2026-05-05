@@ -1,7 +1,7 @@
 {
   "name": "std-drawer",
-  "version": "2.1.0",
-  "description": "std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it. Stateless: state lives in the OPEN payload, not the entity, so the trait stays safe under consumer entity rebinds.",
+  "version": "2.2.0",
+  "description": "std-drawer — drawer-slot atom. Renders ONLY to its `drawer` slot. The runtime's slot wrapper provides the backdrop + right-anchored panel + close-X chrome; the atom emits ONLY the panel body content. Host emits OPEN with payload {id, name, description} → renders body; CLOSE clears the slot. Stateless: state lives in the OPEN payload, not the entity, so the trait stays safe under consumer entity rebinds.",
   "orbitals": [
     {
       "name": "DrawerContentOrbital",
@@ -75,46 +75,36 @@
                     "render-ui",
                     "drawer",
                     {
-                      "isOpen": true,
-                      "position": "@config.position",
-                      "onClose": "CLOSE",
-                      "type": "side-panel",
-                      "width": "@config.width",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "vertical",
+                          "variant": "h4",
+                          "type": "typography",
+                          "content": "@payload.name"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "@payload.description",
+                          "variant": "body"
+                        },
+                        {
                           "children": [
                             {
-                              "variant": "h4",
-                              "type": "typography",
-                              "content": "@payload.name"
-                            },
-                            {
-                              "color": "muted",
-                              "variant": "body",
-                              "content": "@payload.description",
-                              "type": "typography"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "justify": "end",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "action": "CLOSE",
-                                  "variant": "ghost",
-                                  "label": "Close"
-                                }
-                              ],
-                              "gap": "sm"
+                              "action": "CLOSE",
+                              "label": "Close",
+                              "type": "button",
+                              "variant": "ghost"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
                           "type": "stack"
                         }
                       ],
-                      "title": "@config.title"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -132,30 +122,6 @@
                 ]
               }
             ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Details"
-            },
-            "width": {
-              "type": "string",
-              "default": "md",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "position": {
-              "type": "string",
-              "default": "right",
-              "values": [
-                "left",
-                "right"
-              ]
-            }
           },
           "scope": "instance"
         }
