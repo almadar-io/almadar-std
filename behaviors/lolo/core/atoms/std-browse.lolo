@@ -1,5 +1,5 @@
-app std-browse "1.0.0"
-"std-browse as a Function — single primitive: data-grid"
+app std-browse "2.0.0"
+"std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid."
 
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
@@ -21,6 +21,10 @@ orbital BrowseItemOrbital {
         { name: "description", label: "Description", variant: "caption" },
         { name: "status", label: "Status", variant: "badge" }
       ]
+      imageField : string = ""
+      itemActions : [object] = []
+      cols : number = 1
+      gap : string = "md"
       pageSize : number = 10
       displayPageSize : number = 10
     }
@@ -29,7 +33,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", imageField: "@config.imageField", itemActions: "@config.itemActions", cols: "@config.cols", gap: "@config.gap", pageSize: "@config.displayPageSize" }] })
       BrowseItemLoadFailed -> error
         (render-ui main { type: "typography", variant: "caption", color: "error", content: "@payload.error" })
     }
@@ -50,7 +54,7 @@ orbital BrowseItemOrbital {
       REFETCH_PAGE -> browsing
         (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", pageSize: "@config.displayPageSize" }] })
+        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "data-grid", entity: "@payload.data", fields: "@config.fields", imageField: "@config.imageField", itemActions: "@config.itemActions", cols: "@config.cols", gap: "@config.gap", pageSize: "@config.displayPageSize" }] })
     }
     state error {
       INIT -> loading
@@ -60,6 +64,15 @@ orbital BrowseItemOrbital {
 emits {
       BrowseItemLoaded
       BrowseItemLoadFailed
+      ;; Generic CRUD item-action events fired when a consumer-supplied
+      ;; `itemActions[]` button is clicked in the data-grid. Declared here
+      ;; so any consumer that wires VIEW / EDIT / DELETE actions doesn't
+      ;; need to re-declare on the bind site. Domain-specific actions
+      ;; (ADD_TO_CART, FAVORITE, etc.) still need to be declared by the
+      ;; consumer or wired via call-site emits override.
+      VIEW   -> external { id : string!, row : BrowseItem }
+      EDIT   -> external { id : string!, row : BrowseItem }
+      DELETE -> external { id : string!, row : BrowseItem }
     }
 
         listens {

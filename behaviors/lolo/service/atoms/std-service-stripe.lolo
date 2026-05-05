@@ -1,5 +1,5 @@
-app std-service-stripe "1.0.0"
-"std-service-stripe as a Function"
+app std-service-stripe "2.0.0"
+"std-service-stripe — Stripe payment service. Bind via `uses Stripe from \"std/behaviors/std-service-stripe\"` and configure `amount` / `currency` / `metadata` at the call site. Pass `uiTrait: \"@trait.YourPaymentForm\"` to inject your own Stripe Elements card form; leave unset to render the atom's default test form (standalone surface)."
 
 orbital ServiceStripeOrbital {
   entity ServiceStripe [runtime] {
@@ -20,17 +20,38 @@ orbital ServiceStripeOrbital {
   type ServiceStripeLoadFailed = Event { message : string } "Fired when ServiceStripe fails to load"
   type ServiceStripeStripeCompleted = Event { result : object }
   type ServiceStripeStripeFailed = Event { error : string, code : string }
+
+  ;; Default UI: a sibling trait pointing back at the standalone test form.
+  ;; Consumers override `uiTrait` to inject their own Stripe Elements card form;
+  ;; the default value below keeps standalone usage working.
+  trait ServiceStripeDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+    }
+    emits {
+      CREATE_PAYMENT -> external { source : string }
+    }
+  }
+
   trait ServiceStripeStripe -> ServiceStripe [interaction, instance] {
     initial: idle
+    config {
+      uiTrait  : trait  = "@trait.ServiceStripeDefaultForm"
+      amount   : number = 0
+      currency : string = "usd"
+      metadata : object = {}
+    }
     state idle {
       INIT -> idle
-        (set @entity.amount 0)
-        (set @entity.currency "usd")
+        (set @entity.amount @config.amount)
+        (set @entity.currency @config.currency)
         (fetch ServiceStripe { emit: { success: "ServiceStripeLoaded", failure: "ServiceStripeLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
-        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" } { emit: { success: "ServiceStripeStripeCompleted", failure: "ServiceStripeStripeFailed" } })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency", metadata: "@config.metadata" } { emit: { success: "ServiceStripeStripeCompleted", failure: "ServiceStripeStripeFailed" } })
     }
     state creating {
       PAYMENT_CREATED -> confirming
@@ -61,17 +82,18 @@ orbital ServiceStripeOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
     }
 emits {
-      ServiceStripeLoaded
-      ServiceStripeLoadFailed
-      ServiceStripeStripeCompleted
-      ServiceStripeStripeFailed
+      ServiceStripeLoaded            -> external { id : string }
+      ServiceStripeLoadFailed        -> external { message : string }
+      ServiceStripeStripeCompleted   -> external { result : object }
+      ServiceStripeStripeFailed      -> external { error : string, code : string }
     }
 
         listens {
+      ServiceStripeDefaultForm.CREATE_PAYMENT -> CREATE_PAYMENT
       PAYMENT_CREATED { id : string!, clientSecret : string! }
       FAILED { error : string! }
           ServiceStripeLoadFailed { message : string }
-    
+
       ServiceStripeStripeFailed { error : string, code : string }
     }
   }

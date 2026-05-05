@@ -1,13 +1,15 @@
-app std-ecommerce "1.0.0"
-"std-ecommerce as a Function"
+app std-ecommerce "2.0.0"
+"std-ecommerce as a Function — products with images, cart icon in top bar, Stripe-backed checkout."
 
 orbital ProductOrbital {
   uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse from "std/behaviors/std-browse"
 
   entity Product [persistent: products] {
     id : string!
     name : string!
     description : string
+    imageUrl : string = ""
     price : number!
     category : string
     sku : string
@@ -17,16 +19,84 @@ orbital ProductOrbital {
 
   trait ProductAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.ProductBrowse",
+      contentTrait: "@trait.ProductCatalog",
       appName: "EcommerceApp",
       navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }],
       searchEvent: "PRODUCT_SEARCH",
+      topBarActions: [{ icon: "shopping-cart", label: "Cart", event: "CART_OPEN" }],
       notifications: [],
       notificationClickEvent: "PRODUCT_NOTIFICATIONS_OPEN"
     }
     events {
       SEARCH: PRODUCT_SEARCH
       NOTIFY_CLICK: PRODUCT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait. Owns the header (icon + Products + Create button)
+  ;; and embeds the std-browse list via `@trait.ProductBrowseList`.
+  ;; AppLayout's contentTrait points here.
+  trait ProductCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "package" },
+              { type: "typography", content: "Products", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.ProductBrowseList"
+        ]})
+      PRODUCT_SEARCH -> composing
+      PRODUCT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to products", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      ProductAppLayout.PRODUCT_SEARCH -> PRODUCT_SEARCH
+      ProductAppLayout.PRODUCT_NOTIFICATIONS_OPEN -> PRODUCT_NOTIFICATIONS_OPEN
+      PRODUCT_SEARCH { value : string }
+      PRODUCT_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; The data-grid list, bound from std-browse via the `@trait.X` embedding
+  ;; pattern. ProductCatalog above embeds this trait as a child.
+  trait ProductBrowseList = Browse.traits.BrowseItemBrowse -> Product {
+    config: {
+      fields: [
+        { name: "name", variant: "h3", icon: "package" },
+        { name: "category", variant: "badge" },
+        { name: "price", variant: "h4", format: "currency" },
+        { name: "sku", variant: "caption" },
+        { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }
+      ],
+      imageField: "imageUrl",
+      itemActions: [
+        { label: "View", event: "VIEW", variant: "ghost" },
+        { label: "Edit", event: "EDIT", variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 3,
+      gap: "md"
+    }
+    listens {
+      ProductCreate.PRODUCT_CREATED -> INIT
+      ProductEdit.PRODUCT_UPDATED -> INIT
+      ProductDelete.PRODUCT_DELETED -> INIT
     }
   }
 
@@ -50,72 +120,6 @@ orbital ProductOrbital {
   type OrderRecordUpdateFailed = Event { error : string, code : string }
   type OrderRecordDeleted = Event { id : string }
   type OrderRecordDeleteFailed = Event { error : string, code : string }
-  trait ProductBrowse -> Product [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      PRODUCT_SEARCH -> browsing
-        (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      PRODUCT_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to products", action: "INIT", variant: "ghost" }] })
-      ProductLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Products", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Product", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "package" }, { name: "category", variant: "badge" }, { name: "price", variant: "h4", format: "currency" }, { name: "sku", variant: "caption" }, { name: "inStock", label: "In Stock", variant: "body", format: "boolean" }], cols: 3, gap: "md" }] })
-      ProductLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load product" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
-    }
-    emits {
-ADD_TO_CART -> external { id: string }
-CREATE
-      VIEW { id : string!, row : Product }
-EDIT { id : string!, row : Product }
-DELETE { id : string!, row : Product }
-ProductLoaded
-      ProductLoadFailed
-ProductSaved
-      ProductSaveFailed
-ProductUpdated
-      ProductUpdateFailed
-ProductDeleted
-      ProductDeleteFailed
-CartItemSaved
-      CartItemSaveFailed
-CartItemDeleted
-      CartItemDeleteFailed
-CheckoutSaved
-      CheckoutSaveFailed
-OrderRecordSaved
-      OrderRecordSaveFailed
-OrderRecordUpdated
-      OrderRecordUpdateFailed
-OrderRecordDeleted
-      OrderRecordDeleteFailed
-    }
-    listens {
-      ProductCreate.PRODUCT_CREATED -> INIT
-      ProductEdit.PRODUCT_UPDATED -> INIT
-      ProductDelete.PRODUCT_DELETED -> INIT
-      ProductAppLayout.PRODUCT_SEARCH -> PRODUCT_SEARCH
-      ProductAppLayout.PRODUCT_NOTIFICATIONS_OPEN -> PRODUCT_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Product }
-      EDIT { id : string!, row : Product }
-      DELETE { id : string!, row : Product }
-      PRODUCT_SEARCH { value : string }
-      PRODUCT_NOTIFICATIONS_OPEN { id : string }
-          ProductLoadFailed { error : string, code : string }
-    
-      ProductSaveFailed { error : string, code : string }
-      ProductUpdateFailed { error : string, code : string }
-      ProductDeleteFailed { error : string, code : string }
-      CartItemSaveFailed { error : string, code : string }
-      CartItemDeleteFailed { error : string, code : string }
-      CheckoutSaveFailed { error : string, code : string }
-      OrderRecordSaveFailed { error : string, code : string }
-      OrderRecordUpdateFailed { error : string, code : string }
-      OrderRecordDeleteFailed { error : string, code : string }
-    }
-  }
   trait ProductCreate -> Product [interaction, collection] {
     initial: closed
     state closed {
@@ -146,7 +150,7 @@ ProductSaveFailed
     listens {
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse.CREATE -> CREATE
+      ProductCatalog.CREATE -> CREATE
     }
   }
   trait ProductEdit -> Product [interaction, collection] {
@@ -183,7 +187,7 @@ ProductUpdateFailed
       EDIT { id : string!, row : Product }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse.EDIT -> EDIT
+      ProductBrowseList.EDIT -> EDIT
     }
   }
   trait ProductView -> Product [interaction, collection] {
@@ -219,7 +223,7 @@ ProductLoaded
       VIEW { id : string! }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse.VIEW -> VIEW
+      ProductBrowseList.VIEW -> VIEW
     }
   }
   trait ProductDelete -> Product [interaction, collection] {
@@ -258,10 +262,10 @@ ProductLoadFailed
     listens {
       DELETE { id : string! }
           ProductLoadFailed { error : string, code : string }
-      ProductBrowse.DELETE -> DELETE
+      ProductBrowseList.DELETE -> DELETE
     }
   }
-  page "/products" as ProductsPage -> ProductAppLayout, ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
+  page "/products" as ProductsPage -> ProductAppLayout, ProductCatalog, ProductBrowseList, ProductCreate, ProductEdit, ProductView, ProductDelete
 }
 orbital CartItemOrbital {
   entity CartItem [persistent: cartitems] {
@@ -310,7 +314,6 @@ CartItemLoaded
       CartItemLoadFailed
     }
     listens {
-      ProductOrbital.ProductBrowse.ADD_TO_CART -> INIT
           CartItemLoadFailed { error : string, code : string }
     }
   }
@@ -387,83 +390,191 @@ CartItemLoadFailed
   page "/cart" -> CartItemCartBrowse, CartItemAddItem
 }
 orbital CheckoutOrbital {
+  uses Stripe from "std/behaviors/std-service-stripe"
+
   entity Checkout [runtime] {
     id : string!
     customerName : string!
     email : string!
     shippingAddress : string!
-    paymentMethod : string!
-    orderTotal : number
-    status : string
+    orderTotal : number = 0
+    status : string = "draft"
+  }
+
+  ;; Stripe service binding — Pattern B (uiTrait override). Pulls amount from
+  ;; the wizard's @entity.orderTotal, points UI slot at the consumer's
+  ;; CheckoutPaymentForm. We don't rename ServiceStripeStripeCompleted at the
+  ;; bind site (the events rename has a known gap that doesn't reach inside
+  ;; call-service emit-configs); the wizard's `listens` block at the bottom
+  ;; references it directly.
+  trait CheckoutPayment = Stripe.traits.ServiceStripeStripe {
+    config: {
+      amount: 0,
+      currency: "usd",
+      metadata: {},
+      uiTrait: "@trait.CheckoutPaymentForm"
+    }
+    listens {
+      CheckoutPaymentForm.CREATE_PAYMENT -> CREATE_PAYMENT
+      PAYMENT_CREATED { id : string!, clientSecret : string! }
+      FAILED { error : string! }
+      ServiceStripeLoadFailed { message : string }
+      ServiceStripeStripeFailed { error : string, code : string }
+    }
+  }
+
+  ;; Consumer's payment form — fills the uiTrait slot on CheckoutPayment. Emits
+  ;; CREATE_PAYMENT when user clicks Pay; the Stripe trait above listens.
+  trait CheckoutPaymentForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "alert", variant: "info", message: "Enter card details to complete your order." },
+          { type: "input", inputType: "text", placeholder: "Card number" },
+          { type: "stack", direction: "horizontal", gap: "sm", children: [
+            { type: "input", inputType: "text", placeholder: "MM/YY" },
+            { type: "input", inputType: "text", placeholder: "CVC" }
+          ]},
+          { type: "button", label: "Pay now", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }
+        ]})
+    }
+    emits {
+      CREATE_PAYMENT -> external { source : string }
+    }
   }
 
   type CheckoutLoaded     = Event { data : [Checkout] }                  "Fired when Checkout finishes loading"
   type CheckoutLoadFailed = Event { error : string, code : string } "Fired when Checkout fails to load"
   type CheckoutSaveFailed = Event { error : string, code : string }
   type CheckoutSaved = Event { id : string }
-  trait CheckoutWizard -> Checkout [interaction, collection] {
+  trait CheckoutWizard -> Checkout [interaction, instance] {
     initial: step1
     state step1 {
       INIT -> step1
         (set @entity.customerName "")
         (set @entity.email "")
         (set @entity.orderTotal 0)
-        (set @entity.paymentMethod "")
         (set @entity.shippingAddress "")
-        (set @entity.status "")
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (set @entity.status "draft")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Customer Info" },
+          { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+        ]})
       NEXT -> step2
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Shipping", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (set @entity.customerName @payload.data.customerName)
+        (set @entity.email @payload.data.email)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Shipping Address" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }
+        ]})
     }
     state step2 {
       NEXT -> step3
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Payment", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["paymentMethod"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (set @entity.shippingAddress @payload.data.shippingAddress)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 2 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Payment" },
+          "@trait.CheckoutPayment",
+          { type: "wizard-navigation", currentStep: 2, totalSteps: 4, showBack: true, showNext: false, showComplete: false, onBack: "PREV" }
+        ]})
       PREV -> step1
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Customer Info" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+        ]})
     }
     state step3 {
-      NEXT -> review
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "badge", label: "Review" }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 3 }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Customer Name" }, { type: "typography", variant: "body", content: "@entity.customerName" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Shipping Address" }, { type: "typography", variant: "body", content: "@entity.shippingAddress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Payment Method" }, { type: "typography", variant: "body", content: "@entity.paymentMethod" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Order Total" }, { type: "typography", variant: "body", content: "@entity.orderTotal" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }] }, { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showComplete: true, showNext: false }] }] })
+      PAYMENT_DONE -> review
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Review" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 3 },
+          { type: "divider" },
+          { type: "stack", direction: "vertical", gap: "sm", children: [
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Customer" }, { type: "typography", variant: "body", content: "@entity.customerName" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Shipping" }, { type: "typography", variant: "body", content: "@entity.shippingAddress" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Order Total" }, { type: "typography", variant: "body", content: "@entity.orderTotal" }] }
+          ]},
+          { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showNext: false, showComplete: true, onBack: "PREV", onComplete: "COMPLETE" }
+        ]})
       PREV -> step2
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Shipping", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Shipping Address" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["shippingAddress"] }
+        ]})
     }
     state review {
-      PREV -> step3
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Payment", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["paymentMethod"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
       COMPLETE -> complete
+        (set @entity.status "placed")
         (persist create Checkout @payload.data { emit: { success: "CheckoutSaved", failure: "CheckoutSaveFailed" } })
-        (notify success "Checkout created successfully")
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Order Placed", variant: "h2" }, { type: "typography", content: "Your order has been placed successfully.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
+        (emit ORDER_PLACED { id: "@entity.id" })
+        (notify success "Order placed successfully")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-xl mx-auto w-full py-12", children: [
+          { type: "icon", name: "check-circle" },
+          { type: "typography", variant: "h2", content: "Order Placed" },
+          { type: "typography", variant: "body", color: "muted", content: "Your order is confirmed and on its way." },
+          { type: "button", label: "Start New", action: "RESTART", variant: "ghost", icon: "rotate-ccw" }
+        ]})
+      PREV -> step3
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 2 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Payment" },
+          "@trait.CheckoutPayment"
+        ]})
     }
     state complete {
       RESTART -> step1
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
-      INIT -> step1
-        (fetch Checkout { emit: { success: "CheckoutLoaded", failure: "CheckoutLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Customer Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (set @entity.customerName "")
+        (set @entity.email "")
+        (set @entity.orderTotal 0)
+        (set @entity.shippingAddress "")
+        (set @entity.status "draft")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Checkout" },
+          { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Customer Info" },
+          { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["customerName", "email"] }
+        ]})
     }
     emits {
-ORDER_PLACED -> external { id: string }
-CheckoutLoadFailed
-      CheckoutLoaded
-CheckoutSaveFailed
+      ORDER_PLACED -> external { id : string }
       CheckoutSaved
+      CheckoutSaveFailed
     }
     listens {
       CartItemOrbital.CartItemCartBrowse.CHECKOUT_STARTED -> INIT
-          CheckoutLoadFailed { error : string, code : string }
-          COMPLETE { data : string }
+      CheckoutPayment.ServiceStripeStripeCompleted -> PAYMENT_DONE
+      CheckoutPayment.ServiceStripeStripeFailed -> PAYMENT_FAILED
+      CheckoutPayment.ServiceStripeLoaded -> NOOP
+      CheckoutPayment.ServiceStripeLoadFailed -> NOOP
+      NEXT { data : object! }
+      PREV { }
+      PAYMENT_DONE { result : object }
+      PAYMENT_FAILED { error : string, code : string }
+      NOOP { id : string, message : string }
+      COMPLETE { data : object! }
+      CheckoutSaveFailed { error : string, code : string }
     }
   }
-  page "/checkout" -> CheckoutWizard
+  page "/checkout" -> CheckoutWizard, CheckoutPayment, CheckoutPaymentForm
 }
 orbital OrderRecordOrbital {
   entity OrderRecord [persistent: orderrecords] {

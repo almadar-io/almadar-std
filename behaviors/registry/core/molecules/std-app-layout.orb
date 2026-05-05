@@ -1,7 +1,7 @@
 {
   "name": "std-app-layout",
-  "version": "1.1.0",
-  "description": "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with optional search and notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM): the chrome stays stable while the consumer's content trait renders the data.",
+  "version": "1.2.0",
+  "description": "std-app-layout — dashboard-layout chrome (sidebar nav + top bar with search + topBarActions + notifications) wrapping a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM): the chrome stays stable while the consumer's content trait renders the data, and the consumer can add domain icons (cart / profile / help) via topBarActions.",
   "orbitals": [
     {
       "name": "AppLayoutOrbital",
@@ -73,23 +73,24 @@
                     "render-ui",
                     "main",
                     {
-                      "notificationClickEvent": "@config.notificationClickEvent",
+                      "notifications": "@config.notifications",
+                      "searchEvent": "@config.searchEvent",
+                      "appName": "@config.appName",
+                      "topBarActions": "@config.topBarActions",
+                      "navItems": "@config.navItems",
                       "type": "dashboard-layout",
                       "children": [
                         {
                           "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
                           "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             "@config.contentTrait"
                           ],
-                          "className": "max-w-5xl mx-auto w-full"
+                          "gap": "lg"
                         }
                       ],
-                      "searchEvent": "@config.searchEvent",
-                      "notifications": "@config.notifications",
-                      "appName": "@config.appName",
-                      "navItems": "@config.navItems"
+                      "notificationClickEvent": "@config.notificationClickEvent"
                     }
                   ]
                 ]
@@ -107,26 +108,30 @@
             ]
           },
           "config": {
-            "navItems": {
-              "type": "[object]",
-              "default": []
+            "contentTrait": {
+              "type": "trait"
             },
             "appName": {
               "type": "string",
               "default": "App"
             },
+            "notifications": {
+              "type": "[object]",
+              "default": []
+            },
+            "topBarActions": {
+              "type": "[object]",
+              "default": []
+            },
             "searchEvent": {
               "type": "string",
               "default": "SEARCH"
-            },
-            "contentTrait": {
-              "type": "trait"
             },
             "notificationClickEvent": {
               "type": "string",
               "default": "NOTIFY_CLICK"
             },
-            "notifications": {
+            "navItems": {
               "type": "[object]",
               "default": []
             }

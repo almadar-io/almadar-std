@@ -71,59 +71,17 @@
           "emits": [
             {
               "event": "ServiceRedisLoaded",
-              "description": "Fired when ServiceRedis finishes loading",
-              "scope": "internal",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "key",
-                  "type": "string"
-                },
-                {
-                  "name": "value",
-                  "type": "string"
-                },
-                {
-                  "name": "ttl",
-                  "type": "number"
-                },
-                {
-                  "name": "result",
-                  "type": "string"
-                },
-                {
-                  "name": "redisStatus",
-                  "type": "string"
-                },
-                {
-                  "name": "error",
                   "type": "string"
                 }
               ]
             },
             {
               "event": "ServiceRedisLoadFailed",
-              "description": "Fired when ServiceRedis fails to load",
-              "scope": "internal",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "message",
@@ -133,7 +91,7 @@
             },
             {
               "event": "ServiceRedisRedisCompleted",
-              "scope": "internal",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "result",
@@ -143,7 +101,7 @@
             },
             {
               "event": "ServiceRedisRedisFailed",
-              "scope": "internal",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -335,22 +293,25 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "name": "database",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "Redis Cache",
+                              "variant": "h2",
                               "type": "typography"
                             }
                           ],
-                          "gap": "md",
-                          "align": "center",
                           "direction": "horizontal",
                           "type": "stack"
                         },
@@ -358,6 +319,9 @@
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
                               "placeholder": "cache-key",
@@ -372,44 +336,38 @@
                               "inputType": "number",
                               "placeholder": "3600"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Get",
-                              "variant": "primary",
                               "icon": "download",
+                              "action": "GET_KEY",
                               "type": "button",
-                              "action": "GET_KEY"
+                              "variant": "primary",
+                              "label": "Get"
                             },
                             {
-                              "icon": "upload",
                               "variant": "primary",
                               "label": "Set",
-                              "action": "SET_KEY",
-                              "type": "button"
+                              "icon": "upload",
+                              "type": "button",
+                              "action": "SET_KEY"
                             },
                             {
-                              "type": "button",
+                              "icon": "trash-2",
                               "action": "DELETE_KEY",
-                              "variant": "danger",
                               "label": "Delete",
-                              "icon": "trash-2"
+                              "type": "button",
+                              "variant": "danger"
                             }
                           ],
-                          "justify": "center",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "justify": "center"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -453,9 +411,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "loading-state",
                       "title": "Executing...",
-                      "message": "Running redis operation...",
-                      "type": "loading-state"
+                      "message": "Running redis operation..."
                     }
                   ],
                   [
@@ -469,8 +427,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceRedisRedisCompleted",
-                        "failure": "ServiceRedisRedisFailed"
+                        "failure": "ServiceRedisRedisFailed",
+                        "success": "ServiceRedisRedisCompleted"
                       }
                     }
                   ]
@@ -499,8 +457,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ServiceRedisRedisCompleted",
-                        "failure": "ServiceRedisRedisFailed"
+                        "failure": "ServiceRedisRedisFailed",
+                        "success": "ServiceRedisRedisCompleted"
                       }
                     }
                   ]
@@ -522,32 +480,32 @@
                     {
                       "direction": "vertical",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
                           "type": "alert",
-                          "variant": "success",
-                          "message": "Operation complete"
+                          "message": "Operation complete",
+                          "variant": "success"
                         },
                         {
-                          "color": "muted",
                           "variant": "body",
                           "content": "@entity.result",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
+                          "icon": "rotate-ccw",
+                          "label": "Reset",
                           "action": "RESET",
                           "variant": "ghost",
-                          "label": "Reset",
-                          "icon": "rotate-ccw",
                           "type": "button"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -568,8 +526,8 @@
                     {
                       "type": "error-state",
                       "onRetry": "RESET",
-                      "message": "@entity.error",
-                      "title": "Redis Error"
+                      "title": "Redis Error",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -583,26 +541,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "database"
                             },
                             {
-                              "content": "Redis Cache",
                               "variant": "h2",
+                              "content": "Redis Cache",
                               "type": "typography"
                             }
                           ],
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
@@ -629,35 +586,36 @@
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "action": "GET_KEY",
+                              "icon": "download",
                               "type": "button",
                               "label": "Get",
-                              "action": "GET_KEY",
-                              "variant": "primary",
-                              "icon": "download"
+                              "variant": "primary"
                             },
                             {
                               "label": "Set",
+                              "type": "button",
                               "icon": "upload",
                               "action": "SET_KEY",
-                              "variant": "primary",
-                              "type": "button"
+                              "variant": "primary"
                             },
                             {
-                              "variant": "danger",
-                              "action": "DELETE_KEY",
                               "icon": "trash-2",
                               "type": "button",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "action": "DELETE_KEY",
+                              "variant": "danger"
                             }
                           ],
-                          "gap": "sm",
-                          "justify": "center"
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -671,22 +629,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
                               "name": "database"
                             },
                             {
-                              "content": "Redis Cache",
                               "type": "typography",
+                              "content": "Redis Cache",
                               "variant": "h2"
                             }
                           ],
-                          "gap": "md",
                           "direction": "horizontal",
                           "align": "center",
                           "type": "stack"
@@ -695,57 +654,56 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "input",
                               "placeholder": "cache-key"
                             },
                             {
-                              "type": "input",
-                              "placeholder": "cache-value"
+                              "placeholder": "cache-value",
+                              "type": "input"
                             },
                             {
                               "type": "input",
-                              "placeholder": "3600",
-                              "inputType": "number"
+                              "inputType": "number",
+                              "placeholder": "3600"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "center",
                           "direction": "horizontal",
+                          "justify": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Get",
-                              "action": "GET_KEY",
-                              "variant": "primary",
+                              "icon": "download",
                               "type": "button",
-                              "icon": "download"
+                              "action": "GET_KEY",
+                              "label": "Get",
+                              "variant": "primary"
                             },
                             {
+                              "action": "SET_KEY",
                               "variant": "primary",
-                              "icon": "upload",
-                              "label": "Set",
                               "type": "button",
-                              "action": "SET_KEY"
+                              "icon": "upload",
+                              "label": "Set"
                             },
                             {
                               "action": "DELETE_KEY",
-                              "type": "button",
-                              "label": "Delete",
                               "variant": "danger",
-                              "icon": "trash-2"
+                              "icon": "trash-2",
+                              "type": "button",
+                              "label": "Delete"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
