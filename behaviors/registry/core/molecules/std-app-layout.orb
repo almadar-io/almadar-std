@@ -1,0 +1,95 @@
+{
+  "name": "std-app-layout",
+  "version": "1.0.0",
+  "description": "std-app-layout — dashboard-layout chrome (sidebar nav + app name) with a single contentTrait slot. Use for list-style apps (CMS / helpdesk / CRM): the chrome stays stable while the consumer's content trait renders the data.",
+  "orbitals": [
+    {
+      "name": "AppLayoutOrbital",
+      "entity": {
+        "name": "AppLayoutState",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AppLayout",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "@config.appName",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "children": [
+                            "@config.contentTrait"
+                          ],
+                          "gap": "lg"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "navItems": "@config.navItems"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "contentTrait": {
+              "type": "trait"
+            },
+            "appName": {
+              "type": "string",
+              "default": "App"
+            },
+            "navItems": {
+              "type": "[object]",
+              "default": []
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AppLayoutPage",
+          "path": "/app-layout",
+          "traits": [
+            {
+              "ref": "AppLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

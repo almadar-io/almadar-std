@@ -70,6 +70,7 @@ export * from './agent/molecules/std-agent-learner.js';
 export * from './agent/molecules/std-agent-planner.js';
 export * from './agent/molecules/std-agent-rag.js';
 export * from './agent/molecules/std-agent-tool-loop.js';
+export * from './core/molecules/std-app-layout.js';
 export * from './core/molecules/std-cart.js';
 export * from './core/molecules/std-dashboard.js';
 export * from './core/molecules/std-dashboard-grid-layout.js';
