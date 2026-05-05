@@ -20,6 +20,28 @@
         {
           "name": "AppLayout",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SEARCH",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NOTIFY_CLICK",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -31,6 +53,14 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search"
+              },
+              {
+                "key": "NOTIFY_CLICK",
+                "name": "Notify Click"
               }
             ],
             "transitions": [
@@ -43,50 +73,62 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "@config.appName",
-                      "notifications": "@config.notifications",
                       "notificationClickEvent": "@config.notificationClickEvent",
-                      "searchEvent": "@config.searchEvent",
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             "@config.contentTrait"
                           ],
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "className": "max-w-5xl mx-auto w-full"
                         }
                       ],
-                      "type": "dashboard-layout",
+                      "searchEvent": "@config.searchEvent",
+                      "notifications": "@config.notifications",
+                      "appName": "@config.appName",
                       "navItems": "@config.navItems"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "NOTIFY_CLICK"
               }
             ]
           },
           "config": {
-            "contentTrait": {
-              "type": "trait"
+            "navItems": {
+              "type": "[object]",
+              "default": []
             },
             "appName": {
               "type": "string",
               "default": "App"
             },
-            "navItems": {
-              "type": "[object]",
-              "default": []
-            },
             "searchEvent": {
-              "type": "string"
+              "type": "string",
+              "default": "SEARCH"
+            },
+            "contentTrait": {
+              "type": "trait"
+            },
+            "notificationClickEvent": {
+              "type": "string",
+              "default": "NOTIFY_CLICK"
             },
             "notifications": {
               "type": "[object]",
               "default": []
-            },
-            "notificationClickEvent": {
-              "type": "string"
             }
           },
           "scope": "instance"
