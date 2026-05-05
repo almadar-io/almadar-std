@@ -53,11 +53,11 @@ export interface StdBrowseBrowseItemLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `0` */
+  /** Default: `10` */
   displayPageSize?: number;
-  /** Default: `[]` */
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"caption","name":"description","label":"Description"},{"label":"Status","name":"status","variant":"badge"}]` */
   fields?: TraitConfig[];
-  /** Default: `0` */
+  /** Default: `10` */
   pageSize?: number;
 }
 

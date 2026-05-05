@@ -78,6 +78,8 @@ export * from './core/molecules/std-form-advanced.js';
 export * from './core/molecules/std-list.js';
 export * from './core/molecules/std-master-detail-layout.js';
 export * from './probes/molecules/std-source-scope-probe.js';
+export * from './core/molecules/std-stack-layout.js';
+export * from './core/molecules/std-tabs-layout.js';
 export * from './core/molecules/std-wizard-form.js';
 
 // Organisms

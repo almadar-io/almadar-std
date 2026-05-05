@@ -1,5 +1,19 @@
 # @almadar/std
 
+## 13.13.1
+
+### Fixed
+
+- **`behaviors/functions/index.ts` was missing the `std-tabs-layout` and
+  `std-stack-layout` factory exports** in v13.13.0 because the regenerator
+  was last run with `--only=<single>` before the package was committed,
+  which writes a single-export index. The full sweep that ran later was
+  not included in the committed tree. Result: `import { stdTabsLayout }
+  from '@almadar/std'` returned `undefined` against v13.13.0.
+- This release re-runs the full regenerator and ships the complete
+  factory barrel (all 4 layout shells exported, 100 behaviors total).
+  No source-level behavior changes — purely a packaging fix.
+
 ## 13.13.0
 
 ### Added
