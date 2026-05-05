@@ -462,9 +462,12 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [{ name: "customerName", required: true, min: 2 }, { name: "email", type: "email", required: true }] }
         ]})
-      NEXT -> step2
+      ;; Guard: step1 -> step2 only fires if both customerName + email are
+      ;; populated. Defense-in-depth on top of HTML5's required-field check —
+      ;; catches programmatic dispatches that bypass the form.
+      NEXT -> step2 when (and @payload.data.customerName @payload.data.email)
         (set @entity.customerName @payload.data.customerName)
         (set @entity.email @payload.data.email)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
@@ -472,11 +475,12 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Shipping Address" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: ["shippingAddress"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: [{ name: "shippingAddress", required: true, min: 5 }] }
         ]})
     }
     state step2 {
-      NEXT -> step3
+      ;; Guard: step2 -> step3 only when shippingAddress is supplied.
+      NEXT -> step3 when @payload.data.shippingAddress
         (set @entity.shippingAddress @payload.data.shippingAddress)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
           { type: "typography", variant: "h2", content: "Checkout" },
@@ -494,7 +498,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [{ name: "customerName", required: true, min: 2 }, { name: "email", type: "email", required: true }] }
         ]})
     }
     state step3 {
@@ -521,7 +525,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 1 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Shipping Address" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: ["shippingAddress"] }
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: [{ name: "shippingAddress", required: true, min: 5 }] }
         ]})
     }
     state review {
@@ -560,7 +564,7 @@ orbital CheckoutOrbital {
           { type: "wizard-progress", steps: ["Customer Info", "Shipping", "Payment", "Review"], currentStep: 0 },
           { type: "divider" },
           { type: "typography", variant: "h3", content: "Customer Info" },
-          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: ["customerName", "email"] }
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [{ name: "customerName", required: true, min: 2 }, { name: "email", type: "email", required: true }] }
         ]})
     }
     emits {

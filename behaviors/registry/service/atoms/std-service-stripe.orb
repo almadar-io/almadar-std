@@ -111,11 +111,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
                       "align": "center",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "name": "credit-card",
@@ -123,28 +124,26 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Payment"
+                              "content": "Payment",
+                              "variant": "h2"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "placeholder": "0.00",
                               "type": "input",
-                              "inputType": "number",
-                              "placeholder": "0.00"
+                              "inputType": "number"
                             },
                             {
-                              "type": "select",
                               "options": [
                                 {
                                   "label": "USD",
@@ -155,24 +154,25 @@
                                   "label": "EUR"
                                 },
                                 {
-                                  "label": "GBP",
-                                  "value": "gbp"
+                                  "value": "gbp",
+                                  "label": "GBP"
                                 }
-                              ]
+                              ],
+                              "type": "select"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "vertical"
+                          "gap": "md"
                         },
                         {
-                          "label": "Pay",
-                          "variant": "primary",
-                          "action": "CREATE_PAYMENT",
                           "type": "button",
-                          "icon": "credit-card"
+                          "icon": "credit-card",
+                          "variant": "primary",
+                          "label": "Pay",
+                          "action": "CREATE_PAYMENT"
                         }
                       ],
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -229,6 +229,30 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "PAYMENT_CREATED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "clientSecret",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "PAYMENT_CONFIRMED",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "type": "object"
+                }
+              ]
             }
           ],
           "listens": [
@@ -270,6 +294,26 @@
                 "name": "Create Payment"
               },
               {
+                "key": "ServiceStripeLoaded",
+                "name": "ServiceStripe loaded",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceStripeLoadFailed",
+                "name": "ServiceStripe load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "PAYMENT_CREATED",
                 "name": "Payment Created",
                 "payloadSchema": [
@@ -298,76 +342,17 @@
               },
               {
                 "key": "PAYMENT_CONFIRMED",
-                "name": "Payment Confirmed"
+                "name": "Payment Confirmed",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "object"
+                  }
+                ]
               },
               {
                 "key": "RESET",
                 "name": "Reset"
-              },
-              {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
-                "key": "ServiceStripeLoaded",
-                "name": "ServiceStripe loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "amount",
-                    "type": "number"
-                  },
-                  {
-                    "name": "currency",
-                    "type": "string"
-                  },
-                  {
-                    "name": "paymentIntentId",
-                    "type": "string"
-                  },
-                  {
-                    "name": "clientSecret",
-                    "type": "string"
-                  },
-                  {
-                    "name": "paymentStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceStripeLoadFailed",
-                "name": "ServiceStripe load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "ServiceStripeStripeCompleted",
@@ -392,6 +377,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -415,8 +404,8 @@
                     "ServiceStripe",
                     {
                       "emit": {
-                        "success": "ServiceStripeLoaded",
-                        "failure": "ServiceStripeLoadFailed"
+                        "failure": "ServiceStripeLoadFailed",
+                        "success": "ServiceStripeLoaded"
                       }
                     }
                   ],
@@ -424,12 +413,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -443,9 +432,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Setting up your payment intent.",
+                      "type": "loading-state",
                       "title": "Creating payment...",
-                      "type": "loading-state"
+                      "message": "Setting up your payment intent."
                     }
                   ],
                   [
@@ -453,18 +442,28 @@
                     "stripe",
                     "createPaymentIntent",
                     {
-                      "amount": "@entity.amount",
                       "currency": "@entity.currency",
+                      "amount": "@entity.amount",
                       "metadata": "@config.metadata"
                     },
                     {
                       "emit": {
-                        "success": "ServiceStripeStripeCompleted",
+                        "success": "PAYMENT_CREATED",
                         "failure": "ServiceStripeStripeFailed"
                       }
                     }
                   ]
                 ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceStripeLoaded"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceStripeLoadFailed"
               },
               {
                 "from": "creating",
@@ -486,8 +485,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "message": "Processing your payment.",
-                      "title": "Confirming payment..."
+                      "title": "Confirming payment...",
+                      "message": "Processing your payment."
                     }
                   ],
                   [
@@ -500,7 +499,7 @@
                     {
                       "emit": {
                         "failure": "ServiceStripeStripeFailed",
-                        "success": "ServiceStripeStripeCompleted"
+                        "success": "PAYMENT_CONFIRMED"
                       }
                     }
                   ]
@@ -520,9 +519,9 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
                       "message": "@entity.error",
                       "type": "error-state",
+                      "onRetry": "RETRY",
                       "title": "Payment Failed"
                     }
                   ]
@@ -539,37 +538,44 @@
                     "succeeded"
                   ],
                   [
+                    "emit",
+                    "ServiceStripeStripeCompleted",
+                    {
+                      "result": "@payload"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
+                          "variant": "success",
                           "type": "alert",
-                          "message": "Payment successful!",
-                          "variant": "success"
+                          "message": "Payment successful!"
                         },
                         {
-                          "color": "muted",
+                          "variant": "body",
                           "content": "@entity.paymentIntentId",
                           "type": "typography",
-                          "variant": "body"
+                          "color": "muted"
                         },
                         {
                           "icon": "rotate-ccw",
+                          "label": "New Payment",
                           "type": "button",
                           "action": "RESET",
-                          "variant": "ghost",
-                          "label": "New Payment"
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -588,10 +594,10 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
-                      "type": "error-state",
+                      "title": "Payment Failed",
                       "onRetry": "RETRY",
-                      "title": "Payment Failed"
+                      "message": "@entity.error",
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -605,13 +611,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -619,18 +623,19 @@
                             },
                             {
                               "type": "typography",
-                              "content": "Payment",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Payment"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
@@ -639,37 +644,48 @@
                               "placeholder": "0.00"
                             },
                             {
-                              "type": "select",
                               "options": [
                                 {
-                                  "label": "USD",
-                                  "value": "usd"
+                                  "value": "usd",
+                                  "label": "USD"
                                 },
                                 {
                                   "label": "EUR",
                                   "value": "eur"
                                 },
                                 {
-                                  "label": "GBP",
-                                  "value": "gbp"
+                                  "value": "gbp",
+                                  "label": "GBP"
                                 }
-                              ]
+                              ],
+                              "type": "select"
                             }
                           ],
-                          "gap": "md",
                           "direction": "vertical"
                         },
                         {
-                          "type": "button",
-                          "variant": "primary",
-                          "icon": "credit-card",
                           "label": "Pay",
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "credit-card",
                           "action": "CREATE_PAYMENT"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "succeeded",
+                "to": "succeeded",
+                "event": "ServiceStripeStripeCompleted"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceStripeStripeFailed"
               },
               {
                 "from": "error",
@@ -681,16 +697,15 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "credit-card"
+                              "name": "credit-card",
+                              "type": "icon"
                             },
                             {
                               "content": "Payment",
@@ -698,8 +713,6 @@
                               "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
                           "align": "center"
                         },
                         {
@@ -710,24 +723,24 @@
                           "gap": "md",
                           "children": [
                             {
-                              "type": "input",
                               "inputType": "number",
+                              "type": "input",
                               "placeholder": "0.00"
                             },
                             {
                               "type": "select",
                               "options": [
                                 {
-                                  "label": "USD",
-                                  "value": "usd"
+                                  "value": "usd",
+                                  "label": "USD"
                                 },
                                 {
                                   "value": "eur",
                                   "label": "EUR"
                                 },
                                 {
-                                  "label": "GBP",
-                                  "value": "gbp"
+                                  "value": "gbp",
+                                  "label": "GBP"
                                 }
                               ]
                             }
@@ -735,13 +748,16 @@
                           "type": "stack"
                         },
                         {
-                          "icon": "credit-card",
-                          "action": "CREATE_PAYMENT",
                           "type": "button",
+                          "label": "Pay",
+                          "action": "CREATE_PAYMENT",
                           "variant": "primary",
-                          "label": "Pay"
+                          "icon": "credit-card"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -755,35 +771,30 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "credit-card"
                             },
                             {
-                              "content": "Payment",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Payment"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "input",
@@ -794,8 +805,8 @@
                               "type": "select",
                               "options": [
                                 {
-                                  "label": "USD",
-                                  "value": "usd"
+                                  "value": "usd",
+                                  "label": "USD"
                                 },
                                 {
                                   "label": "EUR",
@@ -807,16 +818,21 @@
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "action": "CREATE_PAYMENT",
-                          "icon": "credit-card",
                           "type": "button",
+                          "variant": "primary",
                           "label": "Pay",
-                          "variant": "primary"
+                          "icon": "credit-card",
+                          "action": "CREATE_PAYMENT"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -824,21 +840,21 @@
             ]
           },
           "config": {
-            "currency": {
-              "type": "string",
-              "default": "usd"
-            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceStripeDefaultForm"
             },
-            "metadata": {
-              "type": "object",
-              "default": {}
+            "currency": {
+              "type": "string",
+              "default": "usd"
             },
             "amount": {
               "type": "number",
               "default": 0.0
+            },
+            "metadata": {
+              "type": "object",
+              "default": {}
             }
           },
           "scope": "instance"
