@@ -1,7 +1,7 @@
 {
   "name": "std-drawer",
-  "version": "1.0.0",
-  "description": "std-drawer as a Function",
+  "version": "2.0.0",
+  "description": "std-drawer — side-panel atom. Renders ONLY to its `drawer` slot. Host emits OPEN with payload {id, name, description} → renders side-panel; CLOSE clears it.",
   "orbitals": [
     {
       "name": "DrawerContentOrbital",
@@ -15,27 +15,9 @@
             "required": true
           },
           {
-            "name": "name",
+            "name": "selectedItemId",
             "type": "string",
-            "required": true
-          },
-          {
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "type": "string",
-            "default": "active",
-            "values": [
-              "active",
-              "inactive",
-              "pending"
-            ]
-          },
-          {
-            "name": "createdAt",
-            "type": "string"
+            "default": ""
           }
         ]
       },
@@ -44,48 +26,14 @@
           "name": "DrawerContentDrawer",
           "category": "interaction",
           "linkedEntity": "DrawerContent",
-          "emits": [
-            {
-              "event": "DrawerContentLoaded",
-              "description": "Fired when DrawerContent finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[DrawerContent]"
-                }
-              ]
-            },
-            {
-              "event": "DrawerContentLoadFailed",
-              "description": "Fired when DrawerContent fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "closed",
                 "isInitial": true
               },
               {
-                "name": "closed"
-              },
-              {
                 "name": "open"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
@@ -94,32 +42,23 @@
                 "name": "Initialize"
               },
               {
-                "key": "DrawerContentLoaded",
-                "name": "DrawerContent loaded",
+                "key": "OPEN",
+                "name": "Open",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "[DrawerContent]"
-                  }
-                ]
-              },
-              {
-                "key": "DrawerContentLoadFailed",
-                "name": "DrawerContent load failed",
-                "payloadSchema": [
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
                   {
-                    "name": "error",
+                    "name": "name",
                     "type": "string"
                   },
                   {
-                    "name": "code",
+                    "name": "description",
                     "type": "string"
                   }
                 ]
-              },
-              {
-                "key": "OPEN",
-                "name": "Open"
               },
               {
                 "key": "CLOSE",
@@ -128,159 +67,14 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
+                "from": "closed",
+                "to": "closed",
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "DrawerContent",
-                    {
-                      "emit": {
-                        "success": "DrawerContentLoaded",
-                        "failure": "DrawerContentLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading…"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "closed",
-                "event": "DrawerContentLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "name": "panel-right",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Details",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "label": "Open",
-                              "action": "OPEN",
-                              "icon": "panel-right",
-                              "type": "button",
-                              "variant": "primary"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "fields": [],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "content": "@item.name",
-                                  "variant": "h4",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "DrawerContentLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "button",
-                          "action": "INIT",
-                          "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "label": "Retry"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
-                    }
+                    "set",
+                    "@entity.selectedItemId",
+                    ""
                   ]
                 ]
               },
@@ -290,40 +84,52 @@
                 "event": "OPEN",
                 "effects": [
                   [
+                    "set",
+                    "@entity.selectedItemId",
+                    "@payload.id"
+                  ],
+                  [
                     "render-ui",
                     "drawer",
                     {
-                      "isOpen": true,
-                      "position": "right",
-                      "title": "Details",
                       "onClose": "CLOSE",
+                      "isOpen": true,
+                      "title": "@config.title",
                       "type": "side-panel",
+                      "width": "@config.width",
+                      "position": "@config.position",
                       "children": [
                         {
-                          "direction": "vertical",
                           "children": [
                             {
+                              "content": "@payload.name",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "Drawer content"
+                              "variant": "h4"
                             },
                             {
+                              "type": "typography",
+                              "color": "muted",
+                              "variant": "body",
+                              "content": "@payload.description"
+                            },
+                            {
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
                                   "variant": "ghost",
                                   "action": "CLOSE",
-                                  "label": "Close"
+                                  "label": "Close",
+                                  "type": "button"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
                               "justify": "end",
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "type": "stack"
                             }
                           ],
+                          "gap": "md",
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "vertical"
                         }
                       ]
                     }
@@ -332,60 +138,48 @@
               },
               {
                 "from": "open",
-                "to": "loading",
+                "to": "closed",
                 "event": "CLOSE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.selectedItemId",
+                    ""
+                  ],
                   [
                     "render-ui",
                     "drawer",
                     null
-                  ],
-                  [
-                    "fetch",
-                    "DrawerContent",
-                    {
-                      "emit": {
-                        "failure": "DrawerContentLoadFailed",
-                        "success": "DrawerContentLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "DrawerContent",
-                    {
-                      "emit": {
-                        "failure": "DrawerContentLoadFailed",
-                        "success": "DrawerContentLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "config": {
+            "width": {
+              "type": "string",
+              "default": "md",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "position": {
+              "type": "string",
+              "default": "right",
+              "values": [
+                "left",
+                "right"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Details"
+            }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

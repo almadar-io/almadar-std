@@ -1,7 +1,7 @@
 {
   "name": "std-master-detail-layout",
   "version": "1.0.0",
-  "description": "std-master-detail-layout — generic two-pane shell (browse + drawer)",
+  "description": "std-master-detail-layout — two-pane shell: std-browse (master) + std-drawer (detail panel).",
   "orbitals": [
     {
       "name": "MasterDetailItemOrbital",
@@ -41,6 +41,7 @@
           "name": "MasterDetailBrowse",
           "linkedEntity": "MasterDetailItem",
           "config": {
+            "pageSize": 10.0,
             "fields": [
               {
                 "name": "name",
@@ -48,21 +49,20 @@
                 "variant": "h5"
               },
               {
-                "variant": "caption",
+                "label": "Description",
                 "name": "description",
-                "label": "Description"
+                "variant": "caption"
               }
-            ],
-            "pageSize": 10.0
+            ]
           }
         },
         {
           "ref": "Drawer.traits.DrawerContentDrawer",
           "name": "MasterDetailDrawer",
           "config": {
-            "title": "Details",
+            "placement": "right",
             "width": "md",
-            "placement": "right"
+            "title": "Details"
           }
         },
         {
@@ -143,8 +143,8 @@
                     "MasterDetailItem",
                     {
                       "emit": {
-                        "success": "MasterDetailItemLoaded",
-                        "failure": "MasterDetailItemLoadFailed"
+                        "failure": "MasterDetailItemLoadFailed",
+                        "success": "MasterDetailItemLoaded"
                       }
                     }
                   ],
@@ -152,12 +152,13 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-6xl mx-auto w-full",
-                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
                           "align": "center",
                           "type": "stack",
                           "children": [
@@ -166,13 +167,12 @@
                               "type": "icon"
                             },
                             {
-                              "content": "Master / Detail",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Master / Detail"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"

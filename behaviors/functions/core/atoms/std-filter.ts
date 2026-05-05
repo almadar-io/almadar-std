@@ -45,10 +45,10 @@ export interface StdFilterFilterPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFilterConfig {
-  /** Default: `[]` */
-  filters?: TraitConfig[];
   /** Default: `"FILTER"` */
   event?: string;
+  /** Default: `[{"filterType":"select","options":["active","inactive","pending"],"label":"Status","field":"status"}]` */
+  filters?: TraitConfig[];
 }
 
 /**

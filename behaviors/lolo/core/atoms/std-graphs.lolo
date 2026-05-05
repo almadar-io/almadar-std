@@ -13,18 +13,22 @@ orbital GraphItemOrbital {
     initial: idle
     config {
       chartType     : "bar" | "line" | "pie" | "area" | "donut" = "bar"
-      categoryField : string = ""
+      categoryField : string = "status"
       valueField    : string = ""
       aggregation   : "count" | "sum" | "avg" | "min" | "max" = "count"
-      title         : string = ""
-      subtitle      : string = ""
+      title         : string = "Distribution"
+      subtitle      : string = "Counts per category"
       height        : number = 280
       showLegend    : boolean = true
       showValues    : boolean = false
     }
     state idle {
       INIT -> idle
-        (set @entity.chartData [])
+        (set @entity.chartData [
+          { label: "Active", value: 6 },
+          { label: "Pending", value: 3 },
+          { label: "Inactive", value: 1 }
+        ])
         (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues" })
       ITEMS_LOADED -> idle
         (set @entity.chartData (array/map (object/entries (array/groupBy @payload.data @config.categoryField)) ["fn", "entry", {

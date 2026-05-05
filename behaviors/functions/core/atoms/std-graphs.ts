@@ -37,24 +37,24 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut';
   /** Default: `true` */
   showLegend?: boolean;
-  /** Default: `""` */
-  subtitle?: string;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `false` */
-  showValues?: boolean;
+  /** Default: `"status"` */
+  categoryField?: string;
   /** Default: `"count"` */
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
-  /** Default: `""` */
-  categoryField?: string;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
   /** Default: `280` */
   height?: number;
-  /** Default: `""` */
+  /** Default: `"Distribution"` */
   title?: string;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut';
+  /** Default: `false` */
+  showValues?: boolean;
 }
 
 /**

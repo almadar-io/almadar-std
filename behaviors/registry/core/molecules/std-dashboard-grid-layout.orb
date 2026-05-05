@@ -1,7 +1,7 @@
 {
   "name": "std-dashboard-grid-layout",
   "version": "1.0.0",
-  "description": "std-dashboard-grid-layout — stats + charts + activity feed in a dashboard chrome",
+  "description": "std-dashboard-grid-layout — std-stats + std-graphs + std-browse inside a dashboard-layout chrome with sidebar nav.",
   "orbitals": [
     {
       "name": "DashboardGridItemOrbital",
@@ -54,18 +54,18 @@
           "config": {
             "aggregations": [
               {
-                "field": "amount",
+                "type": "sum",
                 "label": "Total",
-                "type": "sum"
+                "field": "amount"
               },
               {
-                "label": "Average",
                 "field": "amount",
-                "type": "avg"
+                "type": "avg",
+                "label": "Average"
               },
               {
-                "type": "count",
                 "field": "id",
+                "type": "count",
                 "label": "Count"
               }
             ]
@@ -85,8 +85,8 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DashboardGraphs",
           "config": {
-            "valueField": "amount",
             "chartType": "bar",
+            "valueField": "amount",
             "categoryField": "category"
           },
           "listens": [
@@ -105,6 +105,7 @@
           "name": "DashboardFeed",
           "linkedEntity": "DashboardGridItem",
           "config": {
+            "pageSize": 10.0,
             "fields": [
               {
                 "name": "timestamp",
@@ -121,8 +122,7 @@
                 "label": "Amount",
                 "variant": "badge"
               }
-            ],
-            "pageSize": 10.0
+            ]
           }
         },
         {
@@ -214,34 +214,33 @@
                     {
                       "navItems": [
                         {
-                          "label": "Dashboard",
+                          "icon": "bar-chart-3",
                           "href": "/dashboard",
-                          "icon": "bar-chart-3"
+                          "label": "Dashboard"
                         }
                       ],
-                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
                           "gap": "lg",
+                          "type": "stack",
+                          "direction": "vertical",
                           "className": "max-w-6xl mx-auto w-full",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "bar-chart-3"
+                                  "name": "bar-chart-3",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Dashboard"
+                                  "content": "Dashboard",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack",
                               "direction": "horizontal"
                             },
                             {
@@ -250,15 +249,16 @@
                             "@trait.DashboardStats",
                             "@trait.DashboardGraphs",
                             {
-                              "content": "Recent Activity",
+                              "type": "typography",
                               "variant": "h4",
-                              "type": "typography"
+                              "content": "Recent Activity"
                             },
                             "@trait.DashboardFeed"
                           ]
                         }
                       ],
-                      "appName": "Dashboard"
+                      "appName": "Dashboard",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
