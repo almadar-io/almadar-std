@@ -344,6 +344,8 @@ orbital CourseOrbital {
 }
 
 orbital EnrollmentOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Enrollment [persistent: enrollments] {
     id : string!
     studentName : string = ""
@@ -357,6 +359,22 @@ orbital EnrollmentOrbital {
   type EnrollmentLoadFailed = Event { error : string, code : string }  "Fired when Enrollment fails to load"
   type EnrollmentSaved      = Event { id : string }
   type EnrollmentSaveFailed = Event { error : string, code : string }
+
+  trait EnrollmentAppLayout = AppShell.traits.AppLayout -> Enrollment {
+    config: {
+      contentTrait: "@trait.EnrollmentWizard",
+      appName: "LMS",
+      navItems: [{ label: "Courses", href: "/courses", icon: "graduation-cap" }, { label: "Enroll", href: "/enroll", icon: "user-plus" }, { label: "Progress", href: "/progress", icon: "trending-up" }],
+      searchEvent: "ENROLLMENT_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "ENROLLMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ENROLLMENT_SEARCH
+      NOTIFY_CLICK: ENROLLMENT_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Wizard pattern from std-ecommerce: state-per-step + `(set @entity.X
   ;; @payload.data.X)` + guards `when (and @entity.X @payload.data.Y)`.
@@ -524,11 +542,12 @@ orbital EnrollmentOrbital {
     }
   }
 
-  page "/enroll" -> EnrollmentWizard
+  page "/enroll" -> EnrollmentAppLayout, EnrollmentWizard
 }
 
 orbital ProgressOrbital {
-  uses Browse  from "std/behaviors/std-browse"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
 
   entity Progress [persistent: progresses] {
     id : string!
@@ -544,6 +563,22 @@ orbital ProgressOrbital {
 
   type ProgressLoaded     = Event { data : [Progress] }                "Fired when Progress finishes loading"
   type ProgressLoadFailed = Event { error : string, code : string }    "Fired when Progress fails to load"
+
+  trait ProgressAppLayout = AppShell.traits.AppLayout -> Progress {
+    config: {
+      contentTrait: "@trait.ProgressDisplay",
+      appName: "LMS",
+      navItems: [{ label: "Courses", href: "/courses", icon: "graduation-cap" }, { label: "Enroll", href: "/enroll", icon: "user-plus" }, { label: "Progress", href: "/progress", icon: "trending-up" }],
+      searchEvent: "PROGRESS_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "PROGRESS_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PROGRESS_SEARCH
+      NOTIFY_CLICK: PROGRESS_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Page-chrome: header + stats + graphs + the browse list.
   trait ProgressDisplay [interaction, instance] {
@@ -657,5 +692,5 @@ orbital ProgressOrbital {
     }
   }
 
-  page "/progress" -> ProgressDisplay, ProgressStats, ProgressGraphs, ProgressBrowseList, ProgressItemSink
+  page "/progress" -> ProgressAppLayout, ProgressDisplay, ProgressStats, ProgressGraphs, ProgressBrowseList, ProgressItemSink
 }

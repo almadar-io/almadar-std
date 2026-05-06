@@ -284,6 +284,7 @@ orbital ChatMessageOrbital {
 }
 
 orbital ChannelOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -295,6 +296,21 @@ orbital ChannelOrbital {
     memberCount : number = 0
     isPrivate : boolean = false
     pendingId : string = ""
+  }
+
+  trait ChannelAppLayout = AppShell.traits.AppLayout -> Channel {
+    config: {
+      contentTrait: "@trait.ChannelCatalog",
+      appName: "Realtime Chat",
+      navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "users" }],
+      searchEvent: "CHANNEL_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CHANNEL_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CHANNEL_SEARCH
+      NOTIFY_CLICK: CHANNEL_NOTIFICATIONS_OPEN
+    }
   }
 
   ;; Page-chrome trait: header + Create button + embedded Browse list.
@@ -447,7 +463,7 @@ orbital ChannelOrbital {
     }
   }
 
-  page "/channels" -> ChannelCatalog, ChannelBrowseList, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete, ChannelPersistor
+  page "/channels" -> ChannelAppLayout, ChannelCatalog, ChannelBrowseList, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete, ChannelPersistor
 }
 
 ;; OnlineUserOrbital — kept ENTIRELY CUSTOM. Presence visualization
@@ -457,6 +473,8 @@ orbital ChannelOrbital {
 ;; doesn't represent presence semantics, and Stats/Graphs aggregations
 ;; would clash with the runtime entity model used here.
 orbital OnlineUserOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity OnlineUser [runtime] {
     id : string!
     username : string!
@@ -467,6 +485,21 @@ orbital OnlineUserOrbital {
 
   type OnlineUserLoaded     = Event { data : [OnlineUser] }                  "Fired when OnlineUser finishes loading"
   type OnlineUserLoadFailed = Event { error : string, code : string }        "Fired when OnlineUser fails to load"
+
+  trait OnlineUserAppLayout = AppShell.traits.AppLayout -> OnlineUser {
+    config: {
+      contentTrait: "@trait.OnlineUserDisplay",
+      appName: "Realtime Chat",
+      navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "users" }],
+      searchEvent: "ONLINE_USER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ONLINE_USER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ONLINE_USER_SEARCH
+      NOTIFY_CLICK: ONLINE_USER_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait OnlineUserDisplay -> OnlineUser [interaction, collection] {
     initial: loading
@@ -528,5 +561,5 @@ orbital OnlineUserOrbital {
     }
   }
 
-  page "/online" -> OnlineUserDisplay
+  page "/online" -> OnlineUserAppLayout, OnlineUserDisplay
 }

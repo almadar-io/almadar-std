@@ -271,6 +271,7 @@ orbital TicketOrbital {
 }
 
 orbital TicketReplyOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Modal from "std/behaviors/std-modal"
   uses Email from "std/behaviors/std-service-email"
 
@@ -289,6 +290,21 @@ orbital TicketReplyOrbital {
   type TicketReplyLoadFailed = Event { error : string, code : string }         "Fired when TicketReply fails to load"
   type TicketReplySaved      = Event { id : string }
   type TicketReplySaveFailed = Event { error : string, code : string }
+
+  trait TicketReplyAppLayout = AppShell.traits.AppLayout -> TicketReply {
+    config: {
+      contentTrait: "@trait.TicketReplyBrowse",
+      appName: "Helpdesk",
+      navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Replies", href: "/replies", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      searchEvent: "TICKET_REPLY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TICKET_REPLY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TICKET_REPLY_SEARCH
+      NOTIFY_CLICK: TICKET_REPLY_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait TicketReplyBrowse -> TicketReply [interaction, collection] {
     initial: browsing
@@ -408,10 +424,11 @@ orbital TicketReplyOrbital {
     }
   }
 
-  page "/replies" -> TicketReplyBrowse, TicketReplyComposerForm, TicketReplyCreate, TicketReplyEmail, TicketReplyPersistor
+  page "/replies" -> TicketReplyAppLayout, TicketReplyBrowse, TicketReplyComposerForm, TicketReplyCreate, TicketReplyEmail, TicketReplyPersistor
 }
 
 orbital SupportMetricsOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Browse from "std/behaviors/std-browse"
 
   entity SupportMetric [persistent: supportmetrics] {
@@ -425,6 +442,21 @@ orbital SupportMetricsOrbital {
 
   type SupportMetricLoaded     = Event { data : [SupportMetric] }
   type SupportMetricLoadFailed = Event { error : string, code : string }
+
+  trait SupportMetricsAppLayout = AppShell.traits.AppLayout -> SupportMetric {
+    config: {
+      contentTrait: "@trait.SupportMetricsDisplay",
+      appName: "Helpdesk",
+      navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Replies", href: "/replies", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      searchEvent: "SUPPORT_METRICS_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SUPPORT_METRICS_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SUPPORT_METRICS_SEARCH
+      NOTIFY_CLICK: SUPPORT_METRICS_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait SupportMetricsBrowse = Browse.traits.BrowseItemBrowse -> SupportMetric {
     config: {
@@ -459,5 +491,5 @@ orbital SupportMetricsOrbital {
     }
   }
 
-  page "/metrics" -> SupportMetricsDisplay, SupportMetricsBrowse
+  page "/metrics" -> SupportMetricsAppLayout, SupportMetricsDisplay, SupportMetricsBrowse
 }

@@ -306,6 +306,7 @@ orbital ServiceNodeOrbital {
 }
 
 orbital AlertMetricOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -318,6 +319,21 @@ orbital AlertMetricOrbital {
     timestamp : datetime
     source : string = ""
     pendingId : string = ""
+  }
+
+  trait AlertMetricAppLayout = AppShell.traits.AppLayout -> AlertMetric {
+    config: {
+      contentTrait: "@trait.AlertCatalog",
+      appName: "DevOps Dashboard",
+      navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      searchEvent: "ALERT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ALERT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ALERT_SEARCH
+      NOTIFY_CLICK: ALERT_NOTIFICATIONS_OPEN
+    }
   }
 
   trait AlertCatalog [interaction, instance] {
@@ -484,11 +500,12 @@ orbital AlertMetricOrbital {
     }
   }
 
-  page "/alerts" as AlertsPage -> AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail
+  page "/alerts" as AlertsPage -> AlertMetricAppLayout, AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail
 }
 
 orbital LogEntryOrbital {
-  uses Browse from "std/behaviors/std-browse"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
 
   entity LogEntry [persistent: logentries] {
     id : string!
@@ -496,6 +513,21 @@ orbital LogEntryOrbital {
     message : string!
     timestamp : datetime
     service : string = ""
+  }
+
+  trait LogEntryAppLayout = AppShell.traits.AppLayout -> LogEntry {
+    config: {
+      contentTrait: "@trait.LogCatalog",
+      appName: "DevOps Dashboard",
+      navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      searchEvent: "LOG_SEARCH",
+      notifications: [],
+      notificationClickEvent: "LOG_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: LOG_SEARCH
+      NOTIFY_CLICK: LOG_NOTIFICATIONS_OPEN
+    }
   }
 
   trait LogCatalog [interaction, instance] {
@@ -529,11 +561,12 @@ orbital LogEntryOrbital {
     }
   }
 
-  page "/logs" as LogsPage -> LogCatalog, LogBrowseList
+  page "/logs" as LogsPage -> LogEntryAppLayout, LogCatalog, LogBrowseList
 }
 
 orbital SystemMetricOrbital {
-  uses Browse from "std/behaviors/std-browse"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
 
   entity SystemMetric [persistent: systemmetrics] {
     id : string!
@@ -541,6 +574,21 @@ orbital SystemMetricOrbital {
     value : number!
     unit : string = ""
     trend : "up" | "down" | "flat" = "flat"
+  }
+
+  trait SystemMetricAppLayout = AppShell.traits.AppLayout -> SystemMetric {
+    config: {
+      contentTrait: "@trait.SystemMetricDisplay",
+      appName: "DevOps Dashboard",
+      navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      searchEvent: "SYSTEM_METRIC_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SYSTEM_METRIC_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SYSTEM_METRIC_SEARCH
+      NOTIFY_CLICK: SYSTEM_METRIC_NOTIFICATIONS_OPEN
+    }
   }
 
   trait SystemMetricsBrowse = Browse.traits.BrowseItemBrowse -> SystemMetric {
@@ -572,5 +620,5 @@ orbital SystemMetricOrbital {
     }
   }
 
-  page "/metrics" -> SystemMetricDisplay, SystemMetricsBrowse
+  page "/metrics" -> SystemMetricAppLayout, SystemMetricDisplay, SystemMetricsBrowse
 }

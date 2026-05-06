@@ -311,6 +311,7 @@ orbital ProviderOrbital {
   page "/providers" as ProvidersPage -> BookingProviderAppLayout, ProviderCatalog, ProviderSearch, ProviderFilter, ProviderStats, ProviderGraphs, ProviderBrowseList, ProviderCreate, ProviderEdit, ProviderView, ProviderDelete
 }
 orbital BookingOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Stripe from "std/behaviors/std-service-stripe"
 
   entity Booking [runtime] {
@@ -323,6 +324,22 @@ orbital BookingOrbital {
     notes : string
     depositAmount : number = 0
     status : string = "draft"
+  }
+
+  trait BookingAppLayout = AppShell.traits.AppLayout -> Booking {
+    config: {
+      contentTrait: "@trait.BookingWizard",
+      appName: "BookingSystemApp",
+      navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }],
+      searchEvent: "BOOKING_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "BOOKING_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BOOKING_SEARCH
+      NOTIFY_CLICK: BOOKING_NOTIFICATIONS_OPEN
+    }
   }
 
   ;; Stripe service binding — Pattern B (uiTrait override). Pulls amount from
@@ -554,9 +571,10 @@ orbital BookingOrbital {
       BookingSmsFailed { error : string, code : string }
     }
   }
-  page "/book" -> BookingWizard, BookingPayment, BookingPaymentForm
+  page "/book" -> BookingAppLayout, BookingWizard, BookingPayment, BookingPaymentForm
 }
 orbital AppointmentOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Calendar from "std/behaviors/std-calendar"
   uses Browse from "std/behaviors/std-browse"
 
@@ -580,6 +598,22 @@ orbital AppointmentOrbital {
   type AppointmentSaved = Event { id : string }
   type AppointmentUpdateFailed = Event { error : string, code : string }
   type AppointmentUpdated = Event { id : string }
+
+  trait AppointmentAppLayout = AppShell.traits.AppLayout -> Appointment {
+    config: {
+      contentTrait: "@trait.AppointmentDashboard",
+      appName: "BookingSystemApp",
+      navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }],
+      searchEvent: "APPOINTMENT_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "APPOINTMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPOINTMENT_SEARCH
+      NOTIFY_CLICK: APPOINTMENT_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Page-chrome trait that owns the header (icon + title + Create button)
   ;; and embeds the Calendar primary view + BrowseList fallback.
@@ -793,15 +827,33 @@ orbital AppointmentOrbital {
       AppointmentBrowseList.DELETE -> DELETE
     }
   }
-  page "/appointments" -> AppointmentDashboard, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete
+  page "/appointments" -> AppointmentAppLayout, AppointmentDashboard, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete
 }
 orbital ScheduleOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Schedule [singleton] {
     id : string!
     totalBookings : number = 0
     confirmedToday : number = 0
     pendingBookings : number = 0
     availableSlots : number = 0
+  }
+
+  trait ScheduleAppLayout = AppShell.traits.AppLayout -> Schedule {
+    config: {
+      contentTrait: "@trait.ScheduleDisplay",
+      appName: "BookingSystemApp",
+      navItems: [{ label: "Providers", href: "/providers", icon: "user-check" }, { label: "Book", href: "/book", icon: "calendar-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Schedule", href: "/schedule", icon: "clock" }],
+      searchEvent: "SCHEDULE_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "SCHEDULE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SCHEDULE_SEARCH
+      NOTIFY_CLICK: SCHEDULE_NOTIFICATIONS_OPEN
+    }
   }
 
   type ScheduleLoaded     = Event { data : [Schedule] }                  "Fired when Schedule finishes loading"
@@ -895,5 +947,5 @@ orbital ScheduleOrbital {
       BookingOrbital.BookingWizard.BOOKING_CONFIRMED -> INIT
     }
   }
-  page "/schedule" -> ScheduleDisplay
+  page "/schedule" -> ScheduleAppLayout, ScheduleDisplay
 }

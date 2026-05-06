@@ -107,37 +107,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ArticleAppLayout",
           "config": {
-            "searchEvent": "ARTICLE_SEARCH",
-            "notificationClickEvent": "ARTICLE_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.ArticleCatalog",
             "navItems": [
               {
+                "icon": "layout-grid",
                 "label": "CMS Hub",
-                "href": "/cms-hub",
-                "icon": "layout-grid"
+                "href": "/cms-hub"
               },
               {
-                "href": "/articles",
                 "label": "Articles",
-                "icon": "file-text"
+                "icon": "file-text",
+                "href": "/articles"
               },
               {
                 "href": "/media",
-                "label": "Media",
-                "icon": "image"
+                "icon": "image",
+                "label": "Media"
               },
               {
+                "label": "Categories",
                 "href": "/categories",
-                "icon": "folder",
-                "label": "Categories"
+                "icon": "folder"
               }
             ],
+            "notifications": [],
             "appName": "CmsApp",
-            "notifications": []
+            "notificationClickEvent": "ARTICLE_NOTIFICATIONS_OPEN",
+            "searchEvent": "ARTICLE_SEARCH"
           },
           "events": {
-            "SEARCH": "ARTICLE_SEARCH",
-            "NOTIFY_CLICK": "ARTICLE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ARTICLE_NOTIFICATIONS_OPEN",
+            "SEARCH": "ARTICLE_SEARCH"
           }
         },
         {
@@ -220,66 +220,66 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
-                          "align": "center",
-                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
-                              "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "file-text"
+                                  "name": "file-text",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Articles",
                                   "variant": "h2",
-                                  "content": "Articles"
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
-                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "icon": "plus",
-                                  "type": "button",
                                   "variant": "primary",
-                                  "label": "Create Article"
+                                  "type": "button",
+                                  "label": "Create Article",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.ArticleSearch",
                             "@trait.ArticleFilter"
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          ]
                         },
                         "@trait.ArticleStats",
                         "@trait.ArticleGraphs",
                         "@trait.ArticleBrowseList"
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -298,10 +298,8 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "className": "py-8",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -309,23 +307,25 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "variant": "h3"
                         },
                         {
-                          "content": "You're all caught up.",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
+                          "content": "You're all caught up.",
+                          "variant": "caption",
+                          "type": "typography"
                         },
                         {
-                          "label": "Back to articles",
                           "action": "INIT",
                           "variant": "ghost",
-                          "type": "button"
+                          "type": "button",
+                          "label": "Back to articles"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -339,21 +339,38 @@
           "name": "ArticleBrowseList",
           "linkedEntity": "Article",
           "config": {
-            "cols": 1.0,
-            "imageField": "heroImage",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm",
+            "variant": "card",
             "fields": [
               {
-                "name": "title",
                 "icon": "file-text",
+                "name": "title",
                 "variant": "h3"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "author"
+                "name": "author",
+                "variant": "caption"
               },
               {
                 "name": "category",
@@ -364,25 +381,8 @@
                 "name": "publishedAt"
               }
             ],
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
-              },
-              {
-                "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ],
-            "variant": "card",
-            "gap": "sm"
+            "cols": 1.0,
+            "imageField": "heroImage"
           },
           "listens": [
             {
@@ -415,8 +415,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "ArticleSearch",
           "config": {
-            "placeholder": "Search articles...",
-            "searchEvent": "ARTICLE_SEARCH"
+            "searchEvent": "ARTICLE_SEARCH",
+            "placeholder": "Search articles..."
           }
         },
         {
@@ -426,12 +426,12 @@
             "facets": [
               {
                 "field": "status",
+                "label": "Status",
                 "values": [
                   "draft",
                   "published",
                   "archived"
-                ],
-                "label": "Status"
+                ]
               },
               {
                 "label": "Category",
@@ -447,8 +447,8 @@
           "config": {
             "metrics": [
               {
-                "label": "Total",
-                "aggregation": "count"
+                "aggregation": "count",
+                "label": "Total"
               },
               {
                 "label": "Published",
@@ -458,11 +458,11 @@
                 "aggregation": "count"
               },
               {
-                "aggregation": "count",
-                "label": "Drafts",
                 "filter": {
                   "status": "draft"
-                }
+                },
+                "label": "Drafts",
+                "aggregation": "count"
               }
             ]
           },
@@ -481,9 +481,9 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "ArticleGraphs",
           "config": {
-            "title": "Articles by Status",
+            "categoryField": "status",
             "chartType": "pie",
-            "categoryField": "status"
+            "title": "Articles by Status"
           },
           "listens": [
             {
@@ -501,9 +501,7 @@
           "name": "ArticleCreate",
           "linkedEntity": "Article",
           "config": {
-            "icon": "plus-circle",
             "title": "Create Article",
-            "mode": "create",
             "fields": [
               "title",
               "slug",
@@ -513,7 +511,9 @@
               "status",
               "publishedAt",
               "heroImage"
-            ]
+            ],
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -534,9 +534,8 @@
           "name": "ArticleEdit",
           "linkedEntity": "Article",
           "config": {
-            "icon": "edit",
             "mode": "edit",
-            "title": "Edit Article",
+            "icon": "edit",
             "fields": [
               "title",
               "slug",
@@ -546,7 +545,8 @@
               "status",
               "publishedAt",
               "heroImage"
-            ]
+            ],
+            "title": "Edit Article"
           },
           "events": {
             "OPEN": "EDIT"
@@ -577,9 +577,9 @@
               "publishedAt",
               "heroImage"
             ],
+            "title": "View Article",
             "mode": "view",
-            "icon": "eye",
-            "title": "View Article"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -600,10 +600,10 @@
           "name": "ArticleDelete",
           "linkedEntity": "Article",
           "config": {
-            "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "title": "Delete Article"
+            "title": "Delete Article",
+            "icon": "alert-triangle"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -716,23 +716,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "sm",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "inputType": "text",
                           "placeholder": "Paste hero image URL...",
+                          "inputType": "text",
                           "type": "input"
                         },
                         {
-                          "icon": "upload",
-                          "label": "Upload Hero",
+                          "type": "button",
                           "action": "UPLOAD",
-                          "variant": "secondary",
-                          "type": "button"
+                          "label": "Upload Hero",
+                          "icon": "upload",
+                          "variant": "secondary"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -747,14 +747,14 @@
                     "storage",
                     "upload",
                     {
-                      "file": "@payload.file",
+                      "acl": "public",
                       "bucket": "articles",
-                      "acl": "public"
+                      "file": "@payload.file"
                     },
                     {
                       "emit": {
-                        "success": "ArticleHeroUploaded",
-                        "failure": "ArticleHeroUploadFailed"
+                        "failure": "ArticleHeroUploadFailed",
+                        "success": "ArticleHeroUploaded"
                       }
                     }
                   ]
@@ -1016,6 +1016,10 @@
       "name": "MediaAssetOrbital",
       "uses": [
         {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
           "from": "std/behaviors/std-modal",
           "as": "Modal"
         },
@@ -1065,6 +1069,44 @@
       },
       "traits": [
         {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "MediaAssetAppLayout",
+          "linkedEntity": "MediaAsset",
+          "config": {
+            "searchEvent": "MEDIA_SEARCH",
+            "navItems": [
+              {
+                "label": "CMS Hub",
+                "href": "/cms-hub",
+                "icon": "layout-grid"
+              },
+              {
+                "href": "/articles",
+                "label": "Articles",
+                "icon": "file-text"
+              },
+              {
+                "href": "/media",
+                "icon": "image",
+                "label": "Media"
+              },
+              {
+                "label": "Categories",
+                "href": "/categories",
+                "icon": "folder"
+              }
+            ],
+            "contentTrait": "@trait.MediaCatalog",
+            "notificationClickEvent": "MEDIA_NOTIFICATIONS_OPEN",
+            "appName": "CmsApp",
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "MEDIA_SEARCH",
+            "NOTIFY_CLICK": "MEDIA_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
           "name": "MediaCatalog",
           "category": "interaction",
           "emits": [
@@ -1106,61 +1148,6 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
-                              "align": "center",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "name": "image",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "variant": "h2",
-                                      "content": "Media Library",
-                                      "type": "typography"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "action": "CREATE",
-                                      "icon": "plus",
-                                      "label": "Create MediaAsset",
-                                      "type": "button",
-                                      "variant": "secondary"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            "@trait.MediaUpload",
-                            "@trait.MediaAssetGallery"
-                          ],
-                          "direction": "vertical",
-                          "gap": "lg"
-                        }
-                      ],
                       "navItems": [
                         {
                           "label": "CMS Hub",
@@ -1173,18 +1160,73 @@
                           "icon": "file-text"
                         },
                         {
+                          "label": "Media",
                           "href": "/media",
-                          "icon": "image",
-                          "label": "Media"
+                          "icon": "image"
                         },
                         {
                           "label": "Categories",
-                          "icon": "folder",
-                          "href": "/categories"
+                          "href": "/categories",
+                          "icon": "folder"
                         }
                       ],
-                      "type": "dashboard-layout",
-                      "appName": "CmsApp"
+                      "appName": "CmsApp",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "align": "center",
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "image"
+                                    },
+                                    {
+                                      "variant": "h2",
+                                      "type": "typography",
+                                      "content": "Media Library"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "label": "Create MediaAsset",
+                                      "action": "CREATE",
+                                      "icon": "plus",
+                                      "type": "button",
+                                      "variant": "secondary"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            "@trait.MediaUpload",
+                            "@trait.MediaAssetGallery"
+                          ]
+                        }
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -1199,8 +1241,8 @@
           "linkedEntity": "MediaAsset",
           "config": {
             "titleField": "name",
-            "cols": 4.0,
             "gap": "md",
+            "cols": 4.0,
             "imageField": "url"
           },
           "listens": [
@@ -1365,22 +1407,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "sm",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "placeholder": "Paste file URL...",
-                          "inputType": "text",
-                          "type": "input"
+                          "type": "input",
+                          "inputType": "text"
                         },
                         {
-                          "type": "button",
-                          "label": "Upload File",
-                          "action": "UPLOAD",
                           "variant": "primary",
-                          "icon": "upload"
+                          "label": "Upload File",
+                          "icon": "upload",
+                          "type": "button",
+                          "action": "UPLOAD"
                         }
                       ]
                     }
@@ -1397,14 +1439,14 @@
                     "storage",
                     "upload",
                     {
-                      "file": "@payload.file",
                       "bucket": "media",
+                      "file": "@payload.file",
                       "acl": "public"
                     },
                     {
                       "emit": {
-                        "success": "StorageUploaded",
-                        "failure": "MediaUploadFailed"
+                        "failure": "MediaUploadFailed",
+                        "success": "StorageUploaded"
                       }
                     }
                   ],
@@ -1412,9 +1454,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "loading-state",
                       "title": "Uploading...",
-                      "message": "Uploading file to storage.",
-                      "type": "loading-state"
+                      "message": "Uploading file to storage."
                     }
                   ]
                 ]
@@ -1444,16 +1486,17 @@
                     "emit",
                     "MEDIA_UPLOADED",
                     {
-                      "id": "@payload.id",
-                      "url": "@payload.url"
+                      "url": "@payload.url",
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "sm",
+                      "direction": "vertical",
                       "align": "center",
+                      "gap": "sm",
                       "type": "stack",
                       "children": [
                         {
@@ -1461,18 +1504,17 @@
                           "type": "icon"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
-                          "message": "Upload complete."
+                          "message": "Upload complete.",
+                          "type": "alert"
                         },
                         {
-                          "variant": "ghost",
-                          "label": "Upload Another",
                           "action": "INIT",
+                          "label": "Upload Another",
+                          "variant": "ghost",
                           "type": "button"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1487,9 +1529,9 @@
                     "main",
                     {
                       "type": "error-state",
-                      "title": "Upload Failed",
+                      "message": "@payload.error",
                       "onRetry": "INIT",
-                      "message": "@payload.error"
+                      "title": "Upload Failed"
                     }
                   ]
                 ]
@@ -1503,15 +1545,15 @@
           "name": "MediaAssetCreate",
           "linkedEntity": "MediaAsset",
           "config": {
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "Add Media Asset",
             "fields": [
               "name",
               "altText",
               "type",
               "url"
-            ],
-            "mode": "create",
-            "icon": "plus-circle",
-            "title": "Add Media Asset"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -1533,14 +1575,14 @@
           "linkedEntity": "MediaAsset",
           "config": {
             "mode": "view",
+            "title": "View Media Asset",
             "icon": "eye",
             "fields": [
               "name",
               "altText",
               "type",
               "url"
-            ],
-            "title": "View Media Asset"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -1658,6 +1700,9 @@
           "path": "/media",
           "traits": [
             {
+              "ref": "MediaAssetAppLayout"
+            },
+            {
               "ref": "MediaCatalog"
             },
             {
@@ -1682,6 +1727,10 @@
     {
       "name": "CategoryOrbital",
       "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
         {
           "from": "std/behaviors/std-modal",
           "as": "Modal"
@@ -1736,6 +1785,44 @@
       },
       "traits": [
         {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "CategoryAppLayout",
+          "linkedEntity": "Category",
+          "config": {
+            "notificationClickEvent": "CATEGORY_NOTIFICATIONS_OPEN",
+            "appName": "CmsApp",
+            "searchEvent": "CATEGORY_SEARCH",
+            "contentTrait": "@trait.CategoryCatalog",
+            "notifications": [],
+            "navItems": [
+              {
+                "icon": "layout-grid",
+                "label": "CMS Hub",
+                "href": "/cms-hub"
+              },
+              {
+                "icon": "file-text",
+                "href": "/articles",
+                "label": "Articles"
+              },
+              {
+                "icon": "image",
+                "href": "/media",
+                "label": "Media"
+              },
+              {
+                "label": "Categories",
+                "icon": "folder",
+                "href": "/categories"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "CATEGORY_SEARCH",
+            "NOTIFY_CLICK": "CATEGORY_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
           "name": "CategoryCatalog",
           "category": "interaction",
           "emits": [
@@ -1777,60 +1864,6 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "folder"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Categories",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center"
-                                },
-                                {
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "icon": "plus",
-                                      "action": "CREATE",
-                                      "label": "Create Category",
-                                      "type": "button",
-                                      "variant": "primary"
-                                    }
-                                  ],
-                                  "direction": "horizontal"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            "@trait.CategoryBrowseList"
-                          ],
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack"
-                        }
-                      ],
                       "type": "dashboard-layout",
                       "navItems": [
                         {
@@ -1839,19 +1872,73 @@
                           "icon": "layout-grid"
                         },
                         {
-                          "label": "Articles",
+                          "icon": "file-text",
                           "href": "/articles",
-                          "icon": "file-text"
+                          "label": "Articles"
                         },
                         {
+                          "icon": "image",
                           "label": "Media",
-                          "href": "/media",
-                          "icon": "image"
+                          "href": "/media"
                         },
                         {
-                          "label": "Categories",
                           "href": "/categories",
+                          "label": "Categories",
                           "icon": "folder"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "className": "max-w-5xl mx-auto w-full",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "name": "folder",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "content": "Categories",
+                                      "type": "typography",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "label": "Create Category",
+                                      "action": "CREATE",
+                                      "type": "button",
+                                      "icon": "plus",
+                                      "variant": "primary"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            "@trait.CategoryBrowseList"
+                          ],
+                          "type": "stack",
+                          "direction": "vertical"
                         }
                       ],
                       "appName": "CmsApp"
@@ -1868,33 +1955,11 @@
           "name": "CategoryBrowseList",
           "linkedEntity": "Category",
           "config": {
-            "cols": 1.0,
-            "fields": [
-              {
-                "name": "name",
-                "icon": "folder",
-                "variant": "h3"
-              },
-              {
-                "variant": "badge",
-                "label": "Articles",
-                "format": "number",
-                "name": "articleCount"
-              },
-              {
-                "variant": "body",
-                "name": "description"
-              },
-              {
-                "name": "slug",
-                "variant": "caption"
-              }
-            ],
             "variant": "card",
             "itemActions": [
               {
-                "label": "View",
                 "variant": "ghost",
+                "label": "View",
                 "event": "VIEW"
               },
               {
@@ -1908,6 +1973,28 @@
                 "label": "Delete"
               }
             ],
+            "fields": [
+              {
+                "icon": "folder",
+                "name": "name",
+                "variant": "h3"
+              },
+              {
+                "variant": "badge",
+                "name": "articleCount",
+                "label": "Articles",
+                "format": "number"
+              },
+              {
+                "name": "description",
+                "variant": "body"
+              },
+              {
+                "name": "slug",
+                "variant": "caption"
+              }
+            ],
+            "cols": 1.0,
             "gap": "sm"
           },
           "listens": [
@@ -1942,16 +2029,16 @@
           "name": "CategoryCreate",
           "linkedEntity": "Category",
           "config": {
+            "icon": "plus-circle",
+            "title": "Create Category",
+            "mode": "create",
             "fields": [
               "name",
               "slug",
               "description",
               "parentCategory",
               "articleCount"
-            ],
-            "title": "Create Category",
-            "mode": "create",
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -1972,8 +2059,7 @@
           "name": "CategoryEdit",
           "linkedEntity": "Category",
           "config": {
-            "icon": "edit",
-            "title": "Edit Category",
+            "mode": "edit",
             "fields": [
               "name",
               "slug",
@@ -1981,7 +2067,8 @@
               "parentCategory",
               "articleCount"
             ],
-            "mode": "edit"
+            "icon": "edit",
+            "title": "Edit Category"
           },
           "events": {
             "OPEN": "EDIT"
@@ -2002,6 +2089,8 @@
           "name": "CategoryView",
           "linkedEntity": "Category",
           "config": {
+            "icon": "eye",
+            "title": "View Category",
             "fields": [
               "name",
               "slug",
@@ -2009,9 +2098,7 @@
               "parentCategory",
               "articleCount"
             ],
-            "title": "View Category",
-            "mode": "view",
-            "icon": "eye"
+            "mode": "view"
           },
           "events": {
             "OPEN": "VIEW"
@@ -2032,10 +2119,10 @@
           "name": "CategoryDelete",
           "linkedEntity": "Category",
           "config": {
+            "icon": "alert-triangle",
             "title": "Delete Category",
-            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -2242,6 +2329,9 @@
           "path": "/categories",
           "traits": [
             {
+              "ref": "CategoryAppLayout"
+            },
+            {
               "ref": "CategoryCatalog"
             },
             {
@@ -2269,6 +2359,10 @@
     {
       "name": "CmsHubOrbital",
       "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
         {
           "from": "std/behaviors/std-browse",
           "as": "Browse"
@@ -2326,6 +2420,44 @@
       },
       "traits": [
         {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "CmsHubAppLayout",
+          "linkedEntity": "HubArticle",
+          "config": {
+            "contentTrait": "@trait.CmsHubDisplay",
+            "appName": "CmsApp",
+            "navItems": [
+              {
+                "icon": "layout-grid",
+                "label": "CMS Hub",
+                "href": "/cms-hub"
+              },
+              {
+                "label": "Articles",
+                "href": "/articles",
+                "icon": "file-text"
+              },
+              {
+                "href": "/media",
+                "label": "Media",
+                "icon": "image"
+              },
+              {
+                "href": "/categories",
+                "icon": "folder",
+                "label": "Categories"
+              }
+            ],
+            "searchEvent": "CMS_HUB_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "CMS_HUB_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "CMS_HUB_SEARCH",
+            "NOTIFY_CLICK": "CMS_HUB_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
           "name": "CmsHubDisplay",
           "category": "interaction",
           "stateMachine": {
@@ -2353,63 +2485,63 @@
                     {
                       "type": "dashboard-layout",
                       "appName": "CmsApp",
-                      "navItems": [
-                        {
-                          "href": "/cms-hub",
-                          "icon": "layout-grid",
-                          "label": "CMS Hub"
-                        },
-                        {
-                          "href": "/articles",
-                          "icon": "file-text",
-                          "label": "Articles"
-                        },
-                        {
-                          "label": "Media",
-                          "href": "/media",
-                          "icon": "image"
-                        },
-                        {
-                          "icon": "folder",
-                          "label": "Categories",
-                          "href": "/categories"
-                        }
-                      ],
                       "children": [
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "layout-grid",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "layout-grid"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "CMS Hub",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "content": "Recent articles across the platform",
                               "type": "typography",
                               "variant": "caption",
-                              "color": "muted",
-                              "content": "Recent articles across the platform"
+                              "color": "muted"
                             },
                             "@trait.HubBrowseList"
                           ],
+                          "className": "max-w-5xl mx-auto w-full",
+                          "direction": "vertical",
+                          "type": "stack",
                           "gap": "lg"
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "layout-grid",
+                          "label": "CMS Hub",
+                          "href": "/cms-hub"
+                        },
+                        {
+                          "label": "Articles",
+                          "icon": "file-text",
+                          "href": "/articles"
+                        },
+                        {
+                          "icon": "image",
+                          "label": "Media",
+                          "href": "/media"
+                        },
+                        {
+                          "label": "Categories",
+                          "icon": "folder",
+                          "href": "/categories"
                         }
                       ]
                     }
@@ -2425,7 +2557,7 @@
           "name": "HubBrowseList",
           "linkedEntity": "HubArticle",
           "config": {
-            "cols": 1.0,
+            "variant": "card",
             "fields": [
               {
                 "name": "title",
@@ -2437,18 +2569,18 @@
                 "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "author"
+                "name": "author",
+                "variant": "caption"
               },
               {
                 "name": "category",
                 "variant": "badge"
               }
             ],
-            "itemActions": [],
             "imageField": "heroImage",
             "gap": "sm",
-            "variant": "card"
+            "itemActions": [],
+            "cols": 1.0
           }
         }
       ],
@@ -2457,6 +2589,9 @@
           "name": "CmsHubPage",
           "path": "/cms-hub",
           "traits": [
+            {
+              "ref": "CmsHubAppLayout"
+            },
             {
               "ref": "CmsHubDisplay"
             },

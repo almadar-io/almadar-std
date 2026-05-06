@@ -294,6 +294,7 @@ orbital PostOrbital {
 }
 
 orbital CommentOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -305,6 +306,21 @@ orbital CommentOrbital {
     body : string = ""
     createdAt : datetime = ""
     pendingId : string = ""
+  }
+
+  trait CommentAppLayout = AppShell.traits.AppLayout -> Comment {
+    config: {
+      contentTrait: "@trait.CommentDisplay",
+      appName: "SocialFeed",
+      navItems: [{ label: "Feed", href: "/feed", icon: "rss" }, { label: "Comments", href: "/comments", icon: "message-circle" }],
+      searchEvent: "COMMENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "COMMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: COMMENT_SEARCH
+      NOTIFY_CLICK: COMMENT_NOTIFICATIONS_OPEN
+    }
   }
 
   ;; Page-chrome trait for /comments — header + embedded browse list.
@@ -325,9 +341,23 @@ orbital CommentOrbital {
           { type: "divider" },
           "@trait.CommentBrowseList"
         ]})
+      COMMENT_SEARCH -> composing
+      COMMENT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to comments", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
       CREATE -> external { source : string }
+    }
+    listens {
+      CommentAppLayout.COMMENT_SEARCH -> COMMENT_SEARCH
+      CommentAppLayout.COMMENT_NOTIFICATIONS_OPEN -> COMMENT_NOTIFICATIONS_OPEN
+      COMMENT_SEARCH { value : string }
+      COMMENT_NOTIFICATIONS_OPEN { id : string }
     }
   }
 
@@ -452,5 +482,5 @@ orbital CommentOrbital {
     }
   }
 
-  page "/comments" -> CommentDisplay, CommentBrowseList, CommentCreate, CommentEdit, CommentView, CommentDeleteConfirm, CommentPersistor
+  page "/comments" -> CommentAppLayout, CommentDisplay, CommentBrowseList, CommentCreate, CommentEdit, CommentView, CommentDeleteConfirm, CommentPersistor
 }

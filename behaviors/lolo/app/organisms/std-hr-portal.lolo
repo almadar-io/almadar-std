@@ -291,6 +291,7 @@ orbital EmployeeOrbital {
 }
 
 orbital OnboardingOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Email from "std/behaviors/std-service-email"
 
   entity Onboarding [persistent: onboardings] {
@@ -307,6 +308,21 @@ orbital OnboardingOrbital {
   type OnboardingLoadFailed = Event { error : string, code : string }
   type OnboardingSaved      = Event { id : string }
   type OnboardingSaveFailed = Event { error : string, code : string }
+
+  trait OnboardingAppLayout = AppShell.traits.AppLayout -> Onboarding {
+    config: {
+      contentTrait: "@trait.OnboardingWizard",
+      appName: "HRPortal",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "clipboard-check" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "git-branch" }],
+      searchEvent: "ONBOARDING_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ONBOARDING_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ONBOARDING_SEARCH
+      NOTIFY_CLICK: ONBOARDING_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Custom wizard pattern — mirrors std-ecommerce CheckoutWizard. State per
   ;; step, (set @entity.X) on advance, (and @entity.X @entity.Y) guards
@@ -456,10 +472,11 @@ orbital OnboardingOrbital {
     }
   }
 
-  page "/onboarding" as OnboardingPage -> OnboardingWizard
+  page "/onboarding" as OnboardingPage -> OnboardingAppLayout, OnboardingWizard
 }
 
 orbital TimeOffOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
   uses Browse        from "std/behaviors/std-browse"
   uses Modal         from "std/behaviors/std-modal"
   uses Confirmation  from "std/behaviors/std-confirmation"
@@ -476,6 +493,21 @@ orbital TimeOffOrbital {
     reason : string = ""
     status : "pending" | "approved" | "denied" = "pending"
     pendingId : string = ""
+  }
+
+  trait TimeOffAppLayout = AppShell.traits.AppLayout -> TimeOff {
+    config: {
+      contentTrait: "@trait.TimeOffCatalog",
+      appName: "HRPortal",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "clipboard-check" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "git-branch" }],
+      searchEvent: "TIME_OFF_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TIME_OFF_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TIME_OFF_SEARCH
+      NOTIFY_CLICK: TIME_OFF_NOTIFICATIONS_OPEN
+    }
   }
 
   trait TimeOffCatalog [interaction, instance] {
@@ -651,10 +683,11 @@ orbital TimeOffOrbital {
     }
   }
 
-  page "/timeoff" as TimeOffPage -> TimeOffCatalog, TimeOffCalendar, TimeOffBrowseList, TimeOffCreate, TimeOffEdit, TimeOffView, TimeOffDelete, TimeOffPersistor
+  page "/timeoff" as TimeOffPage -> TimeOffAppLayout, TimeOffCatalog, TimeOffCalendar, TimeOffBrowseList, TimeOffCreate, TimeOffEdit, TimeOffView, TimeOffDelete, TimeOffPersistor
 }
 
 orbital OrgChartOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Related from "std/behaviors/std-related"
 
   entity OrgNode [runtime] {
@@ -667,6 +700,21 @@ orbital OrgChartOrbital {
 
   type OrgChartLoaded     = Event { data : [OrgNode] }
   type OrgChartLoadFailed = Event { error : string, code : string }
+
+  trait OrgChartAppLayout = AppShell.traits.AppLayout -> OrgNode {
+    config: {
+      contentTrait: "@trait.OrgChartDisplay",
+      appName: "HRPortal",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "clipboard-check" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "git-branch" }],
+      searchEvent: "ORG_CHART_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ORG_CHART_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ORG_CHART_SEARCH
+      NOTIFY_CLICK: ORG_CHART_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Fetches direct reports for the focused node — Related atom keys off the
   ;; managerId field. Drives the "expand node" interaction in the tree view.
@@ -726,5 +774,5 @@ orbital OrgChartOrbital {
     }
   }
 
-  page "/org-chart" as OrgChartPage -> OrgChartDisplay, EmployeeRelated
+  page "/org-chart" as OrgChartPage -> OrgChartAppLayout, OrgChartDisplay, EmployeeRelated
 }

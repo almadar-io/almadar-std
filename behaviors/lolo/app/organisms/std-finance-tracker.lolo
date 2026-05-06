@@ -257,6 +257,8 @@ orbital TransactionOrbital {
 }
 
 orbital FinanceSummaryOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity FinanceSummary [runtime] {
     id : string!
     totalIncome : number = 0
@@ -267,6 +269,21 @@ orbital FinanceSummaryOrbital {
 
   type FinanceSummaryLoaded     = Event { data : [FinanceSummary] }        "Fired when FinanceSummary finishes loading"
   type FinanceSummaryLoadFailed = Event { error : string, code : string }  "Fired when FinanceSummary fails to load"
+
+  trait FinanceSummaryAppLayout = AppShell.traits.AppLayout -> FinanceSummary {
+    config: {
+      contentTrait: "@trait.FinanceSummaryDisplay",
+      appName: "Finance Tracker",
+      navItems: [{ label: "Transactions", href: "/transactions", icon: "receipt" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }],
+      searchEvent: "FINANCE_SUMMARY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "FINANCE_SUMMARY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: FINANCE_SUMMARY_SEARCH
+      NOTIFY_CLICK: FINANCE_SUMMARY_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait FinanceSummaryDisplay -> FinanceSummary [interaction, instance] {
     initial: composing
@@ -306,10 +323,11 @@ orbital FinanceSummaryOrbital {
     }
   }
 
-  page "/summary" -> FinanceSummaryDisplay
+  page "/summary" -> FinanceSummaryAppLayout, FinanceSummaryDisplay
 }
 
 orbital FinanceReportOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Modal from "std/behaviors/std-modal"
 
   entity FinanceReport [persistent: financereports] {
@@ -325,6 +343,21 @@ orbital FinanceReportOrbital {
 
   type FinanceReportLoaded     = Event { data : [FinanceReport] }         "Fired when FinanceReport finishes loading"
   type FinanceReportLoadFailed = Event { error : string, code : string }  "Fired when FinanceReport fails to load"
+
+  trait FinanceReportAppLayout = AppShell.traits.AppLayout -> FinanceReport {
+    config: {
+      contentTrait: "@trait.FinanceReportBrowse",
+      appName: "Finance Tracker",
+      navItems: [{ label: "Transactions", href: "/transactions", icon: "receipt" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }],
+      searchEvent: "FINANCE_REPORT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "FINANCE_REPORT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: FINANCE_REPORT_SEARCH
+      NOTIFY_CLICK: FINANCE_REPORT_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait FinanceReportBrowse -> FinanceReport [interaction, collection] {
     initial: browsing
@@ -432,5 +465,5 @@ orbital FinanceReportOrbital {
     }
   }
 
-  page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView, FinanceReportPersistor
+  page "/reports" -> FinanceReportAppLayout, FinanceReportBrowse, FinanceReportCreate, FinanceReportView, FinanceReportPersistor
 }

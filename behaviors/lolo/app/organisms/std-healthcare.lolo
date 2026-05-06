@@ -294,6 +294,7 @@ orbital PatientOrbital {
 }
 
 orbital AppointmentOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
   uses Browse        from "std/behaviors/std-browse"
   uses Modal         from "std/behaviors/std-modal"
   uses Confirmation  from "std/behaviors/std-confirmation"
@@ -312,6 +313,22 @@ orbital AppointmentOrbital {
     reason : string
     status : "scheduled" | "completed" | "cancelled" | "no-show" = "scheduled"
     pendingId : string = ""
+  }
+
+  trait AppointmentAppLayout = AppShell.traits.AppLayout -> Appointment {
+    config: {
+      contentTrait: "@trait.AppointmentCatalog",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }],
+      searchEvent: "APPOINTMENT_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "APPOINTMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPOINTMENT_SEARCH
+      NOTIFY_CLICK: APPOINTMENT_NOTIFICATIONS_OPEN
+    }
   }
 
   trait AppointmentCatalog [interaction, instance] {
@@ -523,11 +540,13 @@ orbital AppointmentOrbital {
     }
   }
 
-  page "/appointments" as AppointmentsPage -> AppointmentCatalog, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete, AppointmentPersistor
+  page "/appointments" as AppointmentsPage -> AppointmentAppLayout, AppointmentCatalog, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete, AppointmentPersistor
   page "/appointments/reminder" as AppointmentReminderPage -> AppointmentReminderSms
 }
 
 orbital IntakeFormOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity IntakeForm [persistent: intakeforms] {
     id : string!
     firstName : string!
@@ -544,6 +563,22 @@ orbital IntakeFormOrbital {
   type IntakeFormLoadFailed = Event { error : string, code : string }
   type IntakeFormSaved      = Event { id : string }
   type IntakeFormSaveFailed = Event { error : string, code : string }
+
+  trait IntakeFormAppLayout = AppShell.traits.AppLayout -> IntakeForm {
+    config: {
+      contentTrait: "@trait.IntakeFormWizard",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }],
+      searchEvent: "INTAKE_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "INTAKE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: INTAKE_SEARCH
+      NOTIFY_CLICK: INTAKE_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Custom wizard pattern — mirrors std-ecommerce CheckoutWizard. State per
   ;; step, (set @entity.X) on advance, (and @entity.X @entity.Y) guards
@@ -692,10 +727,11 @@ orbital IntakeFormOrbital {
     }
   }
 
-  page "/intake" as IntakePage -> IntakeFormWizard
+  page "/intake" as IntakePage -> IntakeFormAppLayout, IntakeFormWizard
 }
 
 orbital PrescriptionOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
   uses Browse        from "std/behaviors/std-browse"
   uses Modal         from "std/behaviors/std-modal"
   uses Confirmation  from "std/behaviors/std-confirmation"
@@ -715,6 +751,22 @@ orbital PrescriptionOrbital {
 
   type PrescriptionLoaded     = Event { data : [Prescription] }
   type PrescriptionLoadFailed = Event { error : string, code : string }
+
+  trait PrescriptionAppLayout = AppShell.traits.AppLayout -> Prescription {
+    config: {
+      contentTrait: "@trait.PrescriptionCatalog",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }],
+      searchEvent: "PRESCRIPTION_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "PRESCRIPTION_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PRESCRIPTION_SEARCH
+      NOTIFY_CLICK: PRESCRIPTION_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait PrescriptionCatalog [interaction, instance] {
     initial: composing
@@ -907,12 +959,30 @@ orbital PrescriptionOrbital {
     }
   }
 
-  page "/prescriptions" as PrescriptionsPage -> PrescriptionCatalog, PrescriptionBrowseList, PrescriptionCreate, PrescriptionEdit, PrescriptionView, PrescriptionDelete, PrescriptionPersistor
+  page "/prescriptions" as PrescriptionsPage -> PrescriptionAppLayout, PrescriptionCatalog, PrescriptionBrowseList, PrescriptionCreate, PrescriptionEdit, PrescriptionView, PrescriptionDelete, PrescriptionPersistor
 }
 
 orbital DashboardOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity DashboardSummary [runtime] {
     id : string!
+  }
+
+  trait DashboardAppLayout = AppShell.traits.AppLayout -> DashboardSummary {
+    config: {
+      contentTrait: "@trait.DashboardDisplay",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }],
+      searchEvent: "DASHBOARD_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "DASHBOARD_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: DASHBOARD_SEARCH
+      NOTIFY_CLICK: DASHBOARD_NOTIFICATIONS_OPEN
+    }
   }
 
   trait DashboardDisplay -> DashboardSummary [interaction, instance] {
@@ -935,5 +1005,5 @@ orbital DashboardOrbital {
     }
   }
 
-  page "/dashboard" as DashboardPage -> DashboardDisplay
+  page "/dashboard" as DashboardPage -> DashboardAppLayout, DashboardDisplay
 }

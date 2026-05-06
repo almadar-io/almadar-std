@@ -259,6 +259,7 @@ orbital RouteOrbital {
 }
 
 orbital BackendOrbital {
+  uses AppShell       from "std/behaviors/std-app-layout"
   uses Modal          from "std/behaviors/std-modal"
   uses Confirmation   from "std/behaviors/std-confirmation"
   uses Browse         from "std/behaviors/std-browse"
@@ -273,6 +274,21 @@ orbital BackendOrbital {
     status : "active" | "disabled" = "active"
     latency : number = 0
     pendingId : string = ""
+  }
+
+  trait BackendAppLayout = AppShell.traits.AppLayout -> Backend {
+    config: {
+      contentTrait: "@trait.BackendCatalog",
+      appName: "API Gateway",
+      navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }],
+      searchEvent: "BACKEND_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BACKEND_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BACKEND_SEARCH
+      NOTIFY_CLICK: BACKEND_NOTIFICATIONS_OPEN
+    }
   }
 
   ;; Page-chrome trait — header + browse list + circuit breaker visualization
@@ -299,9 +315,23 @@ orbital BackendOrbital {
           "@trait.BackendRateLimiter",
           "@trait.BackendCache"
         ]})
+      BACKEND_SEARCH -> composing
+      BACKEND_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to backends", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
       CREATE -> external { source : string }
+    }
+    listens {
+      BackendAppLayout.BACKEND_SEARCH -> BACKEND_SEARCH
+      BackendAppLayout.BACKEND_NOTIFICATIONS_OPEN -> BACKEND_NOTIFICATIONS_OPEN
+      BACKEND_SEARCH { value : string }
+      BACKEND_NOTIFICATIONS_OPEN { id : string }
     }
   }
 
@@ -434,11 +464,12 @@ orbital BackendOrbital {
     }
   }
 
-  page "/backends" as BackendsPage -> BackendCatalog, BackendBrowseList, BackendCircuitBreaker, BackendRateLimiter, BackendCache, BackendCreate, BackendEdit, BackendView, BackendDelete, BackendPersistor
+  page "/backends" as BackendsPage -> BackendAppLayout, BackendCatalog, BackendBrowseList, BackendCircuitBreaker, BackendRateLimiter, BackendCache, BackendCreate, BackendEdit, BackendView, BackendDelete, BackendPersistor
 }
 
 orbital AnalyticsOrbital {
-  uses Browse from "std/behaviors/std-browse"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
 
   entity AnalyticsRecord [persistent: analyticsrecords] {
     id : string!
@@ -447,6 +478,21 @@ orbital AnalyticsOrbital {
     statusCode : number = 200
     latencyMs : number = 0
     timestamp : string = ""
+  }
+
+  trait AnalyticsAppLayout = AppShell.traits.AppLayout -> AnalyticsRecord {
+    config: {
+      contentTrait: "@trait.AnalyticsDisplay",
+      appName: "API Gateway",
+      navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }],
+      searchEvent: "ANALYTICS_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ANALYTICS_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ANALYTICS_SEARCH
+      NOTIFY_CLICK: ANALYTICS_NOTIFICATIONS_OPEN
+    }
   }
 
   trait AnalyticsBrowseList = Browse.traits.BrowseItemBrowse -> AnalyticsRecord {
@@ -482,8 +528,22 @@ orbital AnalyticsOrbital {
           { type: "typography", variant: "h3", content: "Recent requests" },
           "@trait.AnalyticsBrowseList"
         ]})
+      ANALYTICS_SEARCH -> composing
+      ANALYTICS_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to analytics", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    listens {
+      AnalyticsAppLayout.ANALYTICS_SEARCH -> ANALYTICS_SEARCH
+      AnalyticsAppLayout.ANALYTICS_NOTIFICATIONS_OPEN -> ANALYTICS_NOTIFICATIONS_OPEN
+      ANALYTICS_SEARCH { value : string }
+      ANALYTICS_NOTIFICATIONS_OPEN { id : string }
     }
   }
 
-  page "/analytics" -> AnalyticsDisplay, AnalyticsBrowseList
+  page "/analytics" -> AnalyticsAppLayout, AnalyticsDisplay, AnalyticsBrowseList
 }

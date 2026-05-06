@@ -284,6 +284,7 @@ orbital ContactOrbital {
 }
 
 orbital DealOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -296,6 +297,22 @@ orbital DealOrbital {
     stage : "prospecting" | "qualified" | "proposal" | "negotiation" | "won" | "lost" = "prospecting"
     closedAt : string = ""
     pendingId : string = ""
+  }
+
+  trait DealAppLayout = AppShell.traits.AppLayout -> Deal {
+    config: {
+      contentTrait: "@trait.DealCatalog",
+      appName: "CRM",
+      navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }],
+      searchEvent: "DEAL_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "DEAL_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: DEAL_SEARCH
+      NOTIFY_CLICK: DEAL_NOTIFICATIONS_OPEN
+    }
   }
 
   trait DealCatalog [interaction, instance] {
@@ -444,10 +461,12 @@ orbital DealOrbital {
     }
   }
 
-  page "/deals" -> DealCatalog, DealBrowseList, DealCreate, DealEdit, DealView, DealDelete, DealPersistor
+  page "/deals" -> DealAppLayout, DealCatalog, DealBrowseList, DealCreate, DealEdit, DealView, DealDelete, DealPersistor
 }
 
 orbital PipelineOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   ;; PipelineDisplay keeps a custom render — it visualizes deal-stage flow
   ;; (prospecting → qualified → proposal → negotiation → won/lost). Stage
   ;; columns + summary stats per stage are pipeline-shaped, not generic
@@ -462,6 +481,22 @@ orbital PipelineOrbital {
     wonDeals : number = 0
     lostDeals : number = 0
     conversionRate : number = 0
+  }
+
+  trait PipelineAppLayout = AppShell.traits.AppLayout -> Pipeline {
+    config: {
+      contentTrait: "@trait.PipelineDisplay",
+      appName: "CRM",
+      navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }],
+      searchEvent: "PIPELINE_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "PIPELINE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PIPELINE_SEARCH
+      NOTIFY_CLICK: PIPELINE_NOTIFICATIONS_OPEN
+    }
   }
 
   type PipelineLoaded     = Event { data : [Pipeline] }                  "Fired when Pipeline finishes loading"
@@ -507,10 +542,11 @@ orbital PipelineOrbital {
     }
   }
 
-  page "/pipeline" -> PipelineDisplay
+  page "/pipeline" -> PipelineAppLayout, PipelineDisplay
 }
 
 orbital NoteOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -525,6 +561,22 @@ orbital NoteOrbital {
     followUpAt : string = ""
     createdAt : string = ""
     pendingId : string = ""
+  }
+
+  trait NoteAppLayout = AppShell.traits.AppLayout -> Note {
+    config: {
+      contentTrait: "@trait.NoteCatalog",
+      appName: "CRM",
+      navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }],
+      searchEvent: "NOTE_SEARCH",
+      topBarActions: [],
+      notifications: [],
+      notificationClickEvent: "NOTE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: NOTE_SEARCH
+      NOTIFY_CLICK: NOTE_NOTIFICATIONS_OPEN
+    }
   }
 
   trait NoteCatalog [interaction, instance] {
@@ -684,5 +736,5 @@ orbital NoteOrbital {
     }
   }
 
-  page "/notes" -> NoteCatalog, NoteBrowseList, NoteCalendar, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+  page "/notes" -> NoteAppLayout, NoteCatalog, NoteBrowseList, NoteCalendar, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
 }

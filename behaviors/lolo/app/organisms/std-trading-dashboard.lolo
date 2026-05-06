@@ -255,6 +255,7 @@ orbital PortfolioOrbital {
 }
 
 orbital TradeOrderOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -267,6 +268,21 @@ orbital TradeOrderOrbital {
     price : number = 0
     status : "pending" | "filled" | "cancelled" = "pending"
     pendingId : string = ""
+  }
+
+  trait TradeOrderAppLayout = AppShell.traits.AppLayout -> TradeOrder {
+    config: {
+      contentTrait: "@trait.TradeOrderCatalog",
+      appName: "Trading Dashboard",
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }],
+      searchEvent: "TRADE_ORDER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TRADE_ORDER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TRADE_ORDER_SEARCH
+      NOTIFY_CLICK: TRADE_ORDER_NOTIFICATIONS_OPEN
+    }
   }
 
   trait TradeOrderCatalog [interaction, instance] {
@@ -414,10 +430,11 @@ orbital TradeOrderOrbital {
     }
   }
 
-  page "/orders" -> TradeOrderCatalog, TradeOrderBrowseList, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete, TradeOrderPersistor
+  page "/orders" -> TradeOrderAppLayout, TradeOrderCatalog, TradeOrderBrowseList, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete, TradeOrderPersistor
 }
 
 orbital MarketFeedOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
   uses Selection from "std/behaviors/std-selection"
 
   entity MarketFeed [runtime] {
@@ -433,6 +450,33 @@ orbital MarketFeedOrbital {
   type MarketFeedLoadFailed = Event { error : string, code : string }        "Fired when MarketFeed fails to load"
   type MarketFeedSaved      = Event { id : string }
   type MarketFeedSaveFailed = Event { error : string, code : string }
+
+  trait MarketFeedAppLayout = AppShell.traits.AppLayout -> MarketFeed {
+    config: {
+      contentTrait: "@trait.MarketFeedDisplay",
+      appName: "Trading Dashboard",
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }],
+      searchEvent: "MARKET_FEED_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MARKET_FEED_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MARKET_FEED_SEARCH
+      NOTIFY_CLICK: MARKET_FEED_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait wrapping the custom MarketFeedAsync stream UI
+  ;; so AppLayout has a single `contentTrait` slot to render.
+  trait MarketFeedDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          "@trait.MarketFeedAsync"
+        ]})
+    }
+  }
 
   ;; Multi-select pinning of watched symbols. Bound from std-selection.
   trait MarketSelection = Selection.traits.SelectableItemSelection -> MarketFeed {
@@ -539,5 +583,5 @@ orbital MarketFeedOrbital {
     }
   }
 
-  page "/market" -> MarketFeedAsync, MarketSelection
+  page "/market" -> MarketFeedAppLayout, MarketFeedDisplay, MarketFeedAsync, MarketSelection
 }

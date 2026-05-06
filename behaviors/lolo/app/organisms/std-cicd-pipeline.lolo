@@ -258,6 +258,7 @@ orbital BuildOrbital {
 }
 
 orbital StageOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -270,6 +271,21 @@ orbital StageOrbital {
     duration : string = ""
     output : string = ""
     pendingId : string = ""
+  }
+
+  trait StageAppLayout = AppShell.traits.AppLayout -> Stage {
+    config: {
+      contentTrait: "@trait.StageCatalog",
+      appName: "CI/CD Pipeline",
+      navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }],
+      searchEvent: "STAGE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "STAGE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: STAGE_SEARCH
+      NOTIFY_CLICK: STAGE_NOTIFICATIONS_OPEN
+    }
   }
 
   ;; Search/Filter are owned by BuildOrbital — std atoms inline a single
@@ -292,9 +308,23 @@ orbital StageOrbital {
           { type: "divider" },
           "@trait.StageBrowseList"
         ]})
+      STAGE_SEARCH -> composing
+      STAGE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to stages", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
       CREATE -> external { source : string }
+    }
+    listens {
+      StageAppLayout.STAGE_SEARCH -> STAGE_SEARCH
+      StageAppLayout.STAGE_NOTIFICATIONS_OPEN -> STAGE_NOTIFICATIONS_OPEN
+      STAGE_SEARCH { value : string }
+      STAGE_NOTIFICATIONS_OPEN { id : string }
     }
   }
 
@@ -420,12 +450,13 @@ orbital StageOrbital {
     }
   }
 
-  page "/stages" -> StageCatalog, StageBrowseList, StageCreate, StageEdit, StageView, StageDelete, StagePersistor
+  page "/stages" -> StageAppLayout, StageCatalog, StageBrowseList, StageCreate, StageEdit, StageView, StageDelete, StagePersistor
 }
 
 orbital DeploymentOrbital {
-  uses Browse from "std/behaviors/std-browse"
-  uses GitHub from "std/behaviors/std-service-github"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
+  uses GitHub   from "std/behaviors/std-service-github"
 
   entity Deployment [persistent: deployments] {
     id : string!
@@ -439,6 +470,21 @@ orbital DeploymentOrbital {
   type DeploymentLoadFailed = Event { error : string, code : string } "Fired when Deployment fails to load"
   type DeploymentSaved      = Event { id : string }
   type DeploymentSaveFailed = Event { error : string, code : string }
+
+  trait DeploymentAppLayout = AppShell.traits.AppLayout -> Deployment {
+    config: {
+      contentTrait: "@trait.DeploymentDisplay",
+      appName: "CI/CD Pipeline",
+      navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }],
+      searchEvent: "DEPLOYMENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "DEPLOYMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: DEPLOYMENT_SEARCH
+      NOTIFY_CLICK: DEPLOYMENT_NOTIFICATIONS_OPEN
+    }
+  }
 
   trait DeploymentBrowseList = Browse.traits.BrowseItemBrowse -> Deployment {
     config: {
@@ -469,6 +515,20 @@ orbital DeploymentOrbital {
           { type: "typography", variant: "h3", content: "Recent Commits" },
           "@trait.DeploymentGitHub"
         ]})
+      DEPLOYMENT_SEARCH -> composing
+      DEPLOYMENT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to deploy", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    listens {
+      DeploymentAppLayout.DEPLOYMENT_SEARCH -> DEPLOYMENT_SEARCH
+      DeploymentAppLayout.DEPLOYMENT_NOTIFICATIONS_OPEN -> DEPLOYMENT_NOTIFICATIONS_OPEN
+      DEPLOYMENT_SEARCH { value : string }
+      DEPLOYMENT_NOTIFICATIONS_OPEN { id : string }
     }
   }
 
@@ -587,5 +647,5 @@ orbital DeploymentOrbital {
     }
   }
 
-  page "/deploy" -> DeploymentDisplay, DeploymentBrowseList, DeploymentCommitsPanel, DeploymentGitHub, DeploymentAsync
+  page "/deploy" -> DeploymentAppLayout, DeploymentDisplay, DeploymentBrowseList, DeploymentCommitsPanel, DeploymentGitHub, DeploymentAsync
 }

@@ -272,6 +272,7 @@ orbital TaskOrbital {
 }
 
 orbital SprintOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -285,6 +286,21 @@ orbital SprintOrbital {
     status : "planning" | "active" | "completed" = "planning"
     taskCount : number = 0
     pendingId : string = ""
+  }
+
+  trait SprintAppLayout = AppShell.traits.AppLayout -> Sprint {
+    config: {
+      contentTrait: "@trait.SprintCatalog",
+      appName: "ProjectManagerApp",
+      navItems: [{ label: "Tasks", href: "/tasks", icon: "list-todo" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "trending-down" }],
+      searchEvent: "SPRINT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SPRINT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SPRINT_SEARCH
+      NOTIFY_CLICK: SPRINT_NOTIFICATIONS_OPEN
+    }
   }
 
   trait SprintCatalog [interaction, instance] {
@@ -433,10 +449,12 @@ orbital SprintOrbital {
     }
   }
 
-  page "/sprints" -> SprintCatalog, SprintBrowseList, SprintCreate, SprintEdit, SprintView, SprintDelete, SprintPersistor
+  page "/sprints" -> SprintAppLayout, SprintCatalog, SprintBrowseList, SprintCreate, SprintEdit, SprintView, SprintDelete, SprintPersistor
 }
 
 orbital BurndownOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+
   entity Burndown [singleton] {
     id : string!
     totalPoints : number = 0
@@ -448,6 +466,21 @@ orbital BurndownOrbital {
 
   type BurndownLoaded     = Event { data : [Burndown] }                  "Fired when Burndown finishes loading"
   type BurndownLoadFailed = Event { error : string, code : string }      "Fired when Burndown fails to load"
+
+  trait BurndownAppLayout = AppShell.traits.AppLayout -> Burndown {
+    config: {
+      contentTrait: "@trait.BurndownDisplay",
+      appName: "ProjectManagerApp",
+      navItems: [{ label: "Tasks", href: "/tasks", icon: "list-todo" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "trending-down" }],
+      searchEvent: "BURNDOWN_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BURNDOWN_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BURNDOWN_SEARCH
+      NOTIFY_CLICK: BURNDOWN_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Cross-orbital @trait.X references aren't supported (std-cms gap), so the
   ;; burndown view aggregates locally with an inline line-chart instead of
@@ -510,5 +543,5 @@ orbital BurndownOrbital {
     }
   }
 
-  page "/burndown" -> BurndownDisplay
+  page "/burndown" -> BurndownAppLayout, BurndownDisplay
 }

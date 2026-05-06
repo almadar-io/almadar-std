@@ -274,6 +274,7 @@ orbital ArticleOrbital {
 }
 
 orbital MediaAssetOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Modal from "std/behaviors/std-modal"
   uses Gallery from "std/behaviors/std-gallery"
   uses Storage from "std/behaviors/std-service-storage"
@@ -285,6 +286,21 @@ orbital MediaAssetOrbital {
     type : string
     url : string = ""
     pendingId : string = ""
+  }
+
+  trait MediaAssetAppLayout = AppShell.traits.AppLayout -> MediaAsset {
+    config: {
+      contentTrait: "@trait.MediaCatalog",
+      appName: "CmsApp",
+      navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }],
+      searchEvent: "MEDIA_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MEDIA_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MEDIA_SEARCH
+      NOTIFY_CLICK: MEDIA_NOTIFICATIONS_OPEN
+    }
   }
 
   trait MediaCatalog [interaction, instance] {
@@ -420,10 +436,11 @@ orbital MediaAssetOrbital {
   type MediaAssetLoaded = Event { data : [MediaAsset], totalCount : number } "Fired when MediaAsset finishes loading"
   type MediaAssetLoadFailed = Event { error : string, code : string } "Fired when MediaAsset fails to load"
 
-  page "/media" as MediaPage -> MediaCatalog, MediaAssetGallery, MediaUpload, MediaAssetCreate, MediaAssetView, MediaPersistor
+  page "/media" as MediaPage -> MediaAssetAppLayout, MediaCatalog, MediaAssetGallery, MediaUpload, MediaAssetCreate, MediaAssetView, MediaPersistor
 }
 
 orbital CategoryOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Modal from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse from "std/behaviors/std-browse"
@@ -436,6 +453,21 @@ orbital CategoryOrbital {
     parentCategory : string
     articleCount : number
     pendingId : string = ""
+  }
+
+  trait CategoryAppLayout = AppShell.traits.AppLayout -> Category {
+    config: {
+      contentTrait: "@trait.CategoryCatalog",
+      appName: "CmsApp",
+      navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }],
+      searchEvent: "CATEGORY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CATEGORY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CATEGORY_SEARCH
+      NOTIFY_CLICK: CATEGORY_NOTIFICATIONS_OPEN
+    }
   }
 
   trait CategoryCatalog [interaction, instance] {
@@ -587,10 +619,11 @@ orbital CategoryOrbital {
   type CategoryLoaded = Event { data : [Category], totalCount : number } "Fired when Category finishes loading"
   type CategoryLoadFailed = Event { error : string, code : string } "Fired when Category fails to load"
 
-  page "/categories" as CategoriesPage -> CategoryCatalog, CategoryBrowseList, CategoryCreate, CategoryEdit, CategoryView, CategoryDelete, CategoryPersistor
+  page "/categories" as CategoriesPage -> CategoryAppLayout, CategoryCatalog, CategoryBrowseList, CategoryCreate, CategoryEdit, CategoryView, CategoryDelete, CategoryPersistor
 }
 
 orbital CmsHubOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
   uses Browse from "std/behaviors/std-browse"
 
   entity CmsHub [runtime] {
@@ -606,6 +639,21 @@ orbital CmsHubOrbital {
     category : string
     publishedAt : datetime
     heroImage : string = ""
+  }
+
+  trait CmsHubAppLayout = AppShell.traits.AppLayout -> HubArticle {
+    config: {
+      contentTrait: "@trait.CmsHubDisplay",
+      appName: "CmsApp",
+      navItems: [{ label: "CMS Hub", href: "/cms-hub", icon: "layout-grid" }, { label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }],
+      searchEvent: "CMS_HUB_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CMS_HUB_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CMS_HUB_SEARCH
+      NOTIFY_CLICK: CMS_HUB_NOTIFICATIONS_OPEN
+    }
   }
 
   trait CmsHubDisplay [interaction, instance] {
@@ -642,5 +690,5 @@ orbital CmsHubOrbital {
     }
   }
 
-  page "/cms-hub" as CmsHubPage -> CmsHubDisplay, HubBrowseList
+  page "/cms-hub" as CmsHubPage -> CmsHubAppLayout, CmsHubDisplay, HubBrowseList
 }

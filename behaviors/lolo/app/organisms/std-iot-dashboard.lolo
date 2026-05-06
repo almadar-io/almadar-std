@@ -2,9 +2,10 @@ app std-iot-dashboard "2.0.0"
 "IoT dashboard: devices, sensor readings, and alerts. Pick for connected-device monitoring."
 
 orbital SensorReadingOrbital {
-  uses Stats  from "std/behaviors/std-stats"
-  uses Graphs from "std/behaviors/std-graphs"
-  uses Browse from "std/behaviors/std-browse"
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Stats    from "std/behaviors/std-stats"
+  uses Graphs   from "std/behaviors/std-graphs"
+  uses Browse   from "std/behaviors/std-browse"
 
   entity SensorReading [persistent: sensorreadings] {
     id : string!
@@ -18,6 +19,21 @@ orbital SensorReadingOrbital {
 
   type SensorReadingLoaded     = Event { data : [SensorReading] }       "Fired when SensorReading finishes loading"
   type SensorReadingLoadFailed = Event { error : string, code : string } "Fired when SensorReading fails to load"
+
+  trait SensorAppLayout = AppShell.traits.AppLayout -> SensorReading {
+    config: {
+      contentTrait: "@trait.SensorCatalog",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }],
+      searchEvent: "SENSOR_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SENSOR_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SENSOR_SEARCH
+      NOTIFY_CLICK: SENSOR_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Page-chrome trait. Stats (active sensors, avg reading, anomaly count)
   ;; + line-chart Graphs over timestamp/reading + meter for threshold view
@@ -87,7 +103,7 @@ orbital SensorReadingOrbital {
     }
   }
 
-  page "/sensors" as SensorsPage -> SensorCatalog, SensorStats, SensorGraphs, SensorBrowseList
+  page "/sensors" as SensorsPage -> SensorAppLayout, SensorCatalog, SensorStats, SensorGraphs, SensorBrowseList
 }
 
 orbital DeviceOrbital {
@@ -313,6 +329,7 @@ orbital DeviceOrbital {
 }
 
 orbital DeviceAlertOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
@@ -332,6 +349,21 @@ orbital DeviceAlertOrbital {
 
   type DeviceAlertLoaded     = Event { data : [DeviceAlert] }              "Fired when DeviceAlert finishes loading"
   type DeviceAlertLoadFailed = Event { error : string, code : string }     "Fired when DeviceAlert fails to load"
+
+  trait DeviceAlertAppLayout = AppShell.traits.AppLayout -> DeviceAlert {
+    config: {
+      contentTrait: "@trait.AlertCatalog",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }],
+      searchEvent: "ALERT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "ALERT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: ALERT_SEARCH
+      NOTIFY_CLICK: ALERT_NOTIFICATIONS_OPEN
+    }
+  }
 
   ;; Page-chrome trait. Header + search/filter toolbar + browse list.
   trait AlertCatalog [interaction, instance] {
@@ -551,5 +583,5 @@ orbital DeviceAlertOrbital {
     }
   }
 
-  page "/alerts" -> AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail, AlertEmailNotice, DeviceAlertCircuitBreaker
+  page "/alerts" -> DeviceAlertAppLayout, AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail, AlertEmailNotice, DeviceAlertCircuitBreaker
 }
