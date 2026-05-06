@@ -51,7 +51,7 @@ orbital ServiceStripeOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
-        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency", metadata: "@config.metadata" } { emit: { success: "PAYMENT_CREATED", failure: "ServiceStripeStripeFailed" } })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency", metadata: "@config.metadata" } { emit: { success: "PAYMENT_CREATED", failure: "FAILED" } })
       ServiceStripeLoaded -> idle
       ServiceStripeLoadFailed -> idle
     }
@@ -60,9 +60,10 @@ orbital ServiceStripeOrbital {
         (set @entity.paymentIntentId @payload.id)
         (set @entity.clientSecret @payload.clientSecret)
         (render-ui main { type: "loading-state", title: "Confirming payment...", message: "Processing your payment." })
-        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" } { emit: { success: "PAYMENT_CONFIRMED", failure: "ServiceStripeStripeFailed" } })
+        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" } { emit: { success: "PAYMENT_CONFIRMED", failure: "FAILED" } })
       FAILED -> error
         (set @entity.error @payload.error)
+        (emit ServiceStripeStripeFailed { error: @entity.error, code: "create_payment_failed" })
         (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state confirming {
@@ -72,14 +73,23 @@ orbital ServiceStripeOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Payment successful!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.paymentIntentId" }, { type: "button", label: "New Payment", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
         (set @entity.error @payload.error)
+        (emit ServiceStripeStripeFailed { error: @entity.error, code: "confirm_payment_failed" })
         (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state succeeded {
       RESET -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      ;; Self-loop on the external emit so ORB_X_UNUSED_EMISSION sees an
+      ;; in-atom listener. The actual `succeeded` state is reached via
+      ;; PAYMENT_CONFIRMED above — this self-transition is just a
+      ;; validator-satisfaction hook for the externally-consumed emit.
       ServiceStripeStripeCompleted -> succeeded
     }
     state error {
+      ;; Mirrors the succeeded self-loop above: ServiceStripeStripeFailed
+      ;; is emitted from the FAILED transition body in creating/confirming
+      ;; for downstream consumers, and listened to here so the validator
+      ;; doesn't flag the emission as unused.
       ServiceStripeStripeFailed -> error
       RETRY -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "0.00" }, { type: "select", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", action: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
@@ -91,10 +101,12 @@ emits {
       ServiceStripeLoadFailed        -> external { message : string }
       ServiceStripeStripeCompleted   -> external { result : object }
       ServiceStripeStripeFailed      -> external { error : string, code : string }
-      ;; Internal chain triggers fired as call-service emit.success values.
+      ;; Internal chain triggers fired as call-service emit.success / emit.failure values.
       ;; createPaymentIntent → PAYMENT_CREATED → confirmPayment → PAYMENT_CONFIRMED
+      ;; Either call-service failure → FAILED → error state.
       PAYMENT_CREATED                { id : string!, clientSecret : string! }
       PAYMENT_CONFIRMED              { result : object }
+      FAILED                         { error : string! }
     }
 
         listens {
@@ -104,6 +116,7 @@ emits {
       FAILED { error : string! }
       ServiceStripeLoaded { id : string }
       ServiceStripeLoadFailed { message : string }
+      ServiceStripeStripeCompleted { result : object }
       ServiceStripeStripeFailed { error : string, code : string }
     }
   }
