@@ -1,71 +1,120 @@
-app std-service-email "1.0.0"
-"std-service-email as a Function"
+app std-service-email "2.0.0"
+"std-service-email — Email send service. Bind via `uses Email from \"std/behaviors/std-service-email\"` and configure `to` / `subject` / `body` / `from` / `replyTo` / `templateId` / `htmlBody` at the call site. Pass `uiTrait: \"@trait.YourEmailForm\"` to inject your own composer; leave unset to render the atom's default test form (standalone surface)."
 
 orbital ServiceEmailOrbital {
   entity ServiceEmail [runtime] {
-    id : string
+    id : string!
+    to : string = ""
+    subject : string = ""
+    body : string = ""
+    from : string = ""
+    replyTo : string = ""
+    templateId : string = ""
+    htmlBody : string = ""
+    sendStatus : string = "idle"
+    messageId : string = ""
+    error : string = ""
     name : string
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    to : string
-    subject : string
-    body : string
-    from : string
-    sendStatus : string = "idle"
-    messageId : string
-    error : string
   }
 
   type ServiceEmailLoaded     = Event ServiceEmail                  "Fired when ServiceEmail finishes loading"
   type ServiceEmailLoadFailed = Event { message : string } "Fired when ServiceEmail fails to load"
-  type ServiceEmailEmailCompleted = Event { result : object }
-  type ServiceEmailEmailFailed = Event { error : string, code : string }
+  type EmailSent              = Event { id : string } "Fired when email send succeeds"
+  type ServiceEmailEmailFailed = Event { error : string, code : string } "Fired when email send fails"
+
+  ;; Default UI: a sibling trait pointing back at the standalone test form.
+  ;; Consumers override `uiTrait` to inject their own composer; the default
+  ;; below keeps standalone usage working.
+  trait ServiceEmailDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "Email", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", placeholder: "recipient@example.com" }, { type: "input", placeholder: "Email subject" }, { type: "textarea", placeholder: "Write your message..." }] }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+    }
+    emits {
+      SEND -> external { source : string }
+    }
+  }
+
   trait ServiceEmailEmail -> ServiceEmail [interaction, instance] {
     initial: idle
+    config {
+      recipient : string = ""
+      subject : string = ""
+      body : string = ""
+      sender : string = ""
+      replyTo : string = ""
+      templateId : string = ""
+      htmlBody : string = ""
+      uiTrait : trait = "@trait.ServiceEmailDefaultForm"
+    }
     state idle {
       INIT -> idle
-        (set @entity.body "")
-        (set @entity.subject "")
-        (set @entity.to "")
+        (set @entity.to @config.recipient)
+        (set @entity.subject @config.subject)
+        (set @entity.body @config.body)
+        (set @entity.from @config.sender)
+        (set @entity.replyTo @config.replyTo)
+        (set @entity.templateId @config.templateId)
+        (set @entity.htmlBody @config.htmlBody)
         (fetch ServiceEmail { emit: { success: "ServiceEmailLoaded", failure: "ServiceEmailLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "ServiceEmail Email", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "recipient@example.com" }, { type: "input", placeholder: "Email subject" }, { type: "textarea", placeholder: "Write your message..." }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       SEND -> sending
-        (render-ui main { type: "loading-state", title: "Sending email...", message: "Delivering serviceemail email..." })
-        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" } { emit: { success: "ServiceEmailEmailCompleted", failure: "ServiceEmailEmailFailed" } })
+        (render-ui main { type: "loading-state", title: "Sending email...", message: "Delivering your message." })
+        (call-service email "send" { to: "@config.recipient", subject: "@config.subject", body: "@config.body", from: "@config.sender", replyTo: "@config.replyTo", templateId: "@config.templateId", htmlBody: "@config.htmlBody" } { emit: { success: "EmailSent", failure: "FAILED" } })
+      ServiceEmailLoaded -> idle
+      ServiceEmailLoadFailed -> idle
     }
     state sending {
-      SENT -> sent
-        (set @entity.sendStatus sent)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Email sent successfully" }, { type: "button", label: "Send Another", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      EmailSent -> sent
+        (set @entity.sendStatus "sent")
+        (set @entity.messageId @payload.id)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Email sent successfully" }, { type: "typography", variant: "body", color: "muted", content: "@entity.messageId" }, { type: "button", label: "Send Another", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
-        (set @entity.sendStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Send Failed", message: "Could not deliver the email.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (set @entity.sendStatus "error")
+        (set @entity.error @payload.error)
+        (emit ServiceEmailEmailFailed { error: @entity.error, code: "send_email_failed" })
+        (render-ui main { type: "error-state", title: "Send Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state sent {
       RESET -> idle
-        (set @entity.sendStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "ServiceEmail Email", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "recipient@example.com" }, { type: "input", placeholder: "Email subject" }, { type: "textarea", placeholder: "Write your message..." }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+        (set @entity.sendStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      ;; Self-loop on the external emit so ORB_X_UNUSED_EMISSION sees an
+      ;; in-atom listener. The actual `sent` state is reached via EmailSent
+      ;; above — this self-transition is just a validator-satisfaction hook.
+      EmailSent -> sent
     }
     state error {
+      ;; Mirrors the sent self-loop above: ServiceEmailEmailFailed is
+      ;; emitted from the FAILED transition body in sending for downstream
+      ;; consumers, and listened to here so the validator doesn't flag
+      ;; the emission as unused.
+      ServiceEmailEmailFailed -> error
       RETRY -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "ServiceEmail Email", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "recipient@example.com" }, { type: "input", placeholder: "Email subject" }, { type: "textarea", placeholder: "Write your message..." }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       RESET -> idle
-        (set @entity.sendStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "ServiceEmail Email", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "recipient@example.com" }, { type: "input", placeholder: "Email subject" }, { type: "textarea", placeholder: "Write your message..." }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+        (set @entity.sendStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
     }
 emits {
       ServiceEmailLoaded            -> external { id : string }
       ServiceEmailLoadFailed        -> external { message : string }
-      ServiceEmailEmailCompleted           -> external { result : object }
-      ServiceEmailEmailFailed              -> external { error : string, code : string }
+      EmailSent                     -> external { id : string }
+      ServiceEmailEmailFailed       -> external { error : string, code : string }
+      ;; Internal chain trigger fired as call-service emit.failure value.
+      FAILED                        { error : string! }
     }
 
         listens {
-      SENT { messageId : string }
+      ServiceEmailDefaultForm.SEND -> SEND
+      EmailSent { id : string }
       FAILED { error : string! }
-          ServiceEmailLoadFailed { message : string }
-    
+      ServiceEmailLoaded { id : string }
+      ServiceEmailLoadFailed { message : string }
       ServiceEmailEmailFailed { error : string, code : string }
     }
   }

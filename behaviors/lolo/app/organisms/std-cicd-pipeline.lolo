@@ -1,21 +1,31 @@
-app std-cicd-pipeline "1.0.0"
-"CI/CD pipeline: builds, stages, and deployments. Pick for build-pipeline visualization."
+app std-cicd-pipeline "2.0.0"
+"CI/CD pipeline: builds with stats and graphs, stages, and deployments backed by GitHub commits."
 
 orbital BuildOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
 
   entity Build [persistent: builds] {
     id : string!
     branch : string!
-    status : "pending" | "running" | "success" | "failed"
-    commit : string
-    triggeredBy : string
+    commit : string = ""
+    status : "pending" | "running" | "success" | "failed" = "pending"
+    duration : string = ""
+    triggeredBy : string = ""
+    day : string = ""
+    startedAt : string = ""
     pendingId : string = ""
   }
 
   trait BuildAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.BuildBrowse",
+      contentTrait: "@trait.BuildCatalog",
       appName: "CI/CD Pipeline",
       navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }],
       searchEvent: "BUILD_SEARCH",
@@ -28,311 +38,554 @@ orbital BuildOrbital {
     }
   }
 
-  type BuildLoaded     = Event { data : [Build] }                  "Fired when Build finishes loading"
-  type BuildLoadFailed = Event { error : string, code : string } "Fired when Build fails to load"
-  type BuildSaved = Event { id : string }
-  type BuildSaveFailed = Event { error : string, code : string }
-  type BuildUpdated = Event { id : string }
-  type BuildUpdateFailed = Event { error : string, code : string }
-  type BuildDeleted = Event { id : string }
-  type BuildDeleteFailed = Event { error : string, code : string }
-  type DeploymentSaved = Event { id : string }
-  type DeploymentSaveFailed = Event { error : string, code : string }
-  trait BuildBrowse -> Build [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading builds…" }] })
-      BUILD_SEARCH -> browsing
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      BUILD_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to builds", action: "INIT", variant: "ghost" }] })
-      BuildLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] })
-      BuildLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load builds" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  trait BuildCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "hammer" },
+              { type: "typography", content: "Builds", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Build", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.BuildSearch",
+            "@trait.BuildFilter"
+          ]},
+          "@trait.BuildStats",
+          "@trait.BuildGraphs",
+          { type: "divider" },
+          "@trait.BuildBrowseList"
+        ]})
+      BUILD_SEARCH -> composing
+      BUILD_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to builds", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-CREATE
-      VIEW { id : string!, row : Build }
-EDIT { id : string!, row : Build }
-DELETE { id : string!, row : Build }
-BuildLoaded
-      BuildLoadFailed
-BuildSaved
-      BuildSaveFailed
-BuildUpdated
-      BuildUpdateFailed
-BuildDeleted
-      BuildDeleteFailed
-DeploymentSaved
-      DeploymentSaveFailed
+      CREATE -> external { source : string }
     }
     listens {
-      BuildCreate.BUILD_CREATED -> INIT
-      BuildEdit.BUILD_UPDATED -> INIT
-      BuildDelete.BUILD_DELETED -> INIT
       BuildAppLayout.BUILD_SEARCH -> BUILD_SEARCH
       BuildAppLayout.BUILD_NOTIFICATIONS_OPEN -> BUILD_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Build }
-      EDIT { id : string!, row : Build }
-      DELETE { id : string!, row : Build }
       BUILD_SEARCH { value : string }
       BUILD_NOTIFICATIONS_OPEN { id : string }
-          BuildLoadFailed { error : string, code : string }
+    }
+  }
 
-      BuildSaveFailed { error : string, code : string }
-      BuildUpdateFailed { error : string, code : string }
-      BuildDeleteFailed { error : string, code : string }
-      DeploymentSaveFailed { error : string, code : string }
+  trait BuildSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search builds…",
+      event: "BUILD_SEARCH"
     }
   }
-  trait BuildCreate -> Build [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-      CREATE -> open
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Build @payload.data { emit: { success: "BuildSaved", failure: "BuildSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit BUILD_CREATED)
-    }
-    emits {
-BUILD_CREATED -> external { id: string }
-BuildLoadFailed
-      BuildLoaded
-BuildSaveFailed
-      BuildSaved
-    }
-    listens {
-      SAVE { data : object! }
-          BuildLoadFailed { error : string, code : string }
-      BuildBrowse.CREATE -> CREATE
-    }
-  }
-  trait BuildEdit -> Build [interaction, collection] {
-    listens {
-      BuildView.EDIT -> EDIT
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-      EDIT -> open
-        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Build @payload.data { emit: { success: "BuildUpdated", failure: "BuildUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit BUILD_UPDATED)
-    }
-    emits {
-BUILD_UPDATED -> external { id: string }
-BuildLoadFailed
-      BuildLoaded
-BuildUpdateFailed
-      BuildUpdated
-    }
-    listens {
-      EDIT { id : string!, row : Build }
-      SAVE { data : object! }
-          BuildLoadFailed { error : string, code : string }
-      BuildBrowse.EDIT -> EDIT
-    }
-  }
-  trait BuildView -> Build [interaction, collection] {
-    emits {
-EDIT { id : string }
-BuildLoaded
-      BuildLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.branch "")
-        (set @entity.commit "")
-        (set @entity.status "")
-        (set @entity.triggeredBy "")
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-      VIEW -> open
-        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.branch" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Branch" }, { type: "typography", variant: "body", content: "@entity.branch" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Commit" }, { type: "typography", variant: "body", content: "@entity.commit" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Triggered By" }, { type: "typography", variant: "body", content: "@entity.triggeredBy" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
-    listens {
-      VIEW { id : string! }
-      SAVE { data : object! }
-          BuildLoadFailed { error : string, code : string }
-      BuildBrowse.VIEW -> VIEW
+  trait BuildFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["running", "success", "failed"] },
+        { field: "branch", label: "Branch", filterType: "text" }
+      ],
+      event: "BUILD_FILTER"
     }
   }
-  trait BuildDelete -> Build [interaction, collection] {
+
+  trait BuildStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Build Health",
+      metrics: [
+        { aggregation: "count", label: "Total Today", icon: "hammer",       variant: "primary", format: "number" },
+        { aggregation: "count", label: "Success",     icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "success"]] },
+        { aggregation: "count", label: "Failed",      icon: "x-circle",     variant: "danger",  format: "number", filter: ["fn", "row", ["=", "@row.status", "failed"]] },
+        { aggregation: "avg",   label: "Avg Duration", icon: "clock",        variant: "default", format: "number", field: "duration" }
+      ]
+    }
+    listens {
+      BuildBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait BuildGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Builds per day",
+      subtitle: "Volume across the past period",
+      chartType: "bar",
+      categoryField: "day",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      BuildBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait BuildBrowseList = Browse.traits.BrowseItemBrowse -> Build {
+    config: {
+      fields: [
+        { name: "id",          variant: "caption" },
+        { name: "branch",      variant: "h4",    icon: "git-branch" },
+        { name: "commit",      variant: "body" },
+        { name: "status",      variant: "badge" },
+        { name: "duration",    variant: "caption" },
+        { name: "startedAt",   label: "Started", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      BuildSearch.SEARCH              -> REFETCH_QUERY
+      BuildFilter.FILTER              -> REFETCH_FILTER
+      BuildPersistor.BUILD_CREATED    -> INIT
+      BuildPersistor.BUILD_UPDATED    -> INIT
+      BuildPersistor.BUILD_DELETED    -> INIT
+    }
+  }
+
+  trait BuildCreate = Modal.traits.ModalRecordModal -> Build {
+    config: {
+      icon: "plus-circle",
+      title: "Create Build",
+      mode: "create",
+      fields: ["branch", "commit", "status", "duration", "triggeredBy"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      BuildCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Build }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BuildEdit = Modal.traits.ModalRecordModal -> Build {
+    config: {
+      icon: "edit",
+      title: "Edit Build",
+      mode: "edit",
+      fields: ["branch", "commit", "status", "duration", "triggeredBy"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      BuildBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Build }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BuildView = Modal.traits.ModalRecordModal -> Build {
+    config: {
+      icon: "eye",
+      title: "View Build",
+      mode: "edit",
+      fields: ["branch", "commit", "status", "duration", "triggeredBy"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      BuildBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Build }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BuildDelete = Confirmation.traits.ConfirmActionConfirmation -> Build {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Build",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      BuildBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Build }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BuildPersistor -> Build [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Build {id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" }, emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Build", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Build @entity.pendingId { emit: { success: "BuildDeleted", failure: "BuildDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-        (emit BUILD_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Build @payload.data { emit: { success: "BUILD_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Build @payload.data { emit: { success: "BUILD_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Build @payload.id { emit: { success: "BUILD_DELETED" } })
     }
     emits {
-BUILD_DELETED -> external { id: string }
-BuildDeleteFailed
-      BuildDeleted
-BuildLoadFailed
-      BuildLoaded
+      BUILD_CREATED -> external { id : string }
+      BUILD_UPDATED -> external { id : string }
+      BUILD_DELETED -> external { id : string }
     }
     listens {
-      DELETE { id : string! }
-          BuildLoadFailed { error : string, code : string }
-      BuildBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      BuildCreate.SAVE          -> DO_CREATE
+      BuildEdit.SAVE            -> DO_UPDATE
+      BuildDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/builds" as BuildsPage -> BuildAppLayout, BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
+
+  page "/builds" as BuildsPage -> BuildAppLayout, BuildCatalog, BuildSearch, BuildFilter, BuildStats, BuildGraphs, BuildBrowseList, BuildCreate, BuildEdit, BuildView, BuildDelete, BuildPersistor
 }
+
 orbital StageOrbital {
-  entity Stage [runtime] {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity Stage [persistent: stages] {
     id : string!
     name : string!
-    status : "pending" | "running" | "success" | "failed"
-    duration : string
-    output : string
+    buildId : string = ""
+    status : "pending" | "running" | "success" | "failed" = "pending"
+    duration : string = ""
+    output : string = ""
+    pendingId : string = ""
   }
 
-  type StageLoaded     = Event { data : [Stage] }                  "Fired when Stage finishes loading"
-  type StageLoadFailed = Event { error : string, code : string } "Fired when Stage fails to load"
-  trait StageDisplay -> Stage [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.duration "")
-        (set @entity.name "")
-        (set @entity.output "")
-        (set @entity.status "")
-        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+  ;; Search/Filter are owned by BuildOrbital — std atoms inline a single
+  ;; SearchResult/FilterTarget entity per app, so reusing those atoms here
+  ;; would clash. StageBrowseList uses Browse's built-in column controls.
+  trait StageCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "layers" },
+              { type: "typography", content: "Stages", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Stage", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.StageBrowseList"
+        ]})
     }
-    state displaying {
-      INIT -> displaying
-        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: "@entity.duration" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: "@entity.output" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-StageLoaded
-      StageLoadFailed
-    }
-
-        listens {
-      StageLoadFailed { error : string, code : string }
+    emits {
+      CREATE -> external { source : string }
     }
   }
-  page "/stages" -> StageDisplay
+
+  trait StageBrowseList = Browse.traits.BrowseItemBrowse -> Stage {
+    config: {
+      fields: [
+        { name: "name",     variant: "h4",    icon: "layers" },
+        { name: "buildId",  label: "Build", variant: "caption" },
+        { name: "status",   variant: "badge" },
+        { name: "duration", variant: "caption" },
+        { name: "output",   variant: "body" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      StagePersistor.STAGE_CREATED     -> INIT
+      StagePersistor.STAGE_UPDATED     -> INIT
+      StagePersistor.STAGE_DELETED     -> INIT
+    }
+  }
+
+  trait StageCreate = Modal.traits.ModalRecordModal -> Stage {
+    config: {
+      icon: "plus-circle",
+      title: "Create Stage",
+      mode: "create",
+      fields: ["name", "buildId", "status", "duration", "output"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      StageCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Stage }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StageEdit = Modal.traits.ModalRecordModal -> Stage {
+    config: {
+      icon: "edit",
+      title: "Edit Stage",
+      mode: "edit",
+      fields: ["name", "buildId", "status", "duration", "output"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      StageBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Stage }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StageView = Modal.traits.ModalRecordModal -> Stage {
+    config: {
+      icon: "eye",
+      title: "View Stage",
+      mode: "edit",
+      fields: ["name", "buildId", "status", "duration", "output"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      StageBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Stage }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StageDelete = Confirmation.traits.ConfirmActionConfirmation -> Stage {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Stage",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      StageBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Stage }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StagePersistor -> Stage [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Stage @payload.data { emit: { success: "STAGE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Stage @payload.data { emit: { success: "STAGE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Stage @payload.id { emit: { success: "STAGE_DELETED" } })
+    }
+    emits {
+      STAGE_CREATED -> external { id : string }
+      STAGE_UPDATED -> external { id : string }
+      STAGE_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      StageCreate.SAVE          -> DO_CREATE
+      StageEdit.SAVE            -> DO_UPDATE
+      StageDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/stages" -> StageCatalog, StageBrowseList, StageCreate, StageEdit, StageView, StageDelete, StagePersistor
 }
+
 orbital DeploymentOrbital {
-  entity Deployment [runtime] {
+  uses Browse from "std/behaviors/std-browse"
+  uses GitHub from "std/behaviors/std-service-github"
+
+  entity Deployment [persistent: deployments] {
     id : string!
     environment : string!
     version : string!
-    status : "pending" | "running" | "success" | "failed"
-    deployedAt : datetime
+    status : "pending" | "running" | "success" | "failed" = "pending"
+    deployedAt : string = ""
   }
 
   type DeploymentLoaded     = Event { data : [Deployment] }                  "Fired when Deployment finishes loading"
   type DeploymentLoadFailed = Event { error : string, code : string } "Fired when Deployment fails to load"
+  type DeploymentSaved      = Event { id : string }
   type DeploymentSaveFailed = Event { error : string, code : string }
-  type DeploymentSaved = Event { id : string }
+
+  trait DeploymentBrowseList = Browse.traits.BrowseItemBrowse -> Deployment {
+    config: {
+      fields: [
+        { name: "environment", variant: "h4",    icon: "rocket" },
+        { name: "version",     variant: "badge" },
+        { name: "status",      variant: "badge" },
+        { name: "deployedAt",  label: "Deployed", variant: "caption", format: "date" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+  }
+
+  ;; Page-chrome trait. Embeds the local browse list and the GitHub commits panel.
+  trait DeploymentDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "rocket" },
+            { type: "typography", content: "Deployments", variant: "h2" }
+          ]},
+          { type: "divider" },
+          "@trait.DeploymentBrowseList",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recent Commits" },
+          "@trait.DeploymentGitHub"
+        ]})
+    }
+  }
+
+  ;; Consumer-authored UI for the GitHub binding's `uiTrait` slot. Paints a
+  ;; commit list once GithubDone fires.
+  trait DeploymentCommitsPanel [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "alert", variant: "info", message: "Loading recent commits from GitHub…" }
+        ]})
+    }
+  }
+
+  trait DeploymentGitHub = GitHub.traits.ServiceGithubGithub {
+    config: {
+      op: "listCommits",
+      owner: "owner-placeholder",
+      repo: "repo-placeholder",
+      path: "",
+      ref: "main",
+      uiTrait: "@trait.DeploymentCommitsPanel"
+    }
+    listens {
+      ServiceGithubLoaded { id : string }
+      ServiceGithubLoadFailed { message : string }
+      GithubDone { id : string, result : object }
+      ServiceGithubGithubFailed { error : string, code : string }
+      FAILED { error : string! }
+    }
+  }
+
+  ;; Domain-specific deploy lifecycle: idle -> loading -> success/error.
+  ;; Custom render-ui retained for the loading/success/error states because
+  ;; the visual treatment (loading-state + skeleton, error-state + retry,
+  ;; success badge) is bespoke deploy-pipeline UI not covered by stdmodals.
   trait DeploymentAsync -> Deployment [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (fetch Deployment { emit: { success: "DeploymentLoaded", failure: "DeploymentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "upload-cloud" }, { type: "typography", content: "Deployment", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "upload-cloud" },
+            { type: "typography", content: "Deployment", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." },
+          { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }
+        ]})
       START -> loading
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Deploying...", message: "Processing deployment..." }, { type: "skeleton", variant: "text" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "loading-state", title: "Deploying...", message: "Processing deployment..." },
+          { type: "skeleton", variant: "text" }
+        ]})
     }
     state loading {
       LOADED -> success
         (persist create Deployment @payload.data { emit: { success: "DeploymentSaved", failure: "DeploymentSaveFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Deployment successful." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "icon", name: "check-circle" },
+          { type: "alert", variant: "success", message: "Deployment successful." },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [
+            { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }
+          ]}
+        ]})
       FAILED -> error
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "Deployment failed.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "error-state", title: "Operation Failed", message: "Deployment failed.", onRetry: "RETRY" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [
+            { type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" },
+            { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }
+          ]}
+        ]})
     }
     state success {
       RESET -> idle
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "upload-cloud" }, { type: "typography", content: "Deployment", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "upload-cloud" },
+            { type: "typography", content: "Deployment", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." },
+          { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }
+        ]})
     }
     state error {
       RESET -> idle
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "upload-cloud" }, { type: "typography", content: "Deployment", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "upload-cloud" },
+            { type: "typography", content: "Deployment", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." },
+          { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }
+        ]})
       RETRY -> loading
-        (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Deploying...", message: "Processing deployment..." }, { type: "skeleton", variant: "text" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "loading-state", title: "Deploying...", message: "Processing deployment..." },
+          { type: "skeleton", variant: "text" }
+        ]})
     }
-emits {
-DeploymentLoadFailed
+    emits {
       DeploymentLoaded
-DeploymentSaveFailed
+      DeploymentLoadFailed
       DeploymentSaved
+      DeploymentSaveFailed
     }
-
-        listens {
+    listens {
       DeploymentLoadFailed { error : string, code : string }
-      LOADED { data : string }
+      DeploymentSaveFailed { error : string, code : string }
+      LOADED { data : object }
     }
   }
-  page "/deploy" -> DeploymentAsync
+
+  page "/deploy" -> DeploymentDisplay, DeploymentBrowseList, DeploymentCommitsPanel, DeploymentGitHub, DeploymentAsync
 }

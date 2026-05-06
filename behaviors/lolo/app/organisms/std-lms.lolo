@@ -1,24 +1,37 @@
-app std-lms "1.0.0"
-"LMS: courses, student enrollments, and lesson progress tracking."
+app std-lms "2.0.0"
+"LMS: visual course catalog (gallery), enrollment wizard, lesson playback (YouTube), progress dashboard."
 
 orbital CourseOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+  uses Search        from "std/behaviors/std-search"
+  uses Filter        from "std/behaviors/std-filter"
+  uses Stats         from "std/behaviors/std-stats"
+  uses Graphs        from "std/behaviors/std-graphs"
+  uses Browse        from "std/behaviors/std-browse"
+  uses Gallery       from "std/behaviors/std-gallery"
+  uses Storage       from "std/behaviors/std-service-storage"
+  uses YouTube       from "std/behaviors/std-service-youtube"
 
-  entity Course [runtime] {
+  entity Course [persistent: courses] {
     id : string!
-    title : string = ""
+    title : string!
     description : string = ""
-    instructor : string = ""
+    category : string = ""
+    level : "beginner" | "intermediate" | "advanced" = "beginner"
     duration : string = ""
-    level : "Beginner" | "Intermediate" | "Advanced" = "Beginner"
+    instructor : string = ""
+    thumbnail : string = ""
+    videoId : string = ""
     pendingId : string = ""
   }
 
   trait CourseAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.CourseBrowse",
+      contentTrait: "@trait.CourseCatalog",
       appName: "LMS",
-      navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }],
+      navItems: [{ label: "Courses", href: "/courses", icon: "graduation-cap" }, { label: "Enroll", href: "/enroll", icon: "user-plus" }, { label: "Progress", href: "/progress", icon: "trending-up" }],
       searchEvent: "COURSE_SEARCH",
       notifications: [],
       notificationClickEvent: "COURSE_NOTIFICATIONS_OPEN"
@@ -29,331 +42,620 @@ orbital CourseOrbital {
     }
   }
 
-  type CourseLoaded     = Event { data : [Course] }                  "Fired when Course finishes loading"
-  type CourseLoadFailed = Event { error : string, code : string } "Fired when Course fails to load"
-  type CourseSaved = Event { id : string }
-  type CourseSaveFailed = Event { error : string, code : string }
-  type CourseUpdated = Event { id : string }
-  type CourseUpdateFailed = Event { error : string, code : string }
-  type CourseDeleted = Event { id : string }
-  type CourseDeleteFailed = Event { error : string, code : string }
-  type EnrollmentSaved = Event { id : string }
-  type EnrollmentSaveFailed = Event { error : string, code : string }
-  trait CourseBrowse -> Course [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      COURSE_SEARCH -> browsing
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      COURSE_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to courses", action: "INIT", variant: "ghost" }] })
-      CourseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "Courses", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Course", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "title", variant: "h3", icon: "book-open" }, { name: "level", variant: "badge" }, { name: "instructor", variant: "body" }, { name: "duration", variant: "body" }, { name: "description", variant: "caption" }], cols: 2, gap: "md" }] })
-      CourseLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load course" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  ;; Page-chrome: header (icon + title + Create / Edit / Delete buttons),
+  ;; toolbar (search + filter), stats, graphs, then the gallery as the
+  ;; primary visual list. Edit and Delete buttons emit their own events
+  ;; so admin actions stay decoupled from the gallery's view-only contract.
+  trait CourseCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "graduation-cap" },
+              { type: "typography", content: "Courses", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Course", action: "CREATE", variant: "primary", icon: "plus" },
+              { type: "button", label: "Edit Selected", action: "EDIT_COURSE", variant: "ghost", icon: "edit" },
+              { type: "button", label: "Delete Selected", action: "DELETE_COURSE", variant: "danger", icon: "trash-2" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.CourseSearch",
+            "@trait.CourseFilter"
+          ]},
+          "@trait.CourseStats",
+          "@trait.CourseGraphs",
+          { type: "divider" },
+          "@trait.CourseGallery"
+        ]})
+      EDIT_COURSE -> composing
+      DELETE_COURSE -> composing
+      COURSE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to courses", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-ENROLL -> external { id: string }
-CREATE
-      VIEW { id : string!, row : Course }
-EDIT { id : string!, row : Course }
-DELETE { id : string!, row : Course }
-CourseLoaded
-      CourseLoadFailed
-CourseSaved
-      CourseSaveFailed
-CourseUpdated
-      CourseUpdateFailed
-CourseDeleted
-      CourseDeleteFailed
-EnrollmentSaved
-      EnrollmentSaveFailed
+      CREATE        -> external { source : string }
+      EDIT_COURSE   -> external { id : string!, row : Course }
+      DELETE_COURSE -> external { id : string!, row : Course }
     }
     listens {
-      CourseCreate.COURSE_CREATED -> INIT
-      CourseEdit.COURSE_UPDATED -> INIT
-      CourseDelete.COURSE_DELETED -> INIT
-      CourseAppLayout.COURSE_SEARCH -> COURSE_SEARCH
       CourseAppLayout.COURSE_NOTIFICATIONS_OPEN -> COURSE_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Course }
-      EDIT { id : string!, row : Course }
-      DELETE { id : string!, row : Course }
-      COURSE_SEARCH { value : string }
       COURSE_NOTIFICATIONS_OPEN { id : string }
-          CourseLoadFailed { error : string, code : string }
+      EDIT_COURSE   { id : string!, row : Course }
+      DELETE_COURSE { id : string!, row : Course }
+    }
+  }
 
-      CourseSaveFailed { error : string, code : string }
-      CourseUpdateFailed { error : string, code : string }
-      CourseDeleteFailed { error : string, code : string }
-      EnrollmentSaveFailed { error : string, code : string }
-    }
-  }
-  trait CourseCreate -> Course [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-      CREATE -> open
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Course @payload.data { emit: { success: "CourseSaved", failure: "CourseSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit COURSE_CREATED)
-    }
-    emits {
-COURSE_CREATED -> external { id: string }
-CourseLoadFailed
-      CourseLoaded
-CourseSaveFailed
-      CourseSaved
+  trait CourseSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search courses...",
+      event: "SEARCH"
     }
     listens {
+      CourseAppLayout.COURSE_SEARCH -> SEARCH
+    }
+  }
+
+  trait CourseFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "category", label: "Category", filterType: "select", options: ["programming", "design", "business", "marketing"] },
+        { field: "level", label: "Level", filterType: "select", options: ["beginner", "intermediate", "advanced"] }
+      ],
+      event: "FILTER"
+    }
+  }
+
+  trait CourseStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Course Stats",
+      metrics: [
+        { label: "Total Courses",     aggregation: "count", icon: "graduation-cap", variant: "primary", format: "number" },
+        { label: "Enrolled Students", aggregation: "sum",   field: "enrolledCount", icon: "users",      variant: "info",    format: "number" },
+        { label: "Completion Rate",   aggregation: "avg",   field: "completionPct", icon: "check-circle", variant: "success", format: "percent" },
+        { label: "Avg Duration",      aggregation: "avg",   field: "durationHours", icon: "clock",      variant: "default", format: "number", suffix: "h" }
+      ]
+    }
+    listens {
+      CourseGallery.GalleryItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait CourseGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      chartType: "bar",
+      categoryField: "category",
+      aggregation: "count",
+      title: "Courses by Category",
+      subtitle: "Catalog distribution",
+      height: 280,
+      showLegend: true
+    }
+    listens {
+      CourseGallery.GalleryItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait CourseGallery = Gallery.traits.GalleryItemGallery -> Course {
+    config: {
+      imageField: "thumbnail",
+      titleField: "title",
+      subtitleField: "instructor",
+      cols: 4,
+      gap: "md"
+    }
+    listens {
+      CoursePersistor.COURSE_CREATED -> INIT
+      CoursePersistor.COURSE_UPDATED -> INIT
+      CoursePersistor.COURSE_DELETED -> INIT
+      EnrollmentOrbital.EnrollmentWizard.ENROLLED -> INIT
+    }
+  }
+
+  ;; Admin CRUD via Modal / Confirmation refs.
+  trait CourseCreateModal = Modal.traits.ModalRecordModal -> Course {
+    config: {
+      icon: "plus-circle",
+      title: "Create Course",
+      mode: "create",
+      fields: ["title", "description", "category", "level", "duration", "instructor", "thumbnail", "videoId"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      CourseCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Course }
       SAVE { data : object! }
-          CourseLoadFailed { error : string, code : string }
-      CourseBrowse.CREATE -> CREATE
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait CourseEdit -> Course [interaction, collection] {
-    listens {
-      CourseView.EDIT -> EDIT
+
+  ;; Edit modal opens via the catalog's EDIT_COURSE button.
+  trait CourseEditModal = Modal.traits.ModalRecordModal -> Course {
+    config: {
+      icon: "edit",
+      title: "Edit Course",
+      mode: "edit",
+      fields: ["title", "description", "category", "level", "duration", "instructor", "thumbnail", "videoId"]
     }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-      EDIT -> open
-        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Course", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "instructor", "duration", "level"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Course @payload.data { emit: { success: "CourseUpdated", failure: "CourseUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit COURSE_UPDATED)
-    }
-    emits {
-COURSE_UPDATED -> external { id: string }
-CourseLoadFailed
-      CourseLoaded
-CourseUpdateFailed
-      CourseUpdated
+    events {
+      OPEN: EDIT
     }
     listens {
+      CourseCatalog.EDIT_COURSE -> EDIT
       EDIT { id : string!, row : Course }
       SAVE { data : object! }
-          CourseLoadFailed { error : string, code : string }
-      CourseBrowse.EDIT -> EDIT
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait CourseView -> Course [interaction, collection] {
-    emits {
-EDIT { id : string }
-CourseLoaded
-      CourseLoadFailed
+
+  ;; Delete-confirmation opens via the catalog's DELETE_COURSE button.
+  trait CourseDeleteConfirm = Confirmation.traits.ConfirmActionConfirmation -> Course {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Course",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
     }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.description "")
-        (set @entity.duration "")
-        (set @entity.instructor "")
-        (set @entity.level "Beginner")
-        (set @entity.title "")
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-      VIEW -> open
-        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Instructor" }, { type: "typography", variant: "body", content: "@entity.instructor" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "body", content: "@entity.duration" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
+    events {
+      REQUEST: DELETE_COURSE
+      CONFIRM: CONFIRM_DELETE
     }
     listens {
-      VIEW { id : string! }
-      SAVE { data : object! }
-          CourseLoadFailed { error : string, code : string }
-      CourseBrowse.VIEW -> VIEW
+      CourseCatalog.DELETE_COURSE -> DELETE_COURSE
+      DELETE_COURSE { id : string!, row : Course }
+      ConfirmActionLoadFailed { error : string, code : string }
     }
   }
-  trait CourseDelete -> Course [interaction, collection] {
+
+  ;; Coordinator: persist side-effects triggered by Modal/Confirmation refs.
+  trait CoursePersistor -> Course [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Course {id: "@payload.id" , emit: { success: "CourseLoaded", failure: "CourseLoadFailed" }, emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Course", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Course @entity.pendingId { emit: { success: "CourseDeleted", failure: "CourseDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-        (emit COURSE_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Course { emit: { success: "CourseLoaded", failure: "CourseLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Course @payload.data { emit: { success: "COURSE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Course @payload.data { emit: { success: "COURSE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Course @payload.id { emit: { success: "COURSE_DELETED" } })
     }
     emits {
-COURSE_DELETED -> external { id: string }
-CourseDeleteFailed
-      CourseDeleted
-CourseLoadFailed
-      CourseLoaded
+      COURSE_CREATED -> external { id : string }
+      COURSE_UPDATED -> external { id : string }
+      COURSE_DELETED -> external { id : string }
     }
     listens {
-      DELETE { id : string! }
-          CourseLoadFailed { error : string, code : string }
-      CourseBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      CourseCreateModal.SAVE -> DO_CREATE
+      CourseEditModal.SAVE -> DO_UPDATE
+      CourseDeleteConfirm.CONFIRM_DELETE -> DO_DELETE
     }
-  }
-  page "/courses" as CoursesPage -> CourseAppLayout, CourseBrowse, CourseCreate, CourseEdit, CourseView, CourseDelete
-}
-orbital EnrollmentOrbital {
-  entity Enrollment [runtime] {
-    id : string!
-    studentName : string
-    email : string
-    courseId : string
-    enrolledAt : datetime
-    status : string
   }
 
-  type EnrollmentLoaded     = Event { data : [Enrollment] }                  "Fired when Enrollment finishes loading"
-  type EnrollmentLoadFailed = Event { error : string, code : string } "Fired when Enrollment fails to load"
-  type EnrollmentSaveFailed = Event { error : string, code : string }
-  type EnrollmentSaved = Event { id : string }
-  trait EnrollmentWizard -> Enrollment [interaction, collection] {
-    initial: step1
-    state step1 {
-      INIT -> step1
-        (set @entity.courseId "")
-        (set @entity.email "")
-        (set @entity.enrolledAt "")
-        (set @entity.status "")
-        (set @entity.studentName "")
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
-      NEXT -> step2
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 1 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Course Selection", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["courseId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+  ;; Domain-specific upload form fills the storage atom's uiTrait slot.
+  trait CourseThumbnailForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "image" },
+            { type: "typography", variant: "h3", content: "Course Thumbnail" }
+          ]},
+          { type: "input", inputType: "text", placeholder: "Choose image..." },
+          { type: "button", label: "Upload Thumbnail", action: "UPLOAD", variant: "primary", icon: "upload" }
+        ]})
     }
-    state step2 {
-      NEXT -> review
+    emits {
+      UPLOAD -> external { source : string, file : string }
+    }
+  }
+
+  ;; Inline storage call for course thumbnail uploads.
+  trait CourseThumbnailUpload = Storage.traits.ServiceStorageStorage {
+    config: {
+      uiTrait: "@trait.CourseThumbnailForm",
+      bucket: "course-thumbnails",
+      acl: "public",
+      maxSize: 5242880,
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/webp"]
+    }
+    listens {
+      CourseThumbnailForm.UPLOAD -> UPLOAD
+    }
+  }
+
+  ;; YouTube embed bound for lesson playback. The atom's render IS the
+  ;; embed; uiTrait OVERRIDES it with our domain-specific lesson frame.
+  trait CourseLessonVideo = YouTube.traits.ServiceYoutubeYoutube {
+    config: {
+      videoId: "",
+      autoplay: false,
+      controls: true,
+      uiTrait: "@trait.CourseLessonPlayer"
+    }
+    listens {
+      ServiceYoutubeYoutubeReady { videoId : string }
+      ServiceYoutubeYoutubeFailed { error : string, code : string }
+    }
+  }
+
+  ;; Domain-specific lesson surface — wraps the bound YouTube embed area
+  ;; with prev / next lesson buttons, lesson title, and a completion
+  ;; checkbox. The embed itself comes from CourseLessonVideo's atom
+  ;; default render (a card placeholder until the real youtube-embed
+  ;; pattern lands; this surface inherits it automatically).
+  trait CourseLessonPlayer [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-3xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [
+            { type: "button", label: "Previous", action: "PREV_LESSON", variant: "ghost", icon: "chevron-left" },
+            { type: "typography", variant: "h3", content: "@entity.title" },
+            { type: "button", label: "Next", action: "NEXT_LESSON", variant: "ghost", icon: "chevron-right" }
+          ]},
+          { type: "divider" },
+          { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [
+            { type: "icon", name: "video" },
+            { type: "typography", content: "Lesson video", variant: "caption", color: "muted" },
+            { type: "typography", content: "@config.videoId", variant: "body" }
+          ]}]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "input", inputType: "checkbox" },
+              { type: "typography", variant: "body", content: "Mark lesson complete" }
+            ]},
+            { type: "button", label: "Complete Lesson", action: "LESSON_COMPLETE", variant: "primary", icon: "check" }
+          ]}
+        ]})
+      PREV_LESSON -> ready
+        (emit NEXT_LESSON { source: "prev-button" })
+      NEXT_LESSON -> ready
+        (emit NEXT_LESSON { source: "next-button" })
+      LESSON_COMPLETE -> ready
+        (emit LESSON_COMPLETE { lessonId: "@entity.id" })
+    }
+    emits {
+      LESSON_COMPLETE -> external { lessonId : string }
+      NEXT_LESSON     -> external { source : string }
+    }
+    listens {
+      LESSON_COMPLETE { lessonId : string }
+      NEXT_LESSON { source : string }
+    }
+  }
+
+  page "/courses" as CoursesPage -> CourseAppLayout, CourseCatalog, CourseSearch, CourseFilter, CourseStats, CourseGraphs, CourseGallery, CourseCreateModal, CourseEditModal, CourseDeleteConfirm, CoursePersistor, CourseThumbnailForm, CourseThumbnailUpload, CourseLessonVideo, CourseLessonPlayer
+}
+
+orbital EnrollmentOrbital {
+  entity Enrollment [persistent: enrollments] {
+    id : string!
+    studentName : string = ""
+    email : string = ""
+    courseId : string = ""
+    enrolledAt : string = ""
+    status : "pending" | "active" | "completed" = "pending"
+  }
+
+  type EnrollmentLoaded     = Event { data : [Enrollment] }            "Fired when Enrollment finishes loading"
+  type EnrollmentLoadFailed = Event { error : string, code : string }  "Fired when Enrollment fails to load"
+  type EnrollmentSaved      = Event { id : string }
+  type EnrollmentSaveFailed = Event { error : string, code : string }
+
+  ;; Wizard pattern from std-ecommerce: state-per-step + `(set @entity.X
+  ;; @payload.data.X)` + guards `when (and @entity.X @payload.data.Y)`.
+  ;; Steps: student-info -> course-selection -> review -> confirm.
+  trait EnrollmentWizard -> Enrollment [interaction, instance] {
+    initial: studentInfo
+    state studentInfo {
+      INIT -> studentInfo
+        (set @entity.studentName "")
+        (set @entity.email "")
+        (set @entity.courseId "")
+        (set @entity.enrolledAt "")
+        (set @entity.status "pending")
         (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "badge", label: "Review" }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 2 }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Student Name" }, { type: "typography", variant: "body", content: "@entity.studentName" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Course Id" }, { type: "typography", variant: "body", content: "@entity.courseId" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Enrolled At" }, { type: "typography", variant: "body", content: "@entity.enrolledAt" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }] }, { type: "wizard-navigation", currentStep: 2, totalSteps: 3, showBack: true, showComplete: true, showNext: false }] }] })
-      PREV -> step1
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "user-plus" },
+            { type: "typography", variant: "h2", content: "Course Enrollment" }
+          ]},
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Student Info" },
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [
+            { name: "studentName", required: true, min: 2 },
+            { name: "email", type: "email", required: true }
+          ]}
+        ]})
+      ;; Guard: studentName + email must be present.
+      NEXT -> courseSelection when (and @payload.data.studentName @payload.data.email)
+        (set @entity.studentName @payload.data.studentName)
+        (set @entity.email @payload.data.email)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "user-plus" },
+            { type: "typography", variant: "h2", content: "Course Enrollment" }
+          ]},
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 1 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Course Selection" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: [
+            { name: "courseId", required: true }
+          ]}
+        ]})
+    }
+    state courseSelection {
+      ;; Guard: requires step1 commit + current submission's courseId.
+      NEXT -> review when (and @entity.studentName @entity.email @payload.data.courseId)
+        (set @entity.courseId @payload.data.courseId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "user-plus" },
+            { type: "typography", variant: "h2", content: "Course Enrollment" }
+          ]},
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 2 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Review" },
+          { type: "stack", direction: "vertical", gap: "sm", children: [
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Student" }, { type: "typography", variant: "body", content: "@entity.studentName" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Course" }, { type: "typography", variant: "body", content: "@entity.courseId" }] }
+          ]},
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" },
+            { type: "button", label: "Continue", action: "NEXT", variant: "primary", icon: "arrow-right" }
+          ]}
+        ]})
+      PREV -> studentInfo
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Course Enrollment" },
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Student Info" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [
+            { name: "studentName", required: true, min: 2 },
+            { name: "email", type: "email", required: true }
+          ]}
+        ]})
     }
     state review {
-      PREV -> step2
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 1 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Course Selection", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["courseId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
-      COMPLETE -> complete
-        (persist create Enrollment @payload.data { emit: { success: "EnrollmentSaved", failure: "EnrollmentSaveFailed" } })
-        (notify success "Enrollment created successfully")
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Enrolled!", variant: "h2" }, { type: "typography", content: "You have been successfully enrolled in the course.", variant: "body" }, { type: "button", label: "Start New", action: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
+      ;; Guard: full entity must be populated before NEXT to confirm.
+      NEXT -> confirm when (and @entity.studentName @entity.email @entity.courseId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Course Enrollment" },
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 3 },
+          { type: "divider" },
+          { type: "alert", variant: "info", message: "Please confirm your enrollment." },
+          { type: "stack", direction: "vertical", gap: "sm", children: [
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Student" }, { type: "typography", variant: "body", content: "@entity.studentName" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] },
+            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Course" }, { type: "typography", variant: "body", content: "@entity.courseId" }] }
+          ]},
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" },
+            { type: "button", label: "Enroll", action: "COMPLETE", variant: "primary", icon: "check" }
+          ]}
+        ]})
+      PREV -> courseSelection
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Course Enrollment" },
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 1 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Course Selection" },
+          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT", cancelEvent: "PREV", submitLabel: "Continue", cancelLabel: "Back", fields: [
+            { name: "courseId", required: true }
+          ]}
+        ]})
+    }
+    state confirm {
+      ;; Guard: all entity fields populated before persisting.
+      COMPLETE -> complete when (and @entity.studentName @entity.email @entity.courseId)
+        (set @entity.status "active")
+        (persist create Enrollment @entity { emit: { success: "EnrollmentSaved", failure: "EnrollmentSaveFailed" } })
+        (emit ENROLLED { id: "@entity.id", courseId: "@entity.courseId" })
+        (notify success "Enrollment confirmed")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-xl mx-auto w-full py-12", children: [
+          { type: "icon", name: "check-circle" },
+          { type: "typography", variant: "h2", content: "Enrolled!" },
+          { type: "typography", variant: "body", color: "muted", content: "You have been enrolled in the course." },
+          { type: "button", label: "Enroll another student", action: "RESTART", variant: "ghost", icon: "rotate-ccw" }
+        ]})
+      PREV -> review
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Course Enrollment" },
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 2 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Review" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [
+            { type: "button", label: "Back", action: "PREV", variant: "ghost", icon: "arrow-left" },
+            { type: "button", label: "Continue", action: "NEXT", variant: "primary", icon: "arrow-right" }
+          ]}
+        ]})
     }
     state complete {
-      RESTART -> step1
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
-      INIT -> step1
-        (fetch Enrollment { emit: { success: "EnrollmentLoaded", failure: "EnrollmentLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user-plus" }, { type: "typography", content: "Course Enrollment", variant: "h2" }] }, { type: "progress-dots", count: 2, currentIndex: 0 }, { type: "wizard-progress", steps: ["Student Info", "Course Selection"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Student Info", variant: "h3" }, { type: "form-section", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["studentName", "email"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", action: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      RESTART -> studentInfo
+        (set @entity.studentName "")
+        (set @entity.email "")
+        (set @entity.courseId "")
+        (set @entity.enrolledAt "")
+        (set @entity.status "pending")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-xl mx-auto w-full", children: [
+          { type: "typography", variant: "h2", content: "Course Enrollment" },
+          { type: "wizard-progress", steps: ["Student Info", "Course Selection", "Review", "Confirm"], currentStep: 0 },
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Student Info" },
+          { type: "form-section", mode: "create", submitEvent: "NEXT", submitLabel: "Continue", showCancel: false, fields: [
+            { name: "studentName", required: true, min: 2 },
+            { name: "email", type: "email", required: true }
+          ]}
+        ]})
     }
     emits {
-COMPLETE_LESSON -> external { id: string }
-EnrollmentLoadFailed
+      ENROLLED -> external { id : string, courseId : string }
       EnrollmentLoaded
-EnrollmentSaveFailed
+      EnrollmentLoadFailed
       EnrollmentSaved
+      EnrollmentSaveFailed
     }
     listens {
-      CourseOrbital.CourseBrowse.ENROLL -> INIT
-          EnrollmentLoadFailed { error : string, code : string }
-          COMPLETE { data : string }
+      NEXT { data : object! }
+      PREV { }
+      COMPLETE { }
+      RESTART { }
+      EnrollmentLoadFailed { error : string, code : string }
+      EnrollmentSaveFailed { error : string, code : string }
     }
   }
+
   page "/enroll" -> EnrollmentWizard
 }
+
 orbital ProgressOrbital {
-  entity Progress [runtime] {
+  uses Browse  from "std/behaviors/std-browse"
+
+  entity Progress [persistent: progresses] {
     id : string!
-    courseName : string
-    lessonsCompleted : number
-    totalLessons : number
-    percentComplete : number
-    lastActivity : datetime
+    courseName : string = ""
+    week : string = ""
+    lessonsCompleted : number = 0
+    totalLessons : number = 0
+    completionPct : number = 0
+    timeSpent : number = 0
+    streak : number = 0
+    lastActivity : string = ""
   }
 
-  type ProgressLoaded     = Event { data : [Progress] }                  "Fired when Progress finishes loading"
-  type ProgressLoadFailed = Event { error : string, code : string } "Fired when Progress fails to load"
-  trait ProgressDisplay -> Progress [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.courseName "")
-        (set @entity.lastActivity "")
-        (set @entity.lessonsCompleted 0)
-        (set @entity.percentComplete 0)
-        (set @entity.totalLessons 0)
-        (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+  type ProgressLoaded     = Event { data : [Progress] }                "Fired when Progress finishes loading"
+  type ProgressLoadFailed = Event { error : string, code : string }    "Fired when Progress fails to load"
+
+  ;; Page-chrome: header + stats + graphs + the browse list.
+  trait ProgressDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "trending-up" },
+            { type: "typography", variant: "h2", content: "Progress" }
+          ]},
+          { type: "divider" },
+          "@trait.ProgressStats",
+          "@trait.ProgressGraphs",
+          { type: "divider" },
+          "@trait.ProgressBrowseList"
+        ]})
     }
-    state displaying {
-      INIT -> displaying
+  }
+
+  ;; ProgressStats/ProgressGraphs are inlined locally (instead of binding
+  ;; the std-stats / std-graphs atoms) because each binding inlines the
+  ;; atom's own runtime entity (StatsItem / GraphItem) and CourseOrbital
+  ;; already inlines them — global entity uniqueness blocks a second copy.
+  ;; The render-ui shape is intentionally close to std-stats / std-graphs
+  ;; so the visual chrome stays consistent.
+  trait ProgressStats -> Progress [interaction, collection] {
+    initial: idle
+    state idle {
+      INIT -> idle
         (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+        (render-ui main { type: "simple-grid", cols: 4, gap: "md", children: [
+          { type: "stat-display", label: "Completion %", value: 0, icon: "check-circle", variant: "success", format: "percent" },
+          { type: "stat-display", label: "Time Spent", value: 0, icon: "clock", variant: "info", format: "number", suffix: "h" },
+          { type: "stat-display", label: "Lessons Remaining", value: 0, icon: "list", variant: "default", format: "number" },
+          { type: "stat-display", label: "Streak", value: 0, icon: "flame", variant: "warning", format: "number", suffix: "d" }
+        ]})
+      ProgressLoaded -> idle
+        (render-ui main { type: "simple-grid", cols: 4, gap: "md", children: [
+          { type: "stat-display", label: "Completion %", value: 0, icon: "check-circle", variant: "success", format: "percent" },
+          { type: "stat-display", label: "Time Spent", value: 0, icon: "clock", variant: "info", format: "number", suffix: "h" },
+          { type: "stat-display", label: "Lessons Remaining", value: 0, icon: "list", variant: "default", format: "number" },
+          { type: "stat-display", label: "Streak", value: 0, icon: "flame", variant: "warning", format: "number", suffix: "d" }
+        ]})
     }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "LMS", navItems: [{ label: "Courses", href: "/courses", icon: "book-open" }, { label: "Enroll", href: "/enroll", icon: "layout-list" }, { label: "Progress", href: "/progress", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "CourseName" }, { type: "typography", variant: "h3", content: "@entity.courseName" }] }] }, { type: "stat-display", label: "LessonsCompleted", value: "@entity.lessonsCompleted" }, { type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "PercentComplete", value: "@entity.percentComplete" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActivity" }, { type: "typography", variant: "h3", content: "@entity.lastActivity" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-ProgressLoaded
+    emits {
+      ProgressLoaded
       ProgressLoadFailed
     }
-
-        listens {
-      EnrollmentOrbital.EnrollmentWizard.COMPLETE_LESSON -> INIT
-          ProgressLoadFailed { error : string, code : string }
+    listens {
+      ProgressLoadFailed { error : string, code : string }
     }
   }
-  page "/progress" -> ProgressDisplay
+
+  trait ProgressGraphs -> Progress [interaction, collection] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Progress { emit: { success: "ProgressLoaded", failure: "ProgressLoadFailed" } })
+        (render-ui main { type: "chart", title: "Progress over time", subtitle: "Average completion % per week", chartType: "line", data: [], height: 280, showLegend: true })
+      ProgressLoaded -> idle
+        (render-ui main { type: "chart", title: "Progress over time", subtitle: "Average completion % per week", chartType: "line", data: @payload.data, height: 280, showLegend: true })
+    }
+    emits {
+      ProgressLoaded
+      ProgressLoadFailed
+    }
+    listens {
+      ProgressLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ProgressBrowseList = Browse.traits.BrowseItemBrowse -> Progress {
+    config: {
+      fields: [
+        { name: "courseName",       label: "Course",             variant: "h4", icon: "book-open" },
+        { name: "completionPct",    label: "Completion",         variant: "badge", format: "percent" },
+        { name: "lessonsCompleted", label: "Lessons Completed",  variant: "body" },
+        { name: "totalLessons",     label: "Total Lessons",      variant: "body" },
+        { name: "lastActivity",     label: "Last Activity",      variant: "caption", format: "date" }
+      ],
+      itemActions: [],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      EnrollmentOrbital.EnrollmentWizard.ENROLLED -> INIT
+    }
+  }
+
+  ;; Absorber trait: drains Browse atom's default DELETE/EDIT/VIEW
+  ;; emits so the unused-emission validator sees a consumer. The
+  ;; progress list is read-only (itemActions: []) so these never fire
+  ;; at runtime, but the atom still declares them as part of its
+  ;; canonical emit surface.
+  trait ProgressItemSink [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      VIEW -> idle
+      EDIT -> idle
+      DELETE -> idle
+    }
+    listens {
+      VIEW   { id : string!, row : Progress }
+      EDIT   { id : string!, row : Progress }
+      DELETE { id : string!, row : Progress }
+      ProgressBrowseList.VIEW   -> VIEW
+      ProgressBrowseList.EDIT   -> EDIT
+      ProgressBrowseList.DELETE -> DELETE
+    }
+  }
+
+  page "/progress" -> ProgressDisplay, ProgressStats, ProgressGraphs, ProgressBrowseList, ProgressItemSink
 }

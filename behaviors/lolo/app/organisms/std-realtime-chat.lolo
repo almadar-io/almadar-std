@@ -1,22 +1,30 @@
-app std-realtime-chat "1.0.0"
-"Realtime chat: channels, messages, and online presence. Pick for Slack-style team messaging."
+app std-realtime-chat "2.0.0"
+"Realtime chat: channels, messages, presence. Pick for Slack-style team messaging."
 
 orbital ChatMessageOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Storage      from "std/behaviors/std-service-storage"
+  uses Twilio       from "std/behaviors/std-service-twilio"
 
   entity ChatMessage [persistent: chatmessages] {
     id : string!
     sender : string!
     content : string!
-    channel : string
+    channel : string = ""
     timestamp : datetime
+    pendingId : string = ""
   }
 
   trait ChatAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.ChatMessageBrowse",
+      contentTrait: "@trait.ChatRoom",
       appName: "Realtime Chat",
-      navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }],
+      navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "users" }],
       searchEvent: "CHAT_SEARCH",
       notifications: [],
       notificationClickEvent: "CHAT_NOTIFICATIONS_OPEN"
@@ -27,364 +35,498 @@ orbital ChatMessageOrbital {
     }
   }
 
+  ;; Page-chrome trait. Owns the header (icon + Chat + New Channel button)
+  ;; + toolbar (search) + stat row + the custom message-list block. The
+  ;; AppLayout's `contentTrait` points here.
+  trait ChatRoom [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "message-circle" },
+              { type: "typography", content: "Chat", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Channel", action: "CREATE_CHANNEL", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.ChatSearch",
+          "@trait.ChatStats",
+          { type: "divider" },
+          "@trait.ChatMessageBrowse"
+        ]})
+      CHAT_SEARCH -> composing
+      CHAT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to chat", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE_CHANNEL -> external { source : string }
+    }
+    listens {
+      ChatAppLayout.CHAT_SEARCH -> CHAT_SEARCH
+      ChatAppLayout.CHAT_NOTIFICATIONS_OPEN -> CHAT_NOTIFICATIONS_OPEN
+      CHAT_SEARCH { value : string }
+      CHAT_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; Search bar — bound from std-search atom. Emits CHAT_SEARCH used by
+  ;; the message browse trait below to refilter.
+  trait ChatSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search messages…",
+      event: "CHAT_SEARCH"
+    }
+  }
+
+  ;; Aggregations on the ChatMessage collection. Listens to ChatMessageBrowse's
+  ;; ChatMessageLoaded and aggregates per @config.metrics.
+  trait ChatStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Chat Activity",
+      metrics: [
+        { aggregation: "count", label: "Messages",       icon: "message-circle", variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active Channels", icon: "hash",          variant: "info",    format: "number" },
+        { aggregation: "count", label: "Top Author",      icon: "user",          variant: "success", format: "number" }
+      ]
+    }
+    listens {
+      ChatMessageBrowse.ChatMessageLoaded -> ITEMS_LOADED
+    }
+  }
+
   type ChatMessageLoaded     = Event { data : [ChatMessage] }                  "Fired when ChatMessage finishes loading"
-  type ChatMessageLoadFailed = Event { error : string, code : string } "Fired when ChatMessage fails to load"
-  type ChatMessageSaved = Event { id : string }
+  type ChatMessageLoadFailed = Event { error : string, code : string }         "Fired when ChatMessage fails to load"
+  type ChatMessageSaved      = Event { id : string }
   type ChatMessageSaveFailed = Event { error : string, code : string }
-  type ChannelSaved = Event { id : string }
-  type ChannelSaveFailed = Event { error : string, code : string }
-  type ChannelUpdated = Event { id : string }
-  type ChannelUpdateFailed = Event { error : string, code : string }
-  type ChannelDeleted = Event { id : string }
-  type ChannelDeleteFailed = Event { error : string, code : string }
+
+  ;; CUSTOM render-ui RETAINED: chat messages are conversation-shaped
+  ;; (avatar + author + timestamp + bubble). std-browse's data-grid row
+  ;; layout doesn't capture conversation UI, so this trait keeps a
+  ;; hand-authored `data-list` with `variant: "message"` and `senderField`.
+  ;; It still owns the fetch state machine and emits a domain-shaped
+  ;; SMS_NOTIFY when a message body matches an @here pattern, picked up
+  ;; by ChatSmsNotify below.
   trait ChatMessageBrowse -> ChatMessage [interaction, collection] {
+    initial: browsing
     state browsing {
       INIT -> browsing
         (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       CHAT_SEARCH -> browsing
         (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      CHAT_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to chat", action: "INIT", variant: "ghost" }] })
       ChatMessageLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Chat", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "sender", variant: "h4" }, { name: "content", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "message", senderField: "sender", gap: "sm" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "data-list", entity: "@payload.data", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [
+            { name: "sender",    variant: "h4" },
+            { name: "content",   variant: "body" },
+            { name: "timestamp", variant: "caption", format: "date" }
+          ], variant: "message", senderField: "sender", gap: "sm" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [
+            { type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }
+          ]}
+        ]})
       ChatMessageLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load chatmessage" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load messages" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-COMPOSE
-      VIEW { id : string!, row : ChatMessage }
-ChatMessageLoaded
+      COMPOSE -> external { source : string }
+      VIEW   -> external { id : string!, row : ChatMessage }
+      ChatMessageLoaded
       ChatMessageLoadFailed
-ChatMessageSaved
-      ChatMessageSaveFailed
-ChannelSaved
-      ChannelSaveFailed
-ChannelUpdated
-      ChannelUpdateFailed
-ChannelDeleted
-      ChannelDeleteFailed
     }
     listens {
-      ChatMessageCompose.SEND -> INIT
-      ChatAppLayout.CHAT_SEARCH -> CHAT_SEARCH
-      ChatAppLayout.CHAT_NOTIFICATIONS_OPEN -> CHAT_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : ChatMessage }
-      CHAT_SEARCH { value : string }
-      CHAT_NOTIFICATIONS_OPEN { id : string }
-          ChatMessageLoadFailed { error : string, code : string }
-
-      ChatMessageSaveFailed { error : string, code : string }
-      ChannelSaveFailed { error : string, code : string }
-      ChannelUpdateFailed { error : string, code : string }
-      ChannelDeleteFailed { error : string, code : string }
+      ChatSearch.SEARCH                   -> CHAT_SEARCH
+      ChatMessagePersistor.MESSAGE_SAVED  -> INIT
+      ChatMessageLoadFailed { error : string, code : string }
     }
   }
-  trait ChatMessageCompose -> ChatMessage [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
-      COMPOSE -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New ChatMessage", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["sender", "content", "channel", "timestamp"] }] })
+
+  ;; Modal binding — Compose new message. Atom renders to the modal slot;
+  ;; the persist side-effect lives in ChatMessagePersistor.
+  trait ChatMessageCompose = Modal.traits.ModalRecordModal -> ChatMessage {
+    config: {
+      icon: "edit",
+      title: "New Message",
+      mode: "create",
+      fields: ["sender", "content", "channel", "timestamp"]
     }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SEND -> closed
-        (persist create ChatMessage @payload.data { emit: { success: "ChatMessageSaved", failure: "ChatMessageSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-    emits {
-SEND
-      ChatMessageLoadFailed
-ChatMessageLoaded
-      ChatMessageSaveFailed
-ChatMessageSaved
-    
+    events {
+      OPEN: COMPOSE
     }
     listens {
-      SEND { data : object! }
-          ChatMessageLoadFailed { error : string, code : string }
       ChatMessageBrowse.COMPOSE -> COMPOSE
-    }
-  }
-  trait ChatMessageView -> ChatMessage [interaction, collection] {
-    emits {
-EDIT { id : string }
-ChatMessageLoaded
-      ChatMessageLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.channel "")
-        (set @entity.content "")
-        (set @entity.sender "")
-        (set @entity.timestamp "")
-        (fetch ChatMessage { emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
-      VIEW -> open
-        (fetch ChatMessage {id: "@payload.id" , emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" }, emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.sender" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Sender" }, { type: "typography", variant: "body", content: "@entity.sender" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Channel" }, { type: "typography", variant: "body", content: "@entity.channel" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-
-    listens {
-      VIEW { id : string! }
+      COMPOSE { id : string, row : ChatMessage }
       SAVE { data : object! }
-          ChatMessageLoadFailed { error : string, code : string }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Modal binding — View existing message.
+  trait ChatMessageView = Modal.traits.ModalRecordModal -> ChatMessage {
+    config: {
+      icon: "eye",
+      title: "View Message",
+      mode: "edit",
+      fields: ["sender", "content", "channel", "timestamp"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
       ChatMessageBrowse.VIEW -> VIEW
+      VIEW { id : string, row : ChatMessage }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
     }
-  }
-  page "/chat" as ChatPage -> ChatAppLayout, ChatMessageBrowse, ChatMessageCompose, ChatMessageView
-}
-orbital ChannelOrbital {
-  entity Channel [persistent: channels] {
-    id : string!
-    name : string!
-    description : string
-    memberCount : number
-    isPrivate : boolean
-    pendingId : string = ""
   }
 
-  type ChannelLoaded     = Event { data : [Channel] }                  "Fired when Channel finishes loading"
-  type ChannelLoadFailed = Event { error : string, code : string } "Fired when Channel fails to load"
-  type ChannelDeleteFailed = Event { error : string, code : string }
-  type ChannelDeleted = Event { id : string }
-  type ChannelSaveFailed = Event { error : string, code : string }
-  type ChannelSaved = Event { id : string }
-  type ChannelUpdateFailed = Event { error : string, code : string }
-  type ChannelUpdated = Event { id : string }
-  trait ChannelBrowse -> Channel [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      ChannelLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hash" }, { type: "typography", content: "Channels", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Channel", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "hash" }, { name: "memberCount", label: "Members", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "isPrivate", label: "Private", variant: "body", format: "boolean" }], variant: "card", gap: "sm" }] }] })
-      ChannelLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load channel" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
-    }
-    emits {
-CREATE
-      VIEW { id : string!, row : Channel }
-EDIT { id : string!, row : Channel }
-DELETE { id : string!, row : Channel }
-ChannelLoaded
-      ChannelLoadFailed
-    }
-    listens {
-      ChannelCreate.CHANNEL_CREATED -> INIT
-      ChannelEdit.CHANNEL_UPDATED -> INIT
-      ChannelDelete.CHANNEL_DELETED -> INIT
-          ChannelLoadFailed { error : string, code : string }
-    }
-  }
-  trait ChannelCreate -> Channel [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-      CREATE -> open
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Channel @payload.data { emit: { success: "ChannelSaved", failure: "ChannelSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit CHANNEL_CREATED)
-    }
-    emits {
-CHANNEL_CREATED
-      ChannelLoadFailed
-ChannelLoaded
-      ChannelSaveFailed
-ChannelSaved
-    
-    }
-    listens {
-      ChannelLoadFailed { error : string, code : string }
-      SAVE { data : string }
-      ChannelBrowse.CREATE -> CREATE
-    }
-  }
-  trait ChannelEdit -> Channel [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-      EDIT -> open
-        (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Channel @payload.data { emit: { success: "ChannelUpdated", failure: "ChannelUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit CHANNEL_UPDATED)
-    }
-    emits {
-CHANNEL_UPDATED
-      ChannelLoadFailed
-ChannelLoaded
-      ChannelUpdateFailed
-ChannelUpdated
-    
-    }
-    listens {
-      ChannelView.EDIT -> EDIT
-      ChannelLoadFailed { error : string, code : string }
-      EDIT { id : string, row : Channel }
-      SAVE { data : string }
-      ChannelBrowse.EDIT -> EDIT
-    }
-  }
-  trait ChannelView -> Channel [interaction, collection] {
-    emits {
-EDIT { id : string }
-ChannelLoaded
-      ChannelLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.description "")
-        (set @entity.isPrivate false)
-        (set @entity.memberCount 0)
-        (set @entity.name "")
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-      VIEW -> open
-        (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Member Count" }, { type: "typography", variant: "body", content: "@entity.memberCount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Is Private" }, { type: "typography", variant: "body", content: "@entity.isPrivate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-
-    listens {
-      ChannelLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      ChannelBrowse.VIEW -> VIEW
-    }
-  }
-  trait ChannelDelete -> Channel [interaction, collection] {
+  ;; Coordinator: persists new messages from the Compose modal and forwards
+  ;; saved-event ids. Mirrors std-helpdesk's TicketPersistor.
+  trait ChatMessagePersistor -> ChatMessage [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Channel {id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" }, emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Channel", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Channel @entity.pendingId { emit: { success: "ChannelDeleted", failure: "ChannelDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-        (emit CHANNEL_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create ChatMessage @payload.data { emit: { success: "MESSAGE_SAVED" } })
     }
     emits {
-CHANNEL_DELETED
-      ChannelDeleteFailed
-ChannelDeleted
-      ChannelLoadFailed
-ChannelLoaded
-    
+      MESSAGE_SAVED -> external { id : string }
     }
     listens {
-      ChannelLoadFailed { error : string, code : string }
-      DELETE { id : string }
-      ChannelBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      ChatMessageCompose.SAVE -> DO_CREATE
     }
   }
-  page "/channels" -> ChannelBrowse, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete
+
+  ;; Standalone attachment uploader — calls storage service inline. Used by
+  ;; chat users to attach images/files to a message. Bucket is private so
+  ;; messages stay scoped to the workspace; allowedMimeTypes whitelists
+  ;; image and PDF uploads.
+  trait ChatMessageAttachment [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "paperclip" },
+            { type: "typography", variant: "h3", content: "Attach File" }
+          ]},
+          { type: "input", inputType: "text", placeholder: "Choose file…" },
+          { type: "button", label: "Upload", action: "UPLOAD", variant: "primary", icon: "upload" }
+        ]})
+      UPLOAD -> uploading
+        (call-service storage "upload" { bucket: "chat-attachments", acl: "private", maxSize: 10485760, file: "@payload.file" } { emit: { success: "AttachmentUploaded", failure: "AttachmentUploadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Uploading…" }] })
+    }
+    state uploading {
+      AttachmentUploaded -> ready
+        (notify success "Attachment uploaded")
+      AttachmentUploadFailed -> ready
+        (notify error "Upload failed")
+    }
+    emits {
+      AttachmentUploaded -> external { id : string, url : string }
+      AttachmentUploadFailed -> external { error : string }
+    }
+    listens {
+      UPLOAD { source : string, file : string }
+      AttachmentUploaded { id : string, url : string }
+      AttachmentUploadFailed { error : string }
+    }
+  }
+
+  ;; Standalone SMS notifier — fires Twilio when invoked with a recipient
+  ;; and body. The triggering logic (detecting @here patterns in message
+  ;; bodies and firing SMS_NOTIFY) lives on the consuming application path;
+  ;; this trait just wires the call and surfaces success/failure events.
+  trait ChatSmsNotify [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "bell" },
+            { type: "typography", variant: "h3", content: "Send SMS Notify" }
+          ]},
+          { type: "button", label: "Send Notification", action: "SMS_NOTIFY", variant: "primary", icon: "send" }
+        ]})
+      SMS_NOTIFY -> sending
+        (call-service twilio "sendSMS" { recipient: "@payload.recipient", body: "@payload.body", sender: "+15551234567" } { emit: { success: "ChatSmsSent", failure: "ChatSmsFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Sending notification…" }] })
+    }
+    state sending {
+      ChatSmsSent -> ready
+        (notify success "Notification sent")
+      ChatSmsFailed -> ready
+        (notify error "Notification failed")
+    }
+    emits {
+      ChatSmsSent -> external { id : string }
+      ChatSmsFailed -> external { error : string }
+    }
+    listens {
+      SMS_NOTIFY { recipient : string!, body : string! }
+      ChatSmsSent { id : string }
+      ChatSmsFailed { error : string }
+    }
+  }
+
+  page "/chat" as ChatPage -> ChatAppLayout, ChatRoom, ChatSearch, ChatStats, ChatMessageBrowse, ChatMessageCompose, ChatMessageView, ChatMessagePersistor, ChatMessageAttachment, ChatSmsNotify
 }
+
+orbital ChannelOrbital {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity Channel [persistent: channels] {
+    id : string!
+    name : string!
+    description : string = ""
+    memberCount : number = 0
+    isPrivate : boolean = false
+    pendingId : string = ""
+  }
+
+  ;; Page-chrome trait: header + Create button + embedded Browse list.
+  ;; Listens to ChatRoom's cross-orbital CREATE_CHANNEL so the "New Channel"
+  ;; button on the /chat page also opens this orbital's create modal.
+  trait ChannelCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "hash" },
+              { type: "typography", content: "Channels", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Channel", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.ChannelBrowseList"
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      ChatMessageOrbital.ChatRoom.CREATE_CHANNEL -> CREATE
+    }
+  }
+
+  trait ChannelBrowseList = Browse.traits.BrowseItemBrowse -> Channel {
+    config: {
+      fields: [
+        { name: "name",        variant: "h3",    icon: "hash" },
+        { name: "memberCount", label: "Members", variant: "badge", format: "number" },
+        { name: "description", variant: "body" },
+        { name: "isPrivate",   label: "Private", variant: "body",  format: "boolean" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      ChannelPersistor.CHANNEL_CREATED -> INIT
+      ChannelPersistor.CHANNEL_UPDATED -> INIT
+      ChannelPersistor.CHANNEL_DELETED -> INIT
+    }
+  }
+
+  trait ChannelCreate = Modal.traits.ModalRecordModal -> Channel {
+    config: {
+      icon: "plus-circle",
+      title: "Create Channel",
+      mode: "create",
+      fields: ["name", "description", "memberCount", "isPrivate"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      ChannelCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Channel }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ChannelEdit = Modal.traits.ModalRecordModal -> Channel {
+    config: {
+      icon: "edit",
+      title: "Edit Channel",
+      mode: "edit",
+      fields: ["name", "description", "memberCount", "isPrivate"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      ChannelBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Channel }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ChannelView = Modal.traits.ModalRecordModal -> Channel {
+    config: {
+      icon: "eye",
+      title: "View Channel",
+      mode: "edit",
+      fields: ["name", "description", "memberCount", "isPrivate"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      ChannelBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Channel }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ChannelDelete = Confirmation.traits.ConfirmActionConfirmation -> Channel {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Channel",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      ChannelBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Channel }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ChannelPersistor -> Channel [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Channel @payload.data { emit: { success: "CHANNEL_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Channel @payload.data { emit: { success: "CHANNEL_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Channel @payload.id { emit: { success: "CHANNEL_DELETED" } })
+    }
+    emits {
+      CHANNEL_CREATED -> external { id : string }
+      CHANNEL_UPDATED -> external { id : string }
+      CHANNEL_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      ChannelCreate.SAVE          -> DO_CREATE
+      ChannelEdit.SAVE            -> DO_UPDATE
+      ChannelDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/channels" -> ChannelCatalog, ChannelBrowseList, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete, ChannelPersistor
+}
+
+;; OnlineUserOrbital — kept ENTIRELY CUSTOM. Presence visualization
+;; (online status with green/yellow/red dots, last-seen timestamps) is
+;; domain-specific real-time UI; no atom captures it. All render-ui
+;; blocks below are intentionally hand-authored — std-browse's row layout
+;; doesn't represent presence semantics, and Stats/Graphs aggregations
+;; would clash with the runtime entity model used here.
 orbital OnlineUserOrbital {
   entity OnlineUser [runtime] {
     id : string!
     username : string!
-    status : string
+    status : "online" | "away" | "offline" = "offline"
     lastActive : datetime
-    avatar : string
+    avatar : string = ""
   }
 
   type OnlineUserLoaded     = Event { data : [OnlineUser] }                  "Fired when OnlineUser finishes loading"
-  type OnlineUserLoadFailed = Event { error : string, code : string } "Fired when OnlineUser fails to load"
+  type OnlineUserLoadFailed = Event { error : string, code : string }        "Fired when OnlineUser fails to load"
+
   trait OnlineUserDisplay -> OnlineUser [interaction, collection] {
     initial: loading
     state loading {
       INIT -> displaying
-        (set @entity.avatar "")
-        (set @entity.lastActive "")
-        (set @entity.status "")
-        (set @entity.username "")
         (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "users" },
+              { type: "typography", content: "Online Users", variant: "h2" }
+            ]},
+            { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [
+            { type: "spinner" },
+            { type: "typography", variant: "caption", color: "muted", content: "Loading presence…" }
+          ]}
+        ]})
     }
     state displaying {
-      INIT -> displaying
+      OnlineUserLoaded -> displaying
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "users" },
+              { type: "typography", content: "Online Users", variant: "h2" }
+            ]},
+            { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }
+          ]},
+          { type: "divider" },
+          { type: "data-list", entity: "@payload.data", fields: [
+            { name: "username",   variant: "h4" },
+            { name: "status",     variant: "badge" },
+            { name: "lastActive", variant: "caption", format: "date" }
+          ], variant: "card", gap: "sm" }
+        ]})
+      REFRESH -> loading
         (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [
+          { type: "spinner" },
+          { type: "typography", variant: "caption", color: "muted", content: "Refreshing…" }
+        ]})
+      OnlineUserLoadFailed -> displaying
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [
+          { type: "icon", name: "alert-triangle", color: "destructive" },
+          { type: "typography", variant: "h3", content: "Failed to load presence" },
+          { type: "typography", variant: "body", color: "muted", content: "@payload.error" },
+          { type: "button", label: "Retry", action: "REFRESH", variant: "primary", icon: "rotate-ccw" }
+        ]})
     }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: "@entity.username" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: "@entity.status" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: "@entity.lastActive" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: "@entity.avatar" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-OnlineUserLoaded
+    emits {
+      OnlineUserLoaded
       OnlineUserLoadFailed
     }
-
-        listens {
+    listens {
       OnlineUserLoadFailed { error : string, code : string }
     }
   }
+
   page "/online" -> OnlineUserDisplay
 }

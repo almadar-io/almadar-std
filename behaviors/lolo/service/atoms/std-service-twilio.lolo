@@ -1,74 +1,102 @@
-app std-service-twilio "1.0.0"
-"std-service-twilio as a Function"
+app std-service-twilio "2.0.0"
+"std-service-twilio — Twilio messaging service. Bind via `uses Twilio from \"std/behaviors/std-service-twilio\"` and configure `recipient` / `body` / `sender` / `mode` at the call site (mapped to Twilio `to`/`body`/`from`/`mode`). Pass `uiTrait: \"@trait.YourMessagingForm\"` to inject your own form; leave unset to render the atom's default test form (standalone surface)."
 
 orbital ServiceTwilioOrbital {
   entity ServiceTwilio [runtime] {
-    id : string
+    id : string!
+    to : string = ""
+    body : string = ""
+    from : string = ""
+    mode : "sms" | "voice" | "whatsapp" = "sms"
+    messageSid : string = ""
+    sendStatus : string = "idle"
+    error : string = ""
     name : string
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    to : string
-    messageBody : string
-    channel : string = "sms"
-    messageSid : string
-    sendStatus : string = "idle"
-    error : string
   }
 
   type ServiceTwilioLoaded     = Event ServiceTwilio                  "Fired when ServiceTwilio finishes loading"
   type ServiceTwilioLoadFailed = Event { message : string } "Fired when ServiceTwilio fails to load"
-  type ServiceTwilioTwilioCompleted = Event { result : object }
+  type ServiceTwilioTwilioCompleted = Event { id : string }
   type ServiceTwilioTwilioFailed = Event { error : string, code : string }
+
+  trait ServiceTwilioDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Twilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", inputType: "tel", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "select", options: [{ label: "SMS", value: "sms" }, { label: "Voice", value: "voice" }, { label: "WhatsApp", value: "whatsapp" }] }, { type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }] })
+    }
+    emits {
+      SEND -> external { source : string }
+    }
+  }
+
   trait ServiceTwilioTwilio -> ServiceTwilio [interaction, instance] {
     initial: idle
+    config {
+      uiTrait: trait = "@trait.ServiceTwilioDefaultForm"
+      recipient: string = ""
+      body: string = ""
+      sender: string = ""
+      mode: "sms" | "voice" | "whatsapp" = "sms"
+    }
     state idle {
       INIT -> idle
-        (set @entity.messageBody "")
-        (set @entity.to "")
+        (set @entity.to @config.recipient)
+        (set @entity.body @config.body)
+        (set @entity.mode @config.mode)
         (fetch ServiceTwilio { emit: { success: "ServiceTwilioLoaded", failure: "ServiceTwilioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
-      SEND_SMS -> sending
-        (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
-        (call-service twilio "sendSMS" { to: "@entity.to", body: "@entity.messageBody" } { emit: { success: "ServiceTwilioTwilioCompleted", failure: "ServiceTwilioTwilioFailed" } })
-      SEND_WHATSAPP -> sending
-        (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
-        (call-service twilio "sendWhatsApp" { to: "@entity.to", body: "@entity.messageBody" } { emit: { success: "ServiceTwilioTwilioCompleted", failure: "ServiceTwilioTwilioFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      SEND -> sending
+        (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering your message." })
+        (call-service twilio "sendSMS" { to: "@config.recipient", body: "@config.body" } { emit: { success: "TwilioSent", failure: "FAILED" } })
+      ServiceTwilioLoaded -> idle
+      ServiceTwilioLoadFailed -> idle
     }
     state sending {
-      SENT -> sent
-        (set @entity.sendStatus sent)
-        (set @entity.messageSid @payload.messageSid)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Message sent successfully" }, { type: "button", label: "Send Another", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      TwilioSent -> sent
+        (set @entity.sendStatus "sent")
+        (set @entity.messageSid @payload.id)
+        (emit ServiceTwilioTwilioCompleted { id: @entity.messageSid })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Message sent successfully" }, { type: "typography", variant: "body", color: "muted", content: "@entity.messageSid" }, { type: "button", label: "Send Another", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
-        (set @entity.sendStatus error)
+        (set @entity.sendStatus "error")
         (set @entity.error @payload.error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Send Failed", message: "Could not deliver the message.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (emit ServiceTwilioTwilioFailed { error: @entity.error, code: "send_failed" })
+        (render-ui main { type: "error-state", title: "Send Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state sent {
       RESET -> idle
-        (set @entity.sendStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+        (set @entity.sendStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      ServiceTwilioTwilioCompleted -> sent
     }
     state error {
+      ServiceTwilioTwilioFailed -> error
       RETRY -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       RESET -> idle
-        (set @entity.sendStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "+1234567890" }, { type: "textarea", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", action: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", action: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+        (set @entity.sendStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
     }
-emits {
+    emits {
       ServiceTwilioLoaded            -> external { id : string }
       ServiceTwilioLoadFailed        -> external { message : string }
-      ServiceTwilioTwilioCompleted           -> external { result : object }
-      ServiceTwilioTwilioFailed              -> external { error : string, code : string }
+      TwilioSent                     -> external { id : string }
+      ServiceTwilioTwilioCompleted   -> external { id : string }
+      ServiceTwilioTwilioFailed      -> external { error : string, code : string }
+      FAILED                         { error : string! }
     }
 
-        listens {
-      SENT { messageSid : string }
+    listens {
+      ServiceTwilioDefaultForm.SEND -> SEND
+      TwilioSent { id : string }
       FAILED { error : string! }
-          ServiceTwilioLoadFailed { message : string }
-    
+      ServiceTwilioLoaded { id : string }
+      ServiceTwilioLoadFailed { message : string }
+      ServiceTwilioTwilioCompleted { id : string }
       ServiceTwilioTwilioFailed { error : string, code : string }
     }
   }

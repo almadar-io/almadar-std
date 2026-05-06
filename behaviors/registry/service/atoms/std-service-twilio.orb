@@ -1,7 +1,7 @@
 {
   "name": "std-service-twilio",
-  "version": "1.0.0",
-  "description": "std-service-twilio as a Function",
+  "version": "2.0.0",
+  "description": "std-service-twilio — Twilio messaging service. Bind via `uses Twilio from \"std/behaviors/std-service-twilio\"` and configure `recipient` / `body` / `sender` / `mode` at the call site (mapped to Twilio `to`/`body`/`from`/`mode`). Pass `uiTrait: \"@trait.YourMessagingForm\"` to inject your own form; leave unset to render the atom's default test form (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceTwilioOrbital",
@@ -11,7 +11,48 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "to",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "from",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "default": "sms",
+            "values": [
+              "sms",
+              "voice",
+              "whatsapp"
+            ]
+          },
+          {
+            "name": "messageSid",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sendStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
           },
           {
             "name": "name",
@@ -34,36 +75,119 @@
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "to",
-            "type": "string"
-          },
-          {
-            "name": "messageBody",
-            "type": "string"
-          },
-          {
-            "name": "channel",
-            "type": "string",
-            "default": "sms"
-          },
-          {
-            "name": "messageSid",
-            "type": "string"
-          },
-          {
-            "name": "sendStatus",
-            "type": "string",
-            "default": "idle"
-          },
-          {
-            "name": "error",
-            "type": "string"
           }
         ]
       },
       "traits": [
+        {
+          "name": "ServiceTwilioDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SEND",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND",
+                "name": "Send"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "stretch",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle"
+                            },
+                            {
+                              "content": "Twilio Messaging",
+                              "variant": "h2",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "inputType": "tel",
+                          "type": "input",
+                          "placeholder": "+1234567890"
+                        },
+                        {
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
+                        },
+                        {
+                          "type": "select",
+                          "options": [
+                            {
+                              "label": "SMS",
+                              "value": "sms"
+                            },
+                            {
+                              "value": "voice",
+                              "label": "Voice"
+                            },
+                            {
+                              "label": "WhatsApp",
+                              "value": "whatsapp"
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "send",
+                          "type": "button",
+                          "label": "Send",
+                          "action": "SEND"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
         {
           "name": "ServiceTwilioTwilio",
           "category": "interaction",
@@ -90,12 +214,22 @@
               ]
             },
             {
+              "event": "TwilioSent",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
               "event": "ServiceTwilioTwilioCompleted",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "result",
-                  "type": "object"
+                  "name": "id",
+                  "type": "string"
                 }
               ]
             },
@@ -112,6 +246,26 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SEND",
+              "triggers": "SEND",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceTwilioDefaultForm"
+              }
             }
           ],
           "stateMachine": {
@@ -136,19 +290,35 @@
                 "name": "Initialize"
               },
               {
-                "key": "SEND_SMS",
-                "name": "Send Sms"
+                "key": "SEND",
+                "name": "Send"
               },
               {
-                "key": "SEND_WHATSAPP",
-                "name": "Send Whatsapp"
-              },
-              {
-                "key": "SENT",
-                "name": "Sent",
+                "key": "ServiceTwilioLoaded",
+                "name": "ServiceTwilio loaded",
                 "payloadSchema": [
                   {
-                    "name": "messageSid",
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceTwilioLoadFailed",
+                "name": "ServiceTwilio load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TwilioSent",
+                "name": "Twilio sent",
+                "payloadSchema": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -169,76 +339,12 @@
                 "name": "Reset"
               },
               {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
-                "key": "ServiceTwilioLoaded",
-                "name": "ServiceTwilio loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "to",
-                    "type": "string"
-                  },
-                  {
-                    "name": "messageBody",
-                    "type": "string"
-                  },
-                  {
-                    "name": "channel",
-                    "type": "string"
-                  },
-                  {
-                    "name": "messageSid",
-                    "type": "string"
-                  },
-                  {
-                    "name": "sendStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceTwilioLoadFailed",
-                "name": "ServiceTwilio load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
                 "key": "ServiceTwilioTwilioCompleted",
                 "name": "ServiceTwilio twilio completed",
                 "payloadSchema": [
                   {
-                    "name": "result",
-                    "type": "object"
+                    "name": "id",
+                    "type": "string"
                   }
                 ]
               },
@@ -255,6 +361,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -265,13 +375,18 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.messageBody",
-                    ""
+                    "@entity.to",
+                    "@config.recipient"
                   ],
                   [
                     "set",
-                    "@entity.to",
-                    ""
+                    "@entity.body",
+                    "@config.body"
+                  ],
+                  [
+                    "set",
+                    "@entity.mode",
+                    "@config.mode"
                   ],
                   [
                     "fetch",
@@ -287,62 +402,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
-                        {
-                          "align": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "message-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceTwilio Messaging"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "+1234567890"
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "Write your message..."
-                        },
-                        {
-                          "justify": "center",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "action": "SEND_SMS",
-                              "label": "Send SMS",
-                              "variant": "primary",
-                              "icon": "message-circle",
-                              "type": "button"
-                            },
-                            {
-                              "action": "SEND_WHATSAPP",
-                              "type": "button",
-                              "variant": "secondary",
-                              "icon": "phone",
-                              "label": "Send WhatsApp"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "align": "stretch",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -350,15 +415,15 @@
               {
                 "from": "idle",
                 "to": "sending",
-                "event": "SEND_SMS",
+                "event": "SEND",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Delivering servicetwilio message...",
+                      "type": "loading-state",
                       "title": "Sending message...",
-                      "type": "loading-state"
+                      "message": "Delivering your message."
                     }
                   ],
                   [
@@ -366,13 +431,13 @@
                     "twilio",
                     "sendSMS",
                     {
-                      "body": "@entity.messageBody",
-                      "to": "@entity.to"
+                      "to": "@config.recipient",
+                      "body": "@config.body"
                     },
                     {
                       "emit": {
-                        "failure": "ServiceTwilioTwilioFailed",
-                        "success": "ServiceTwilioTwilioCompleted"
+                        "success": "TwilioSent",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -380,39 +445,18 @@
               },
               {
                 "from": "idle",
-                "to": "sending",
-                "event": "SEND_WHATSAPP",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Sending message...",
-                      "message": "Delivering servicetwilio message...",
-                      "type": "loading-state"
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "twilio",
-                    "sendWhatsApp",
-                    {
-                      "to": "@entity.to",
-                      "body": "@entity.messageBody"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceTwilioTwilioCompleted",
-                        "failure": "ServiceTwilioTwilioFailed"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceTwilioLoaded"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceTwilioLoadFailed"
               },
               {
                 "from": "sending",
                 "to": "sent",
-                "event": "SENT",
+                "event": "TwilioSent",
                 "effects": [
                   [
                     "set",
@@ -422,7 +466,14 @@
                   [
                     "set",
                     "@entity.messageSid",
-                    "@payload.messageSid"
+                    "@payload.id"
+                  ],
+                  [
+                    "emit",
+                    "ServiceTwilioTwilioCompleted",
+                    {
+                      "id": "@entity.messageSid"
+                    }
                   ],
                   [
                     "render-ui",
@@ -431,11 +482,10 @@
                       "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
                           "type": "alert",
@@ -443,13 +493,20 @@
                           "message": "Message sent successfully"
                         },
                         {
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "@entity.messageSid"
+                        },
+                        {
                           "icon": "rotate-ccw",
-                          "action": "RESET",
                           "type": "button",
                           "label": "Send Another",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "RESET"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -470,43 +527,21 @@
                     "@payload.error"
                   ],
                   [
+                    "emit",
+                    "ServiceTwilioTwilioFailed",
+                    {
+                      "code": "send_failed",
+                      "error": "@entity.error"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "error-state",
-                          "title": "Send Failed",
-                          "message": "Could not deliver the message.",
-                          "onRetry": "RETRY"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Retry",
-                              "action": "RETRY",
-                              "variant": "primary",
-                              "icon": "refresh-cw"
-                            },
-                            {
-                              "type": "button",
-                              "action": "RESET",
-                              "label": "Reset",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "justify": "center"
-                        }
-                      ],
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "message": "@entity.error",
+                      "onRetry": "RETRY",
+                      "type": "error-state",
+                      "title": "Send Failed"
                     }
                   ]
                 ]
@@ -525,65 +560,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "message-circle"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceTwilio Messaging"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "+1234567890",
-                          "type": "input"
-                        },
-                        {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "icon": "message-circle",
-                              "action": "SEND_SMS",
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Send SMS"
-                            },
-                            {
-                              "action": "SEND_WHATSAPP",
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Send WhatsApp",
-                              "icon": "phone"
-                            }
-                          ],
-                          "justify": "center"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "align": "stretch",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "sent",
+                "to": "sent",
+                "event": "ServiceTwilioTwilioCompleted"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceTwilioTwilioFailed"
               },
               {
                 "from": "error",
@@ -594,62 +589,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "message-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "ServiceTwilio Messaging",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "+1234567890",
-                          "type": "input"
-                        },
-                        {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
-                        },
-                        {
-                          "type": "stack",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "icon": "message-circle",
-                              "label": "Send SMS",
-                              "action": "SEND_SMS",
-                              "variant": "primary",
-                              "type": "button"
-                            },
-                            {
-                              "type": "button",
-                              "action": "SEND_WHATSAPP",
-                              "variant": "secondary",
-                              "icon": "phone",
-                              "label": "Send WhatsApp"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        }
-                      ],
                       "direction": "vertical",
-                      "align": "stretch",
-                      "gap": "lg"
+                      "children": [
+                        "@config.uiTrait"
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -669,66 +614,43 @@
                     "main",
                     {
                       "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "message-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceTwilio Messaging"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "+1234567890",
-                          "type": "input"
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "Write your message..."
-                        },
-                        {
-                          "justify": "center",
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "icon": "message-circle",
-                              "action": "SEND_SMS",
-                              "label": "Send SMS",
-                              "variant": "primary"
-                            },
-                            {
-                              "action": "SEND_WHATSAPP",
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Send WhatsApp",
-                              "icon": "phone"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "gap": "lg",
-                      "align": "stretch",
+                      "direction": "vertical",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "sender": {
+              "type": "string",
+              "default": ""
+            },
+            "mode": {
+              "type": "string",
+              "default": "sms",
+              "values": [
+                "sms",
+                "voice",
+                "whatsapp"
+              ]
+            },
+            "body": {
+              "type": "string",
+              "default": ""
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceTwilioDefaultForm"
+            },
+            "recipient": {
+              "type": "string",
+              "default": ""
+            }
           },
           "scope": "instance"
         }

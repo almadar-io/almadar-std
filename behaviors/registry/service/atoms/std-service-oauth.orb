@@ -1,7 +1,7 @@
 {
   "name": "std-service-oauth",
-  "version": "1.0.0",
-  "description": "std-service-oauth as a Function",
+  "version": "2.0.0",
+  "description": "std-service-oauth — OAuth sign-in service. Bind via `uses Oauth from \"std/behaviors/std-service-oauth\"` and configure `provider` / `scopes` / `redirectUri` at the call site. Pass `uiTrait: \"@trait.YourLoginForm\"` to inject your own provider button; leave unset to render the atom's default sign-in form (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceOauthOrbital",
@@ -20,17 +20,7 @@
             "default": "google"
           },
           {
-            "name": "authUrl",
-            "type": "string",
-            "default": ""
-          },
-          {
             "name": "accessToken",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "name": "refreshToken",
             "type": "string",
             "default": ""
           },
@@ -70,6 +60,110 @@
       },
       "traits": [
         {
+          "name": "ServiceOauthDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "LOGIN",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOGIN",
+                "name": "Login"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "lock",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Sign In",
+                              "variant": "h2",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "select",
+                          "options": [
+                            {
+                              "label": "Google",
+                              "value": "google"
+                            },
+                            {
+                              "value": "github",
+                              "label": "GitHub"
+                            },
+                            {
+                              "value": "microsoft",
+                              "label": "Microsoft"
+                            },
+                            {
+                              "label": "Okta",
+                              "value": "okta"
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "primary",
+                          "action": "LOGIN",
+                          "label": "Sign in with provider",
+                          "icon": "log-in",
+                          "type": "button"
+                        }
+                      ],
+                      "align": "center",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
           "name": "ServiceOauthOauth",
           "category": "interaction",
           "linkedEntity": "ServiceOauth",
@@ -95,12 +189,16 @@
               ]
             },
             {
-              "event": "ServiceOauthOauthCompleted",
+              "event": "OAuthLoggedIn",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "result",
-                  "type": "object"
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "accessToken",
+                  "type": "string"
                 }
               ]
             },
@@ -117,22 +215,39 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "LOGIN",
+              "triggers": "LOGIN",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceOauthDefaultForm"
+              }
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "unauthenticated",
+                "name": "idle",
                 "isInitial": true
               },
               {
-                "name": "authorizing"
+                "name": "authenticating"
               },
               {
                 "name": "authenticated"
-              },
-              {
-                "name": "refreshing"
               },
               {
                 "name": "error"
@@ -148,124 +263,11 @@
                 "name": "Login"
               },
               {
-                "key": "AUTH_URL_RECEIVED",
-                "name": "Auth Url Received",
-                "payloadSchema": [
-                  {
-                    "name": "authUrl",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CALLBACK",
-                "name": "Callback",
-                "payloadSchema": [
-                  {
-                    "name": "code",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "FAILED",
-                "name": "Failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TOKEN_RECEIVED",
-                "name": "Token Received",
-                "payloadSchema": [
-                  {
-                    "name": "accessToken",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "refreshToken",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REFRESH",
-                "name": "Refresh"
-              },
-              {
-                "key": "LOGOUT",
-                "name": "Logout"
-              },
-              {
-                "key": "TOKEN_REFRESHED",
-                "name": "Token Refreshed",
-                "payloadSchema": [
-                  {
-                    "name": "accessToken",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
                 "key": "ServiceOauthLoaded",
                 "name": "ServiceOauth loaded",
                 "payloadSchema": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "provider",
-                    "type": "string"
-                  },
-                  {
-                    "name": "authUrl",
-                    "type": "string"
-                  },
-                  {
-                    "name": "accessToken",
-                    "type": "string"
-                  },
-                  {
-                    "name": "refreshToken",
-                    "type": "string"
-                  },
-                  {
-                    "name": "authStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
                     "type": "string"
                   }
                 ]
@@ -281,14 +283,33 @@
                 ]
               },
               {
-                "key": "ServiceOauthOauthCompleted",
-                "name": "ServiceOauth oauth completed",
+                "key": "OAuthLoggedIn",
+                "name": "OAuth logged in",
                 "payloadSchema": [
                   {
-                    "name": "result",
-                    "type": "object"
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "accessToken",
+                    "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
               },
               {
                 "key": "ServiceOauthOauthFailed",
@@ -303,26 +324,30 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
               {
-                "from": "unauthenticated",
-                "to": "unauthenticated",
+                "from": "idle",
+                "to": "idle",
                 "event": "INIT",
                 "effects": [
                   [
                     "set",
                     "@entity.provider",
-                    "google"
+                    "@config.provider"
                   ],
                   [
                     "fetch",
                     "ServiceOauth",
                     {
                       "emit": {
-                        "success": "ServiceOauthLoaded",
-                        "failure": "ServiceOauthLoadFailed"
+                        "failure": "ServiceOauthLoadFailed",
+                        "success": "ServiceOauthLoaded"
                       }
                     }
                   ],
@@ -331,71 +356,27 @@
                     "main",
                     {
                       "type": "stack",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "lock",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "Sign In",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "select",
-                          "options": [
-                            {
-                              "label": "Google",
-                              "value": "google"
-                            },
-                            {
-                              "value": "github",
-                              "label": "GitHub"
-                            },
-                            {
-                              "label": "Microsoft",
-                              "value": "microsoft"
-                            }
-                          ]
-                        },
-                        {
-                          "action": "LOGIN",
-                          "type": "button",
-                          "variant": "primary",
-                          "label": "Login",
-                          "icon": "log-in"
-                        }
-                      ],
-                      "gap": "lg",
                       "direction": "vertical",
-                      "align": "center"
+                      "children": [
+                        "@config.uiTrait"
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "unauthenticated",
-                "to": "authorizing",
+                "from": "idle",
+                "to": "authenticating",
                 "event": "LOGIN",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "title": "Signing in...",
                       "type": "loading-state",
-                      "title": "Authorizing...",
-                      "message": "Redirecting to provider for authorization."
+                      "message": "Authenticating with provider."
                     }
                   ],
                   [
@@ -403,186 +384,38 @@
                     "oauth",
                     "authorize",
                     {
-                      "provider": "@entity.provider",
-                      "scopes": [
-                        "openid",
-                        "email"
-                      ]
+                      "redirectUri": "@config.redirectUri",
+                      "provider": "@config.provider",
+                      "scopes": "@config.scopes"
                     },
                     {
                       "emit": {
-                        "failure": "ServiceOauthOauthFailed",
-                        "success": "ServiceOauthOauthCompleted"
+                        "success": "OAuthLoggedIn",
+                        "failure": "FAILED"
                       }
                     }
                   ]
                 ]
               },
               {
-                "from": "authorizing",
-                "to": "authorizing",
-                "event": "AUTH_URL_RECEIVED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.authUrl",
-                    "@payload.authUrl"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "external-link"
-                        },
-                        {
-                          "variant": "h2",
-                          "type": "typography",
-                          "content": "Authorization Required"
-                        },
-                        {
-                          "variant": "body",
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "@entity.authUrl"
-                        },
-                        {
-                          "placeholder": "Paste authorization code here",
-                          "type": "input"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Submit",
-                          "variant": "primary",
-                          "icon": "check",
-                          "action": "CALLBACK"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceOauthLoaded"
               },
               {
-                "from": "authorizing",
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceOauthLoadFailed"
+              },
+              {
+                "from": "authenticating",
                 "to": "authenticated",
-                "event": "CALLBACK",
-                "effects": [
-                  [
-                    "call-service",
-                    "oauth",
-                    "token",
-                    {
-                      "code": "@payload.code"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceOauthOauthCompleted",
-                        "failure": "ServiceOauthOauthFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "name": "check-circle",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "success",
-                          "message": "Authenticated successfully",
-                          "type": "alert"
-                        },
-                        {
-                          "justify": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Refresh Token",
-                              "type": "button",
-                              "variant": "ghost",
-                              "action": "REFRESH",
-                              "icon": "refresh-cw"
-                            },
-                            {
-                              "action": "LOGOUT",
-                              "variant": "ghost",
-                              "type": "button",
-                              "label": "Logout",
-                              "icon": "log-out"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "authorizing",
-                "to": "error",
-                "event": "FAILED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.error",
-                    "@payload.error"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "title": "Authentication Failed",
-                          "onRetry": "RETRY",
-                          "message": "@entity.error",
-                          "type": "error-state"
-                        },
-                        {
-                          "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "type": "button",
-                          "action": "RETRY",
-                          "label": "Try Again"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "authenticated",
-                "to": "authenticated",
-                "event": "TOKEN_RECEIVED",
+                "event": "OAuthLoggedIn",
                 "effects": [
                   [
                     "set",
                     "@entity.accessToken",
                     "@payload.accessToken"
-                  ],
-                  [
-                    "set",
-                    "@entity.refreshToken",
-                    "@payload.refreshToken"
                   ],
                   [
                     "set",
@@ -594,80 +427,71 @@
                     "main",
                     {
                       "type": "stack",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "check-circle"
-                        },
-                        {
-                          "message": "Authenticated successfully",
-                          "variant": "success",
-                          "type": "alert"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "variant": "ghost",
-                              "action": "REFRESH",
-                              "type": "button",
-                              "icon": "refresh-cw",
-                              "label": "Refresh Token"
-                            },
-                            {
-                              "action": "LOGOUT",
-                              "type": "button",
-                              "variant": "ghost",
-                              "label": "Logout",
-                              "icon": "log-out"
-                            }
-                          ],
-                          "gap": "sm"
-                        }
-                      ],
                       "direction": "vertical",
                       "align": "center",
+                      "children": [
+                        {
+                          "name": "check-circle",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "success",
+                          "type": "alert",
+                          "message": "Signed in successfully"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.accessToken",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "icon": "log-out",
+                          "type": "button",
+                          "label": "Sign Out",
+                          "action": "RESET",
+                          "variant": "ghost"
+                        }
+                      ],
                       "gap": "lg"
                     }
                   ]
                 ]
               },
               {
-                "from": "authenticated",
-                "to": "refreshing",
-                "event": "REFRESH",
+                "from": "authenticating",
+                "to": "error",
+                "event": "FAILED",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "emit",
+                    "ServiceOauthOauthFailed",
+                    {
+                      "error": "@entity.error",
+                      "code": "oauth_login_failed"
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Obtaining a new access token.",
-                      "type": "loading-state",
-                      "title": "Refreshing token..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "oauth",
-                    "refresh",
-                    {
-                      "refreshToken": "@entity.refreshToken"
-                    },
-                    {
-                      "emit": {
-                        "failure": "ServiceOauthOauthFailed",
-                        "success": "ServiceOauthOauthCompleted"
-                      }
+                      "message": "@entity.error",
+                      "title": "Sign In Failed",
+                      "onRetry": "RETRY",
+                      "type": "error-state"
                     }
                   ]
                 ]
               },
               {
                 "from": "authenticated",
-                "to": "unauthenticated",
-                "event": "LOGOUT",
+                "to": "idle",
+                "event": "RESET",
                 "effects": [
                   [
                     "set",
@@ -678,146 +502,39 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
-                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "lock"
-                            },
-                            {
-                              "content": "Sign In",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "options": [
-                            {
-                              "value": "google",
-                              "label": "Google"
-                            },
-                            {
-                              "value": "github",
-                              "label": "GitHub"
-                            },
-                            {
-                              "label": "Microsoft",
-                              "value": "microsoft"
-                            }
-                          ],
-                          "type": "select"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Login",
-                          "variant": "primary",
-                          "action": "LOGIN",
-                          "icon": "log-in"
-                        }
+                        "@config.uiTrait"
                       ]
                     }
                   ]
                 ]
               },
               {
-                "from": "refreshing",
+                "from": "authenticated",
                 "to": "authenticated",
-                "event": "TOKEN_REFRESHED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.accessToken",
-                    "@payload.accessToken"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "name": "check-circle",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "success",
-                          "message": "Authenticated successfully",
-                          "type": "alert"
-                        },
-                        {
-                          "justify": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "Refresh Token",
-                              "type": "button",
-                              "action": "REFRESH",
-                              "variant": "ghost",
-                              "icon": "refresh-cw"
-                            },
-                            {
-                              "type": "button",
-                              "icon": "log-out",
-                              "action": "LOGOUT",
-                              "label": "Logout",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center"
-                    }
-                  ]
-                ]
+                "event": "OAuthLoggedIn"
               },
               {
-                "from": "refreshing",
+                "from": "error",
                 "to": "error",
-                "event": "FAILED",
+                "event": "ServiceOauthOauthFailed"
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.error",
-                    "@payload.error"
-                  ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
-                        {
-                          "type": "error-state",
-                          "message": "@entity.error",
-                          "title": "Authentication Failed",
-                          "onRetry": "RETRY"
-                        },
-                        {
-                          "action": "RETRY",
-                          "label": "Try Again",
-                          "variant": "primary",
-                          "type": "button",
-                          "icon": "rotate-ccw"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "align": "center",
-                      "gap": "lg",
                       "direction": "vertical",
                       "type": "stack"
                     }
@@ -826,68 +543,48 @@
               },
               {
                 "from": "error",
-                "to": "unauthenticated",
-                "event": "RETRY",
+                "to": "idle",
+                "event": "RESET",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
                       "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "lock",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Sign In",
-                              "variant": "h2"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "options": [
-                            {
-                              "label": "Google",
-                              "value": "google"
-                            },
-                            {
-                              "label": "GitHub",
-                              "value": "github"
-                            },
-                            {
-                              "value": "microsoft",
-                              "label": "Microsoft"
-                            }
-                          ],
-                          "type": "select"
-                        },
-                        {
-                          "type": "button",
-                          "icon": "log-in",
-                          "variant": "primary",
-                          "label": "Login",
-                          "action": "LOGIN"
-                        }
-                      ]
+                        "@config.uiTrait"
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceOauthDefaultForm"
+            },
+            "redirectUri": {
+              "type": "string",
+              "default": ""
+            },
+            "scopes": {
+              "type": "[string]",
+              "default": []
+            },
+            "provider": {
+              "type": "string",
+              "default": "google",
+              "values": [
+                "google",
+                "github",
+                "microsoft",
+                "okta"
+              ]
+            }
           },
           "scope": "instance"
         }

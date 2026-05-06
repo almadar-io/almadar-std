@@ -1,21 +1,30 @@
-app std-api-gateway "1.0.0"
+app std-api-gateway "2.0.0"
 "API gateway admin: routes, backends, analytics. Pick for API management dashboards."
 
 orbital RouteOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+  uses Search        from "std/behaviors/std-search"
+  uses Filter        from "std/behaviors/std-filter"
+  uses Stats         from "std/behaviors/std-stats"
+  uses Graphs        from "std/behaviors/std-graphs"
+  uses Browse        from "std/behaviors/std-browse"
 
   entity Route [persistent: routes] {
     id : string!
     path : string!
-    method : "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
-    backend : string!
-    rateLimit : number
+    method : "GET" | "POST" | "PUT" | "DELETE" = "GET"
+    status : "active" | "disabled" = "active"
+    target : string!
+    hits : number = 0
+    rateLimit : number = 0
     pendingId : string = ""
   }
 
   trait RouteAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.RouteBrowse",
+      contentTrait: "@trait.RouteCatalog",
       appName: "API Gateway",
       navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }],
       searchEvent: "ROUTE_SEARCH",
@@ -28,306 +37,453 @@ orbital RouteOrbital {
     }
   }
 
-  type RouteLoaded     = Event { data : [Route] }                  "Fired when Route finishes loading"
-  type RouteLoadFailed = Event { error : string, code : string } "Fired when Route fails to load"
-  type RouteSaved = Event { id : string }
-  type RouteSaveFailed = Event { error : string, code : string }
-  type RouteUpdated = Event { id : string }
-  type RouteUpdateFailed = Event { error : string, code : string }
-  type RouteDeleted = Event { id : string }
-  type RouteDeleteFailed = Event { error : string, code : string }
-  trait RouteBrowse -> Route [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading routes…" }] })
-      ROUTE_SEARCH -> browsing
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      ROUTE_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to routes", action: "INIT", variant: "ghost" }] })
-      RouteLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "Routes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Route", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "method", variant: "badge" }, { name: "path", variant: "h3", icon: "git-branch" }, { name: "backend", variant: "body" }, { name: "rateLimit", label: "Rate Limit", variant: "caption", format: "number" }], variant: "card", gap: "sm" }] })
-      RouteLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load routes" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  ;; Page-chrome trait. Owns the header (icon + Routes + Create button)
+  ;; + toolbar (search/filter) + stat row + graphs + embedded list. The
+  ;; AppLayout's `contentTrait` points here.
+  trait RouteCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "git-branch" },
+              { type: "typography", content: "Routes", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Route", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.RouteSearch",
+            "@trait.RouteFilter"
+          ]},
+          "@trait.RouteStats",
+          "@trait.RouteGraphs",
+          { type: "divider" },
+          "@trait.RouteBrowseList"
+        ]})
+      ROUTE_SEARCH -> composing
+      ROUTE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to routes", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-CREATE
-      VIEW { id : string!, row : Route }
-EDIT { id : string!, row : Route }
-DELETE { id : string!, row : Route }
-RouteLoaded
-      RouteLoadFailed
-RouteSaved
-      RouteSaveFailed
-RouteUpdated
-      RouteUpdateFailed
-RouteDeleted
-      RouteDeleteFailed
+      CREATE -> external { source : string }
     }
     listens {
-      RouteCreate.ROUTE_CREATED -> INIT
-      RouteEdit.ROUTE_UPDATED -> INIT
-      RouteDelete.ROUTE_DELETED -> INIT
       RouteAppLayout.ROUTE_SEARCH -> ROUTE_SEARCH
       RouteAppLayout.ROUTE_NOTIFICATIONS_OPEN -> ROUTE_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Route }
-      EDIT { id : string!, row : Route }
-      DELETE { id : string!, row : Route }
       ROUTE_SEARCH { value : string }
       ROUTE_NOTIFICATIONS_OPEN { id : string }
-          RouteLoadFailed { error : string, code : string }
+    }
+  }
 
-      RouteSaveFailed { error : string, code : string }
-      RouteUpdateFailed { error : string, code : string }
-      RouteDeleteFailed { error : string, code : string }
+  trait RouteSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search routes…",
+      event: "ROUTE_SEARCH"
     }
   }
-  trait RouteCreate -> Route [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-      CREATE -> open
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Route @payload.data { emit: { success: "RouteSaved", failure: "RouteSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit ROUTE_CREATED)
-    }
-    emits {
-ROUTE_CREATED -> external { id: string }
-RouteLoadFailed
-      RouteLoaded
-RouteSaveFailed
-      RouteSaved
-    }
-    listens {
-      SAVE { data : object! }
-          RouteLoadFailed { error : string, code : string }
-      RouteBrowse.CREATE -> CREATE
-    }
-  }
-  trait RouteEdit -> Route [interaction, collection] {
-    listens {
-      RouteView.EDIT -> EDIT
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-      EDIT -> open
-        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Route @payload.data { emit: { success: "RouteUpdated", failure: "RouteUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit ROUTE_UPDATED)
-    }
-    emits {
-ROUTE_UPDATED -> external { id: string }
-RouteLoadFailed
-      RouteLoaded
-RouteUpdateFailed
-      RouteUpdated
-    }
-    listens {
-      EDIT { id : string!, row : Route }
-      SAVE { data : object! }
-          RouteLoadFailed { error : string, code : string }
-      RouteBrowse.EDIT -> EDIT
-    }
-  }
-  trait RouteView -> Route [interaction, collection] {
-    emits {
-EDIT { id : string }
-RouteLoaded
-      RouteLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.backend "")
-        (set @entity.method "")
-        (set @entity.path "")
-        (set @entity.rateLimit 0)
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-      VIEW -> open
-        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.path" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Path" }, { type: "typography", variant: "body", content: "@entity.path" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Method" }, { type: "typography", variant: "body", content: "@entity.method" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Backend" }, { type: "typography", variant: "body", content: "@entity.backend" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Rate Limit" }, { type: "typography", variant: "body", content: "@entity.rateLimit" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
-    listens {
-      VIEW { id : string! }
-      SAVE { data : object! }
-          RouteLoadFailed { error : string, code : string }
-      RouteBrowse.VIEW -> VIEW
+  trait RouteFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "method", label: "Method", filterType: "select", options: ["GET", "POST", "PUT", "DELETE"] },
+        { field: "status", label: "Status", filterType: "select", options: ["active", "disabled"] }
+      ],
+      event: "ROUTE_FILTER"
     }
   }
-  trait RouteDelete -> Route [interaction, collection] {
+
+  trait RouteStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Routes",
+      metrics: [
+        { aggregation: "count", label: "Total",    icon: "git-branch",   variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active",   icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "Disabled", icon: "x-circle",     variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "disabled"]] }
+      ]
+    }
+    listens {
+      RouteBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait RouteGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Routes by Method",
+      subtitle: "Distribution across HTTP methods",
+      chartType: "pie",
+      categoryField: "method",
+      aggregation: "count",
+      height: 240,
+      showLegend: true
+    }
+    listens {
+      RouteBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait RouteBrowseList = Browse.traits.BrowseItemBrowse -> Route {
+    config: {
+      fields: [
+        { name: "path",      variant: "h3",      icon: "git-branch" },
+        { name: "method",    variant: "badge" },
+        { name: "status",    variant: "badge" },
+        { name: "target",    variant: "body" },
+        { name: "hits",      label: "Hits",      variant: "caption", format: "number" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      RouteSearch.SEARCH               -> REFETCH_QUERY
+      RouteFilter.FILTER               -> REFETCH_FILTER
+      RoutePersistor.ROUTE_CREATED     -> INIT
+      RoutePersistor.ROUTE_UPDATED     -> INIT
+      RoutePersistor.ROUTE_DELETED     -> INIT
+    }
+  }
+
+  trait RouteCreate = Modal.traits.ModalRecordModal -> Route {
+    config: {
+      icon: "plus-circle",
+      title: "New Route",
+      mode: "create",
+      fields: ["path", "method", "status", "target", "rateLimit"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      RouteCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Route }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait RouteEdit = Modal.traits.ModalRecordModal -> Route {
+    config: {
+      icon: "edit",
+      title: "Edit Route",
+      mode: "edit",
+      fields: ["path", "method", "status", "target", "rateLimit"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      RouteBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Route }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait RouteView = Modal.traits.ModalRecordModal -> Route {
+    config: {
+      icon: "eye",
+      title: "View Route",
+      mode: "edit",
+      fields: ["path", "method", "status", "target", "rateLimit"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      RouteBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Route }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait RouteDelete = Confirmation.traits.ConfirmActionConfirmation -> Route {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Route",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      RouteBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Route }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator — owns persist side-effects fired by Modal/Confirm trait emits.
+  trait RoutePersistor -> Route [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Route {id: "@payload.id" , emit: { success: "RouteLoaded", failure: "RouteLoadFailed" }, emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Route", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Route @entity.pendingId { emit: { success: "RouteDeleted", failure: "RouteDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-        (emit ROUTE_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Route @payload.data { emit: { success: "ROUTE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Route @payload.data { emit: { success: "ROUTE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Route @payload.id { emit: { success: "ROUTE_DELETED" } })
     }
     emits {
-ROUTE_DELETED -> external { id: string }
-RouteDeleteFailed
-      RouteDeleted
-RouteLoadFailed
-      RouteLoaded
+      ROUTE_CREATED -> external { id : string }
+      ROUTE_UPDATED -> external { id : string }
+      ROUTE_DELETED -> external { id : string }
     }
     listens {
-      DELETE { id : string! }
-          RouteLoadFailed { error : string, code : string }
-      RouteBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      RouteCreate.SAVE          -> DO_CREATE
+      RouteEdit.SAVE            -> DO_UPDATE
+      RouteDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/routes" as RoutesPage -> RouteAppLayout, RouteBrowse, RouteCreate, RouteEdit, RouteView, RouteDelete
+
+  page "/routes" as RoutesPage -> RouteAppLayout, RouteCatalog, RouteSearch, RouteFilter, RouteStats, RouteGraphs, RouteBrowseList, RouteCreate, RouteEdit, RouteView, RouteDelete, RoutePersistor
 }
+
 orbital BackendOrbital {
-  entity Backend [runtime] {
+  uses Modal          from "std/behaviors/std-modal"
+  uses Confirmation   from "std/behaviors/std-confirmation"
+  uses Browse         from "std/behaviors/std-browse"
+  uses CircuitBreaker from "std/behaviors/std-circuit-breaker"
+  uses RateLimiter    from "std/behaviors/std-rate-limiter"
+  uses CacheAside     from "std/behaviors/std-cache-aside"
+
+  entity Backend [persistent: backends] {
     id : string!
     name : string!
     url : string!
-    status : string
-    latency : number
-    failureCount : number
-    successCount : number
-    threshold : number
+    status : "active" | "disabled" = "active"
+    latency : number = 0
+    pendingId : string = ""
   }
 
-  type BackendLoaded     = Event { data : [Backend] }                  "Fired when Backend finishes loading"
-  type BackendLoadFailed = Event { error : string, code : string } "Fired when Backend fails to load"
-  trait BackendCircuitBreaker -> Backend [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.failureCount 0)
-        (set @entity.successCount 0)
-        (set @entity.threshold 0)
-        (fetch Backend { emit: { success: "BackendLoaded", failure: "BackendLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
-      FAILURE -> open
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      SUCCESS -> closed
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+  ;; Page-chrome trait — header + browse list + circuit breaker visualization
+  ;; from the std-circuit-breaker atom (which renders its own UI).
+  trait BackendCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "server" },
+              { type: "typography", content: "Backends", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Backend", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.BackendBrowseList",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Service Health" },
+          "@trait.BackendCircuitBreaker",
+          "@trait.BackendRateLimiter",
+          "@trait.BackendCache"
+        ]})
     }
-    state open {
-      TIMEOUT -> halfOpen
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Circuit Half-Open" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }] }] })
-      RESET -> closed
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
-    }
-    state halfOpen {
-      SUCCESS -> closed
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
-      FAILURE -> open
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      RESET -> closed
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
-    }
-emits {
-BackendLoaded
-      BackendLoadFailed
-    }
-
-        listens {
-      BackendLoadFailed { error : string, code : string }
+    emits {
+      CREATE -> external { source : string }
     }
   }
-  page "/backends" -> BackendCircuitBreaker
+
+  trait BackendBrowseList = Browse.traits.BrowseItemBrowse -> Backend {
+    config: {
+      fields: [
+        { name: "name",    variant: "h3",      icon: "server" },
+        { name: "url",     variant: "body" },
+        { name: "status",  variant: "badge" },
+        { name: "latency", label: "Latency",   variant: "caption", format: "number" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      BackendPersistor.BACKEND_CREATED -> INIT
+      BackendPersistor.BACKEND_UPDATED -> INIT
+      BackendPersistor.BACKEND_DELETED -> INIT
+    }
+  }
+
+  ;; Resilience visualizations: circuit breaker, rate limiter, cache.
+  ;; Atoms render their own UI; we just bind them.
+  trait BackendCircuitBreaker = CircuitBreaker.traits.ServiceNodeCircuitBreaker { }
+
+  trait BackendRateLimiter = RateLimiter.traits.RateBucketRateLimiter { }
+
+  trait BackendCache = CacheAside.traits.CacheEntryCacheManager { }
+
+  trait BackendCreate = Modal.traits.ModalRecordModal -> Backend {
+    config: {
+      icon: "plus-circle",
+      title: "New Backend",
+      mode: "create",
+      fields: ["name", "url", "status", "latency"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      BackendCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Backend }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BackendEdit = Modal.traits.ModalRecordModal -> Backend {
+    config: {
+      icon: "edit",
+      title: "Edit Backend",
+      mode: "edit",
+      fields: ["name", "url", "status", "latency"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      BackendBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Backend }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BackendView = Modal.traits.ModalRecordModal -> Backend {
+    config: {
+      icon: "eye",
+      title: "View Backend",
+      mode: "edit",
+      fields: ["name", "url", "status", "latency"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      BackendBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Backend }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BackendDelete = Confirmation.traits.ConfirmActionConfirmation -> Backend {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Backend",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      BackendBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Backend }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait BackendPersistor -> Backend [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Backend @payload.data { emit: { success: "BACKEND_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Backend @payload.data { emit: { success: "BACKEND_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Backend @payload.id { emit: { success: "BACKEND_DELETED" } })
+    }
+    emits {
+      BACKEND_CREATED -> external { id : string }
+      BACKEND_UPDATED -> external { id : string }
+      BACKEND_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      BackendCreate.SAVE          -> DO_CREATE
+      BackendEdit.SAVE            -> DO_UPDATE
+      BackendDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/backends" as BackendsPage -> BackendCatalog, BackendBrowseList, BackendCircuitBreaker, BackendRateLimiter, BackendCache, BackendCreate, BackendEdit, BackendView, BackendDelete, BackendPersistor
 }
+
 orbital AnalyticsOrbital {
-  entity Analytics [runtime] {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity AnalyticsRecord [persistent: analyticsrecords] {
     id : string!
-    totalRequests : number!
-    errorRate : number!
-    avgLatency : number
-    uptime : string
+    routePath : string!
+    method : string
+    statusCode : number = 200
+    latencyMs : number = 0
+    timestamp : string = ""
   }
 
-  type AnalyticsLoaded     = Event { data : [Analytics] }                  "Fired when Analytics finishes loading"
-  type AnalyticsLoadFailed = Event { error : string, code : string } "Fired when Analytics fails to load"
-  trait AnalyticsDisplay -> Analytics [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.avgLatency 0)
-        (set @entity.errorRate 0)
-        (set @entity.totalRequests 0)
-        (set @entity.uptime "")
-        (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state displaying {
-      INIT -> displaying
-        (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch Analytics { emit: { success: "AnalyticsLoaded", failure: "AnalyticsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalRequests", value: "@entity.totalRequests" }, { type: "stat-display", label: "ErrorRate", value: "@entity.errorRate" }, { type: "stat-display", label: "AvgLatency", value: "@entity.avgLatency" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: "@entity.uptime" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-AnalyticsLoaded
-      AnalyticsLoadFailed
-    }
-
-        listens {
-      AnalyticsLoadFailed { error : string, code : string }
+  trait AnalyticsBrowseList = Browse.traits.BrowseItemBrowse -> AnalyticsRecord {
+    config: {
+      pageSize: 100,
+      displayPageSize: 10,
+      fields: [
+        { name: "routePath",  label: "Route",   variant: "h4", icon: "bar-chart-2" },
+        { name: "method",     label: "Method",  variant: "badge" },
+        { name: "statusCode", label: "Status",  variant: "badge" },
+        { name: "latencyMs",  label: "Latency", variant: "caption", format: "number" },
+        { name: "timestamp",  label: "Time",    variant: "caption", format: "date" }
+      ],
+      cols: 1,
+      gap: "sm"
     }
   }
-  page "/analytics" -> AnalyticsDisplay
+
+  ;; Page-chrome trait: pure layout, embeds the analytics browse list.
+  ;; Aggregations (Stats/Graphs) live on the /routes page in RouteOrbital —
+  ;; binding them again here would clash on the atom-owned StatsItem /
+  ;; GraphItem entities (atoms can be bound only once per file).
+  trait AnalyticsDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "bar-chart-2" },
+            { type: "typography", variant: "h2", content: "Analytics" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recent requests" },
+          "@trait.AnalyticsBrowseList"
+        ]})
+    }
+  }
+
+  page "/analytics" -> AnalyticsDisplay, AnalyticsBrowseList
 }

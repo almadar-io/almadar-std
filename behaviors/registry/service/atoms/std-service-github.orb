@@ -1,7 +1,7 @@
 {
   "name": "std-service-github",
-  "version": "1.0.0",
-  "description": "std-service-github as a Function",
+  "version": "2.0.0",
+  "description": "std-service-github — GitHub service. Bind via `uses Github from \"std/behaviors/std-service-github\"` and configure `owner` / `repo` / `path` / `ref` / `op` at the call site. Pass `uiTrait: \"@trait.YourGithubForm\"` to inject your own form; leave unset to render the atom's default form (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceGithubOrbital",
@@ -15,34 +15,29 @@
             "required": true
           },
           {
-            "name": "title",
+            "name": "owner",
             "type": "string",
             "default": ""
           },
           {
-            "name": "body",
+            "name": "repo",
             "type": "string",
             "default": ""
           },
           {
-            "name": "head",
+            "name": "path",
             "type": "string",
             "default": ""
           },
           {
-            "name": "base",
+            "name": "ref",
             "type": "string",
             "default": "main"
           },
           {
-            "name": "prUrl",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "name": "prNumber",
-            "type": "number",
-            "default": 0.0
+            "name": "result",
+            "type": "object",
+            "default": {}
           },
           {
             "name": "ghStatus",
@@ -80,6 +75,129 @@
       },
       "traits": [
         {
+          "name": "ServiceGithubDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "RUN",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RUN",
+                "name": "Run"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "github"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "GitHub",
+                              "variant": "h2"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "select",
+                              "options": [
+                                {
+                                  "label": "Get File",
+                                  "value": "getFile"
+                                },
+                                {
+                                  "label": "List Commits",
+                                  "value": "listCommits"
+                                },
+                                {
+                                  "value": "createIssue",
+                                  "label": "Create Issue"
+                                }
+                              ]
+                            },
+                            {
+                              "placeholder": "owner",
+                              "type": "input"
+                            },
+                            {
+                              "placeholder": "repo",
+                              "type": "input"
+                            },
+                            {
+                              "placeholder": "path",
+                              "type": "input"
+                            },
+                            {
+                              "placeholder": "ref (default: main)",
+                              "type": "input"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "label": "Run",
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "play",
+                          "action": "RUN"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
           "name": "ServiceGithubGithub",
           "category": "interaction",
           "linkedEntity": "ServiceGithub",
@@ -105,9 +223,13 @@
               ]
             },
             {
-              "event": "ServiceGithubGithubCompleted",
+              "event": "GithubDone",
               "scope": "external",
               "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
                 {
                   "name": "result",
                   "type": "object"
@@ -127,6 +249,26 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "RUN",
+              "triggers": "RUN",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceGithubDefaultForm"
+              }
             }
           ],
           "stateMachine": {
@@ -136,10 +278,10 @@
                 "isInitial": true
               },
               {
-                "name": "creatingPR"
+                "name": "running"
               },
               {
-                "name": "prCreated"
+                "name": "succeeded"
               },
               {
                 "name": "error"
@@ -151,22 +293,40 @@
                 "name": "Initialize"
               },
               {
-                "key": "CREATE_PR",
-                "name": "Create Pr"
+                "key": "RUN",
+                "name": "Run"
               },
               {
-                "key": "PR_CREATED",
-                "name": "Pr Created",
+                "key": "ServiceGithubLoaded",
+                "name": "ServiceGithub loaded",
                 "payloadSchema": [
                   {
-                    "name": "url",
-                    "type": "string",
-                    "required": true
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceGithubLoadFailed",
+                "name": "ServiceGithub load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "GithubDone",
+                "name": "Github done",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
                   },
                   {
-                    "name": "number",
-                    "type": "number",
-                    "required": true
+                    "name": "result",
+                    "type": "object"
                   }
                 ]
               },
@@ -186,89 +346,6 @@
                 "name": "Reset"
               },
               {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
-                "key": "ServiceGithubLoaded",
-                "name": "ServiceGithub loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "title",
-                    "type": "string"
-                  },
-                  {
-                    "name": "body",
-                    "type": "string"
-                  },
-                  {
-                    "name": "head",
-                    "type": "string"
-                  },
-                  {
-                    "name": "base",
-                    "type": "string"
-                  },
-                  {
-                    "name": "prUrl",
-                    "type": "string"
-                  },
-                  {
-                    "name": "prNumber",
-                    "type": "number"
-                  },
-                  {
-                    "name": "ghStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceGithubLoadFailed",
-                "name": "ServiceGithub load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceGithubGithubCompleted",
-                "name": "ServiceGithub github completed",
-                "payloadSchema": [
-                  {
-                    "name": "result",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
                 "key": "ServiceGithubGithubFailed",
                 "name": "ServiceGithub github failed",
                 "payloadSchema": [
@@ -281,6 +358,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -291,31 +372,31 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.base",
-                    "main"
+                    "@entity.owner",
+                    "@config.owner"
                   ],
                   [
                     "set",
-                    "@entity.body",
-                    ""
+                    "@entity.repo",
+                    "@config.repo"
                   ],
                   [
                     "set",
-                    "@entity.head",
-                    ""
+                    "@entity.path",
+                    "@config.path"
                   ],
                   [
                     "set",
-                    "@entity.title",
-                    ""
+                    "@entity.ref",
+                    "@config.ref"
                   ],
                   [
                     "fetch",
                     "ServiceGithub",
                     {
                       "emit": {
-                        "failure": "ServiceGithubLoadFailed",
-                        "success": "ServiceGithubLoaded"
+                        "success": "ServiceGithubLoaded",
+                        "failure": "ServiceGithubLoadFailed"
                       }
                     }
                   ],
@@ -324,148 +405,111 @@
                     "main",
                     {
                       "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "git-pull-request",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "Create Pull Request",
-                              "type": "typography",
-                              "variant": "h2"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "type": "input",
-                              "placeholder": "PR title"
-                            },
-                            {
-                              "type": "textarea",
-                              "placeholder": "Describe your changes..."
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "feature-branch"
-                            },
-                            {
-                              "placeholder": "main",
-                              "type": "input"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "label": "Create PR",
-                          "type": "button",
-                          "action": "CREATE_PR",
-                          "variant": "primary",
-                          "icon": "git-pull-request"
-                        }
-                      ],
                       "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center"
+                      "gap": "md",
+                      "children": [
+                        "@config.uiTrait"
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "idle",
-                "to": "creatingPR",
-                "event": "CREATE_PR",
+                "to": "running",
+                "event": "RUN",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Submitting your PR to GitHub.",
-                      "type": "loading-state",
-                      "title": "Creating pull request..."
+                      "message": "Calling the GitHub service.",
+                      "title": "Running GitHub operation...",
+                      "type": "loading-state"
                     }
                   ],
                   [
                     "call-service",
                     "github",
-                    "createPR",
+                    "@config.op",
                     {
-                      "title": "@entity.title",
-                      "head": "@entity.head",
-                      "base": "@entity.base",
-                      "body": "@entity.body"
+                      "ref": "@config.ref",
+                      "repo": "@config.repo",
+                      "path": "@config.path",
+                      "owner": "@config.owner"
                     },
                     {
                       "emit": {
-                        "failure": "ServiceGithubGithubFailed",
-                        "success": "ServiceGithubGithubCompleted"
+                        "failure": "FAILED",
+                        "success": "GithubDone"
                       }
                     }
                   ]
                 ]
               },
               {
-                "from": "creatingPR",
-                "to": "prCreated",
-                "event": "PR_CREATED",
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceGithubLoaded"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ServiceGithubLoadFailed"
+              },
+              {
+                "from": "running",
+                "to": "succeeded",
+                "event": "GithubDone",
                 "effects": [
                   [
                     "set",
-                    "@entity.prUrl",
-                    "@payload.url"
-                  ],
-                  [
-                    "set",
-                    "@entity.prNumber",
-                    "@payload.number"
+                    "@entity.result",
+                    "@payload.result"
                   ],
                   [
                     "set",
                     "@entity.ghStatus",
-                    "created"
+                    "succeeded"
+                  ],
+                  [
+                    "emit",
+                    "GithubDone",
+                    {
+                      "id": "@entity.id",
+                      "result": "@payload.result"
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "type": "alert",
                           "variant": "success",
-                          "message": "Pull request created!"
+                          "message": "GitHub operation completed!"
                         },
                         {
                           "color": "muted",
-                          "content": "@entity.prUrl",
-                          "type": "typography",
-                          "variant": "body"
+                          "content": "@entity.id",
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "action": "RESET",
+                          "variant": "ghost",
                           "icon": "rotate-ccw",
-                          "label": "Create Another",
-                          "variant": "ghost"
+                          "label": "Run Again",
+                          "action": "RESET",
+                          "type": "button"
                         }
                       ]
                     }
@@ -473,7 +517,7 @@
                 ]
               },
               {
-                "from": "creatingPR",
+                "from": "running",
                 "to": "error",
                 "event": "FAILED",
                 "effects": [
@@ -483,19 +527,27 @@
                     "@payload.error"
                   ],
                   [
+                    "emit",
+                    "ServiceGithubGithubFailed",
+                    {
+                      "error": "@entity.error",
+                      "code": "github_op_failed"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "title": "PR Creation Failed",
-                      "onRetry": "RETRY",
                       "type": "error-state",
-                      "message": "@entity.error"
+                      "message": "@entity.error",
+                      "onRetry": "RETRY",
+                      "title": "GitHub Operation Failed"
                     }
                   ]
                 ]
               },
               {
-                "from": "prCreated",
+                "from": "succeeded",
                 "to": "idle",
                 "event": "RESET",
                 "effects": [
@@ -503,65 +555,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "git-pull-request",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Create Pull Request"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "input",
-                              "placeholder": "PR title"
-                            },
-                            {
-                              "type": "textarea",
-                              "placeholder": "Describe your changes..."
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "feature-branch"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "main"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "vertical",
-                          "type": "stack"
-                        },
-                        {
-                          "label": "Create PR",
-                          "variant": "primary",
-                          "icon": "git-pull-request",
-                          "type": "button",
-                          "action": "CREATE_PR"
-                        }
-                      ],
                       "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "children": [
+                        "@config.uiTrait"
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "succeeded",
+                "to": "succeeded",
+                "event": "GithubDone"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceGithubGithubFailed"
               },
               {
                 "from": "error",
@@ -572,62 +584,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "git-pull-request",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Create Pull Request"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "placeholder": "PR title",
-                              "type": "input"
-                            },
-                            {
-                              "type": "textarea",
-                              "placeholder": "Describe your changes..."
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "feature-branch"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "main"
-                            }
-                          ]
-                        },
-                        {
-                          "action": "CREATE_PR",
-                          "variant": "primary",
-                          "label": "Create PR",
-                          "type": "button",
-                          "icon": "git-pull-request"
-                        }
+                        "@config.uiTrait"
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -641,67 +603,48 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "git-pull-request"
-                            },
-                            {
-                              "content": "Create Pull Request",
-                              "type": "typography",
-                              "variant": "h2"
-                            }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "type": "input",
-                              "placeholder": "PR title"
-                            },
-                            {
-                              "placeholder": "Describe your changes...",
-                              "type": "textarea"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "feature-branch"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "main"
-                            }
-                          ]
-                        },
-                        {
-                          "label": "Create PR",
-                          "variant": "primary",
-                          "icon": "git-pull-request",
-                          "action": "CREATE_PR",
-                          "type": "button"
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center"
+                      "children": [
+                        "@config.uiTrait"
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "path": {
+              "type": "string",
+              "default": ""
+            },
+            "ref": {
+              "type": "string",
+              "default": "main"
+            },
+            "op": {
+              "type": "string",
+              "default": "getFile",
+              "values": [
+                "getFile",
+                "listCommits",
+                "createIssue"
+              ]
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceGithubDefaultForm"
+            },
+            "owner": {
+              "type": "string",
+              "default": ""
+            },
+            "repo": {
+              "type": "string",
+              "default": ""
+            }
           },
           "scope": "instance"
         }

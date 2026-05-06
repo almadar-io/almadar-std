@@ -1,7 +1,8 @@
+note: `emit-orb` is deprecated — prefer `orb emit orb /home/osamah/kflow.ai.builder/packages/almadar-std/behaviors/lolo/service/atoms/std-service-llm.lolo`
 {
   "name": "std-service-llm",
-  "version": "1.0.0",
-  "description": "std-service-llm as a Function",
+  "version": "2.0.0",
+  "description": "std-service-llm — LLM completion service. Bind via `uses Llm from \"std/behaviors/std-service-llm\"` and configure `provider` / `model` / `prompt` / `temperature` / `maxTokens` at the call site. Pass `uiTrait: \"@trait.YourLlmForm\"` to inject your own prompt form; leave unset to render the atom's default form (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceLlmOrbital",
@@ -15,14 +16,29 @@
             "required": true
           },
           {
-            "name": "inputText",
+            "name": "provider",
+            "type": "string",
+            "default": "openai"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "gpt-4"
+          },
+          {
+            "name": "prompt",
             "type": "string",
             "default": ""
           },
           {
-            "name": "action",
-            "type": "string",
-            "default": "generate"
+            "name": "temperature",
+            "type": "number",
+            "default": 0.7
+          },
+          {
+            "name": "maxTokens",
+            "type": "number",
+            "default": 2048.0
           },
           {
             "name": "result",
@@ -65,6 +81,155 @@
       },
       "traits": [
         {
+          "name": "ServiceLlmDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "COMPLETE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "LLM Completion"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "select",
+                              "options": [
+                                {
+                                  "label": "OpenAI",
+                                  "value": "openai"
+                                },
+                                {
+                                  "value": "anthropic",
+                                  "label": "Anthropic"
+                                },
+                                {
+                                  "value": "google",
+                                  "label": "Google"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "select",
+                              "options": [
+                                {
+                                  "label": "GPT-4",
+                                  "value": "gpt-4"
+                                },
+                                {
+                                  "label": "GPT-4 Turbo",
+                                  "value": "gpt-4-turbo"
+                                },
+                                {
+                                  "value": "claude-3-5-sonnet",
+                                  "label": "Claude 3.5 Sonnet"
+                                },
+                                {
+                                  "label": "Gemini Pro",
+                                  "value": "gemini-pro"
+                                }
+                              ]
+                            },
+                            {
+                              "placeholder": "Enter your prompt...",
+                              "type": "textarea"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "input",
+                                  "placeholder": "Temperature (0.0 - 2.0)",
+                                  "inputType": "number"
+                                },
+                                {
+                                  "placeholder": "Max tokens",
+                                  "type": "input",
+                                  "inputType": "number"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "primary",
+                          "type": "button",
+                          "label": "Complete",
+                          "action": "COMPLETE",
+                          "icon": "sparkles"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
           "name": "ServiceLlmLlm",
           "category": "interaction",
           "linkedEntity": "ServiceLlm",
@@ -90,12 +255,16 @@
               ]
             },
             {
-              "event": "ServiceLlmLlmCompleted",
+              "event": "LlmCompleted",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "result",
-                  "type": "object"
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
                 }
               ]
             },
@@ -112,6 +281,26 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "COMPLETE",
+              "triggers": "COMPLETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceLlmDefaultForm"
+              }
             }
           ],
           "stateMachine": {
@@ -136,25 +325,40 @@
                 "name": "Initialize"
               },
               {
-                "key": "GENERATE",
-                "name": "Generate"
-              },
-              {
-                "key": "CLASSIFY",
-                "name": "Classify"
-              },
-              {
-                "key": "SUMMARIZE",
-                "name": "Summarize"
-              },
-              {
                 "key": "COMPLETE",
-                "name": "Complete",
+                "name": "Complete"
+              },
+              {
+                "key": "ServiceLlmLoaded",
+                "name": "ServiceLlm loaded",
                 "payloadSchema": [
                   {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceLlmLoadFailed",
+                "name": "ServiceLlm load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LlmCompleted",
+                "name": "Llm completed",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
                     "name": "content",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
@@ -174,77 +378,6 @@
                 "name": "Reset"
               },
               {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
-                "key": "ServiceLlmLoaded",
-                "name": "ServiceLlm loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "inputText",
-                    "type": "string"
-                  },
-                  {
-                    "name": "action",
-                    "type": "string"
-                  },
-                  {
-                    "name": "result",
-                    "type": "string"
-                  },
-                  {
-                    "name": "llmStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceLlmLoadFailed",
-                "name": "ServiceLlm load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceLlmLlmCompleted",
-                "name": "ServiceLlm llm completed",
-                "payloadSchema": [
-                  {
-                    "name": "result",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
                 "key": "ServiceLlmLlmFailed",
                 "name": "ServiceLlm llm failed",
                 "payloadSchema": [
@@ -257,6 +390,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -267,8 +404,28 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.inputText",
-                    ""
+                    "@entity.provider",
+                    "@config.provider"
+                  ],
+                  [
+                    "set",
+                    "@entity.model",
+                    "@config.model"
+                  ],
+                  [
+                    "set",
+                    "@entity.prompt",
+                    "@config.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.temperature",
+                    "@config.temperature"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxTokens",
+                    "@config.maxTokens"
                   ],
                   [
                     "fetch",
@@ -284,65 +441,12 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "brain"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "ServiceLlm LLM",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "Enter text for LLM processing...",
-                          "type": "textarea"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "button",
-                              "icon": "sparkles",
-                              "action": "GENERATE",
-                              "variant": "primary",
-                              "label": "Generate"
-                            },
-                            {
-                              "icon": "tag",
-                              "action": "CLASSIFY",
-                              "label": "Classify",
-                              "type": "button",
-                              "variant": "secondary"
-                            },
-                            {
-                              "action": "SUMMARIZE",
-                              "variant": "secondary",
-                              "label": "Summarize",
-                              "type": "button",
-                              "icon": "align-left"
-                            }
-                          ],
-                          "gap": "sm",
-                          "justify": "center"
-                        }
-                      ],
-                      "gap": "lg",
-                      "align": "stretch",
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "children": [
+                        "@config.uiTrait"
+                      ]
                     }
                   ]
                 ]
@@ -350,19 +454,14 @@
               {
                 "from": "idle",
                 "to": "processing",
-                "event": "GENERATE",
+                "event": "COMPLETE",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.action",
-                    "generate"
-                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "title": "Processing...",
-                      "message": "Running servicellm LLM task...",
+                      "title": "Generating...",
+                      "message": "Calling LLM provider.",
                       "type": "loading-state"
                     }
                   ],
@@ -371,12 +470,15 @@
                     "llm",
                     "generate",
                     {
-                      "userPrompt": "@entity.inputText"
+                      "userPrompt": "@config.prompt",
+                      "temperature": "@config.temperature",
+                      "maxTokens": "@config.maxTokens",
+                      "model": "@config.model"
                     },
                     {
                       "emit": {
-                        "success": "ServiceLlmLlmCompleted",
-                        "failure": "ServiceLlmLlmFailed"
+                        "failure": "FAILED",
+                        "success": "LlmCompleted"
                       }
                     }
                   ]
@@ -384,83 +486,18 @@
               },
               {
                 "from": "idle",
-                "to": "processing",
-                "event": "CLASSIFY",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.action",
-                    "classify"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Processing...",
-                      "message": "Running servicellm LLM task...",
-                      "type": "loading-state"
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "llm",
-                    "classify",
-                    {
-                      "categories": [
-                        "positive",
-                        "negative",
-                        "neutral"
-                      ],
-                      "text": "@entity.inputText"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceLlmLlmCompleted",
-                        "failure": "ServiceLlmLlmFailed"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceLlmLoaded"
               },
               {
                 "from": "idle",
-                "to": "processing",
-                "event": "SUMMARIZE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.action",
-                    "summarize"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "message": "Running servicellm LLM task...",
-                      "title": "Processing..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "llm",
-                    "summarize",
-                    {
-                      "text": "@entity.inputText"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceLlmLlmCompleted",
-                        "failure": "ServiceLlmLlmFailed"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceLlmLoadFailed"
               },
               {
                 "from": "processing",
                 "to": "complete",
-                "event": "COMPLETE",
+                "event": "LlmCompleted",
                 "effects": [
                   [
                     "set",
@@ -478,31 +515,31 @@
                     {
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "variant": "success",
                           "type": "alert",
-                          "message": "LLM task complete"
+                          "message": "LLM completion ready"
                         },
                         {
-                          "content": "@entity.result",
                           "variant": "body",
+                          "content": "@entity.result",
                           "type": "typography"
                         },
                         {
+                          "icon": "rotate-ccw",
                           "variant": "ghost",
                           "type": "button",
                           "action": "RESET",
-                          "icon": "rotate-ccw",
                           "label": "Start Over"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
                       "align": "center",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -523,43 +560,21 @@
                     "error"
                   ],
                   [
+                    "emit",
+                    "ServiceLlmLlmFailed",
+                    {
+                      "error": "@entity.error",
+                      "code": "llm_complete_failed"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "onRetry": "RETRY",
-                          "title": "LLM Failed",
-                          "type": "error-state",
-                          "message": "@entity.error"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "label": "Retry",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "refresh-cw",
-                              "action": "RETRY"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "ghost",
-                              "label": "Reset",
-                              "icon": "rotate-ccw",
-                              "action": "RESET"
-                            }
-                          ],
-                          "justify": "center",
-                          "gap": "sm"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center"
+                      "type": "error-state",
+                      "title": "LLM Failed",
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -578,68 +593,25 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "brain"
-                            },
-                            {
-                              "content": "ServiceLlm LLM",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "Enter text for LLM processing...",
-                          "type": "textarea"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "button",
-                              "icon": "sparkles",
-                              "variant": "primary",
-                              "action": "GENERATE",
-                              "label": "Generate"
-                            },
-                            {
-                              "label": "Classify",
-                              "action": "CLASSIFY",
-                              "type": "button",
-                              "icon": "tag",
-                              "variant": "secondary"
-                            },
-                            {
-                              "type": "button",
-                              "icon": "align-left",
-                              "action": "SUMMARIZE",
-                              "label": "Summarize",
-                              "variant": "secondary"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "center"
-                        }
-                      ],
+                      "gap": "md",
                       "type": "stack",
-                      "align": "stretch",
-                      "gap": "lg",
+                      "children": [
+                        "@config.uiTrait"
+                      ],
                       "direction": "vertical"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "complete",
+                "to": "complete",
+                "event": "LlmCompleted"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceLlmLlmFailed"
               },
               {
                 "from": "error",
@@ -655,65 +627,12 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
-                        {
-                          "align": "center",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "name": "brain",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "ServiceLlm LLM",
-                              "type": "typography",
-                              "variant": "h2"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "Enter text for LLM processing..."
-                        },
-                        {
-                          "type": "stack",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "action": "GENERATE",
-                              "label": "Generate",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "sparkles"
-                            },
-                            {
-                              "label": "Classify",
-                              "type": "button",
-                              "action": "CLASSIFY",
-                              "variant": "secondary",
-                              "icon": "tag"
-                            },
-                            {
-                              "label": "Summarize",
-                              "variant": "secondary",
-                              "action": "SUMMARIZE",
-                              "icon": "align-left",
-                              "type": "button"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -732,70 +651,43 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "brain",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h2",
-                              "content": "ServiceLlm LLM"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "Enter text for LLM processing..."
-                        },
-                        {
-                          "justify": "center",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "icon": "sparkles",
-                              "label": "Generate",
-                              "action": "GENERATE",
-                              "variant": "primary",
-                              "type": "button"
-                            },
-                            {
-                              "action": "CLASSIFY",
-                              "type": "button",
-                              "variant": "secondary",
-                              "icon": "tag",
-                              "label": "Classify"
-                            },
-                            {
-                              "action": "SUMMARIZE",
-                              "variant": "secondary",
-                              "label": "Summarize",
-                              "type": "button",
-                              "icon": "align-left"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        }
-                      ],
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "stretch"
+                      "children": [
+                        "@config.uiTrait"
+                      ]
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "provider": {
+              "type": "string",
+              "default": "openai"
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceLlmDefaultForm"
+            },
+            "model": {
+              "type": "string",
+              "default": "gpt-4"
+            },
+            "maxTokens": {
+              "type": "number",
+              "default": 2048.0
+            },
+            "prompt": {
+              "type": "string",
+              "default": ""
+            },
+            "temperature": {
+              "type": "number",
+              "default": 0.7
+            }
           },
           "scope": "instance"
         }

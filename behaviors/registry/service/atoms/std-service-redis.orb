@@ -1,7 +1,7 @@
 {
   "name": "std-service-redis",
-  "version": "1.0.0",
-  "description": "std-service-redis as a Function",
+  "version": "2.0.0",
+  "description": "std-service-redis — Redis cache service. Bind via `uses Redis from \"std/behaviors/std-service-redis\"` and configure `op` / `key` / `value` / `ttl` at the call site. Pass `uiTrait: \"@trait.YourRedisForm\"` to inject your own form; leave unset to render the atom's default form (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceRedisOrbital",
@@ -11,7 +11,48 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "key",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "ttl",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "op",
+            "type": "string",
+            "default": "get",
+            "values": [
+              "get",
+              "set",
+              "del"
+            ]
+          },
+          {
+            "name": "result",
+            "type": "object",
+            "default": {}
+          },
+          {
+            "name": "redisStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
           },
           {
             "name": "name",
@@ -34,36 +75,130 @@
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "value",
-            "type": "string"
-          },
-          {
-            "name": "ttl",
-            "type": "number",
-            "default": 3600.0
-          },
-          {
-            "name": "result",
-            "type": "string"
-          },
-          {
-            "name": "redisStatus",
-            "type": "string",
-            "default": "idle"
-          },
-          {
-            "name": "error",
-            "type": "string"
           }
         ]
       },
       "traits": [
+        {
+          "name": "ServiceRedisDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "EXEC",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EXEC",
+                "name": "Exec"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "database"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Redis Cache"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "options": [
+                                {
+                                  "label": "Get",
+                                  "value": "get"
+                                },
+                                {
+                                  "label": "Set",
+                                  "value": "set"
+                                },
+                                {
+                                  "value": "del",
+                                  "label": "Delete"
+                                }
+                              ],
+                              "type": "select"
+                            },
+                            {
+                              "type": "input",
+                              "placeholder": "cache-key"
+                            },
+                            {
+                              "placeholder": "cache-value",
+                              "type": "input"
+                            },
+                            {
+                              "type": "input",
+                              "placeholder": "ttl seconds",
+                              "inputType": "number"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "icon": "play",
+                          "label": "Execute",
+                          "variant": "primary",
+                          "action": "EXEC"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
         {
           "name": "ServiceRedisRedis",
           "category": "interaction",
@@ -90,7 +225,7 @@
               ]
             },
             {
-              "event": "ServiceRedisRedisCompleted",
+              "event": "RedisDone",
               "scope": "external",
               "payloadSchema": [
                 {
@@ -112,6 +247,26 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "EXEC",
+              "triggers": "EXEC",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceRedisDefaultForm"
+              }
             }
           ],
           "stateMachine": {
@@ -136,25 +291,36 @@
                 "name": "Initialize"
               },
               {
-                "key": "GET_KEY",
-                "name": "Get Key"
+                "key": "EXEC",
+                "name": "Exec"
               },
               {
-                "key": "SET_KEY",
-                "name": "Set Key"
-              },
-              {
-                "key": "DELETE_KEY",
-                "name": "Delete Key"
-              },
-              {
-                "key": "EXECUTED",
-                "name": "Executed",
+                "key": "ServiceRedisLoaded",
+                "name": "ServiceRedis loaded",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "string",
-                    "required": true
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceRedisLoadFailed",
+                "name": "ServiceRedis load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RedisDone",
+                "name": "Redis done",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "object"
                   }
                 ]
               },
@@ -172,76 +338,6 @@
               {
                 "key": "RESET",
                 "name": "Reset"
-              },
-              {
-                "key": "ServiceRedisLoaded",
-                "name": "ServiceRedis loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "key",
-                    "type": "string"
-                  },
-                  {
-                    "name": "value",
-                    "type": "string"
-                  },
-                  {
-                    "name": "ttl",
-                    "type": "number"
-                  },
-                  {
-                    "name": "result",
-                    "type": "string"
-                  },
-                  {
-                    "name": "redisStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceRedisLoadFailed",
-                "name": "ServiceRedis load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceRedisRedisCompleted",
-                "name": "ServiceRedis redis completed",
-                "payloadSchema": [
-                  {
-                    "name": "result",
-                    "type": "object"
-                  }
-                ]
               },
               {
                 "key": "ServiceRedisRedisFailed",
@@ -267,25 +363,30 @@
                   [
                     "set",
                     "@entity.key",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.ttl",
-                    3600.0
+                    "@config.key"
                   ],
                   [
                     "set",
                     "@entity.value",
-                    ""
+                    "@config.value"
+                  ],
+                  [
+                    "set",
+                    "@entity.ttl",
+                    "@config.ttl"
+                  ],
+                  [
+                    "set",
+                    "@entity.op",
+                    "@config.op"
                   ],
                   [
                     "fetch",
                     "ServiceRedis",
                     {
                       "emit": {
-                        "failure": "ServiceRedisLoadFailed",
-                        "success": "ServiceRedisLoaded"
+                        "success": "ServiceRedisLoaded",
+                        "failure": "ServiceRedisLoadFailed"
                       }
                     }
                   ],
@@ -293,81 +394,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg",
                       "children": [
-                        {
-                          "align": "center",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "name": "database",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "Redis Cache",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "placeholder": "cache-key",
-                              "type": "input"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "cache-value"
-                            },
-                            {
-                              "type": "input",
-                              "inputType": "number",
-                              "placeholder": "3600"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "icon": "download",
-                              "action": "GET_KEY",
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Get"
-                            },
-                            {
-                              "variant": "primary",
-                              "label": "Set",
-                              "icon": "upload",
-                              "type": "button",
-                              "action": "SET_KEY"
-                            },
-                            {
-                              "icon": "trash-2",
-                              "action": "DELETE_KEY",
-                              "label": "Delete",
-                              "type": "button",
-                              "variant": "danger"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "center"
-                        }
-                      ]
+                        "@config.uiTrait"
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -375,28 +407,30 @@
               {
                 "from": "idle",
                 "to": "executing",
-                "event": "GET_KEY",
+                "event": "EXEC",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "title": "Executing...",
                       "message": "Running redis operation...",
+                      "title": "Executing...",
                       "type": "loading-state"
                     }
                   ],
                   [
                     "call-service",
                     "redis",
-                    "get",
+                    "@config.op",
                     {
-                      "key": "@entity.key"
+                      "ttl": "@config.ttl",
+                      "key": "@config.key",
+                      "value": "@config.value"
                     },
                     {
                       "emit": {
-                        "success": "ServiceRedisRedisCompleted",
-                        "failure": "ServiceRedisRedisFailed"
+                        "failure": "FAILED",
+                        "success": "RedisDone"
                       }
                     }
                   ]
@@ -404,108 +438,61 @@
               },
               {
                 "from": "idle",
-                "to": "executing",
-                "event": "SET_KEY",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Executing...",
-                      "message": "Running redis operation..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "redis",
-                    "set",
-                    {
-                      "key": "@entity.key",
-                      "ttl": "@entity.ttl",
-                      "value": "@entity.value"
-                    },
-                    {
-                      "emit": {
-                        "failure": "ServiceRedisRedisFailed",
-                        "success": "ServiceRedisRedisCompleted"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceRedisLoaded"
               },
               {
                 "from": "idle",
-                "to": "executing",
-                "event": "DELETE_KEY",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Executing...",
-                      "message": "Running redis operation..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "redis",
-                    "delete",
-                    {
-                      "key": "@entity.key"
-                    },
-                    {
-                      "emit": {
-                        "failure": "ServiceRedisRedisFailed",
-                        "success": "ServiceRedisRedisCompleted"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceRedisLoadFailed"
               },
               {
                 "from": "executing",
                 "to": "complete",
-                "event": "EXECUTED",
+                "event": "RedisDone",
                 "effects": [
                   [
                     "set",
                     "@entity.result",
-                    "@payload.data"
+                    "@payload.result"
+                  ],
+                  [
+                    "set",
+                    "@entity.redisStatus",
+                    "succeeded"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
+                          "variant": "success",
                           "type": "alert",
-                          "message": "Operation complete",
-                          "variant": "success"
+                          "message": "Operation complete"
                         },
                         {
-                          "variant": "body",
-                          "content": "@entity.result",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "@entity.result",
+                          "variant": "body"
                         },
                         {
-                          "icon": "rotate-ccw",
+                          "variant": "ghost",
                           "label": "Reset",
                           "action": "RESET",
-                          "variant": "ghost",
+                          "icon": "rotate-ccw",
                           "type": "button"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -521,13 +508,21 @@
                     "@payload.error"
                   ],
                   [
+                    "emit",
+                    "ServiceRedisRedisFailed",
+                    {
+                      "error": "@entity.error",
+                      "code": "redis_op_failed"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
+                      "message": "@entity.error",
                       "onRetry": "RESET",
                       "title": "Redis Error",
-                      "message": "@entity.error"
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -541,84 +536,25 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
                       "type": "stack",
                       "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "database"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Redis Cache",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "placeholder": "cache-key",
-                              "type": "input"
-                            },
-                            {
-                              "type": "input",
-                              "placeholder": "cache-value"
-                            },
-                            {
-                              "inputType": "number",
-                              "placeholder": "3600",
-                              "type": "input"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "action": "GET_KEY",
-                              "icon": "download",
-                              "type": "button",
-                              "label": "Get",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Set",
-                              "type": "button",
-                              "icon": "upload",
-                              "action": "SET_KEY",
-                              "variant": "primary"
-                            },
-                            {
-                              "icon": "trash-2",
-                              "type": "button",
-                              "label": "Delete",
-                              "action": "DELETE_KEY",
-                              "variant": "danger"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "justify": "center",
-                          "type": "stack",
-                          "gap": "sm"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "gap": "lg"
+                      "gap": "md"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "complete",
+                "to": "complete",
+                "event": "RedisDone"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceRedisRedisFailed"
               },
               {
                 "from": "error",
@@ -629,86 +565,44 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg",
                       "children": [
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "database"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Redis Cache",
-                              "variant": "h2"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "input",
-                              "placeholder": "cache-key"
-                            },
-                            {
-                              "placeholder": "cache-value",
-                              "type": "input"
-                            },
-                            {
-                              "type": "input",
-                              "inputType": "number",
-                              "placeholder": "3600"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "justify": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "icon": "download",
-                              "type": "button",
-                              "action": "GET_KEY",
-                              "label": "Get",
-                              "variant": "primary"
-                            },
-                            {
-                              "action": "SET_KEY",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "upload",
-                              "label": "Set"
-                            },
-                            {
-                              "action": "DELETE_KEY",
-                              "variant": "danger",
-                              "icon": "trash-2",
-                              "type": "button",
-                              "label": "Delete"
-                            }
-                          ],
-                          "gap": "sm"
-                        }
+                        "@config.uiTrait"
                       ],
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "key": {
+              "type": "string",
+              "default": ""
+            },
+            "op": {
+              "type": "string",
+              "default": "get",
+              "values": [
+                "get",
+                "set",
+                "del"
+              ]
+            },
+            "value": {
+              "type": "string",
+              "default": ""
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceRedisDefaultForm"
+            },
+            "ttl": {
+              "type": "number",
+              "default": 0.0
+            }
           },
           "scope": "instance"
         }

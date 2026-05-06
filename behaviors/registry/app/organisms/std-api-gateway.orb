@@ -1,6 +1,6 @@
 {
   "name": "std-api-gateway",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "API gateway admin: routes, backends, analytics. Pick for API management dashboards.",
   "orbitals": [
     {
@@ -9,6 +9,34 @@
         {
           "from": "std/behaviors/std-app-layout",
           "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
         }
       ],
       "entity": {
@@ -29,22 +57,37 @@
           {
             "name": "method",
             "type": "string",
+            "default": "GET",
             "values": [
               "GET",
               "POST",
               "PUT",
-              "DELETE",
-              "PATCH"
+              "DELETE"
             ]
           },
           {
-            "name": "backend",
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "disabled"
+            ]
+          },
+          {
+            "name": "target",
             "type": "string",
             "required": true
           },
           {
+            "name": "hits",
+            "type": "number",
+            "default": 0.0
+          },
+          {
             "name": "rateLimit",
-            "type": "number"
+            "type": "number",
+            "default": 0.0
           },
           {
             "name": "pendingId",
@@ -60,275 +103,48 @@
           "config": {
             "navItems": [
               {
-                "href": "/routes",
                 "label": "Routes",
+                "href": "/routes",
                 "icon": "git-branch"
               },
               {
-                "icon": "server",
                 "href": "/backends",
-                "label": "Backends"
+                "label": "Backends",
+                "icon": "server"
               },
               {
+                "href": "/analytics",
                 "icon": "bar-chart-2",
-                "label": "Analytics",
-                "href": "/analytics"
+                "label": "Analytics"
               }
             ],
-            "appName": "API Gateway",
             "notifications": [],
-            "notificationClickEvent": "ROUTE_NOTIFICATIONS_OPEN",
             "searchEvent": "ROUTE_SEARCH",
-            "contentTrait": "@trait.RouteBrowse"
+            "notificationClickEvent": "ROUTE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.RouteCatalog",
+            "appName": "API Gateway"
           },
           "events": {
-            "SEARCH": "ROUTE_SEARCH",
-            "NOTIFY_CLICK": "ROUTE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ROUTE_NOTIFICATIONS_OPEN",
+            "SEARCH": "ROUTE_SEARCH"
           }
         },
         {
-          "name": "RouteBrowse",
+          "name": "RouteCatalog",
           "category": "interaction",
-          "linkedEntity": "Route",
           "emits": [
             {
-              "event": "CREATE"
-            },
-            {
-              "event": "VIEW",
+              "event": "CREATE",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.path",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.method",
-                  "type": "string"
-                },
-                {
-                  "name": "row.backend",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.rateLimit",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.path",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.method",
-                  "type": "string"
-                },
-                {
-                  "name": "row.backend",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.rateLimit",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.path",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.method",
-                  "type": "string"
-                },
-                {
-                  "name": "row.backend",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.rateLimit",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoaded",
-              "description": "Fired when Route finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Route]"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoadFailed",
-              "description": "Fired when Route fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
             }
           ],
           "listens": [
-            {
-              "event": "ROUTE_CREATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteCreate"
-              }
-            },
-            {
-              "event": "ROUTE_UPDATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteEdit"
-              }
-            },
-            {
-              "event": "ROUTE_DELETED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteDelete"
-              }
-            },
             {
               "event": "ROUTE_SEARCH",
               "triggers": "ROUTE_SEARCH",
@@ -349,7 +165,7 @@
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "composing",
                 "isInitial": true
               }
             ],
@@ -379,239 +195,106 @@
                 ]
               },
               {
-                "key": "RouteLoaded",
-                "name": "Route loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Route]"
-                  }
-                ]
-              },
-              {
-                "key": "RouteLoadFailed",
-                "name": "Route load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
                 "key": "CREATE",
                 "name": "Create"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Route"
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Route"
-                  }
-                ]
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Route"
-                  }
-                ]
-              },
-              {
-                "key": "RouteSaved",
-                "name": "Route saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteSaveFailed",
-                "name": "Route save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteUpdated",
-                "name": "Route updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteUpdateFailed",
-                "name": "Route update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteDeleted",
-                "name": "Route deleted",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteDeleteFailed",
-                "name": "Route delete failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Loading routes…",
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ],
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ROUTE_SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "Searching…",
-                          "variant": "caption"
-                        }
-                      ],
-                      "className": "py-12",
                       "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "git-branch",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Routes",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "label": "Create Route",
+                                  "icon": "plus",
+                                  "action": "CREATE",
+                                  "type": "button"
+                                }
+                              ]
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            "@trait.RouteSearch",
+                            "@trait.RouteFilter"
+                          ]
+                        },
+                        "@trait.RouteStats",
+                        "@trait.RouteGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.RouteBrowseList"
+                      ],
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "lg"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "composing",
+                "to": "composing",
+                "event": "ROUTE_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
                 "event": "ROUTE_NOTIFICATIONS_OPEN",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-8",
                       "children": [
                         {
                           "name": "bell",
@@ -623,182 +306,356 @@
                           "content": "No notifications"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "You're all caught up.",
                           "variant": "caption",
-                          "content": "You're all caught up."
-                        },
-                        {
-                          "label": "Back to routes",
-                          "variant": "ghost",
-                          "action": "INIT",
-                          "type": "button"
-                        }
-                      ],
-                      "align": "center",
-                      "className": "py-8",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "RouteLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "git-branch"
-                                },
-                                {
-                                  "content": "Routes",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "icon": "plus",
-                                  "action": "CREATE",
-                                  "type": "button",
-                                  "label": "Create Route",
-                                  "variant": "primary"
-                                }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack"
-                            }
-                          ],
-                          "gap": "md",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-list",
-                          "variant": "card",
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "variant": "ghost",
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "variant": "ghost",
-                              "event": "EDIT",
-                              "label": "Edit"
-                            },
-                            {
-                              "event": "DELETE",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "name": "method",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "path",
-                              "variant": "h3",
-                              "icon": "git-branch"
-                            },
-                            {
-                              "name": "backend",
-                              "variant": "body"
-                            },
-                            {
-                              "name": "rateLimit",
-                              "label": "Rate Limit",
-                              "format": "number",
-                              "variant": "caption"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "RouteLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "name": "alert-triangle",
-                          "type": "icon",
-                          "color": "destructive"
-                        },
-                        {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load routes"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "@payload.error",
                           "color": "muted"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
+                          "action": "INIT",
                           "type": "button",
-                          "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "variant": "ghost",
+                          "label": "Back to routes"
                         }
                       ],
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         },
         {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "RouteSearch",
+          "config": {
+            "event": "ROUTE_SEARCH",
+            "placeholder": "Search routes…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "RouteFilter",
+          "config": {
+            "filters": [
+              {
+                "field": "method",
+                "label": "Method",
+                "filterType": "select",
+                "options": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE"
+                ]
+              },
+              {
+                "field": "status",
+                "options": [
+                  "active",
+                  "disabled"
+                ],
+                "filterType": "select",
+                "label": "Status"
+              }
+            ],
+            "event": "ROUTE_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "RouteStats",
+          "config": {
+            "title": "Routes",
+            "metrics": [
+              {
+                "label": "Total",
+                "icon": "git-branch",
+                "variant": "primary",
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active",
+                "variant": "success",
+                "icon": "check-circle"
+              },
+              {
+                "variant": "warning",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "disabled"
+                  ]
+                ],
+                "aggregation": "count",
+                "icon": "x-circle",
+                "label": "Disabled"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "RouteGraphs",
+          "config": {
+            "aggregation": "count",
+            "showLegend": true,
+            "chartType": "pie",
+            "subtitle": "Distribution across HTTP methods",
+            "height": 240.0,
+            "title": "Routes by Method",
+            "categoryField": "method"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "RouteBrowseList",
+          "linkedEntity": "Route",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "git-branch",
+                "name": "path"
+              },
+              {
+                "name": "method",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "target",
+                "variant": "body"
+              },
+              {
+                "format": "number",
+                "variant": "caption",
+                "label": "Hits",
+                "name": "hits"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteFilter"
+              }
+            },
+            {
+              "event": "ROUTE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "RoutePersistor"
+              }
+            },
+            {
+              "event": "ROUTE_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "RoutePersistor"
+              }
+            },
+            {
+              "event": "ROUTE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "RoutePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
           "name": "RouteCreate",
-          "category": "interaction",
+          "linkedEntity": "Route",
+          "config": {
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "New Route",
+            "fields": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "RouteEdit",
+          "linkedEntity": "Route",
+          "config": {
+            "title": "Edit Route",
+            "icon": "edit",
+            "fields": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ],
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "RouteView",
+          "linkedEntity": "Route",
+          "config": {
+            "fields": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ],
+            "mode": "edit",
+            "title": "View Route",
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "RouteDelete",
+          "linkedEntity": "Route",
+          "config": {
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Route",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "RoutePersistor",
+          "category": "lifecycle",
           "linkedEntity": "Route",
           "emits": [
             {
@@ -812,299 +669,6 @@
               ]
             },
             {
-              "event": "RouteLoadFailed",
-              "description": "Fired when Route fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoaded",
-              "description": "Fired when Route finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Route]"
-                }
-              ]
-            },
-            {
-              "event": "RouteSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "CREATE",
-              "triggers": "CREATE",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CREATE",
-                "name": "Create"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ROUTE_CREATED",
-                "name": "Route Created"
-              },
-              {
-                "key": "RouteLoadFailed",
-                "name": "Route load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteLoaded",
-                "name": "Route loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Route]"
-                  }
-                ]
-              },
-              {
-                "key": "RouteSaveFailed",
-                "name": "Route save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteSaved",
-                "name": "Route saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "plus-circle"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Create Route",
-                              "variant": "h3"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "path",
-                            "method",
-                            "backend",
-                            "rateLimit"
-                          ],
-                          "mode": "create"
-                        }
-                      ],
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "Route",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "RouteSaved",
-                        "failure": "RouteSaveFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "ROUTE_CREATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "RouteEdit",
-          "category": "interaction",
-          "linkedEntity": "Route",
-          "emits": [
-            {
               "event": "ROUTE_UPDATED",
               "scope": "external",
               "payloadSchema": [
@@ -1115,667 +679,6 @@
               ]
             },
             {
-              "event": "RouteLoadFailed",
-              "description": "Fired when Route fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoaded",
-              "description": "Fired when Route finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Route]"
-                }
-              ]
-            },
-            {
-              "event": "RouteUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteView"
-              }
-            },
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Route"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ROUTE_UPDATED",
-                "name": "Route Updated"
-              },
-              {
-                "key": "RouteLoadFailed",
-                "name": "Route load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteLoaded",
-                "name": "Route loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Route]"
-                  }
-                ]
-              },
-              {
-                "key": "RouteUpdateFailed",
-                "name": "Route update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RouteUpdated",
-                "name": "Route updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      },
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "edit",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Edit Route"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "fields": [
-                            "path",
-                            "method",
-                            "backend",
-                            "rateLimit"
-                          ],
-                          "mode": "edit",
-                          "entity": "@payload.row",
-                          "type": "form-section",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "update",
-                    "Route",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "failure": "RouteUpdateFailed",
-                        "success": "RouteUpdated"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "ROUTE_UPDATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "RouteView",
-          "category": "interaction",
-          "linkedEntity": "Route",
-          "emits": [
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoaded",
-              "description": "Fired when Route finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Route]"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoadFailed",
-              "description": "Fired when Route fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "VIEW",
-              "triggers": "VIEW",
-              "source": {
-                "kind": "trait",
-                "trait": "RouteBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit"
-              },
-              {
-                "key": "RouteLoaded",
-                "name": "Route loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Route]"
-                  }
-                ]
-              },
-              {
-                "key": "RouteLoadFailed",
-                "name": "Route load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.backend",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.method",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.path",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.rateLimit",
-                    0.0
-                  ],
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "id": "@payload.id",
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.path",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "content": "Path",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.path"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "content": "Method",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.method",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Backend"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.backend",
-                              "variant": "body"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Rate Limit"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.rateLimit"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "icon": "edit",
-                              "type": "button",
-                              "action": "EDIT",
-                              "variant": "primary",
-                              "label": "Edit"
-                            },
-                            {
-                              "type": "button",
-                              "action": "CLOSE",
-                              "label": "Close",
-                              "variant": "ghost"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "RouteDelete",
-          "category": "interaction",
-          "linkedEntity": "Route",
-          "emits": [
-            {
               "event": "ROUTE_DELETED",
               "scope": "external",
               "payloadSchema": [
@@ -1784,65 +687,31 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "RouteDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoadFailed",
-              "description": "Fired when Route fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RouteLoaded",
-              "description": "Fired when Route finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Route]"
-                }
-              ]
             }
           ],
           "listens": [
             {
-              "event": "DELETE",
-              "triggers": "DELETE",
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
               "source": {
                 "kind": "trait",
-                "trait": "RouteBrowse"
+                "trait": "RouteCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "RouteDelete"
               }
             }
           ],
@@ -1851,9 +720,6 @@
               {
                 "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "confirming"
               }
             ],
             "events": [
@@ -1862,49 +728,30 @@
                 "name": "Initialize"
               },
               {
-                "key": "DELETE",
-                "name": "Delete",
+                "key": "DO_CREATE",
+                "name": "Do Create",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
                   }
                 ]
               },
               {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "ROUTE_DELETED",
-                "name": "Route Deleted"
-              },
-              {
-                "key": "RouteDeleteFailed",
-                "name": "Route delete failed",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
                 "payloadSchema": [
                   {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
+                    "name": "data",
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "RouteDeleted",
-                "name": "Route deleted",
+                "key": "DO_DELETE",
+                "name": "Do Delete",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -1913,43 +760,37 @@
                 ]
               },
               {
-                "key": "RouteLoadFailed",
-                "name": "Route load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "ROUTE_CREATED",
+                "name": "Route Created"
               },
               {
-                "key": "RouteLoaded",
-                "name": "Route loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Route]"
-                  }
-                ]
+                "key": "ROUTE_UPDATED",
+                "name": "Route Updated"
+              },
+              {
+                "key": "ROUTE_DELETED",
+                "name": "Route Deleted"
               }
             ],
             "transitions": [
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "INIT",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
                 "effects": [
                   [
-                    "fetch",
+                    "persist",
+                    "create",
                     "Route",
+                    "@payload.data",
                     {
                       "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
+                        "success": "ROUTE_CREATED"
                       }
                     }
                   ]
@@ -1957,182 +798,35 @@
               },
               {
                 "from": "idle",
-                "to": "confirming",
-                "event": "DELETE",
+                "to": "idle",
+                "event": "DO_UPDATE",
                 "effects": [
                   [
-                    "set",
-                    "@entity.pendingId",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
+                    "persist",
+                    "update",
                     "Route",
+                    "@payload.data",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      },
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "children": [
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-triangle"
-                            },
-                            {
-                              "content": "Delete Route",
-                              "type": "typography",
-                              "variant": "h3"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "message": "This action cannot be undone.",
-                          "type": "alert",
-                          "variant": "error"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "label": "Cancel",
-                              "variant": "ghost",
-                              "action": "CANCEL",
-                              "type": "button"
-                            },
-                            {
-                              "icon": "check",
-                              "action": "CONFIRM_DELETE",
-                              "type": "button",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
-                          "gap": "sm"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                        "success": "ROUTE_UPDATED"
+                      }
                     }
                   ]
                 ]
               },
               {
-                "from": "confirming",
+                "from": "idle",
                 "to": "idle",
-                "event": "CONFIRM_DELETE",
+                "event": "DO_DELETE",
                 "effects": [
                   [
                     "persist",
                     "delete",
                     "Route",
-                    "@entity.pendingId",
+                    "@payload.id",
                     {
                       "emit": {
-                        "success": "RouteDeleted",
-                        "failure": "RouteDeleteFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "emit",
-                    "ROUTE_DELETED"
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
+                        "success": "ROUTE_DELETED"
                       }
                     }
                   ]
@@ -2140,7 +834,7 @@
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -2152,7 +846,22 @@
               "ref": "RouteAppLayout"
             },
             {
-              "ref": "RouteBrowse"
+              "ref": "RouteCatalog"
+            },
+            {
+              "ref": "RouteSearch"
+            },
+            {
+              "ref": "RouteFilter"
+            },
+            {
+              "ref": "RouteStats"
+            },
+            {
+              "ref": "RouteGraphs"
+            },
+            {
+              "ref": "RouteBrowseList"
             },
             {
               "ref": "RouteCreate"
@@ -2165,6 +874,9 @@
             },
             {
               "ref": "RouteDelete"
+            },
+            {
+              "ref": "RoutePersistor"
             }
           ]
         }
@@ -2172,9 +884,36 @@
     },
     {
       "name": "BackendOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-circuit-breaker",
+          "as": "CircuitBreaker"
+        },
+        {
+          "from": "std/behaviors/std-rate-limiter",
+          "as": "RateLimiter"
+        },
+        {
+          "from": "std/behaviors/std-cache-aside",
+          "as": "CacheAside"
+        }
+      ],
       "entity": {
         "name": "Backend",
-        "persistence": "runtime",
+        "collection": "backends",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -2193,54 +932,36 @@
           },
           {
             "name": "status",
-            "type": "string"
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "disabled"
+            ]
           },
           {
             "name": "latency",
-            "type": "number"
+            "type": "number",
+            "default": 0.0
           },
           {
-            "name": "failureCount",
-            "type": "number"
-          },
-          {
-            "name": "successCount",
-            "type": "number"
-          },
-          {
-            "name": "threshold",
-            "type": "number"
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
           }
         ]
       },
       "traits": [
         {
-          "name": "BackendCircuitBreaker",
+          "name": "BackendCatalog",
           "category": "interaction",
-          "linkedEntity": "Backend",
           "emits": [
             {
-              "event": "BackendLoaded",
-              "description": "Fired when Backend finishes loading",
-              "scope": "internal",
+              "event": "CREATE",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "[Backend]"
-                }
-              ]
-            },
-            {
-              "event": "BackendLoadFailed",
-              "description": "Fired when Backend fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
@@ -2249,14 +970,8 @@
           "stateMachine": {
             "states": [
               {
-                "name": "closed",
+                "name": "composing",
                 "isInitial": true
-              },
-              {
-                "name": "open"
-              },
-              {
-                "name": "halfOpen"
               }
             ],
             "events": [
@@ -2265,916 +980,503 @@
                 "name": "Initialize"
               },
               {
-                "key": "FAILURE",
-                "name": "Failure"
-              },
-              {
-                "key": "SUCCESS",
-                "name": "Success"
-              },
-              {
-                "key": "TIMEOUT",
-                "name": "Timeout"
-              },
-              {
-                "key": "RESET",
-                "name": "Reset"
-              },
-              {
-                "key": "BackendLoaded",
-                "name": "Backend loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Backend]"
-                  }
-                ]
-              },
-              {
-                "key": "BackendLoadFailed",
-                "name": "Backend load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "CREATE",
+                "name": "Create"
               }
             ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.failureCount",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.successCount",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.threshold",
-                    0.0
-                  ],
-                  [
-                    "fetch",
-                    "Backend",
-                    {
-                      "emit": {
-                        "success": "BackendLoaded",
-                        "failure": "BackendLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
+                          "align": "center",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "content": "Backend",
-                                      "type": "typography",
-                                      "variant": "h2"
-                                    }
-                                  ]
+                                  "name": "server",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "status-dot",
-                                  "pulse": false,
-                                  "label": "Circuit Closed",
-                                  "status": "online"
+                                  "variant": "h2",
+                                  "content": "Backends",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
                               "type": "stack",
-                              "justify": "between",
-                              "gap": "md",
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "divider"
-                            },
-                            {
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert",
-                              "variant": "success"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "cols": 2.0,
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "stat-display",
-                                  "value": "@entity.failureCount",
-                                  "label": "Failures"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "Successes",
-                                  "value": "@entity.successCount"
+                                  "label": "Create Backend",
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
-                              ]
-                            },
-                            {
-                              "type": "meter",
-                              "min": 0.0,
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount"
+                              ],
+                              "gap": "sm"
                             }
                           ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
                           "type": "stack"
-                        }
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.BackendBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Service Health",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.BackendCircuitBreaker",
+                        "@trait.BackendRateLimiter",
+                        "@trait.BackendCache"
                       ],
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "FAILURE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "appName": "API Gateway",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "name": "alert-triangle",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "content": "Backend",
-                                      "type": "typography",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "status-dot",
-                                  "pulse": true,
-                                  "status": "critical",
-                                  "label": "Circuit Open"
-                                }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal",
-                              "justify": "between",
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "error",
-                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures.",
-                              "type": "alert"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "cols": 2.0,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.failureCount",
-                                  "label": "Failures"
-                                },
-                                {
-                                  "value": "@entity.successCount",
-                                  "label": "Successes",
-                                  "type": "stat-display"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "meter",
-                              "min": 0.0,
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount"
-                            },
-                            {
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "type": "button",
-                              "action": "RESET",
-                              "label": "Reset"
-                            }
-                          ],
-                          "gap": "lg"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "icon": "git-branch",
-                          "href": "/routes"
-                        },
-                        {
-                          "icon": "server",
-                          "label": "Backends",
-                          "href": "/backends"
-                        },
-                        {
-                          "icon": "bar-chart-2",
-                          "href": "/analytics",
-                          "label": "Analytics"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "SUCCESS",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "align": "center",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "gap": "md",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "variant": "h2",
-                                      "type": "typography",
-                                      "content": "Backend"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "align": "center"
-                                },
-                                {
-                                  "type": "status-dot",
-                                  "pulse": false,
-                                  "status": "online",
-                                  "label": "Circuit Closed"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "success",
-                              "message": "Service is healthy. All requests are being processed."
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": "Failures",
-                                  "type": "stat-display",
-                                  "value": "@entity.failureCount"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "type": "simple-grid",
-                              "cols": 2.0
-                            },
-                            {
-                              "type": "meter",
-                              "value": "@entity.failureCount",
-                              "min": 0.0,
-                              "max": "@entity.threshold"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "icon": "git-branch",
-                          "href": "/routes"
-                        },
-                        {
-                          "label": "Backends",
-                          "icon": "server",
-                          "href": "/backends"
-                        },
-                        {
-                          "href": "/analytics",
-                          "label": "Analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "halfOpen",
-                "event": "TIMEOUT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "icon": "git-branch",
-                          "label": "Routes"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "href": "/analytics",
-                          "label": "Analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity"
-                                    },
-                                    {
-                                      "variant": "h2",
-                                      "type": "typography",
-                                      "content": "Backend"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "label": "Circuit Half-Open",
-                                  "status": "warning",
-                                  "pulse": true,
-                                  "type": "status-dot"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "justify": "between"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "message": "Testing recovery. Limited requests are being allowed through.",
-                              "variant": "warning",
-                              "type": "alert"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "cols": 2.0,
-                              "children": [
-                                {
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "type": "stat-display",
-                                  "value": "@entity.successCount"
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "lg"
-                        }
-                      ],
-                      "appName": "API Gateway"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "href": "/backends",
-                          "icon": "server",
-                          "label": "Backends"
-                        },
-                        {
-                          "label": "Analytics",
-                          "icon": "bar-chart-2",
-                          "href": "/analytics"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "align": "center",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "gap": "md",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "content": "Backend",
-                                      "type": "typography",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "status-dot",
-                                  "status": "online",
-                                  "label": "Circuit Closed",
-                                  "pulse": false
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "success",
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "label": "Failures",
-                                  "type": "stat-display",
-                                  "value": "@entity.failureCount"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "type": "simple-grid",
-                              "cols": 2.0
-                            },
-                            {
-                              "type": "meter",
-                              "value": "@entity.failureCount",
-                              "min": 0.0,
-                              "max": "@entity.threshold"
-                            }
-                          ],
-                          "direction": "vertical"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "SUCCESS",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Backend",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "align": "center"
-                                },
-                                {
-                                  "pulse": false,
-                                  "label": "Circuit Closed",
-                                  "type": "status-dot",
-                                  "status": "online"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "align": "center",
-                              "justify": "between"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "variant": "success",
-                              "message": "Service is healthy. All requests are being processed.",
-                              "type": "alert"
-                            },
-                            {
-                              "cols": 2.0,
-                              "type": "simple-grid",
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.successCount",
-                                  "label": "Successes"
-                                }
-                              ]
-                            },
-                            {
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount",
-                              "type": "meter",
-                              "min": 0.0
-                            }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "icon": "server",
-                          "label": "Backends",
-                          "href": "/backends"
-                        },
-                        {
-                          "icon": "bar-chart-2",
-                          "label": "Analytics",
-                          "href": "/analytics"
-                        }
-                      ],
-                      "appName": "API Gateway",
-                      "type": "dashboard-layout"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "open",
-                "event": "FAILURE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "appName": "API Gateway",
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "icon": "bar-chart-2",
-                          "href": "/analytics"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "name": "alert-triangle",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h2",
-                                      "content": "Backend"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "status-dot",
-                                  "label": "Circuit Open",
-                                  "status": "critical",
-                                  "pulse": true
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack",
-                              "justify": "between"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "alert",
-                              "variant": "error",
-                              "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
-                            },
-                            {
-                              "children": [
-                                {
-                                  "value": "@entity.failureCount",
-                                  "type": "stat-display",
-                                  "label": "Failures"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "type": "stat-display",
-                                  "value": "@entity.successCount"
-                                }
-                              ],
-                              "type": "simple-grid",
-                              "cols": 2.0
-                            },
-                            {
-                              "min": 0.0,
-                              "type": "meter",
-                              "value": "@entity.failureCount",
-                              "max": "@entity.threshold"
-                            },
-                            {
-                              "icon": "rotate-ccw",
-                              "action": "RESET",
-                              "type": "button",
-                              "variant": "ghost",
-                              "label": "Reset"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "halfOpen",
-                "to": "closed",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "server"
-                                    },
-                                    {
-                                      "content": "Backend",
-                                      "variant": "h2",
-                                      "type": "typography"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "md",
-                                  "align": "center"
-                                },
-                                {
-                                  "status": "online",
-                                  "pulse": false,
-                                  "type": "status-dot",
-                                  "label": "Circuit Closed"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
-                              "justify": "between",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "message": "Service is healthy. All requests are being processed.",
-                              "variant": "success",
-                              "type": "alert"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Failures",
-                                  "value": "@entity.failureCount"
-                                },
-                                {
-                                  "label": "Successes",
-                                  "value": "@entity.successCount",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "type": "simple-grid",
-                              "cols": 2.0
-                            },
-                            {
-                              "max": "@entity.threshold",
-                              "value": "@entity.failureCount",
-                              "min": 0.0,
-                              "type": "meter"
-                            }
-                          ]
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "icon": "git-branch",
-                          "label": "Routes",
-                          "href": "/routes"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "href": "/analytics",
-                          "label": "Analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ]
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "BackendBrowseList",
+          "linkedEntity": "Backend",
+          "config": {
+            "fields": [
+              {
+                "icon": "server",
+                "name": "name",
+                "variant": "h3"
+              },
+              {
+                "variant": "body",
+                "name": "url"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "label": "Latency",
+                "name": "latency",
+                "variant": "caption",
+                "format": "number"
+              }
+            ],
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BACKEND_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendPersistor"
+              }
+            },
+            {
+              "event": "BACKEND_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendPersistor"
+              }
+            },
+            {
+              "event": "BACKEND_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "CircuitBreaker.traits.ServiceNodeCircuitBreaker",
+          "name": "BackendCircuitBreaker"
+        },
+        {
+          "ref": "RateLimiter.traits.RateBucketRateLimiter",
+          "name": "BackendRateLimiter"
+        },
+        {
+          "ref": "CacheAside.traits.CacheEntryCacheManager",
+          "name": "BackendCache"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "BackendCreate",
+          "linkedEntity": "Backend",
+          "config": {
+            "icon": "plus-circle",
+            "title": "New Backend",
+            "mode": "create",
+            "fields": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "BackendEdit",
+          "linkedEntity": "Backend",
+          "config": {
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Backend",
+            "fields": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "BackendView",
+          "linkedEntity": "Backend",
+          "config": {
+            "fields": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ],
+            "mode": "edit",
+            "icon": "eye",
+            "title": "View Backend"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "BackendDelete",
+          "linkedEntity": "Backend",
+          "config": {
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Backend",
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "BackendPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Backend",
+          "emits": [
+            {
+              "event": "BACKEND_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "BACKEND_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "BACKEND_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "BackendDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "BACKEND_CREATED",
+                "name": "Backend Created"
+              },
+              {
+                "key": "BACKEND_UPDATED",
+                "name": "Backend Updated"
+              },
+              {
+                "key": "BACKEND_DELETED",
+                "name": "Backend Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Backend",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "BACKEND_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Backend",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "BACKEND_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Backend",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "BACKEND_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
         {
-          "name": "Backends",
+          "name": "BackendsPage",
           "path": "/backends",
           "traits": [
             {
+              "ref": "BackendCatalog"
+            },
+            {
+              "ref": "BackendBrowseList"
+            },
+            {
               "ref": "BackendCircuitBreaker"
+            },
+            {
+              "ref": "BackendRateLimiter"
+            },
+            {
+              "ref": "BackendCache"
+            },
+            {
+              "ref": "BackendCreate"
+            },
+            {
+              "ref": "BackendEdit"
+            },
+            {
+              "ref": "BackendView"
+            },
+            {
+              "ref": "BackendDelete"
+            },
+            {
+              "ref": "BackendPersistor"
             }
           ]
         }
@@ -3182,9 +1484,16 @@
     },
     {
       "name": "AnalyticsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
       "entity": {
-        "name": "Analytics",
-        "persistence": "runtime",
+        "name": "AnalyticsRecord",
+        "collection": "analyticsrecords",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -3192,1397 +1501,138 @@
             "required": true
           },
           {
-            "name": "totalRequests",
-            "type": "number",
+            "name": "routePath",
+            "type": "string",
             "required": true
           },
           {
-            "name": "errorRate",
-            "type": "number",
-            "required": true
-          },
-          {
-            "name": "avgLatency",
-            "type": "number"
-          },
-          {
-            "name": "uptime",
+            "name": "method",
             "type": "string"
+          },
+          {
+            "name": "statusCode",
+            "type": "number",
+            "default": 200.0
+          },
+          {
+            "name": "latencyMs",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
           }
         ]
       },
       "traits": [
         {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "AnalyticsBrowseList",
+          "linkedEntity": "AnalyticsRecord",
+          "config": {
+            "pageSize": 100.0,
+            "cols": 1.0,
+            "displayPageSize": 10.0,
+            "fields": [
+              {
+                "label": "Route",
+                "variant": "h4",
+                "icon": "bar-chart-2",
+                "name": "routePath"
+              },
+              {
+                "variant": "badge",
+                "label": "Method",
+                "name": "method"
+              },
+              {
+                "name": "statusCode",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
+                "label": "Latency",
+                "format": "number",
+                "name": "latencyMs",
+                "variant": "caption"
+              },
+              {
+                "name": "timestamp",
+                "label": "Time",
+                "variant": "caption",
+                "format": "date"
+              }
+            ],
+            "gap": "sm"
+          }
+        },
+        {
           "name": "AnalyticsDisplay",
           "category": "interaction",
-          "linkedEntity": "Analytics",
-          "emits": [
-            {
-              "event": "AnalyticsLoaded",
-              "description": "Fired when Analytics finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Analytics]"
-                }
-              ]
-            },
-            {
-              "event": "AnalyticsLoadFailed",
-              "description": "Fired when Analytics fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "composing",
                 "isInitial": true
-              },
-              {
-                "name": "displaying"
-              },
-              {
-                "name": "refreshing"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "LOADED",
-                "name": "Loaded"
-              },
-              {
-                "key": "REFRESH",
-                "name": "Refresh"
-              },
-              {
-                "key": "REFRESHED",
-                "name": "Refreshed"
-              },
-              {
-                "key": "AnalyticsLoaded",
-                "name": "Analytics loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Analytics]"
-                  }
-                ]
-              },
-              {
-                "key": "AnalyticsLoadFailed",
-                "name": "Analytics load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "displaying",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.avgLatency",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.errorRate",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.totalRequests",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.uptime",
-                    ""
-                  ],
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "success": "AnalyticsLoaded",
-                        "failure": "AnalyticsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "scaled-diagram",
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "bar-chart-2"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h2",
-                                          "content": "Analytics"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
-                                      "type": "button",
-                                      "variant": "secondary",
-                                      "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "justify": "between"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "value": "@entity.totalRequests",
-                                          "type": "stat-display",
-                                          "label": "TotalRequests"
-                                        },
-                                        {
-                                          "value": "@entity.errorRate",
-                                          "type": "stat-display",
-                                          "label": "ErrorRate"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.avgLatency",
-                                          "label": "AvgLatency"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "type": "typography",
-                                                  "content": "Uptime"
-                                                },
-                                                {
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography",
-                                                  "variant": "h3"
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
-                                    }
-                                  ],
-                                  "type": "box",
-                                  "padding": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "type": "stack"
+                              "type": "icon",
+                              "name": "bar-chart-2"
+                            },
+                            {
+                              "content": "Analytics",
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ]
-                        }
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Recent requests",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.AnalyticsBrowseList"
                       ],
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "label": "Routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "LOADED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "success": "AnalyticsLoaded",
-                        "failure": "AnalyticsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "icon": "git-branch",
-                          "href": "/routes"
-                        },
-                        {
-                          "icon": "server",
-                          "href": "/backends",
-                          "label": "Backends"
-                        },
-                        {
-                          "icon": "bar-chart-2",
-                          "label": "Analytics",
-                          "href": "/analytics"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "lg",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "href": "/",
-                                      "label": "Home"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "bar-chart-2"
-                                        },
-                                        {
-                                          "variant": "h2",
-                                          "type": "typography",
-                                          "content": "Analytics"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "gap": "md",
-                                      "direction": "horizontal"
-                                    },
-                                    {
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
-                                      "variant": "secondary",
-                                      "type": "button",
-                                      "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "cols": 3.0,
-                                      "type": "simple-grid",
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.totalRequests",
-                                          "label": "TotalRequests"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ErrorRate",
-                                          "value": "@entity.errorRate"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.avgLatency",
-                                          "label": "AvgLatency"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "content": "Uptime",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.uptime"
-                                                }
-                                              ],
-                                              "gap": "sm",
-                                              "direction": "vertical"
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Chart View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "gap": "md",
-                                  "cols": 2.0,
-                                  "type": "grid"
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "color": "primary",
-                                      "label": "Current"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0,
-                                  "type": "graph-view"
-                                }
-                              ],
-                              "direction": "vertical"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "displaying",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "success": "AnalyticsLoaded",
-                        "failure": "AnalyticsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "label": "Routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "icon": "server",
-                          "label": "Backends",
-                          "href": "/backends"
-                        },
-                        {
-                          "href": "/analytics",
-                          "label": "Analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "gap": "md",
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "name": "bar-chart-2",
-                                          "type": "icon"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h2",
-                                          "content": "Analytics"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "variant": "secondary",
-                                      "label": "Refresh",
-                                      "action": "REFRESH",
-                                      "icon": "refresh-cw",
-                                      "type": "button"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.totalRequests",
-                                          "label": "TotalRequests"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.errorRate",
-                                          "label": "ErrorRate"
-                                        },
-                                        {
-                                          "value": "@entity.avgLatency",
-                                          "type": "stat-display",
-                                          "label": "AvgLatency"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "gap": "sm",
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "content": "Uptime",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "variant": "h3",
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography"
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "grid",
-                                  "gap": "md",
-                                  "cols": 2.0,
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0
-                                }
-                              ],
-                              "type": "stack"
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ],
-                      "type": "dashboard-layout"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "refreshing",
-                "event": "REFRESH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "failure": "AnalyticsLoadFailed",
-                        "success": "AnalyticsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "direction": "vertical",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "href": "/",
-                                      "label": "Home"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "bar-chart-2"
-                                        },
-                                        {
-                                          "content": "Analytics",
-                                          "type": "typography",
-                                          "variant": "h2"
-                                        }
-                                      ],
-                                      "gap": "md"
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "action": "REFRESH",
-                                      "icon": "refresh-cw",
-                                      "type": "button",
-                                      "variant": "secondary"
-                                    }
-                                  ],
-                                  "justify": "between",
-                                  "direction": "horizontal",
-                                  "type": "stack"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "label": "TotalRequests",
-                                          "value": "@entity.totalRequests"
-                                        },
-                                        {
-                                          "label": "ErrorRate",
-                                          "value": "@entity.errorRate",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.avgLatency",
-                                          "label": "AvgLatency"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "variant": "caption",
-                                                  "content": "Uptime",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "content": "@entity.uptime",
-                                                  "variant": "h3",
-                                                  "type": "typography"
-                                                }
-                                              ],
-                                              "gap": "sm"
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "type": "box"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "content": "Graph View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "cols": 2.0,
-                                  "type": "grid"
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "height": 200.0,
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "width": 400.0
-                                }
-                              ],
-                              "gap": "lg"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "href": "/routes",
-                          "label": "Routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "refreshing",
-                "to": "displaying",
-                "event": "REFRESHED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Analytics",
-                    {
-                      "emit": {
-                        "success": "AnalyticsLoaded",
-                        "failure": "AnalyticsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Analytics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "bar-chart-2"
-                                        },
-                                        {
-                                          "variant": "h2",
-                                          "type": "typography",
-                                          "content": "Analytics"
-                                        }
-                                      ],
-                                      "gap": "md",
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "variant": "secondary",
-                                      "type": "button",
-                                      "action": "REFRESH",
-                                      "icon": "refresh-cw"
-                                    }
-                                  ],
-                                  "type": "stack"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "value": "@entity.totalRequests",
-                                          "type": "stat-display",
-                                          "label": "TotalRequests"
-                                        },
-                                        {
-                                          "label": "ErrorRate",
-                                          "value": "@entity.errorRate",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "AvgLatency",
-                                          "value": "@entity.avgLatency"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Uptime"
-                                                },
-                                                {
-                                                  "content": "@entity.uptime",
-                                                  "type": "typography",
-                                                  "variant": "h3"
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "type": "box",
-                                  "padding": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "color": "primary",
-                                      "label": "Current"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "height": 200.0,
-                                  "width": 400.0,
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ],
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "lg"
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "icon": "git-branch",
-                          "href": "/routes"
-                        },
-                        {
-                          "href": "/backends",
-                          "label": "Backends",
-                          "icon": "server"
-                        },
-                        {
-                          "href": "/analytics",
-                          "icon": "bar-chart-2",
-                          "label": "Analytics"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -4592,6 +1642,9 @@
           "traits": [
             {
               "ref": "AnalyticsDisplay"
+            },
+            {
+              "ref": "AnalyticsBrowseList"
             }
           ]
         }

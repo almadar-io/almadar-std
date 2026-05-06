@@ -1,7 +1,7 @@
 {
   "name": "std-service-storage",
-  "version": "1.0.0",
-  "description": "std-service-storage as a Function",
+  "version": "2.0.0",
+  "description": "std-service-storage — Object storage upload service. Bind via `uses Storage from \"std/behaviors/std-service-storage\"` and configure `bucket` / `acl` / `maxSize` / `allowedMimeTypes` at the call site. Pass `uiTrait: \"@trait.YourUploadForm\"` to inject your own picker; leave unset to render the atom's default file picker (standalone surface).",
   "orbitals": [
     {
       "name": "ServiceStorageOrbital",
@@ -11,7 +11,33 @@
         "fields": [
           {
             "name": "id",
-            "type": "string"
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "bucket",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "fileKey",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "url",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "storageStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
           },
           {
             "name": "name",
@@ -34,40 +60,102 @@
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "bucket",
-            "type": "string",
-            "default": "uploads"
-          },
-          {
-            "name": "fileKey",
-            "type": "string"
-          },
-          {
-            "name": "prefix",
-            "type": "string"
-          },
-          {
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "name": "storageStatus",
-            "type": "string",
-            "default": "idle"
-          },
-          {
-            "name": "result",
-            "type": "string"
-          },
-          {
-            "name": "error",
-            "type": "string"
           }
         ]
       },
       "traits": [
+        {
+          "name": "ServiceStorageDefaultForm",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "UPLOAD",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                },
+                {
+                  "name": "file",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UPLOAD",
+                "name": "Upload"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "hard-drive"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Upload File",
+                              "variant": "h2"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "placeholder": "Choose file...",
+                          "inputType": "text",
+                          "type": "input"
+                        },
+                        {
+                          "type": "button",
+                          "variant": "primary",
+                          "label": "Upload",
+                          "action": "UPLOAD",
+                          "icon": "upload"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
         {
           "name": "ServiceStorageStorage",
           "category": "interaction",
@@ -94,12 +182,16 @@
               ]
             },
             {
-              "event": "ServiceStorageStorageCompleted",
+              "event": "StorageUploaded",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "result",
-                  "type": "object"
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "url",
+                  "type": "string"
                 }
               ]
             },
@@ -116,6 +208,26 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "FAILED",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "UPLOAD",
+              "triggers": "UPLOAD",
+              "source": {
+                "kind": "trait",
+                "trait": "ServiceStorageDefaultForm"
+              }
             }
           ],
           "stateMachine": {
@@ -125,10 +237,10 @@
                 "isInitial": true
               },
               {
-                "name": "executing"
+                "name": "uploading"
               },
               {
-                "name": "complete"
+                "name": "succeeded"
               },
               {
                 "name": "error"
@@ -140,29 +252,50 @@
                 "name": "Initialize"
               },
               {
-                "key": "UPLOAD_FILE",
-                "name": "Upload File"
-              },
-              {
-                "key": "DOWNLOAD_FILE",
-                "name": "Download File"
-              },
-              {
-                "key": "LIST_FILES",
-                "name": "List Files"
-              },
-              {
-                "key": "DELETE_FILE",
-                "name": "Delete File"
-              },
-              {
-                "key": "EXECUTED",
-                "name": "Executed",
+                "key": "UPLOAD",
+                "name": "Upload",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "string",
-                    "required": true
+                    "name": "source",
+                    "type": "string"
+                  },
+                  {
+                    "name": "file",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceStorageLoaded",
+                "name": "ServiceStorage loaded",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ServiceStorageLoadFailed",
+                "name": "ServiceStorage load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "StorageUploaded",
+                "name": "Storage uploaded",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "url",
+                    "type": "string"
                   }
                 ]
               },
@@ -182,80 +315,6 @@
                 "name": "Reset"
               },
               {
-                "key": "ServiceStorageLoaded",
-                "name": "ServiceStorage loaded",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "description",
-                    "type": "string"
-                  },
-                  {
-                    "name": "status",
-                    "type": "string"
-                  },
-                  {
-                    "name": "createdAt",
-                    "type": "string"
-                  },
-                  {
-                    "name": "bucket",
-                    "type": "string"
-                  },
-                  {
-                    "name": "fileKey",
-                    "type": "string"
-                  },
-                  {
-                    "name": "prefix",
-                    "type": "string"
-                  },
-                  {
-                    "name": "content",
-                    "type": "string"
-                  },
-                  {
-                    "name": "storageStatus",
-                    "type": "string"
-                  },
-                  {
-                    "name": "result",
-                    "type": "string"
-                  },
-                  {
-                    "name": "error",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceStorageLoadFailed",
-                "name": "ServiceStorage load failed",
-                "payloadSchema": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ServiceStorageStorageCompleted",
-                "name": "ServiceStorage storage completed",
-                "payloadSchema": [
-                  {
-                    "name": "result",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
                 "key": "ServiceStorageStorageFailed",
                 "name": "ServiceStorage storage failed",
                 "payloadSchema": [
@@ -268,6 +327,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -279,22 +342,7 @@
                   [
                     "set",
                     "@entity.bucket",
-                    "uploads"
-                  ],
-                  [
-                    "set",
-                    "@entity.content",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.fileKey",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.prefix",
-                    ""
+                    "@config.bucket"
                   ],
                   [
                     "fetch",
@@ -310,100 +358,28 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
-                        {
-                          "gap": "md",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "hard-drive",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "ServiceStorage Storage"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "bucket-name",
-                          "type": "input"
-                        },
-                        {
-                          "placeholder": "path/to/file.txt",
-                          "type": "input"
-                        },
-                        {
-                          "placeholder": "path/prefix/",
-                          "type": "input"
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "File content..."
-                        },
-                        {
-                          "justify": "center",
-                          "children": [
-                            {
-                              "action": "UPLOAD_FILE",
-                              "label": "Upload",
-                              "variant": "primary",
-                              "icon": "upload",
-                              "type": "button"
-                            },
-                            {
-                              "icon": "download",
-                              "label": "Download",
-                              "action": "DOWNLOAD_FILE",
-                              "variant": "secondary",
-                              "type": "button"
-                            },
-                            {
-                              "label": "List",
-                              "variant": "secondary",
-                              "action": "LIST_FILES",
-                              "icon": "list",
-                              "type": "button"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "danger",
-                              "action": "DELETE_FILE",
-                              "icon": "trash-2",
-                              "label": "Delete"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "align": "stretch"
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
                 "from": "idle",
-                "to": "executing",
-                "event": "UPLOAD_FILE",
+                "to": "uploading",
+                "event": "UPLOAD",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Processing...",
-                      "message": "Executing storage operation on servicestorage..."
+                      "title": "Uploading...",
+                      "message": "Uploading file to storage.",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -411,14 +387,14 @@
                     "storage",
                     "upload",
                     {
-                      "bucket": "@entity.bucket",
-                      "content": "@entity.content",
-                      "key": "@entity.fileKey"
+                      "bucket": "@config.bucket",
+                      "file": "@payload.file",
+                      "acl": "@config.acl"
                     },
                     {
                       "emit": {
-                        "success": "ServiceStorageStorageCompleted",
-                        "failure": "ServiceStorageStorageFailed"
+                        "success": "StorageUploaded",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -426,150 +402,72 @@
               },
               {
                 "from": "idle",
-                "to": "executing",
-                "event": "DOWNLOAD_FILE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Processing...",
-                      "message": "Executing storage operation on servicestorage...",
-                      "type": "loading-state"
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "storage",
-                    "download",
-                    {
-                      "key": "@entity.fileKey",
-                      "bucket": "@entity.bucket"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceStorageStorageCompleted",
-                        "failure": "ServiceStorageStorageFailed"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceStorageLoaded"
               },
               {
                 "from": "idle",
-                "to": "executing",
-                "event": "LIST_FILES",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Processing...",
-                      "type": "loading-state",
-                      "message": "Executing storage operation on servicestorage..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "storage",
-                    "list",
-                    {
-                      "prefix": "@entity.prefix",
-                      "bucket": "@entity.bucket"
-                    },
-                    {
-                      "emit": {
-                        "failure": "ServiceStorageStorageFailed",
-                        "success": "ServiceStorageStorageCompleted"
-                      }
-                    }
-                  ]
-                ]
+                "to": "idle",
+                "event": "ServiceStorageLoadFailed"
               },
               {
-                "from": "idle",
-                "to": "executing",
-                "event": "DELETE_FILE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Processing...",
-                      "message": "Executing storage operation on servicestorage...",
-                      "type": "loading-state"
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "storage",
-                    "delete",
-                    {
-                      "bucket": "@entity.bucket",
-                      "key": "@entity.fileKey"
-                    },
-                    {
-                      "emit": {
-                        "success": "ServiceStorageStorageCompleted",
-                        "failure": "ServiceStorageStorageFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "executing",
-                "to": "complete",
-                "event": "EXECUTED",
+                "from": "uploading",
+                "to": "succeeded",
+                "event": "StorageUploaded",
                 "effects": [
                   [
                     "set",
-                    "@entity.result",
-                    "@payload.data"
+                    "@entity.fileKey",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.url",
+                    "@payload.url"
                   ],
                   [
                     "set",
                     "@entity.storageStatus",
-                    "complete"
+                    "succeeded"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "variant": "success",
-                          "message": "Operation completed successfully",
-                          "type": "alert"
+                          "message": "Upload successful!",
+                          "type": "alert",
+                          "variant": "success"
                         },
                         {
-                          "content": "@entity.result",
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "@entity.url"
                         },
                         {
-                          "variant": "ghost",
-                          "action": "RESET",
                           "icon": "rotate-ccw",
+                          "label": "Upload Another",
+                          "variant": "ghost",
                           "type": "button",
-                          "label": "Back"
+                          "action": "RESET"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
               },
               {
-                "from": "executing",
+                "from": "uploading",
                 "to": "error",
                 "event": "FAILED",
                 "effects": [
@@ -579,128 +477,69 @@
                     "@payload.error"
                   ],
                   [
-                    "set",
-                    "@entity.storageStatus",
-                    "error"
+                    "emit",
+                    "ServiceStorageStorageFailed",
+                    {
+                      "code": "upload_failed",
+                      "error": "@entity.error"
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "message": "@entity.error",
-                          "title": "Operation Failed",
-                          "type": "error-state"
-                        },
-                        {
-                          "variant": "ghost",
-                          "action": "RESET",
-                          "type": "button",
-                          "label": "Back",
-                          "icon": "rotate-ccw"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg"
+                      "type": "error-state",
+                      "onRetry": "RETRY",
+                      "title": "Upload Failed",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
               },
               {
-                "from": "complete",
+                "from": "succeeded",
                 "to": "idle",
                 "event": "RESET",
                 "effects": [
                   [
-                    "set",
-                    "@entity.storageStatus",
-                    "idle"
-                  ],
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        "@config.uiTrait"
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "succeeded",
+                "to": "succeeded",
+                "event": "StorageUploaded"
+              },
+              {
+                "from": "error",
+                "to": "error",
+                "event": "ServiceStorageStorageFailed"
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
+                "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "hard-drive"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "ServiceStorage Storage",
-                              "variant": "h2"
-                            }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "placeholder": "bucket-name",
-                          "type": "input"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "path/to/file.txt"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "path/prefix/"
-                        },
-                        {
-                          "placeholder": "File content...",
-                          "type": "textarea"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "action": "UPLOAD_FILE",
-                              "label": "Upload",
-                              "variant": "primary",
-                              "icon": "upload"
-                            },
-                            {
-                              "variant": "secondary",
-                              "icon": "download",
-                              "action": "DOWNLOAD_FILE",
-                              "type": "button",
-                              "label": "Download"
-                            },
-                            {
-                              "action": "LIST_FILES",
-                              "variant": "secondary",
-                              "label": "List",
-                              "type": "button",
-                              "icon": "list"
-                            },
-                            {
-                              "type": "button",
-                              "icon": "trash-2",
-                              "action": "DELETE_FILE",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
-                          "justify": "center",
-                          "type": "stack"
-                        }
+                        "@config.uiTrait"
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "stretch"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -711,97 +550,46 @@
                 "event": "RESET",
                 "effects": [
                   [
-                    "set",
-                    "@entity.storageStatus",
-                    "idle"
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
+                      "children": [
+                        "@config.uiTrait"
+                      ],
                       "direction": "vertical",
                       "type": "stack",
-                      "align": "stretch",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "hard-drive"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "ServiceStorage Storage",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "bucket-name"
-                        },
-                        {
-                          "type": "input",
-                          "placeholder": "path/to/file.txt"
-                        },
-                        {
-                          "placeholder": "path/prefix/",
-                          "type": "input"
-                        },
-                        {
-                          "placeholder": "File content...",
-                          "type": "textarea"
-                        },
-                        {
-                          "justify": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Upload",
-                              "action": "UPLOAD_FILE",
-                              "variant": "primary",
-                              "icon": "upload"
-                            },
-                            {
-                              "action": "DOWNLOAD_FILE",
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Download",
-                              "icon": "download"
-                            },
-                            {
-                              "action": "LIST_FILES",
-                              "type": "button",
-                              "label": "List",
-                              "variant": "secondary",
-                              "icon": "list"
-                            },
-                            {
-                              "icon": "trash-2",
-                              "action": "DELETE_FILE",
-                              "type": "button",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg"
+                      "gap": "md"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "maxSize": {
+              "type": "number",
+              "default": 10485760.0
+            },
+            "acl": {
+              "type": "string",
+              "default": "private",
+              "values": [
+                "public",
+                "private"
+              ]
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceStorageDefaultForm"
+            },
+            "bucket": {
+              "type": "string",
+              "default": ""
+            },
+            "allowedMimeTypes": {
+              "type": "[string]",
+              "default": []
+            }
           },
           "scope": "instance"
         }

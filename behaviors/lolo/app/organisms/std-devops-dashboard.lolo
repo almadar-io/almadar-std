@@ -1,23 +1,35 @@
-app std-devops-dashboard "1.0.0"
+app std-devops-dashboard "2.0.0"
 "DevOps dashboard: services, alerts, logs, system metrics. Pick for SRE/observability."
 
 orbital ServiceNodeOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
 
-  entity ServiceNode [runtime] {
+  entity ServiceNode [persistent: servicenodes] {
     id : string!
     name : string!
-    status : "healthy" | "degraded" | "down"
-    url : string
+    status : "healthy" | "degraded" | "down" = "healthy"
+    region : string = ""
+    url : string = ""
     lastChecked : datetime
     failureCount : number = 0
     successCount : number = 0
     threshold : number = 5
+    pendingId : string = ""
   }
+
+  type ServiceNodeLoaded     = Event { data : [ServiceNode] }              "Fired when ServiceNode finishes loading"
+  type ServiceNodeLoadFailed = Event { error : string, code : string }     "Fired when ServiceNode fails to load"
 
   trait ServiceNodeAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.ServiceNodeCircuitBreaker",
+      contentTrait: "@trait.ServiceNodeCatalog",
       appName: "DevOps Dashboard",
       navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
       searchEvent: "SERVICE_SEARCH",
@@ -30,14 +42,229 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  type ServiceNodeLoaded     = Event { data : [ServiceNode] }                  "Fired when ServiceNode finishes loading"
-  type ServiceNodeLoadFailed = Event { error : string, code : string } "Fired when ServiceNode fails to load"
-  type LogEntrySaved = Event { id : string }
-  type LogEntrySaveFailed = Event { error : string, code : string }
-  type LogEntryUpdated = Event { id : string }
-  type LogEntryUpdateFailed = Event { error : string, code : string }
-  type LogEntryDeleted = Event { id : string }
-  type LogEntryDeleteFailed = Event { error : string, code : string }
+  trait ServiceNodeCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "server" },
+              { type: "typography", content: "Services", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Register Service", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.ServiceNodeSearch",
+            "@trait.ServiceNodeFilter"
+          ]},
+          "@trait.ServiceNodeStats",
+          "@trait.ServiceNodeGraphs",
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "status-dot", status: "online", pulse: false, label: "Healthy" },
+            { type: "status-dot", status: "warning", pulse: false, label: "Degraded" },
+            { type: "status-dot", status: "critical", pulse: true, label: "Down" }
+          ]},
+          "@trait.ServiceNodeBrowseList",
+          { type: "divider" },
+          "@trait.ServiceNodeCircuitBreaker"
+        ]})
+      SERVICE_SEARCH -> composing
+      SERVICE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to services", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      ServiceNodeAppLayout.SERVICE_SEARCH -> SERVICE_SEARCH
+      ServiceNodeAppLayout.SERVICE_NOTIFICATIONS_OPEN -> SERVICE_NOTIFICATIONS_OPEN
+      SERVICE_SEARCH { value : string }
+      SERVICE_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait ServiceNodeSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search services…",
+      event: "SERVICE_SEARCH"
+    }
+  }
+
+  trait ServiceNodeFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["healthy", "degraded", "down"] },
+        { field: "region", label: "Region", filterType: "select", options: ["us-east", "us-west", "eu-central", "ap-south"] }
+      ],
+      event: "SERVICE_FILTER"
+    }
+  }
+
+  trait ServiceNodeStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Services",
+      metrics: [
+        { aggregation: "count", label: "Total",    icon: "server",       variant: "primary", format: "number" },
+        { aggregation: "count", label: "Healthy",  icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "healthy"]] },
+        { aggregation: "count", label: "Degraded", icon: "alert-circle", variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "degraded"]] },
+        { aggregation: "count", label: "Down",     icon: "alert-triangle", variant: "danger", format: "number", filter: ["fn", "row", ["=", "@row.status", "down"]] }
+      ]
+    }
+    listens {
+      ServiceNodeBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait ServiceNodeGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Services by Status",
+      subtitle: "Health distribution across the fleet",
+      chartType: "pie",
+      categoryField: "status",
+      aggregation: "count",
+      height: 240,
+      showLegend: true
+    }
+    listens {
+      ServiceNodeBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait ServiceNodeBrowseList = Browse.traits.BrowseItemBrowse -> ServiceNode {
+    config: {
+      fields: [
+        { name: "name",        variant: "h4",      icon: "server" },
+        { name: "status",      variant: "badge" },
+        { name: "region",      variant: "body" },
+        { name: "lastChecked", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      ServiceNodeSearch.SEARCH                 -> REFETCH_QUERY
+      ServiceNodeFilter.FILTER                 -> REFETCH_FILTER
+      ServiceNodePersistor.SERVICE_CREATED     -> INIT
+      ServiceNodePersistor.SERVICE_UPDATED     -> INIT
+      ServiceNodePersistor.SERVICE_DELETED     -> INIT
+    }
+  }
+
+  trait ServiceNodeCreate = Modal.traits.ModalRecordModal -> ServiceNode {
+    config: {
+      icon: "plus-circle",
+      title: "Register Service",
+      mode: "create",
+      fields: ["name", "status", "region", "url", "threshold"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      ServiceNodeCatalog.CREATE -> CREATE
+      CREATE { id : string, row : ServiceNode }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ServiceNodeEdit = Modal.traits.ModalRecordModal -> ServiceNode {
+    config: {
+      icon: "edit",
+      title: "Edit Service",
+      mode: "edit",
+      fields: ["name", "status", "region", "url", "threshold"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      ServiceNodeBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : ServiceNode }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ServiceNodeView = Modal.traits.ModalRecordModal -> ServiceNode {
+    config: {
+      icon: "eye",
+      title: "View Service",
+      mode: "edit",
+      fields: ["name", "status", "region", "url", "lastChecked", "failureCount", "successCount", "threshold"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      ServiceNodeBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : ServiceNode }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ServiceNodeDelete = Confirmation.traits.ConfirmActionConfirmation -> ServiceNode {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Service",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      ServiceNodeBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : ServiceNode }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ServiceNodePersistor -> ServiceNode [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create ServiceNode @payload.data { emit: { success: "SERVICE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update ServiceNode @payload.data { emit: { success: "SERVICE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete ServiceNode @payload.id { emit: { success: "SERVICE_DELETED" } })
+    }
+    emits {
+      SERVICE_CREATED -> external { id : string }
+      SERVICE_UPDATED -> external { id : string }
+      SERVICE_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      ServiceNodeCreate.SAVE          -> DO_CREATE
+      ServiceNodeEdit.SAVE            -> DO_UPDATE
+      ServiceNodeDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  ;; Circuit-breaker state machine — kept inline because the topology
+  ;; (closed -> open -> halfOpen) is the whole point of the trait.
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction, collection] {
     initial: closed
     state closed {
@@ -46,340 +273,304 @@ orbital ServiceNodeOrbital {
         (set @entity.successCount 0)
         (set @entity.threshold 5)
         (fetch ServiceNode { emit: { success: "ServiceNodeLoaded", failure: "ServiceNodeLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
-      SERVICE_SEARCH -> closed
-        (fetch ServiceNode { emit: { success: "ServiceNodeLoaded", failure: "ServiceNodeLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      SERVICE_NOTIFICATIONS_OPEN -> closed
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to services", action: "INIT", variant: "ghost" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "alert", variant: "success", message: "All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
       FAILURE -> open
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       SUCCESS -> closed
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "alert", variant: "success", message: "All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
     state open {
       TIMEOUT -> halfOpen
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Circuit Half-Open" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Half-Open" }] }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }] })
       RESET -> closed
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "alert", variant: "success", message: "All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
     state halfOpen {
       SUCCESS -> closed
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "alert", variant: "success", message: "All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
       FAILURE -> open
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       RESET -> closed
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "alert", variant: "success", message: "All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
-emits {
-ServiceNodeLoaded
+    emits {
+      ServiceNodeLoaded
       ServiceNodeLoadFailed
-LogEntrySaved
-      LogEntrySaveFailed
-LogEntryUpdated
-      LogEntryUpdateFailed
-LogEntryDeleted
-      LogEntryDeleteFailed
     }
-
-        listens {
-      ServiceNodeAppLayout.SERVICE_SEARCH -> SERVICE_SEARCH
-      ServiceNodeAppLayout.SERVICE_NOTIFICATIONS_OPEN -> SERVICE_NOTIFICATIONS_OPEN
-      SERVICE_SEARCH { value : string }
-      SERVICE_NOTIFICATIONS_OPEN { id : string }
+    listens {
       ServiceNodeLoadFailed { error : string, code : string }
-
-      LogEntrySaveFailed { error : string, code : string }
-      LogEntryUpdateFailed { error : string, code : string }
-      LogEntryDeleteFailed { error : string, code : string }
     }
   }
-  page "/services" as ServicesPage -> ServiceNodeAppLayout, ServiceNodeCircuitBreaker
+
+  page "/services" as ServicesPage -> ServiceNodeAppLayout, ServiceNodeCatalog, ServiceNodeSearch, ServiceNodeFilter, ServiceNodeStats, ServiceNodeGraphs, ServiceNodeBrowseList, ServiceNodeCreate, ServiceNodeEdit, ServiceNodeView, ServiceNodeDelete, ServiceNodePersistor, ServiceNodeCircuitBreaker
 }
+
 orbital AlertMetricOrbital {
-  entity AlertMetric [runtime] {
-    id : string!
-    severity : string!
-    message : string!
-    timestamp : string
-    source : string
-  }
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Email        from "std/behaviors/std-service-email"
 
-  type AlertMetricLoaded     = Event { data : [AlertMetric] }                  "Fired when AlertMetric finishes loading"
-  type AlertMetricLoadFailed = Event { error : string, code : string } "Fired when AlertMetric fails to load"
-  trait AlertMetricDisplay -> AlertMetric [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.message "")
-        (set @entity.severity "")
-        (set @entity.source "")
-        (set @entity.timestamp "")
-        (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state displaying {
-      INIT -> displaying
-        (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch AlertMetric { emit: { success: "AlertMetricLoaded", failure: "AlertMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Alerts" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Alerts", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Severity" }, { type: "typography", variant: "h3", content: "@entity.severity" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "h3", content: "@entity.message" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Source" }, { type: "typography", variant: "h3", content: "@entity.source" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-AlertMetricLoaded
-      AlertMetricLoadFailed
-    }
-
-        listens {
-      AlertMetricLoadFailed { error : string, code : string }
-    }
-  }
-  page "/alerts" -> AlertMetricDisplay
-}
-orbital LogEntryOrbital {
-  entity LogEntry [persistent: logentrys] {
+  entity AlertMetric [persistent: alertmetrics] {
     id : string!
-    level : string!
+    severity : "info" | "warning" | "critical" = "info"
     message : string!
     timestamp : datetime
-    service : string
+    source : string = ""
     pendingId : string = ""
   }
 
-  type LogEntryLoaded     = Event { data : [LogEntry] }                  "Fired when LogEntry finishes loading"
-  type LogEntryLoadFailed = Event { error : string, code : string } "Fired when LogEntry fails to load"
-  type LogEntryDeleteFailed = Event { error : string, code : string }
-  type LogEntryDeleted = Event { id : string }
-  type LogEntrySaveFailed = Event { error : string, code : string }
-  type LogEntrySaved = Event { id : string }
-  type LogEntryUpdateFailed = Event { error : string, code : string }
-  type LogEntryUpdated = Event { id : string }
-  trait LogEntryBrowse -> LogEntry [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      LogEntryLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Logs", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create LogEntry", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "message", variant: "h4", icon: "file-text" }, { name: "level", variant: "badge" }, { name: "service", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "compact", gap: "sm" }] }] })
-      LogEntryLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load logentry" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  trait AlertCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "bell" },
+              { type: "typography", content: "Alerts", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Alert", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.AlertBrowseList"
+        ]})
     }
     emits {
-CREATE
-      VIEW { id : string!, row : LogEntry }
-EDIT { id : string!, row : LogEntry }
-DELETE { id : string!, row : LogEntry }
-LogEntryLoaded
-      LogEntryLoadFailed
-    }
-    listens {
-      LogEntryCreate.LOG_ENTRY_CREATED -> INIT
-      LogEntryEdit.LOG_ENTRY_UPDATED -> INIT
-      LogEntryDelete.LOG_ENTRY_DELETED -> INIT
-          LogEntryLoadFailed { error : string, code : string }
+      CREATE -> external { source : string }
     }
   }
-  trait LogEntryCreate -> LogEntry [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-      CREATE -> open
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create LogEntry @payload.data { emit: { success: "LogEntrySaved", failure: "LogEntrySaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit LOG_ENTRY_CREATED)
-    }
-    emits {
-LOG_ENTRY_CREATED
-      LogEntryLoadFailed
-LogEntryLoaded
-      LogEntrySaveFailed
-LogEntrySaved
-    
-    }
-    listens {
-      LogEntryLoadFailed { error : string, code : string }
-      SAVE { data : string }
-      LogEntryBrowse.CREATE -> CREATE
-    }
-  }
-  trait LogEntryEdit -> LogEntry [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-      EDIT -> open
-        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["level", "message", "timestamp", "service"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update LogEntry @payload.data { emit: { success: "LogEntryUpdated", failure: "LogEntryUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit LOG_ENTRY_UPDATED)
-    }
-    emits {
-LOG_ENTRY_UPDATED
-      LogEntryLoadFailed
-LogEntryLoaded
-      LogEntryUpdateFailed
-LogEntryUpdated
-    
-    }
-    listens {
-      LogEntryView.EDIT -> EDIT
-      LogEntryLoadFailed { error : string, code : string }
-      EDIT { id : string, row : LogEntry }
-      SAVE { data : string }
-      LogEntryBrowse.EDIT -> EDIT
-    }
-  }
-  trait LogEntryView -> LogEntry [interaction, collection] {
-    emits {
-EDIT { id : string }
-LogEntryLoaded
-      LogEntryLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.level "")
-        (set @entity.message "")
-        (set @entity.service "")
-        (set @entity.timestamp "")
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-      VIEW -> open
-        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.level" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Level" }, { type: "typography", variant: "body", content: "@entity.level" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Message" }, { type: "typography", variant: "body", content: "@entity.message" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Service" }, { type: "typography", variant: "body", content: "@entity.service" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
+  trait AlertBrowseList = Browse.traits.BrowseItemBrowse -> AlertMetric {
+    config: {
+      fields: [
+        { name: "severity",  variant: "badge" },
+        { name: "message",   variant: "h4",      icon: "alert-triangle" },
+        { name: "source",    variant: "body" },
+        { name: "timestamp", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
     listens {
-      LogEntryLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      LogEntryBrowse.VIEW -> VIEW
+      AlertPersistor.ALERT_CREATED     -> INIT
+      AlertPersistor.ALERT_UPDATED     -> INIT
+      AlertPersistor.ALERT_DELETED     -> INIT
     }
   }
-  trait LogEntryDelete -> LogEntry [interaction, collection] {
+
+  trait AlertCreate = Modal.traits.ModalRecordModal -> AlertMetric {
+    config: {
+      icon: "plus-circle",
+      title: "New Alert",
+      mode: "create",
+      fields: ["severity", "message", "source", "timestamp"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      AlertCatalog.CREATE -> CREATE
+      CREATE { id : string, row : AlertMetric }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertEdit = Modal.traits.ModalRecordModal -> AlertMetric {
+    config: {
+      icon: "edit",
+      title: "Edit Alert",
+      mode: "edit",
+      fields: ["severity", "message", "source", "timestamp"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      AlertBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : AlertMetric }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertView = Modal.traits.ModalRecordModal -> AlertMetric {
+    config: {
+      icon: "eye",
+      title: "View Alert",
+      mode: "edit",
+      fields: ["severity", "message", "source", "timestamp"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      AlertBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : AlertMetric }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertDelete = Confirmation.traits.ConfirmActionConfirmation -> AlertMetric {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Alert",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      AlertBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : AlertMetric }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertPersistor -> AlertMetric [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch LogEntry {id: "@payload.id" , emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" }, emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete LogEntry", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete LogEntry @entity.pendingId { emit: { success: "LogEntryDeleted", failure: "LogEntryDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-        (emit LOG_ENTRY_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch LogEntry { emit: { success: "LogEntryLoaded", failure: "LogEntryLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create AlertMetric @payload.data { emit: { success: "ALERT_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update AlertMetric @payload.data { emit: { success: "ALERT_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete AlertMetric @payload.id { emit: { success: "ALERT_DELETED" } })
     }
     emits {
-LOG_ENTRY_DELETED
-      LogEntryDeleteFailed
-LogEntryDeleted
-      LogEntryLoadFailed
-LogEntryLoaded
-    
+      ALERT_CREATED -> external { id : string }
+      ALERT_UPDATED -> external { id : string }
+      ALERT_DELETED -> external { id : string }
     }
     listens {
-      LogEntryLoadFailed { error : string, code : string }
-      DELETE { id : string }
-      LogEntryBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      AlertCreate.SAVE          -> DO_CREATE
+      AlertEdit.SAVE            -> DO_UPDATE
+      AlertDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/logs" -> LogEntryBrowse, LogEntryCreate, LogEntryEdit, LogEntryView, LogEntryDelete
+
+  ;; Email-out for critical alerts. Listens for AlertPersistor.ALERT_CREATED
+  ;; and dispatches via the std-service-email service when severity is critical.
+  trait AlertEmail -> AlertMetric [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      ALERT_TRIGGERED -> idle when (= "@payload.severity" "critical")
+        (call-service email "send" {
+          recipient: "@payload.recipient",
+          subject: "@payload.subject",
+          body: "@payload.body",
+          sender: "alerts@example.com"
+        })
+    }
+    listens {
+      ALERT_TRIGGERED { id : string, severity : string, recipient : string, subject : string, body : string }
+      AlertPersistor.ALERT_CREATED -> ALERT_TRIGGERED
+    }
+  }
+
+  page "/alerts" as AlertsPage -> AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail
 }
+
+orbital LogEntryOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity LogEntry [persistent: logentries] {
+    id : string!
+    level : "debug" | "info" | "warn" | "error" = "info"
+    message : string!
+    timestamp : datetime
+    service : string = ""
+  }
+
+  trait LogCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "terminal" },
+              { type: "typography", content: "Logs", variant: "h2" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.LogBrowseList"
+        ]})
+    }
+  }
+
+  trait LogBrowseList = Browse.traits.BrowseItemBrowse -> LogEntry {
+    config: {
+      variant: "dense",
+      fields: [
+        { name: "level",     variant: "badge" },
+        { name: "message",   variant: "body",    icon: "file-text" },
+        { name: "service",   variant: "caption" },
+        { name: "timestamp", variant: "caption", format: "date" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+  }
+
+  page "/logs" as LogsPage -> LogCatalog, LogBrowseList
+}
+
 orbital SystemMetricOrbital {
-  entity SystemMetric [runtime] {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity SystemMetric [persistent: systemmetrics] {
     id : string!
     name : string!
     value : number!
-    unit : string
-    trend : string
+    unit : string = ""
+    trend : "up" | "down" | "flat" = "flat"
   }
 
-  type SystemMetricLoaded     = Event { data : [SystemMetric] }                  "Fired when SystemMetric finishes loading"
-  type SystemMetricLoadFailed = Event { error : string, code : string } "Fired when SystemMetric fails to load"
-  trait SystemMetricDisplay -> SystemMetric [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.name "")
-        (set @entity.trend "")
-        (set @entity.unit "")
-        (set @entity.value 0)
-        (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state displaying {
-      INIT -> displaying
-        (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch SystemMetric { emit: { success: "SystemMetricLoaded", failure: "SystemMetricLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: "@entity.name" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Trend" }, { type: "typography", variant: "h3", content: "@entity.trend" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-SystemMetricLoaded
-      SystemMetricLoadFailed
-    }
-
-        listens {
-      SystemMetricLoadFailed { error : string, code : string }
+  trait SystemMetricsBrowse = Browse.traits.BrowseItemBrowse -> SystemMetric {
+    config: {
+      pageSize: 100,
+      displayPageSize: 10,
+      fields: [
+        { name: "name",  label: "Metric", variant: "h4" },
+        { name: "value", label: "Value",  variant: "h3", format: "number" },
+        { name: "unit",  label: "Unit",   variant: "caption" },
+        { name: "trend", label: "Trend",  variant: "badge" }
+      ]
     }
   }
-  page "/metrics" -> SystemMetricDisplay
+
+  trait SystemMetricDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", variant: "h2", content: "System Metrics" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recent" },
+          "@trait.SystemMetricsBrowse"
+        ]})
+    }
+  }
+
+  page "/metrics" -> SystemMetricDisplay, SystemMetricsBrowse
 }

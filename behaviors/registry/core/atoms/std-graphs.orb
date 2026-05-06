@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string"
-                },
                 "value": {
                   "name": "value",
                   "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
                 }
               }
             }
@@ -77,8 +77,8 @@
                     "@entity.chartData",
                     [
                       {
-                        "label": "Active",
-                        "value": 6.0
+                        "value": 6.0,
+                        "label": "Active"
                       },
                       {
                         "label": "Pending",
@@ -94,14 +94,14 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "chartType": "@config.chartType",
-                      "data": "@entity.chartData",
-                      "type": "chart",
+                      "showLegend": "@config.showLegend",
                       "subtitle": "@config.subtitle",
+                      "data": "@entity.chartData",
                       "height": "@config.height",
+                      "type": "chart",
                       "showValues": "@config.showValues",
-                      "showLegend": "@config.showLegend"
+                      "title": "@config.title",
+                      "chartType": "@config.chartType"
                     }
                   ]
                 ]
@@ -128,11 +128,6 @@
                         "fn",
                         "entry",
                         {
-                          "label": [
-                            "object/get",
-                            "@entry",
-                            "0"
-                          ],
                           "value": [
                             "if",
                             [
@@ -208,6 +203,11 @@
                                 ]
                               ]
                             ]
+                          ],
+                          "label": [
+                            "object/get",
+                            "@entry",
+                            "0"
                           ]
                         }
                       ]
@@ -217,14 +217,14 @@
                     "render-ui",
                     "main",
                     {
-                      "showValues": "@config.showValues",
-                      "title": "@config.title",
-                      "subtitle": "@config.subtitle",
-                      "type": "chart",
-                      "chartType": "@config.chartType",
-                      "showLegend": "@config.showLegend",
                       "data": "@entity.chartData",
-                      "height": "@config.height"
+                      "showLegend": "@config.showLegend",
+                      "title": "@config.title",
+                      "type": "chart",
+                      "subtitle": "@config.subtitle",
+                      "height": "@config.height",
+                      "showValues": "@config.showValues",
+                      "chartType": "@config.chartType"
                     }
                   ]
                 ]
@@ -232,13 +232,21 @@
             ]
           },
           "config": {
+            "height": {
+              "type": "number",
+              "default": 280.0
+            },
+            "showValues": {
+              "type": "boolean",
+              "default": false
+            },
             "showLegend": {
               "type": "boolean",
               "default": true
             },
-            "categoryField": {
+            "title": {
               "type": "string",
-              "default": "status"
+              "default": "Distribution"
             },
             "aggregation": {
               "type": "string",
@@ -251,18 +259,6 @@
                 "max"
               ]
             },
-            "subtitle": {
-              "type": "string",
-              "default": "Counts per category"
-            },
-            "height": {
-              "type": "number",
-              "default": 280.0
-            },
-            "title": {
-              "type": "string",
-              "default": "Distribution"
-            },
             "valueField": {
               "type": "string",
               "default": ""
@@ -274,13 +270,16 @@
                 "bar",
                 "line",
                 "pie",
-                "area",
-                "donut"
+                "area"
               ]
             },
-            "showValues": {
-              "type": "boolean",
-              "default": false
+            "categoryField": {
+              "type": "string",
+              "default": "status"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Counts per category"
             }
           },
           "scope": "instance"

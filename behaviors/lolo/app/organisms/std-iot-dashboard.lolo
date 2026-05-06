@@ -1,301 +1,520 @@
-app std-iot-dashboard "1.0.0"
+app std-iot-dashboard "2.0.0"
 "IoT dashboard: devices, sensor readings, and alerts. Pick for connected-device monitoring."
 
 orbital SensorReadingOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses Stats  from "std/behaviors/std-stats"
+  uses Graphs from "std/behaviors/std-graphs"
+  uses Browse from "std/behaviors/std-browse"
 
-  entity SensorReading [runtime] {
+  entity SensorReading [persistent: sensorreadings] {
     id : string!
     sensorId : string!
     value : number!
-    unit : string
-    timestamp : string
+    unit : string = ""
+    timestamp : string = ""
+    type : string = ""
+    threshold : number = 0
   }
 
-  trait SensorAppLayout = AppShell.traits.AppLayout {
-    config: {
-      contentTrait: "@trait.SensorReadingDisplay",
-      appName: "IoT Dashboard",
-      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }],
-      searchEvent: "SENSOR_SEARCH",
-      notifications: [],
-      notificationClickEvent: "SENSOR_NOTIFICATIONS_OPEN"
-    }
-    events {
-      SEARCH: SENSOR_SEARCH
-      NOTIFY_CLICK: SENSOR_NOTIFICATIONS_OPEN
-    }
-  }
-
-  type SensorReadingLoaded     = Event { data : [SensorReading] }                  "Fired when SensorReading finishes loading"
+  type SensorReadingLoaded     = Event { data : [SensorReading] }       "Fired when SensorReading finishes loading"
   type SensorReadingLoadFailed = Event { error : string, code : string } "Fired when SensorReading fails to load"
-  type DeviceSaved = Event { id : string }
-  type DeviceSaveFailed = Event { error : string, code : string }
-  type DeviceUpdated = Event { id : string }
-  type DeviceUpdateFailed = Event { error : string, code : string }
-  type DeviceDeleted = Event { id : string }
-  type DeviceDeleteFailed = Event { error : string, code : string }
-  trait SensorReadingDisplay -> SensorReading [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.sensorId "")
-        (set @entity.timestamp "")
-        (set @entity.unit "")
-        (set @entity.value 0)
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      LOADED -> displaying
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-    }
-    state displaying {
-      INIT -> displaying
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      REFRESH -> refreshing
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      SENSOR_SEARCH -> displaying
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      SENSOR_NOTIFICATIONS_OPEN -> displaying
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back", action: "INIT", variant: "ghost" }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch SensorReading { emit: { success: "SensorReadingLoaded", failure: "SensorReadingLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: "@entity.sensorId" }] }] }, { type: "stat-display", label: "Value", value: "@entity.value" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: "@entity.unit" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: "@entity.timestamp" }] }] }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-    }
-emits {
-SensorReadingLoaded
-      SensorReadingLoadFailed
-DeviceSaved
-      DeviceSaveFailed
-DeviceUpdated
-      DeviceUpdateFailed
-DeviceDeleted
-      DeviceDeleteFailed
-    }
 
-        listens {
-      SensorReadingLoadFailed { error : string, code : string }
-
-      DeviceSaveFailed { error : string, code : string }
-      DeviceUpdateFailed { error : string, code : string }
-      DeviceDeleteFailed { error : string, code : string }
-      SensorAppLayout.SENSOR_SEARCH -> SENSOR_SEARCH
-      SensorAppLayout.SENSOR_NOTIFICATIONS_OPEN -> SENSOR_NOTIFICATIONS_OPEN
-      SENSOR_SEARCH { value : string }
-      SENSOR_NOTIFICATIONS_OPEN { id : string }
+  ;; Page-chrome trait. Stats (active sensors, avg reading, anomaly count)
+  ;; + line-chart Graphs over timestamp/reading + meter for threshold view
+  ;; + the std-browse list. SensorReadings are append-only (telemetry); no
+  ;; Modal/Confirmation/Persistor.
+  trait SensorCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "thermometer" },
+              { type: "typography", content: "Sensor Readings", variant: "h2" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.SensorStats",
+          "@trait.SensorGraphs",
+          { type: "meter", value: "@entity.value", min: 0, max: "@entity.threshold", label: "Latest reading vs threshold" },
+          { type: "divider" },
+          "@trait.SensorBrowseList"
+        ]})
     }
   }
-  page "/sensors" as SensorsPage -> SensorAppLayout, SensorReadingDisplay
+
+  trait SensorStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Sensors",
+      metrics: [
+        { aggregation: "count",   label: "Active Sensors", icon: "activity",       variant: "primary", format: "number", filter: ["fn", "row", ["!=", "@row.sensorId", ""]] },
+        { aggregation: "average", label: "Avg Reading",    icon: "trending-up",    variant: "success", format: "number", field: "value" },
+        { aggregation: "count",   label: "Anomalies",      icon: "alert-triangle", variant: "warning", format: "number", filter: ["fn", "row", [">", "@row.value", "@row.threshold"]] }
+      ]
+    }
+    listens {
+      SensorBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SensorGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Readings over time",
+      subtitle: "Sensor values across time",
+      chartType: "line",
+      dateField: "timestamp",
+      valueField: "value",
+      height: 240,
+      showLegend: true
+    }
+    listens {
+      SensorBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SensorBrowseList = Browse.traits.BrowseItemBrowse -> SensorReading {
+    config: {
+      fields: [
+        { name: "sensorId",  label: "Sensor",    variant: "h4",      icon: "thermometer" },
+        { name: "type",      label: "Type",      variant: "badge" },
+        { name: "value",     label: "Value",     variant: "h4",      format: "number" },
+        { name: "unit",      label: "Unit",      variant: "caption" },
+        { name: "timestamp", label: "Timestamp", variant: "caption", format: "date" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+  }
+
+  page "/sensors" as SensorsPage -> SensorCatalog, SensorStats, SensorGraphs, SensorBrowseList
 }
+
 orbital DeviceOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Browse       from "std/behaviors/std-browse"
+
   entity Device [persistent: devices] {
     id : string!
     name : string!
     type : string!
-    status : string
+    status : "online" | "offline" | "maintenance" = "offline"
     lastSeen : datetime
     pendingId : string = ""
   }
 
-  type DeviceLoaded     = Event { data : [Device] }                  "Fired when Device finishes loading"
-  type DeviceLoadFailed = Event { error : string, code : string } "Fired when Device fails to load"
-  type DeviceDeleteFailed = Event { error : string, code : string }
-  type DeviceDeleted = Event { id : string }
-  type DeviceSaveFailed = Event { error : string, code : string }
-  type DeviceSaved = Event { id : string }
-  type DeviceUpdateFailed = Event { error : string, code : string }
-  type DeviceUpdated = Event { id : string }
-  trait DeviceBrowse -> Device [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      DeviceLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu" }, { type: "typography", content: "Devices", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Device", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "name", variant: "h3", icon: "cpu" }, { name: "status", variant: "badge" }, { name: "type", variant: "body" }, { name: "lastSeen", label: "Last Seen", variant: "caption", format: "date" }], cols: 3, gap: "md" }] }] })
-      DeviceLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load device" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  trait DeviceAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.DeviceCatalog",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }],
+      searchEvent: "DEVICE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "DEVICE_NOTIFICATIONS_OPEN"
     }
-    emits {
-CREATE
-      VIEW { id : string!, row : Device }
-EDIT { id : string!, row : Device }
-DELETE { id : string!, row : Device }
-DeviceLoaded
-      DeviceLoadFailed
-    }
-    listens {
-      DeviceCreate.DEVICE_CREATED -> INIT
-      DeviceEdit.DEVICE_UPDATED -> INIT
-      DeviceDelete.DEVICE_DELETED -> INIT
-          DeviceLoadFailed { error : string, code : string }
+    events {
+      SEARCH: DEVICE_SEARCH
+      NOTIFY_CLICK: DEVICE_NOTIFICATIONS_OPEN
     }
   }
-  trait DeviceCreate -> Device [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-      CREATE -> open
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Device", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "status", "lastSeen"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Device @payload.data { emit: { success: "DeviceSaved", failure: "DeviceSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit DEVICE_CREATED)
+
+  ;; Page-chrome trait. Header + search/filter toolbar + browse list.
+  ;; Stats/Graphs intentionally not bound here — SensorReadingOrbital owns
+  ;; them (atom binds once per file).
+  trait DeviceCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "cpu" },
+              { type: "typography", content: "Devices", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Create Device", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.DeviceSearch",
+            "@trait.DeviceFilter"
+          ]},
+          { type: "divider" },
+          "@trait.DeviceBrowseList"
+        ]})
+      DEVICE_SEARCH -> composing
+      DEVICE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-DEVICE_CREATED
-      DeviceLoadFailed
-DeviceLoaded
-      DeviceSaveFailed
-DeviceSaved
-
+      CREATE -> external { source : string }
     }
     listens {
-      DeviceLoadFailed { error : string, code : string }
-      SAVE { data : string }
-      DeviceBrowse.CREATE -> CREATE
+      DeviceAppLayout.DEVICE_SEARCH -> DEVICE_SEARCH
+      DeviceAppLayout.DEVICE_NOTIFICATIONS_OPEN -> DEVICE_NOTIFICATIONS_OPEN
+      DEVICE_SEARCH { value : string }
+      DEVICE_NOTIFICATIONS_OPEN { id : string }
     }
   }
-  trait DeviceEdit -> Device [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-      EDIT -> open
-        (fetch Device {id: "@payload.id" , emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" }, emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Device", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "status", "lastSeen"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Device @payload.data { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit DEVICE_UPDATED)
-    }
-    emits {
-DEVICE_UPDATED
-      DeviceLoadFailed
-DeviceLoaded
-      DeviceUpdateFailed
-DeviceUpdated
 
+  trait DeviceSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search devices…",
+      event: "DEVICE_SEARCH"
+    }
+  }
+
+  trait DeviceFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["online", "offline", "maintenance"] },
+        { field: "type",   label: "Type",   filterType: "select", options: ["sensor", "gateway", "actuator", "controller"] }
+      ],
+      event: "DEVICE_FILTER"
+    }
+  }
+
+  trait DeviceBrowseList = Browse.traits.BrowseItemBrowse -> Device {
+    config: {
+      fields: [
+        { name: "name",     variant: "h3",      icon: "cpu" },
+        { name: "status",   variant: "badge" },
+        { name: "type",     variant: "body" },
+        { name: "lastSeen", label: "Last Seen", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 3,
+      gap: "md"
     }
     listens {
-      DeviceView.EDIT -> EDIT
-      DeviceLoadFailed { error : string, code : string }
+      DeviceSearch.SEARCH               -> REFETCH_QUERY
+      DeviceFilter.FILTER               -> REFETCH_FILTER
+      DevicePersistor.DEVICE_CREATED    -> INIT
+      DevicePersistor.DEVICE_UPDATED    -> INIT
+      DevicePersistor.DEVICE_DELETED    -> INIT
+    }
+  }
+
+  trait DeviceCreate = Modal.traits.ModalRecordModal -> Device {
+    config: {
+      icon: "plus-circle",
+      title: "Create Device",
+      mode: "create",
+      fields: ["name", "type", "status", "lastSeen"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      DeviceCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Device }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait DeviceEdit = Modal.traits.ModalRecordModal -> Device {
+    config: {
+      icon: "edit",
+      title: "Edit Device",
+      mode: "edit",
+      fields: ["name", "type", "status", "lastSeen"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      DeviceBrowseList.EDIT -> EDIT
       EDIT { id : string, row : Device }
-      SAVE { data : string }
-      DeviceBrowse.EDIT -> EDIT
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait DeviceView -> Device [interaction, collection] {
-    emits {
-EDIT { id : string }
-DeviceLoaded
-      DeviceLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.lastSeen "")
-        (set @entity.name "")
-        (set @entity.status "")
-        (set @entity.type "")
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-      VIEW -> open
-        (fetch Device {id: "@payload.id" , emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" }, emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Type" }, { type: "typography", variant: "body", content: "@entity.type" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Last Seen" }, { type: "typography", variant: "body", content: "@entity.lastSeen" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
+  trait DeviceView = Modal.traits.ModalRecordModal -> Device {
+    config: {
+      icon: "eye",
+      title: "View Device",
+      mode: "edit",
+      fields: ["name", "type", "status", "lastSeen"]
+    }
+    events {
+      OPEN: VIEW
+    }
     listens {
-      DeviceLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      DeviceBrowse.VIEW -> VIEW
+      DeviceBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Device }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait DeviceDelete -> Device [interaction, collection] {
+
+  trait DeviceDelete = Confirmation.traits.ConfirmActionConfirmation -> Device {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Device",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      DeviceBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Device }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: owns the persist side-effects triggered by Modal/Confirm
+  ;; trait emits.
+  trait DevicePersistor -> Device [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Device {id: "@payload.id" , emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" }, emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Device", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Device @entity.pendingId { emit: { success: "DeviceDeleted", failure: "DeviceDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-        (emit DEVICE_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Device @payload.data { emit: { success: "DEVICE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Device @payload.data { emit: { success: "DEVICE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Device @payload.id { emit: { success: "DEVICE_DELETED" } })
     }
     emits {
-DEVICE_DELETED
-      DeviceDeleteFailed
-DeviceDeleted
-      DeviceLoadFailed
-DeviceLoaded
-
+      DEVICE_CREATED -> external { id : string }
+      DEVICE_UPDATED -> external { id : string }
+      DEVICE_DELETED -> external { id : string }
     }
     listens {
-      DeviceLoadFailed { error : string, code : string }
-      DELETE { id : string }
-      DeviceBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      DeviceCreate.SAVE          -> DO_CREATE
+      DeviceEdit.SAVE            -> DO_UPDATE
+      DeviceDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/devices" -> DeviceBrowse, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete
+
+  page "/devices" -> DeviceAppLayout, DeviceCatalog, DeviceSearch, DeviceFilter, DeviceBrowseList, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete, DevicePersistor
 }
+
 orbital DeviceAlertOrbital {
-  entity DeviceAlert [runtime] {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Email        from "std/behaviors/std-service-email"
+
+  entity DeviceAlert [persistent: devicealerts] {
     id : string!
     deviceId : string!
-    severity : string!
-    message : string
-    acknowledged : boolean
-    failureCount : number
-    successCount : number
-    threshold : number
+    severity : "info" | "warning" | "critical" = "info"
+    message : string = ""
+    acknowledged : boolean = false
+    failureCount : number = 0
+    successCount : number = 0
+    threshold : number = 0
+    pendingId : string = ""
   }
 
-  type DeviceAlertLoaded     = Event { data : [DeviceAlert] }                  "Fired when DeviceAlert finishes loading"
-  type DeviceAlertLoadFailed = Event { error : string, code : string } "Fired when DeviceAlert fails to load"
-  trait DeviceAlertCircuitBreaker -> DeviceAlert [interaction, collection] {
+  type DeviceAlertLoaded     = Event { data : [DeviceAlert] }              "Fired when DeviceAlert finishes loading"
+  type DeviceAlertLoadFailed = Event { error : string, code : string }     "Fired when DeviceAlert fails to load"
+
+  ;; Page-chrome trait. Header + search/filter toolbar + browse list.
+  trait AlertCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "bell" },
+              { type: "typography", content: "Alerts", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Alert", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.AlertBrowseList",
+          { type: "divider" },
+          "@trait.DeviceAlertCircuitBreaker"
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+  }
+
+  trait AlertBrowseList = Browse.traits.BrowseItemBrowse -> DeviceAlert {
+    config: {
+      fields: [
+        { name: "deviceId",     label: "Device",       variant: "h4",      icon: "cpu" },
+        { name: "severity",     label: "Severity",     variant: "badge" },
+        { name: "message",      label: "Message",      variant: "body" },
+        { name: "acknowledged", label: "Acknowledged", variant: "badge",   format: "boolean" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      AlertPersistor.ALERT_CREATED      -> INIT
+      AlertPersistor.ALERT_UPDATED      -> INIT
+      AlertPersistor.ALERT_DELETED      -> INIT
+    }
+  }
+
+  trait AlertCreate = Modal.traits.ModalRecordModal -> DeviceAlert {
+    config: {
+      icon: "plus-circle",
+      title: "New Alert",
+      mode: "create",
+      fields: ["deviceId", "severity", "message", "acknowledged"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      AlertCatalog.CREATE -> CREATE
+      CREATE { id : string, row : DeviceAlert }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertEdit = Modal.traits.ModalRecordModal -> DeviceAlert {
+    config: {
+      icon: "edit",
+      title: "Edit Alert",
+      mode: "edit",
+      fields: ["deviceId", "severity", "message", "acknowledged"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      AlertBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : DeviceAlert }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertView = Modal.traits.ModalRecordModal -> DeviceAlert {
+    config: {
+      icon: "eye",
+      title: "View Alert",
+      mode: "edit",
+      fields: ["deviceId", "severity", "message", "acknowledged"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      AlertBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : DeviceAlert }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait AlertDelete = Confirmation.traits.ConfirmActionConfirmation -> DeviceAlert {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Alert",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      AlertBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : DeviceAlert }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: owns persist side-effects triggered by Modal/Confirm
+  ;; trait emits.
+  trait AlertPersistor -> DeviceAlert [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create DeviceAlert @payload.data { emit: { success: "ALERT_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update DeviceAlert @payload.data { emit: { success: "ALERT_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete DeviceAlert @payload.id { emit: { success: "ALERT_DELETED" } })
+    }
+    emits {
+      ALERT_CREATED -> external { id : string }
+      ALERT_UPDATED -> external { id : string }
+      ALERT_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      AlertCreate.SAVE          -> DO_CREATE
+      AlertEdit.SAVE            -> DO_UPDATE
+      AlertDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  ;; Composer fills the Email service's `uiTrait` slot. AlertEmail is
+  ;; auto-fired by AlertPersistor.ALERT_CREATED, so this is a passive notice.
+  trait AlertEmailNotice [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "alert", variant: "info", message: "Critical alerts auto-notify on-call ops via email." })
+    }
+  }
+
+  ;; Email service binding — notifies on critical alerts. Listens to the
+  ;; persistor's ALERT_CREATED, then SEND fires the call-service.
+  trait AlertEmail = Email.traits.ServiceEmailEmail {
+    config: {
+      recipient: "ops@example.com",
+      subject:   "Critical alert raised",
+      body:      "A critical alert was raised on a device. Investigate immediately.",
+      sender:    "alerts@example.com",
+      uiTrait:   "@trait.AlertEmailNotice"
+    }
+    listens {
+      AlertPersistor.ALERT_CREATED -> SEND
+      EmailSent { id : string }
+      FAILED { error : string! }
+      ServiceEmailLoadFailed { message : string }
+      ServiceEmailEmailFailed { error : string, code : string }
+    }
+  }
+
+  ;; Custom render-ui retained: state-machine logic for circuit-breaker
+  ;; renders three distinct surfaces (closed/open/half-open) — not a
+  ;; bind-with-config molecule, this is genuinely custom topology.
+  trait DeviceAlertCircuitBreaker -> DeviceAlert [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
@@ -303,34 +522,34 @@ orbital DeviceAlertOrbital {
         (set @entity.successCount 0)
         (set @entity.threshold 0)
         (fetch DeviceAlert { emit: { success: "DeviceAlertLoaded", failure: "DeviceAlertLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Closed" }] }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
       FAILURE -> open
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Open" }] }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       SUCCESS -> closed
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Closed" }] }, { type: "alert", variant: "success", message: "Service is healthy." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
     state open {
       TIMEOUT -> halfOpen
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Circuit Half-Open" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Half-Open" }] }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests allowed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }] })
       RESET -> closed
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Closed" }] }, { type: "alert", variant: "success", message: "Service is healthy." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
     state halfOpen {
       SUCCESS -> closed
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Closed" }] }, { type: "alert", variant: "success", message: "Service is healthy." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
       FAILURE -> open
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "critical", pulse: true, label: "Open" }] }, { type: "alert", variant: "error", message: "Circuit is open." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       RESET -> closed
-        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "online", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures", value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Circuit Breaker", variant: "h3" }] }, { type: "status-dot", status: "online", pulse: false, label: "Closed" }] }, { type: "alert", variant: "success", message: "Service is healthy." }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Failures",  value: "@entity.failureCount" }, { type: "stat-display", label: "Successes", value: "@entity.successCount" }] }, { type: "meter", value: "@entity.failureCount", min: 0, max: "@entity.threshold" }] })
     }
-emits {
-DeviceAlertLoaded
+    emits {
+      DeviceAlertLoaded
       DeviceAlertLoadFailed
     }
-
-        listens {
+    listens {
       DeviceAlertLoadFailed { error : string, code : string }
     }
   }
-  page "/alerts" -> DeviceAlertCircuitBreaker
+
+  page "/alerts" -> AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail, AlertEmailNotice, DeviceAlertCircuitBreaker
 }

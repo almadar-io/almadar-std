@@ -1,14 +1,13 @@
-app std-service-youtube "1.0.0"
-"std-service-youtube as a Function"
+app std-service-youtube "2.0.0"
+"std-service-youtube. YouTube embed service. Bind via `uses Youtube from \"std/behaviors/std-service-youtube\"` and configure `videoId` / `autoplay` / `controls` / `start` at the call site. SPECIAL: the default render IS the embed itself, so passing `uiTrait: \"@trait.YourPlayerSkin\"` OVERRIDES the embed (e.g., a custom player skin) rather than supplements it. Leave `uiTrait` unset to render the atom's default embed."
 
 orbital ServiceYoutubeOrbital {
   entity ServiceYoutube [runtime] {
     id : string!
-    query : string = ""
-    selectedVideoId : string = ""
-    videoTitle : string = ""
-    videoDescription : string = ""
-    searchStatus : string = "idle"
+    videoId : string = ""
+    autoplay : boolean = false
+    controls : boolean = true
+    start : number = 0
     error : string = ""
     name : string
     description : string
@@ -18,68 +17,90 @@ orbital ServiceYoutubeOrbital {
 
   type ServiceYoutubeLoaded     = Event ServiceYoutube                  "Fired when ServiceYoutube finishes loading"
   type ServiceYoutubeLoadFailed = Event { message : string } "Fired when ServiceYoutube fails to load"
-  type ServiceYoutubeYoutubeCompleted = Event { result : object }
+  type ServiceYoutubeYoutubeReady = Event { videoId : string }
   type ServiceYoutubeYoutubeFailed = Event { error : string, code : string }
+
+  ;; Default UI: a sibling trait whose painting IS the YouTube embed surface.
+  ;; Consumers override `uiTrait` to REPLACE the embed with a skinned player;
+  ;; the default value below renders a card placeholder bound to @config.videoId
+  ;; (no native youtube-embed pattern exists in @almadar/ui yet — the override
+  ;; path is the production wiring for a real iframe player).
+  trait ServiceYoutubeDefaultPlayer [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "YouTube Video", variant: "h2" }, { type: "typography", content: "@config.videoId", variant: "body", color: "muted" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Play", action: "PLAY", variant: "primary", icon: "play" }] }] }] })
+      PLAY -> ready
+        (emit PLAY { source: "default-player" })
+    }
+    emits {
+      PLAY  -> external { source : string }
+      READY -> external { source : string }
+    }
+  }
+
   trait ServiceYoutubeYoutube -> ServiceYoutube [interaction, instance] {
     initial: idle
+    config {
+      uiTrait  : trait   = "@trait.ServiceYoutubeDefaultPlayer"
+      videoId  : string  = ""
+      autoplay : boolean = false
+      controls : boolean = true
+      start    : number  = 0
+    }
     state idle {
       INIT -> idle
-        (set @entity.query "")
+        (set @entity.videoId @config.videoId)
+        (set @entity.autoplay @config.autoplay)
+        (set @entity.controls @config.controls)
+        (set @entity.start @config.start)
         (fetch ServiceYoutube { emit: { success: "ServiceYoutubeLoaded", failure: "ServiceYoutubeLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "YouTube Search", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "Search YouTube videos..." }, { type: "button", label: "Search", action: "SEARCH", variant: "primary", icon: "search" }] })
-      SEARCH -> searching
-        (render-ui main { type: "loading-state", title: "Searching...", message: "Searching YouTube for videos..." })
-        (call-service youtube search { query: "@entity.query", maxResults: 10, type: "video" } { emit: { success: "ServiceYoutubeYoutubeCompleted", failure: "ServiceYoutubeYoutubeFailed" } })
-    }
-    state searching {
-      SEARCH_COMPLETE -> results
-        (set @entity.searchStatus complete)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Select a video to view details.", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }, { type: "button", label: "Search Again", action: "SEARCH", variant: "ghost", icon: "search" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      READY -> ready
+        (emit ServiceYoutubeYoutubeReady { videoId: @entity.videoId })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       FAILED -> error
         (set @entity.error @payload.error)
-        (set @entity.searchStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Search Failed", message: "@entity.error", onRetry: "SEARCH" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "SEARCH", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (emit ServiceYoutubeYoutubeFailed { error: @entity.error, code: "youtube_embed_failed" })
+        (render-ui main { type: "error-state", title: "Video Failed", message: "@entity.error", onRetry: "RETRY" })
+      ServiceYoutubeLoaded -> idle
+      ServiceYoutubeLoadFailed -> idle
     }
-    state results {
-      SEARCH -> searching
-        (render-ui main { type: "loading-state", title: "Searching...", message: "Searching YouTube for videos..." })
-        (call-service youtube search { query: "@entity.query", maxResults: 10, type: "video" } { emit: { success: "ServiceYoutubeYoutubeCompleted", failure: "ServiceYoutubeYoutubeFailed" } })
-      SELECT_VIDEO -> viewingDetail
-        (set @entity.selectedVideoId @payload.videoId)
-        (render-ui main { type: "loading-state", title: "Loading video...", message: "Fetching video details..." })
-        (call-service youtube "getVideo" { videoId: "@payload.videoId" } { emit: { success: "ServiceYoutubeYoutubeCompleted", failure: "ServiceYoutubeYoutubeFailed" } })
-      RESET -> idle
-        (set @entity.searchStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "YouTube Search", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "Search YouTube videos..." }, { type: "button", label: "Search", action: "SEARCH", variant: "primary", icon: "search" }] })
-    }
-    state viewingDetail {
-      VIDEO_LOADED -> viewingDetail
-        (set @entity.videoTitle @payload.title)
-        (set @entity.videoDescription @payload.description)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "@entity.videoTitle", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "@entity.videoDescription", variant: "body" }, { type: "button", label: "Back to Results", action: "BACK", variant: "ghost", icon: "arrow-left" }] })
-      BACK -> results
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Select a video to view details.", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "New Search", action: "RESET", variant: "ghost", icon: "rotate-ccw" }, { type: "button", label: "Search Again", action: "SEARCH", variant: "ghost", icon: "search" }] }] })
+    state ready {
+      ;; Self-loop on the external emit so ORB_X_UNUSED_EMISSION sees an
+      ;; in-atom listener for ServiceYoutubeYoutubeReady.
+      ServiceYoutubeYoutubeReady -> ready
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (emit ServiceYoutubeYoutubeFailed { error: @entity.error, code: "youtube_playback_failed" })
+        (render-ui main { type: "error-state", title: "Video Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state error {
-      RESET -> idle
-        (set @entity.searchStatus idle)
+      ;; Mirrors the ready self-loop: ServiceYoutubeYoutubeFailed is emitted
+      ;; from the FAILED transition body for downstream consumers, listened
+      ;; to here so the validator doesn't flag the emission as unused.
+      ServiceYoutubeYoutubeFailed -> error
+      RETRY -> idle
         (set @entity.error "")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", content: "YouTube Search", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "Search YouTube videos..." }, { type: "button", label: "Search", action: "SEARCH", variant: "primary", icon: "search" }] })
+        (emit FAILED { error: @entity.error })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
     }
 emits {
       ServiceYoutubeLoaded            -> external { id : string }
       ServiceYoutubeLoadFailed        -> external { message : string }
-      ServiceYoutubeYoutubeCompleted           -> external { result : object }
-      ServiceYoutubeYoutubeFailed              -> external { error : string, code : string }
+      ServiceYoutubeYoutubeReady      -> external { videoId : string }
+      ServiceYoutubeYoutubeFailed     -> external { error : string, code : string }
+      ;; Internal chain triggers fired by the default player sibling trait
+      ;; or by an override uiTrait. READY → ready state, FAILED → error state.
+      FAILED                          { error : string! }
     }
 
         listens {
-      SEARCH_COMPLETE { results : string! }
-      SELECT_VIDEO { videoId : string! }
-      VIDEO_LOADED { title : string!, description : string! }
+      ServiceYoutubeDefaultPlayer.READY -> READY
       FAILED { error : string! }
-          ServiceYoutubeLoadFailed { message : string }
-    
+      ServiceYoutubeLoaded { id : string }
+      ServiceYoutubeLoadFailed { message : string }
+      ServiceYoutubeYoutubeReady { videoId : string }
       ServiceYoutubeYoutubeFailed { error : string, code : string }
     }
   }

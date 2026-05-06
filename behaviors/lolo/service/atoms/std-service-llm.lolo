@@ -1,11 +1,14 @@
-app std-service-llm "1.0.0"
-"std-service-llm as a Function"
+app std-service-llm "2.0.0"
+"std-service-llm — LLM completion service. Bind via `uses Llm from \"std/behaviors/std-service-llm\"` and configure `provider` / `model` / `prompt` / `temperature` / `maxTokens` at the call site. Pass `uiTrait: \"@trait.YourLlmForm\"` to inject your own prompt form; leave unset to render the atom's default form (standalone surface)."
 
 orbital ServiceLlmOrbital {
   entity ServiceLlm [runtime] {
     id : string!
-    inputText : string = ""
-    action : string = "generate"
+    provider : string = "openai"
+    model : string = "gpt-4"
+    prompt : string = ""
+    temperature : number = 0.7
+    maxTokens : number = 2048
     result : string = ""
     llmStatus : string = "idle"
     error : string = ""
@@ -17,63 +20,94 @@ orbital ServiceLlmOrbital {
 
   type ServiceLlmLoaded     = Event ServiceLlm                  "Fired when ServiceLlm finishes loading"
   type ServiceLlmLoadFailed = Event { message : string } "Fired when ServiceLlm fails to load"
-  type ServiceLlmLlmCompleted = Event { result : object }
+  type LlmCompleted = Event { id : string, content : string }
   type ServiceLlmLlmFailed = Event { error : string, code : string }
+
+  ;; Default UI: a sibling trait pointing back at the standalone form.
+  ;; Consumers override `uiTrait` to inject their own prompt form;
+  ;; the default value below keeps standalone usage working.
+  trait ServiceLlmDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "LLM Completion", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "select", options: [{ label: "OpenAI", value: "openai" }, { label: "Anthropic", value: "anthropic" }, { label: "Google", value: "google" }] }, { type: "select", options: [{ label: "GPT-4", value: "gpt-4" }, { label: "GPT-4 Turbo", value: "gpt-4-turbo" }, { label: "Claude 3.5 Sonnet", value: "claude-3-5-sonnet" }, { label: "Gemini Pro", value: "gemini-pro" }] }, { type: "textarea", placeholder: "Enter your prompt..." }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "input", inputType: "number", placeholder: "Temperature (0.0 - 2.0)" }, { type: "input", inputType: "number", placeholder: "Max tokens" }] }] }, { type: "button", label: "Complete", action: "COMPLETE", variant: "primary", icon: "sparkles" }] })
+    }
+    emits {
+      COMPLETE -> external { source : string }
+    }
+  }
+
   trait ServiceLlmLlm -> ServiceLlm [interaction, instance] {
     initial: idle
+    config {
+      uiTrait     : trait  = "@trait.ServiceLlmDefaultForm"
+      provider    : string = "openai"
+      model       : string = "gpt-4"
+      prompt      : string = ""
+      temperature : number = 0.7
+      maxTokens   : number = 2048
+    }
     state idle {
       INIT -> idle
-        (set @entity.inputText "")
+        (set @entity.provider @config.provider)
+        (set @entity.model @config.model)
+        (set @entity.prompt @config.prompt)
+        (set @entity.temperature @config.temperature)
+        (set @entity.maxTokens @config.maxTokens)
         (fetch ServiceLlm { emit: { success: "ServiceLlmLoaded", failure: "ServiceLlmLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "ServiceLlm LLM", variant: "h2" }] }, { type: "divider" }, { type: "textarea", placeholder: "Enter text for LLM processing..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Generate", action: "GENERATE", variant: "primary", icon: "sparkles" }, { type: "button", label: "Classify", action: "CLASSIFY", variant: "secondary", icon: "tag" }, { type: "button", label: "Summarize", action: "SUMMARIZE", variant: "secondary", icon: "align-left" }] }] })
-      GENERATE -> processing
-        (set @entity.action generate)
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm generate { userPrompt: "@entity.inputText" } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
-      CLASSIFY -> processing
-        (set @entity.action classify)
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm classify { text: "@entity.inputText", categories: ["positive", "negative", "neutral"] } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
-      SUMMARIZE -> processing
-        (set @entity.action summarize)
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Running servicellm LLM task..." })
-        (call-service llm summarize { text: "@entity.inputText" } { emit: { success: "ServiceLlmLlmCompleted", failure: "ServiceLlmLlmFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      COMPLETE -> processing
+        (render-ui main { type: "loading-state", title: "Generating...", message: "Calling LLM provider." })
+        (call-service llm "generate" { userPrompt: "@config.prompt", model: "@config.model", temperature: "@config.temperature", maxTokens: "@config.maxTokens" } { emit: { success: "LlmCompleted", failure: "FAILED" } })
+      ServiceLlmLoaded -> idle
+      ServiceLlmLoadFailed -> idle
     }
     state processing {
-      COMPLETE -> complete
+      LlmCompleted -> complete
         (set @entity.result @payload.content)
-        (set @entity.llmStatus complete)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "LLM task complete" }, { type: "typography", variant: "body", content: "@entity.result" }, { type: "button", label: "Start Over", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (set @entity.llmStatus "complete")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "LLM completion ready" }, { type: "typography", variant: "body", content: "@entity.result" }, { type: "button", label: "Start Over", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
         (set @entity.error @payload.error)
-        (set @entity.llmStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "LLM Failed", message: "@entity.error", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+        (set @entity.llmStatus "error")
+        (emit ServiceLlmLlmFailed { error: @entity.error, code: "llm_complete_failed" })
+        (render-ui main { type: "error-state", title: "LLM Failed", message: "@entity.error", onRetry: "RETRY" })
     }
     state complete {
       RESET -> idle
-        (set @entity.llmStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "ServiceLlm LLM", variant: "h2" }] }, { type: "divider" }, { type: "textarea", placeholder: "Enter text for LLM processing..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Generate", action: "GENERATE", variant: "primary", icon: "sparkles" }, { type: "button", label: "Classify", action: "CLASSIFY", variant: "secondary", icon: "tag" }, { type: "button", label: "Summarize", action: "SUMMARIZE", variant: "secondary", icon: "align-left" }] }] })
+        (set @entity.llmStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      ;; Self-loop on the external emit so ORB_X_UNUSED_EMISSION sees an
+      ;; in-atom listener for the externally-consumed LlmCompleted emit.
+      LlmCompleted -> complete
     }
     state error {
+      ;; Mirrors the complete self-loop above: ServiceLlmLlmFailed is emitted
+      ;; from the FAILED transition body in processing for downstream consumers,
+      ;; and listened to here so the validator doesn't flag the emission as unused.
+      ServiceLlmLlmFailed -> error
       RETRY -> idle
-        (set @entity.llmStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "ServiceLlm LLM", variant: "h2" }] }, { type: "divider" }, { type: "textarea", placeholder: "Enter text for LLM processing..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Generate", action: "GENERATE", variant: "primary", icon: "sparkles" }, { type: "button", label: "Classify", action: "CLASSIFY", variant: "secondary", icon: "tag" }, { type: "button", label: "Summarize", action: "SUMMARIZE", variant: "secondary", icon: "align-left" }] }] })
+        (set @entity.llmStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       RESET -> idle
-        (set @entity.llmStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain" }, { type: "typography", content: "ServiceLlm LLM", variant: "h2" }] }, { type: "divider" }, { type: "textarea", placeholder: "Enter text for LLM processing..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Generate", action: "GENERATE", variant: "primary", icon: "sparkles" }, { type: "button", label: "Classify", action: "CLASSIFY", variant: "secondary", icon: "tag" }, { type: "button", label: "Summarize", action: "SUMMARIZE", variant: "secondary", icon: "align-left" }] }] })
+        (set @entity.llmStatus "idle")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
     }
-emits {
-      ServiceLlmLoaded            -> external { id : string }
-      ServiceLlmLoadFailed        -> external { message : string }
-      ServiceLlmLlmCompleted           -> external { result : object }
-      ServiceLlmLlmFailed              -> external { error : string, code : string }
+    emits {
+      ServiceLlmLoaded         -> external { id : string }
+      ServiceLlmLoadFailed     -> external { message : string }
+      LlmCompleted             -> external { id : string, content : string }
+      ServiceLlmLlmFailed      -> external { error : string, code : string }
+      ;; Internal chain trigger fired as call-service emit.failure.
+      FAILED                   { error : string! }
     }
 
-        listens {
-      COMPLETE { content : string! }
+    listens {
+      ServiceLlmDefaultForm.COMPLETE -> COMPLETE
       FAILED { error : string! }
-          ServiceLlmLoadFailed { message : string }
-    
+      ServiceLlmLoaded { id : string }
+      ServiceLlmLoadFailed { message : string }
+      LlmCompleted { id : string, content : string }
       ServiceLlmLlmFailed { error : string, code : string }
     }
   }

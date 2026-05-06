@@ -1,7 +1,10 @@
-app std-coding-academy "1.0.0"
-"Coding academy: sequence/build/event programming challenges with student progress."
+app std-coding-academy "2.0.0"
+"Coding academy: sequence/build/event programming challenges (game-shell) plus a student progress dashboard."
 
 orbital SeqChallengeOrbital {
+  uses YouTube from "std/behaviors/std-service-youtube"
+  uses Storage from "std/behaviors/std-service-storage"
+
   entity SeqChallenge [runtime] {
     id : string!
     title : string!
@@ -9,10 +12,15 @@ orbital SeqChallengeOrbital {
     score : number = 0
     completed : boolean = false
     level : number = 1
+    videoId : string = ""
   }
 
   type SeqChallengeLoaded     = Event SeqChallenge                  "Fired when SeqChallenge finishes loading"
-  type SeqChallengeLoadFailed = Event { message : string } "Fired when SeqChallenge fails to load"
+  type SeqChallengeLoadFailed = Event { message : string }          "Fired when SeqChallenge fails to load"
+
+  ;; Game keeps game-shell chrome (game-hud, game-menu, sequencer-board,
+  ;; game-over-screen). The deviation from AppShell is intentional: these
+  ;; UI components are domain-specific to programming-puzzle gameplay.
   trait SeqChallengeSequencerGame -> SeqChallenge [interaction, collection] {
     initial: menu
     state menu {
@@ -22,7 +30,7 @@ orbital SeqChallengeOrbital {
         (fetch SeqChallenge { emit: { success: "SeqChallengeLoaded", failure: "SeqChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Sequencer Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "sequencer-board", entity: "SeqChallenge", completeEvent: "COMPLETE" }] }] })
+        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, "@trait.SeqLessonVideo", { type: "sequencer-board", entity: "SeqChallenge", completeEvent: "COMPLETE" }] }] })
       NAVIGATE -> menu
     }
     state playing {
@@ -33,17 +41,67 @@ orbital SeqChallengeOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Sequencer Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
-emits {
-SeqChallengeLoaded
+    emits {
+      SeqChallengeLoaded
       SeqChallengeLoadFailed
     }
-
-        listens {
+    listens {
       SeqChallengeLoadFailed { message : string }
     }
   }
-  page "/sequencer" as SequencerPage -> SeqChallengeSequencerGame
+
+  ;; Inline lesson video — bound from std-service-youtube. The atom's render
+  ;; is a card placeholder until a real youtube-embed pattern lands; the
+  ;; uiTrait slot points at SeqLessonPlayer for domain framing.
+  trait SeqLessonVideo = YouTube.traits.ServiceYoutubeYoutube {
+    config: {
+      videoId: "@entity.videoId",
+      autoplay: false,
+      controls: true,
+      uiTrait: "@trait.SeqLessonPlayer"
+    }
+    listens {
+      ServiceYoutubeYoutubeReady { videoId : string }
+      ServiceYoutubeYoutubeFailed { error : string, code : string }
+    }
+  }
+
+  trait SeqLessonPlayer [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", align: "center", children: [{ type: "icon", name: "video" }, { type: "typography", variant: "caption", color: "muted", content: "Lesson video" }, { type: "typography", variant: "body", content: "@config.videoId" }] }] })
+    }
+  }
+
+  ;; Inline storage call for game-state save/load.
+  trait SeqProgressStorage = Storage.traits.ServiceStorageStorage {
+    config: {
+      uiTrait: "@trait.SeqProgressForm",
+      bucket: "coding-academy-progress",
+      acl: "private",
+      maxSize: 102400,
+      allowedMimeTypes: ["application/json"]
+    }
+    listens {
+      SeqProgressForm.UPLOAD -> UPLOAD
+    }
+  }
+
+  trait SeqProgressForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "save" }, { type: "button", label: "Save Progress", action: "UPLOAD", variant: "ghost", icon: "save" }] })
+    }
+    emits {
+      UPLOAD -> external { source : string, file : string }
+    }
+  }
+
+  page "/sequencer" as SequencerPage -> SeqChallengeSequencerGame, SeqLessonVideo, SeqLessonPlayer, SeqProgressStorage, SeqProgressForm
 }
+
 orbital BuildChallengeOrbital {
   entity BuildChallenge [runtime] {
     id : string!
@@ -55,7 +113,10 @@ orbital BuildChallengeOrbital {
   }
 
   type BuildChallengeLoaded     = Event BuildChallenge                  "Fired when BuildChallenge finishes loading"
-  type BuildChallengeLoadFailed = Event { message : string } "Fired when BuildChallenge fails to load"
+  type BuildChallengeLoadFailed = Event { message : string }            "Fired when BuildChallenge fails to load"
+
+  ;; Game keeps game-shell chrome (game-hud, game-menu, builder-board,
+  ;; game-over-screen). Deviation from AppShell is intentional.
   trait BuildChallengeBuilderGame -> BuildChallenge [interaction, collection] {
     initial: menu
     state menu {
@@ -76,17 +137,18 @@ orbital BuildChallengeOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
-emits {
-BuildChallengeLoaded
+    emits {
+      BuildChallengeLoaded
       BuildChallengeLoadFailed
     }
-
-        listens {
+    listens {
       BuildChallengeLoadFailed { message : string }
     }
   }
+
   page "/builder" -> BuildChallengeBuilderGame
 }
+
 orbital EventChallengeOrbital {
   entity EventChallenge [runtime] {
     id : string!
@@ -98,7 +160,10 @@ orbital EventChallengeOrbital {
   }
 
   type EventChallengeLoaded     = Event EventChallenge                  "Fired when EventChallenge finishes loading"
-  type EventChallengeLoadFailed = Event { message : string } "Fired when EventChallenge fails to load"
+  type EventChallengeLoadFailed = Event { message : string }            "Fired when EventChallenge fails to load"
+
+  ;; Game keeps game-shell chrome (game-hud, game-menu, event-handler-board,
+  ;; game-over-screen). Deviation from AppShell is intentional.
   trait EventChallengeEventHandlerGame -> EventChallenge [interaction, collection] {
     initial: menu
     state menu {
@@ -119,63 +184,151 @@ orbital EventChallengeOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Event Handler Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
-emits {
-EventChallengeLoaded
+    emits {
+      EventChallengeLoaded
       EventChallengeLoadFailed
     }
-
-        listens {
+    listens {
       EventChallengeLoadFailed { message : string }
     }
   }
+
   page "/events" -> EventChallengeEventHandlerGame
 }
+
 orbital StudentProgressOrbital {
-  entity StudentProgress [runtime] {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Browse   from "std/behaviors/std-browse"
+  uses Stats    from "std/behaviors/std-stats"
+  uses Graphs   from "std/behaviors/std-graphs"
+
+  entity StudentProgress [persistent: studentprogresses] {
     id : string!
-    totalLessons : number
-    completedLessons : number
-    averageScore : number
-    streak : number
+    student : string = ""
+    lessonsCompleted : number = 0
+    avgScore : number = 0
+    streak : number = 0
+    totalTimeMinutes : number = 0
+    progressPct : number = 0
+    day : string = ""
+    lastActiveAt : string = ""
   }
 
-  type StudentProgressLoaded     = Event StudentProgress                  "Fired when StudentProgress finishes loading"
-  type StudentProgressLoadFailed = Event { message : string } "Fired when StudentProgress fails to load"
-  trait StudentProgressDisplay -> StudentProgress [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.averageScore 0)
-        (set @entity.completedLessons 0)
-        (set @entity.streak 0)
-        (set @entity.totalLessons 0)
-        (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
+  trait StudentProgressAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.StudentProgressCatalog",
+      appName: "Coding Academy",
+      navItems: [{ label: "Sequencer", href: "/sequencer", icon: "list-ordered" }, { label: "Builder", href: "/builder", icon: "wrench" }, { label: "Events", href: "/events", icon: "zap" }, { label: "Progress", href: "/progress", icon: "trending-up" }],
+      searchEvent: "STUDENT_PROGRESS_SEARCH",
+      notifications: [],
+      notificationClickEvent: "STUDENT_PROGRESS_NOTIFICATIONS_OPEN"
     }
-    state displaying {
-      INIT -> displaying
-        (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch StudentProgress { emit: { success: "StudentProgressLoaded", failure: "StudentProgressLoadFailed" } })
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Progress" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Progress", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalLessons", value: "@entity.totalLessons" }, { type: "stat-display", label: "CompletedLessons", value: "@entity.completedLessons" }, { type: "stat-display", label: "AverageScore", value: "@entity.averageScore" }, { type: "stat-display", label: "Streak", value: "@entity.streak" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-StudentProgressLoaded
-      StudentProgressLoadFailed
-    }
-
-        listens {
-      StudentProgressLoadFailed { message : string }
+    events {
+      SEARCH: STUDENT_PROGRESS_SEARCH
+      NOTIFY_CLICK: STUDENT_PROGRESS_NOTIFICATIONS_OPEN
     }
   }
-  page "/progress" -> StudentProgressDisplay
+
+  ;; Page-chrome trait: header + stats + graphs + browse list.
+  trait StudentProgressCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "trending-up" },
+              { type: "typography", content: "Progress", variant: "h2" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.StudentProgressStats",
+          "@trait.StudentProgressGraphs",
+          { type: "divider" },
+          "@trait.StudentProgressBrowseList"
+        ]})
+      STUDENT_PROGRESS_SEARCH -> composing
+      STUDENT_PROGRESS_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to progress", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    listens {
+      StudentProgressAppLayout.STUDENT_PROGRESS_SEARCH -> STUDENT_PROGRESS_SEARCH
+      StudentProgressAppLayout.STUDENT_PROGRESS_NOTIFICATIONS_OPEN -> STUDENT_PROGRESS_NOTIFICATIONS_OPEN
+      STUDENT_PROGRESS_SEARCH { value : string }
+      STUDENT_PROGRESS_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait StudentProgressStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Student Progress",
+      metrics: [
+        { label: "Lessons Completed", aggregation: "sum", field: "lessonsCompleted", icon: "check-circle", variant: "success", format: "number" },
+        { label: "Average Score",     aggregation: "avg", field: "avgScore",         icon: "star",         variant: "primary", format: "number" },
+        { label: "Streak",            aggregation: "max", field: "streak",           icon: "flame",        variant: "warning", format: "number", suffix: "d" },
+        { label: "Total Time",        aggregation: "sum", field: "totalTimeMinutes", icon: "clock",        variant: "info",    format: "number", suffix: "m" }
+      ]
+    }
+    listens {
+      StudentProgressBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait StudentProgressGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      chartType: "line",
+      dateField: "day",
+      valueField: "progressPct",
+      title: "Progress over time",
+      subtitle: "Daily progress %",
+      height: 280,
+      showLegend: true
+    }
+    listens {
+      StudentProgressBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait StudentProgressBrowseList = Browse.traits.BrowseItemBrowse -> StudentProgress {
+    config: {
+      fields: [
+        { name: "student",          label: "Student",            variant: "h4", icon: "user" },
+        { name: "lessonsCompleted", label: "Lessons Completed",  variant: "body" },
+        { name: "avgScore",         label: "Avg Score",          variant: "badge" },
+        { name: "streak",           label: "Streak",             variant: "body", suffix: "d" },
+        { name: "lastActiveAt",     label: "Last Active",        variant: "caption", format: "date" }
+      ],
+      itemActions: [],
+      cols: 1,
+      gap: "sm"
+    }
+  }
+
+  ;; Absorber: drains Browse atom's default DELETE/EDIT/VIEW emits so
+  ;; the unused-emission validator sees a consumer. The list is read-only
+  ;; (itemActions: []) so these never fire at runtime.
+  trait StudentProgressItemSink [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      VIEW -> idle
+      EDIT -> idle
+      DELETE -> idle
+    }
+    listens {
+      VIEW   { id : string!, row : StudentProgress }
+      EDIT   { id : string!, row : StudentProgress }
+      DELETE { id : string!, row : StudentProgress }
+      StudentProgressBrowseList.VIEW   -> VIEW
+      StudentProgressBrowseList.EDIT   -> EDIT
+      StudentProgressBrowseList.DELETE -> DELETE
+    }
+  }
+
+  page "/progress" -> StudentProgressAppLayout, StudentProgressCatalog, StudentProgressStats, StudentProgressGraphs, StudentProgressBrowseList, StudentProgressItemSink
 }

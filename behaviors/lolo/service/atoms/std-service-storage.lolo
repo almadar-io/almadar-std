@@ -1,81 +1,94 @@
-app std-service-storage "1.0.0"
-"std-service-storage as a Function"
+app std-service-storage "2.0.0"
+"std-service-storage — Object storage upload service. Bind via `uses Storage from \"std/behaviors/std-service-storage\"` and configure `bucket` / `acl` / `maxSize` / `allowedMimeTypes` at the call site. Pass `uiTrait: \"@trait.YourUploadForm\"` to inject your own picker; leave unset to render the atom's default file picker (standalone surface)."
 
 orbital ServiceStorageOrbital {
   entity ServiceStorage [runtime] {
-    id : string
+    id : string!
+    bucket : string = ""
+    fileKey : string = ""
+    url : string = ""
+    storageStatus : string = "idle"
+    error : string = ""
     name : string
     description : string
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    bucket : string = "uploads"
-    fileKey : string
-    prefix : string
-    content : string
-    storageStatus : string = "idle"
-    result : string
-    error : string
   }
 
   type ServiceStorageLoaded     = Event ServiceStorage                  "Fired when ServiceStorage finishes loading"
   type ServiceStorageLoadFailed = Event { message : string } "Fired when ServiceStorage fails to load"
-  type ServiceStorageStorageCompleted = Event { result : object }
+  type StorageUploaded = Event { id : string, url : string }
   type ServiceStorageStorageFailed = Event { error : string, code : string }
+
+  trait ServiceStorageDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "Upload File", variant: "h2" }] }, { type: "divider" }, { type: "input", inputType: "text", placeholder: "Choose file..." }, { type: "button", label: "Upload", action: "UPLOAD", variant: "primary", icon: "upload" }] })
+    }
+    emits {
+      UPLOAD -> external { source : string, file : string }
+    }
+  }
+
   trait ServiceStorageStorage -> ServiceStorage [interaction, instance] {
     initial: idle
+    config {
+      uiTrait          : trait    = "@trait.ServiceStorageDefaultForm"
+      bucket           : string   = ""
+      acl              : "public" | "private" = "private"
+      maxSize          : number   = 10485760
+      allowedMimeTypes : [string] = []
+    }
     state idle {
       INIT -> idle
-        (set @entity.bucket "uploads")
-        (set @entity.content "")
-        (set @entity.fileKey "")
-        (set @entity.prefix "")
+        (set @entity.bucket @config.bucket)
         (fetch ServiceStorage { emit: { success: "ServiceStorageLoaded", failure: "ServiceStorageLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "ServiceStorage Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "bucket-name" }, { type: "input", placeholder: "path/to/file.txt" }, { type: "input", placeholder: "path/prefix/" }, { type: "textarea", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", action: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", action: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", action: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", action: "DELETE_FILE", variant: "danger", icon: "trash-2" }] }] })
-      UPLOAD_FILE -> executing
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey", content: "@entity.content" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
-      DOWNLOAD_FILE -> executing
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
-      LIST_FILES -> executing
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage list { bucket: "@entity.bucket", prefix: "@entity.prefix" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
-      DELETE_FILE -> executing
-        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation on servicestorage..." })
-        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" } { emit: { success: "ServiceStorageStorageCompleted", failure: "ServiceStorageStorageFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      UPLOAD -> uploading
+        (render-ui main { type: "loading-state", title: "Uploading...", message: "Uploading file to storage." })
+        (call-service storage "upload" { bucket: "@config.bucket", acl: "@config.acl", file: "@payload.file" } { emit: { success: "StorageUploaded", failure: "FAILED" } })
+      ServiceStorageLoaded -> idle
+      ServiceStorageLoadFailed -> idle
     }
-    state executing {
-      EXECUTED -> complete
-        (set @entity.result @payload.data)
-        (set @entity.storageStatus complete)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Operation completed successfully" }, { type: "typography", variant: "body", color: "muted", content: "@entity.result" }, { type: "button", label: "Back", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    state uploading {
+      StorageUploaded -> succeeded
+        (set @entity.fileKey @payload.id)
+        (set @entity.url @payload.url)
+        (set @entity.storageStatus "succeeded")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Upload successful!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.url" }, { type: "button", label: "Upload Another", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       FAILED -> error
         (set @entity.error @payload.error)
-        (set @entity.storageStatus error)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "@entity.error" }, { type: "button", label: "Back", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+        (emit ServiceStorageStorageFailed { error: @entity.error, code: "upload_failed" })
+        (render-ui main { type: "error-state", title: "Upload Failed", message: "@entity.error", onRetry: "RETRY" })
     }
-    state complete {
+    state succeeded {
       RESET -> idle
-        (set @entity.storageStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "ServiceStorage Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "bucket-name" }, { type: "input", placeholder: "path/to/file.txt" }, { type: "input", placeholder: "path/prefix/" }, { type: "textarea", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", action: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", action: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", action: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", action: "DELETE_FILE", variant: "danger", icon: "trash-2" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      StorageUploaded -> succeeded
     }
     state error {
+      ServiceStorageStorageFailed -> error
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
       RESET -> idle
-        (set @entity.storageStatus idle)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive" }, { type: "typography", content: "ServiceStorage Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", placeholder: "bucket-name" }, { type: "input", placeholder: "path/to/file.txt" }, { type: "input", placeholder: "path/prefix/" }, { type: "textarea", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", action: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", action: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", action: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", action: "DELETE_FILE", variant: "danger", icon: "trash-2" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
     }
-emits {
+    emits {
       ServiceStorageLoaded            -> external { id : string }
       ServiceStorageLoadFailed        -> external { message : string }
-      ServiceStorageStorageCompleted           -> external { result : object }
-      ServiceStorageStorageFailed              -> external { error : string, code : string }
+      StorageUploaded                 -> external { id : string, url : string }
+      ServiceStorageStorageFailed     -> external { error : string, code : string }
+      FAILED                          { error : string! }
     }
 
-        listens {
-      EXECUTED { data : string! }
+    listens {
+      ServiceStorageDefaultForm.UPLOAD -> UPLOAD
+      UPLOAD { source : string, file : string }
       FAILED { error : string! }
-          ServiceStorageLoadFailed { message : string }
-    
+      ServiceStorageLoaded { id : string }
+      ServiceStorageLoadFailed { message : string }
+      StorageUploaded { id : string, url : string }
       ServiceStorageStorageFailed { error : string, code : string }
     }
   }

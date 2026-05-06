@@ -1,22 +1,31 @@
-app std-trading-dashboard "1.0.0"
+app std-trading-dashboard "2.0.0"
 "Trading dashboard: portfolio positions, trade orders, and live market feed."
 
 orbital PortfolioOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
 
-  entity Portfolio [runtime] {
+  entity Portfolio [persistent: portfolios] {
     id : string!
-    totalValue : number = 0
-    dailyChange : number = 0
-    positions : number = 0
-    cashBalance : number = 0
+    symbol : string!
+    qty : number!
+    avgCost : number!
+    marketValue : number = 0
+    dailyPnl : number = 0
+    pendingId : string = ""
   }
 
   trait PortfolioAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.PortfolioDisplay",
+      contentTrait: "@trait.PortfolioCatalog",
       appName: "Trading Dashboard",
-      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }],
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }],
       searchEvent: "PORTFOLIO_SEARCH",
       notifications: [],
       notificationClickEvent: "PORTFOLIO_NOTIFICATIONS_OPEN"
@@ -27,315 +36,508 @@ orbital PortfolioOrbital {
     }
   }
 
-  type PortfolioLoaded     = Event { data : [Portfolio] }                  "Fired when Portfolio finishes loading"
-  type PortfolioLoadFailed = Event { error : string, code : string } "Fired when Portfolio fails to load"
-  type TradeOrderSaved = Event { id : string }
-  type TradeOrderSaveFailed = Event { error : string, code : string }
-  type TradeOrderUpdated = Event { id : string }
-  type TradeOrderUpdateFailed = Event { error : string, code : string }
-  type TradeOrderDeleted = Event { id : string }
-  type TradeOrderDeleteFailed = Event { error : string, code : string }
-  type MarketFeedSaved = Event { id : string }
-  type MarketFeedSaveFailed = Event { error : string, code : string }
-  trait PortfolioDisplay -> Portfolio [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.cashBalance 0)
-        (set @entity.dailyChange 0)
-        (set @entity.positions 0)
-        (set @entity.totalValue 0)
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "DailyChange", value: "@entity.dailyChange" }, { type: "stat-display", label: "Positions", value: "@entity.positions" }, { type: "stat-display", label: "CashBalance", value: "@entity.cashBalance" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      LOADED -> displaying
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "DailyChange", value: "@entity.dailyChange" }, { type: "stat-display", label: "Positions", value: "@entity.positions" }, { type: "stat-display", label: "CashBalance", value: "@entity.cashBalance" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
+  trait PortfolioCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "trending-up" },
+              { type: "typography", content: "Portfolio", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Add Position", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.PortfolioSearch",
+            "@trait.PortfolioFilter"
+          ]},
+          "@trait.PortfolioStats",
+          "@trait.PortfolioGraphs",
+          { type: "divider" },
+          "@trait.PortfolioBrowseList"
+        ]})
+      PORTFOLIO_SEARCH -> composing
+      PORTFOLIO_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to portfolio", action: "INIT", variant: "ghost" }
+        ]})
     }
-    state displaying {
-      INIT -> displaying
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "DailyChange", value: "@entity.dailyChange" }, { type: "stat-display", label: "Positions", value: "@entity.positions" }, { type: "stat-display", label: "CashBalance", value: "@entity.cashBalance" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      REFRESH -> refreshing
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "DailyChange", value: "@entity.dailyChange" }, { type: "stat-display", label: "Positions", value: "@entity.positions" }, { type: "stat-display", label: "CashBalance", value: "@entity.cashBalance" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-      PORTFOLIO_SEARCH -> displaying
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      PORTFOLIO_NOTIFICATIONS_OPEN -> displaying
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to portfolio", action: "INIT", variant: "ghost" }] })
+    emits {
+      CREATE -> external { source : string }
     }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch Portfolio { emit: { success: "PortfolioLoaded", failure: "PortfolioLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalValue", value: "@entity.totalValue" }, { type: "stat-display", label: "DailyChange", value: "@entity.dailyChange" }, { type: "stat-display", label: "Positions", value: "@entity.positions" }, { type: "stat-display", label: "CashBalance", value: "@entity.cashBalance" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] })
-    }
-emits {
-PortfolioLoaded
-      PortfolioLoadFailed
-TradeOrderSaved
-      TradeOrderSaveFailed
-TradeOrderUpdated
-      TradeOrderUpdateFailed
-TradeOrderDeleted
-      TradeOrderDeleteFailed
-MarketFeedSaved
-      MarketFeedSaveFailed
-    }
-
-        listens {
+    listens {
       PortfolioAppLayout.PORTFOLIO_SEARCH -> PORTFOLIO_SEARCH
       PortfolioAppLayout.PORTFOLIO_NOTIFICATIONS_OPEN -> PORTFOLIO_NOTIFICATIONS_OPEN
       PORTFOLIO_SEARCH { value : string }
       PORTFOLIO_NOTIFICATIONS_OPEN { id : string }
-      PortfolioLoadFailed { error : string, code : string }
-
-      TradeOrderSaveFailed { error : string, code : string }
-      TradeOrderUpdateFailed { error : string, code : string }
-      TradeOrderDeleteFailed { error : string, code : string }
-      MarketFeedSaveFailed { error : string, code : string }
     }
-  }
-  page "/portfolio" as PortfolioPage -> PortfolioAppLayout, PortfolioDisplay
-}
-orbital TradeOrderOrbital {
-  entity TradeOrder [persistent: tradeorders] {
-    id : string!
-    symbol : string!
-    side : string!
-    quantity : number!
-    price : number
-    pendingId : string = ""
   }
 
-  type TradeOrderLoaded     = Event { data : [TradeOrder] }        "Fired when TradeOrder finishes loading; payload.data holds the list"
-  type TradeOrderLoadFailed = Event { error : string, code : string } "Fired when TradeOrder fails to load"
-  type TradeOrderDeleteFailed = Event { error : string, code : string }
-  type TradeOrderDeleted = Event { id : string }
-  type TradeOrderSaveFailed = Event { error : string, code : string }
-  type TradeOrderSaved = Event { id : string }
-  type TradeOrderUpdateFailed = Event { error : string, code : string }
-  type TradeOrderUpdated = Event { id : string }
-  trait TradeOrderBrowse -> TradeOrder [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading orders…" }] })
-      TradeOrderLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-cart" }, { type: "typography", content: "Trade Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create TradeOrder", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "symbol", variant: "h3", icon: "trending-up" }, { name: "side", variant: "badge" }, { name: "quantity", variant: "body", format: "number" }, { name: "price", variant: "h4", format: "currency" }], variant: "card", gap: "sm" }] }] })
-      TradeOrderLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load orders" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
-    }
-    emits {
-CREATE
-      VIEW { id : string!, row : TradeOrder }
-EDIT { id : string!, row : TradeOrder }
-DELETE { id : string!, row : TradeOrder }
-TradeOrderLoaded
-      TradeOrderLoadFailed
-    }
-    listens {
-      TradeOrderCreate.TRADE_ORDER_CREATED -> INIT
-      TradeOrderEdit.TRADE_ORDER_UPDATED -> INIT
-      TradeOrderDelete.TRADE_ORDER_DELETED -> INIT
-          TradeOrderLoadFailed { error : string, code : string }
+  trait PortfolioSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search positions…",
+      event: "PORTFOLIO_SEARCH"
     }
   }
-  trait TradeOrderCreate -> TradeOrder [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-      CREATE -> open
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create TradeOrder @payload.data { emit: { success: "TradeOrderSaved", failure: "TradeOrderSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TRADE_ORDER_CREATED)
-    }
-    emits {
-TRADE_ORDER_CREATED
-      TradeOrderLoadFailed
-TradeOrderLoaded
-      TradeOrderSaveFailed
-TradeOrderSaved
-    
-    }
-    listens {
-      TradeOrderLoadFailed { error : string, code : string }
-      SAVE { data : string }
-      TradeOrderBrowse.CREATE -> CREATE
-    }
-  }
-  trait TradeOrderEdit -> TradeOrder [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-      EDIT -> open
-        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update TradeOrder @payload.data { emit: { success: "TradeOrderUpdated", failure: "TradeOrderUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TRADE_ORDER_UPDATED)
-    }
-    emits {
-TRADE_ORDER_UPDATED
-      TradeOrderLoadFailed
-TradeOrderLoaded
-      TradeOrderUpdateFailed
-TradeOrderUpdated
-    
-    }
-    listens {
-      TradeOrderView.EDIT -> EDIT
-      TradeOrderLoadFailed { error : string, code : string }
-      EDIT { id : string, row : TradeOrder }
-      SAVE { data : string }
-      TradeOrderBrowse.EDIT -> EDIT
-    }
-  }
-  trait TradeOrderView -> TradeOrder [interaction, collection] {
-    emits {
-EDIT { id : string }
-TradeOrderLoaded
-      TradeOrderLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.price 0)
-        (set @entity.quantity 0)
-        (set @entity.side "")
-        (set @entity.symbol "")
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-      VIEW -> open
-        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.symbol" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Symbol" }, { type: "typography", variant: "body", content: "@entity.symbol" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Side" }, { type: "typography", variant: "body", content: "@entity.side" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Quantity" }, { type: "typography", variant: "body", content: "@entity.quantity" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
-    listens {
-      TradeOrderLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      TradeOrderBrowse.VIEW -> VIEW
+  trait PortfolioFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "symbol", label: "Symbol", filterType: "text" }
+      ],
+      event: "PORTFOLIO_FILTER"
     }
   }
-  trait TradeOrderDelete -> TradeOrder [interaction, collection] {
+
+  trait PortfolioStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Portfolio",
+      metrics: [
+        { aggregation: "sum",   field: "marketValue", label: "Total Value", icon: "dollar-sign", variant: "primary", format: "currency" },
+        { aggregation: "sum",   field: "dailyPnl",    label: "Daily PnL",   icon: "trending-up", variant: "success", format: "currency" },
+        { aggregation: "count",                         label: "Positions",   icon: "layout-list", variant: "info",    format: "number" },
+        { aggregation: "count", label: "Winners", icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", [">", "@row.dailyPnl", 0]] }
+      ]
+    }
+    listens {
+      PortfolioBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait PortfolioGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Daily PnL",
+      subtitle: "Profit and loss across positions",
+      chartType: "line",
+      categoryField: "symbol",
+      valueField: "dailyPnl",
+      aggregation: "sum",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      PortfolioBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait PortfolioBrowseList = Browse.traits.BrowseItemBrowse -> Portfolio {
+    config: {
+      fields: [
+        { name: "symbol",      variant: "h3",    icon: "trending-up" },
+        { name: "qty",         label: "Qty",          variant: "body",    format: "number" },
+        { name: "avgCost",     label: "Avg Cost",     variant: "body",    format: "currency" },
+        { name: "marketValue", label: "Market Value", variant: "h4",      format: "currency" },
+        { name: "dailyPnl",    label: "Daily PnL",    variant: "badge",   format: "currency" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      PortfolioSearch.SEARCH                 -> REFETCH_QUERY
+      PortfolioFilter.FILTER                 -> REFETCH_FILTER
+      PortfolioPersistor.PORTFOLIO_CREATED   -> INIT
+      PortfolioPersistor.PORTFOLIO_UPDATED   -> INIT
+      PortfolioPersistor.PORTFOLIO_DELETED   -> INIT
+    }
+  }
+
+  trait PortfolioCreate = Modal.traits.ModalRecordModal -> Portfolio {
+    config: {
+      icon: "plus-circle",
+      title: "Add Position",
+      mode: "create",
+      fields: ["symbol", "qty", "avgCost", "marketValue", "dailyPnl"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      PortfolioCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Portfolio }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait PortfolioEdit = Modal.traits.ModalRecordModal -> Portfolio {
+    config: {
+      icon: "edit",
+      title: "Edit Position",
+      mode: "edit",
+      fields: ["symbol", "qty", "avgCost", "marketValue", "dailyPnl"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      PortfolioBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Portfolio }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait PortfolioView = Modal.traits.ModalRecordModal -> Portfolio {
+    config: {
+      icon: "eye",
+      title: "View Position",
+      mode: "edit",
+      fields: ["symbol", "qty", "avgCost", "marketValue", "dailyPnl"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      PortfolioBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Portfolio }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait PortfolioDelete = Confirmation.traits.ConfirmActionConfirmation -> Portfolio {
+    config: {
+      icon: "alert-triangle",
+      title: "Close Position",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Close"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      PortfolioBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Portfolio }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait PortfolioPersistor -> Portfolio [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch TradeOrder {id: "@payload.id" , emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" }, emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete TradeOrder @entity.pendingId { emit: { success: "TradeOrderDeleted", failure: "TradeOrderDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-        (emit TRADE_ORDER_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch TradeOrder { emit: { success: "TradeOrderLoaded", failure: "TradeOrderLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Portfolio @payload.data { emit: { success: "PORTFOLIO_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Portfolio @payload.data { emit: { success: "PORTFOLIO_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Portfolio @payload.id { emit: { success: "PORTFOLIO_DELETED" } })
     }
     emits {
-TRADE_ORDER_DELETED
-      TradeOrderDeleteFailed
-TradeOrderDeleted
-      TradeOrderLoadFailed
-TradeOrderLoaded
-    
+      PORTFOLIO_CREATED -> external { id : string }
+      PORTFOLIO_UPDATED -> external { id : string }
+      PORTFOLIO_DELETED -> external { id : string }
     }
     listens {
-      TradeOrderLoadFailed { error : string, code : string }
-      DELETE { id : string }
-      TradeOrderBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      PortfolioCreate.SAVE           -> DO_CREATE
+      PortfolioEdit.SAVE             -> DO_UPDATE
+      PortfolioDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/orders" -> TradeOrderBrowse, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete
+
+  page "/portfolio" as PortfolioPage -> PortfolioAppLayout, PortfolioCatalog, PortfolioSearch, PortfolioFilter, PortfolioStats, PortfolioGraphs, PortfolioBrowseList, PortfolioCreate, PortfolioEdit, PortfolioView, PortfolioDelete, PortfolioPersistor
 }
+
+orbital TradeOrderOrbital {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity TradeOrder [persistent: tradeorders] {
+    id : string!
+    symbol : string!
+    side : "buy" | "sell" = "buy"
+    quantity : number!
+    price : number = 0
+    status : "pending" | "filled" | "cancelled" = "pending"
+    pendingId : string = ""
+  }
+
+  trait TradeOrderCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "clipboard-list" },
+              { type: "typography", content: "Trade Orders", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Order", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.TradeOrderBrowseList"
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+  }
+
+  trait TradeOrderBrowseList = Browse.traits.BrowseItemBrowse -> TradeOrder {
+    config: {
+      fields: [
+        { name: "symbol",   variant: "h3",    icon: "trending-up" },
+        { name: "side",     variant: "badge" },
+        { name: "quantity", variant: "body",  format: "number" },
+        { name: "price",    variant: "h4",    format: "currency" },
+        { name: "status",   variant: "badge" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Cancel", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      TradeOrderPersistor.TRADE_ORDER_CREATED  -> INIT
+      TradeOrderPersistor.TRADE_ORDER_UPDATED  -> INIT
+      TradeOrderPersistor.TRADE_ORDER_DELETED  -> INIT
+    }
+  }
+
+  trait TradeOrderCreate = Modal.traits.ModalRecordModal -> TradeOrder {
+    config: {
+      icon: "plus-circle",
+      title: "New Order",
+      mode: "create",
+      fields: ["symbol", "side", "quantity", "price", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      TradeOrderCatalog.CREATE -> CREATE
+      CREATE { id : string, row : TradeOrder }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TradeOrderEdit = Modal.traits.ModalRecordModal -> TradeOrder {
+    config: {
+      icon: "edit",
+      title: "Edit Order",
+      mode: "edit",
+      fields: ["symbol", "side", "quantity", "price", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      TradeOrderBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : TradeOrder }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TradeOrderView = Modal.traits.ModalRecordModal -> TradeOrder {
+    config: {
+      icon: "eye",
+      title: "View Order",
+      mode: "edit",
+      fields: ["symbol", "side", "quantity", "price", "status"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      TradeOrderBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : TradeOrder }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TradeOrderDelete = Confirmation.traits.ConfirmActionConfirmation -> TradeOrder {
+    config: {
+      icon: "alert-triangle",
+      title: "Cancel Order",
+      alertMessage: "Cancel this pending order?",
+      confirmLabel: "Cancel Order"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      TradeOrderBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : TradeOrder }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TradeOrderPersistor -> TradeOrder [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create TradeOrder @payload.data { emit: { success: "TRADE_ORDER_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update TradeOrder @payload.data { emit: { success: "TRADE_ORDER_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete TradeOrder @payload.id { emit: { success: "TRADE_ORDER_DELETED" } })
+    }
+    emits {
+      TRADE_ORDER_CREATED -> external { id : string }
+      TRADE_ORDER_UPDATED -> external { id : string }
+      TRADE_ORDER_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      TradeOrderCreate.SAVE           -> DO_CREATE
+      TradeOrderEdit.SAVE             -> DO_UPDATE
+      TradeOrderDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/orders" -> TradeOrderCatalog, TradeOrderBrowseList, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete, TradeOrderPersistor
+}
+
 orbital MarketFeedOrbital {
+  uses Selection from "std/behaviors/std-selection"
+
   entity MarketFeed [runtime] {
     id : string!
     symbol : string!
     price : number!
-    change : number
-    volume : number
+    change : number = 0
+    volume : number = 0
+    dailyPnl : number = 0
   }
 
   type MarketFeedLoaded     = Event { data : [MarketFeed] }                  "Fired when MarketFeed finishes loading"
-  type MarketFeedLoadFailed = Event { error : string, code : string } "Fired when MarketFeed fails to load"
+  type MarketFeedLoadFailed = Event { error : string, code : string }        "Fired when MarketFeed fails to load"
+  type MarketFeedSaved      = Event { id : string }
   type MarketFeedSaveFailed = Event { error : string, code : string }
-  type MarketFeedSaved = Event { id : string }
+
+  ;; Multi-select pinning of watched symbols. Bound from std-selection.
+  trait MarketSelection = Selection.traits.SelectableItemSelection -> MarketFeed {
+    config: {
+      multi: true
+    }
+  }
+
+  ;; Domain-specific async state machine: idle -> loading -> success | error.
+  ;; Real-time streaming feed UI (live ticker, depth chart, color-graded PnL)
+  ;; isn't a CRUD shape — kept as custom render-ui.
   trait MarketFeedAsync -> MarketFeed [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (fetch MarketFeed { emit: { success: "MarketFeedLoaded", failure: "MarketFeedLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", content: "Market Feed", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Connect to live market data." },
+          { type: "button", label: "Start Stream", action: "START", variant: "primary", icon: "play" }
+        ]})
       START -> loading
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Connecting to market feed...", message: "Processing marketfeed..." }, { type: "skeleton", variant: "text" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "loading-state", title: "Connecting to market feed…", message: "Streaming ticks…" },
+          { type: "skeleton", variant: "text" }
+        ]})
     }
     state loading {
       LOADED -> success
         (persist create MarketFeed @payload.data { emit: { success: "MarketFeedSaved", failure: "MarketFeedSaveFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Market feed connected." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "activity" },
+              { type: "typography", content: "Live Market Feed", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "alert", variant: "success", message: "Connected" },
+              { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "data-list", entity: @payload.data, fields: [
+            { name: "symbol", variant: "h4",    icon: "trending-up" },
+            { name: "price",  variant: "h3",    format: "currency" },
+            { name: "change", variant: "badge", format: "currency" },
+            { name: "volume", variant: "caption", format: "number" }
+          ], variant: "card", gap: "sm" },
+          { type: "divider" },
+          { type: "line-chart", data: [{ date: "09:30", value: 100 }, { date: "10:00", value: 102 }, { date: "10:30", value: 99 }, { date: "11:00", value: 105 }, { date: "11:30", value: 107 }, { date: "12:00", value: 104 }] },
+          { type: "chart-legend", items: [{ label: "Price", color: "primary" }, { label: "Volume", color: "muted" }] }
+        ]})
       FAILED -> error
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "Market feed disconnected.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "error-state", title: "Stream Disconnected", message: "Market feed disconnected.", onRetry: "RETRY" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [
+            { type: "button", label: "Retry", action: "RETRY", variant: "primary", icon: "refresh-cw" },
+            { type: "button", label: "Reset", action: "RESET", variant: "ghost",   icon: "rotate-ccw" }
+          ]}
+        ]})
     }
     state success {
       RESET -> idle
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", content: "Market Feed", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Connect to live market data." },
+          { type: "button", label: "Start Stream", action: "START", variant: "primary", icon: "play" }
+        ]})
     }
     state error {
       RESET -> idle
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", action: "START", variant: "primary", icon: "play" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", content: "Market Feed", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "body", color: "muted", content: "Connect to live market data." },
+          { type: "button", label: "Start Stream", action: "START", variant: "primary", icon: "play" }
+        ]})
       RETRY -> loading
-        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Connecting to market feed...", message: "Processing marketfeed..." }, { type: "skeleton", variant: "text" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [
+          { type: "loading-state", title: "Connecting to market feed…", message: "Streaming ticks…" },
+          { type: "skeleton", variant: "text" }
+        ]})
     }
-emits {
-MarketFeedLoadFailed
+    emits {
       MarketFeedLoaded
-MarketFeedSaveFailed
+      MarketFeedLoadFailed
       MarketFeedSaved
+      MarketFeedSaveFailed
     }
-
-        listens {
+    listens {
       MarketFeedLoadFailed { error : string, code : string }
       LOADED { data : string }
     }
   }
-  page "/market" -> MarketFeedAsync
+
+  page "/market" -> MarketFeedAsync, MarketSelection
 }

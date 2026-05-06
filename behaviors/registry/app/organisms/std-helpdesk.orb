@@ -1,7 +1,7 @@
 {
   "name": "std-helpdesk",
-  "version": "1.0.0",
-  "description": "Helpdesk: support tickets, responses, and team metrics. Pick for customer support apps.",
+  "version": "2.0.0",
+  "description": "Helpdesk: support tickets, threaded replies, email-out, and team metrics. Pick for customer support apps.",
   "orbitals": [
     {
       "name": "TicketOrbital",
@@ -9,11 +9,40 @@
         {
           "from": "std/behaviors/std-app-layout",
           "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
         }
       ],
       "entity": {
         "name": "Ticket",
-        "persistence": "runtime",
+        "collection": "tickets",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -23,7 +52,7 @@
           {
             "name": "subject",
             "type": "string",
-            "default": ""
+            "required": true
           },
           {
             "name": "description",
@@ -58,6 +87,11 @@
             "default": ""
           },
           {
+            "name": "customerEmail",
+            "type": "string",
+            "default": ""
+          },
+          {
             "name": "pendingId",
             "type": "string",
             "default": ""
@@ -69,8 +103,10 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TicketAppLayout",
           "config": {
-            "contentTrait": "@trait.TicketBrowse",
+            "searchEvent": "TICKET_SEARCH",
+            "notifications": [],
             "appName": "Helpdesk",
+            "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "href": "/tickets",
@@ -78,308 +114,39 @@
                 "label": "Tickets"
               },
               {
-                "href": "/responses",
-                "icon": "message-circle",
-                "label": "Responses"
+                "label": "Replies",
+                "href": "/replies",
+                "icon": "message-circle"
               },
               {
-                "href": "/metrics",
+                "label": "Metrics",
                 "icon": "layout-list",
-                "label": "Metrics"
+                "href": "/metrics"
               }
             ],
-            "searchEvent": "TICKET_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN"
+            "contentTrait": "@trait.TicketCatalog"
           },
           "events": {
-            "SEARCH": "TICKET_SEARCH",
-            "NOTIFY_CLICK": "TICKET_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "TICKET_NOTIFICATIONS_OPEN",
+            "SEARCH": "TICKET_SEARCH"
           }
         },
         {
-          "name": "TicketBrowse",
+          "name": "TicketCatalog",
           "category": "interaction",
-          "linkedEntity": "Ticket",
           "emits": [
             {
-              "event": "ASSIGN",
+              "event": "CREATE",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CREATE"
-            },
-            {
-              "event": "VIEW",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subject",
-                  "type": "string"
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.priority",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.assignee",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subject",
-                  "type": "string"
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.priority",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.assignee",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subject",
-                  "type": "string"
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.priority",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.assignee",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoaded",
-              "description": "Fired when Ticket finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Ticket]"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ResponseSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ResponseSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
             }
           ],
           "listens": [
-            {
-              "event": "TICKET_CREATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketCreate"
-              }
-            },
-            {
-              "event": "TICKET_UPDATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketEdit"
-              }
-            },
-            {
-              "event": "TICKET_DELETED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketDelete"
-              }
-            },
             {
               "event": "TICKET_SEARCH",
               "triggers": "TICKET_SEARCH",
@@ -400,7 +167,7 @@
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "composing",
                 "isInitial": true
               }
             ],
@@ -430,349 +197,61 @@
                 ]
               },
               {
-                "key": "TicketLoaded",
-                "name": "Ticket loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Ticket]"
-                  }
-                ]
-              },
-              {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ASSIGN",
-                "name": "Assign"
-              },
-              {
                 "key": "CREATE",
                 "name": "Create"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Ticket"
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Ticket"
-                  }
-                ]
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Ticket"
-                  }
-                ]
-              },
-              {
-                "key": "TicketSaved",
-                "name": "Ticket saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketSaveFailed",
-                "name": "Ticket save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketUpdated",
-                "name": "Ticket updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketUpdateFailed",
-                "name": "Ticket update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketDeleted",
-                "name": "Ticket deleted",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketDeleteFailed",
-                "name": "Ticket delete failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseSaved",
-                "name": "Response saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseSaveFailed",
-                "name": "Response save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Loading…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TICKET_SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
                       "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Searching…",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ],
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TICKET_NOTIFICATIONS_OPEN",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-8",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "bell"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "No notifications",
-                          "variant": "h3"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "You're all caught up."
-                        },
-                        {
-                          "type": "button",
-                          "label": "Back to tickets",
-                          "action": "INIT",
-                          "variant": "ghost"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TicketLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
                           "children": [
                             {
                               "gap": "sm",
+                              "align": "center",
                               "type": "stack",
                               "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "inbox",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "inbox"
                                 },
                                 {
+                                  "content": "Tickets",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Tickets"
+                                  "variant": "h2"
                                 }
                               ]
                             },
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "label": "New Ticket",
-                                  "variant": "primary",
                                   "action": "CREATE",
                                   "type": "button",
-                                  "icon": "plus"
+                                  "label": "New Ticket",
+                                  "icon": "plus",
+                                  "variant": "primary"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm"
                             }
                           ],
                           "align": "center",
+                          "gap": "md",
+                          "justify": "between",
                           "direction": "horizontal",
                           "type": "stack"
                         },
@@ -780,121 +259,408 @@
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
-                            {
-                              "type": "stat-display",
-                              "icon": "inbox",
-                              "label": "Open Tickets",
-                              "value": "@payload.data.length"
-                            }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 1.0
+                            "@trait.TicketSearch",
+                            "@trait.TicketFilter"
+                          ]
                         },
+                        "@trait.TicketStats",
+                        "@trait.TicketGraphs",
                         {
                           "type": "divider"
                         },
-                        {
-                          "fields": [
-                            {
-                              "name": "subject",
-                              "icon": "inbox",
-                              "variant": "h3"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "priority"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "assignee",
-                              "variant": "body"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "description"
-                            }
-                          ],
-                          "type": "data-list",
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "variant": "ghost"
-                            },
-                            {
-                              "event": "EDIT",
-                              "variant": "ghost",
-                              "label": "Edit"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "variant": "card",
-                          "entity": "@payload.data"
-                        }
+                        "@trait.TicketBrowseList"
                       ]
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TicketLoadFailed",
+                "from": "composing",
+                "to": "composing",
+                "event": "TICKET_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "TICKET_NOTIFICATIONS_OPEN",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center",
                       "gap": "md",
+                      "className": "py-8",
                       "children": [
                         {
                           "type": "icon",
-                          "color": "destructive",
-                          "name": "alert-triangle"
+                          "name": "bell"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Failed to load ticket"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
                           "color": "muted",
+                          "content": "You're all caught up.",
                           "type": "typography",
-                          "variant": "body",
-                          "content": "@payload.error"
+                          "variant": "caption"
                         },
                         {
                           "type": "button",
-                          "variant": "primary",
+                          "label": "Back to tickets",
                           "action": "INIT",
-                          "label": "Retry",
-                          "icon": "rotate-ccw"
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         },
         {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "TicketSearch",
+          "config": {
+            "event": "TICKET_SEARCH",
+            "placeholder": "Search tickets…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "TicketFilter",
+          "config": {
+            "event": "TICKET_FILTER",
+            "filters": [
+              {
+                "options": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "filterType": "select",
+                "label": "Priority",
+                "field": "priority"
+              },
+              {
+                "filterType": "select",
+                "options": [
+                  "open",
+                  "in-progress",
+                  "resolved",
+                  "closed"
+                ],
+                "field": "status",
+                "label": "Status"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "TicketStats",
+          "config": {
+            "metrics": [
+              {
+                "format": "number",
+                "label": "Total",
+                "icon": "inbox",
+                "variant": "primary",
+                "aggregation": "count"
+              },
+              {
+                "format": "number",
+                "icon": "circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ],
+                "variant": "warning",
+                "aggregation": "count",
+                "label": "Open"
+              },
+              {
+                "variant": "success",
+                "aggregation": "count",
+                "label": "Resolved",
+                "icon": "check-circle",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "resolved"
+                  ]
+                ]
+              }
+            ],
+            "title": "Tickets"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "TicketGraphs",
+          "config": {
+            "chartType": "bar",
+            "subtitle": "Volume across priority buckets",
+            "categoryField": "priority",
+            "height": 240.0,
+            "showLegend": false,
+            "title": "Tickets by Priority",
+            "aggregation": "count"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TicketBrowseList",
+          "linkedEntity": "Ticket",
+          "config": {
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "fields": [
+              {
+                "name": "subject",
+                "variant": "h3",
+                "icon": "inbox"
+              },
+              {
+                "name": "priority",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "assignee",
+                "variant": "body"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketFilter"
+              }
+            },
+            {
+              "event": "TICKET_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketPersistor"
+              }
+            },
+            {
+              "event": "TICKET_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketPersistor"
+              }
+            },
+            {
+              "event": "TICKET_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
           "name": "TicketCreate",
-          "category": "interaction",
+          "linkedEntity": "Ticket",
+          "config": {
+            "fields": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ],
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "New Ticket"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TicketEdit",
+          "linkedEntity": "Ticket",
+          "config": {
+            "fields": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ],
+            "title": "Edit Ticket",
+            "mode": "edit",
+            "icon": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TicketView",
+          "linkedEntity": "Ticket",
+          "config": {
+            "icon": "eye",
+            "title": "View Ticket",
+            "mode": "edit",
+            "fields": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "TicketDelete",
+          "linkedEntity": "Ticket",
+          "config": {
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
+            "title": "Delete Ticket",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TicketPersistor",
+          "category": "lifecycle",
           "linkedEntity": "Ticket",
           "emits": [
             {
@@ -908,300 +674,6 @@
               ]
             },
             {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoaded",
-              "description": "Fired when Ticket finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Ticket]"
-                }
-              ]
-            },
-            {
-              "event": "TicketSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "CREATE",
-              "triggers": "CREATE",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CREATE",
-                "name": "Create"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TICKET_CREATED",
-                "name": "Ticket Created"
-              },
-              {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketLoaded",
-                "name": "Ticket loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Ticket]"
-                  }
-                ]
-              },
-              {
-                "key": "TicketSaveFailed",
-                "name": "Ticket save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketSaved",
-                "name": "Ticket saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "name": "plus-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "Create Ticket"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "fields": [
-                            "subject",
-                            "description",
-                            "priority",
-                            "status",
-                            "assignee"
-                          ],
-                          "cancelEvent": "CLOSE",
-                          "submitEvent": "SAVE",
-                          "type": "form-section",
-                          "mode": "create"
-                        }
-                      ],
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "Ticket",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "TicketSaved",
-                        "failure": "TicketSaveFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TICKET_CREATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TicketEdit",
-          "category": "interaction",
-          "linkedEntity": "Ticket",
-          "emits": [
-            {
               "event": "TICKET_UPDATED",
               "scope": "external",
               "payloadSchema": [
@@ -1212,690 +684,6 @@
               ]
             },
             {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoaded",
-              "description": "Fired when Ticket finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Ticket]"
-                }
-              ]
-            },
-            {
-              "event": "TicketUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketView"
-              }
-            },
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Ticket"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TICKET_UPDATED",
-                "name": "Ticket Updated"
-              },
-              {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketLoaded",
-                "name": "Ticket loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Ticket]"
-                  }
-                ]
-              },
-              {
-                "key": "TicketUpdateFailed",
-                "name": "Ticket update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TicketUpdated",
-                "name": "Ticket updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "id": "@payload.id",
-                      "emit": {
-                        "failure": "TicketLoadFailed",
-                        "success": "TicketLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "gap": "md",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "edit"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Edit Ticket",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "@payload.row",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "subject",
-                            "description",
-                            "priority",
-                            "status",
-                            "assignee"
-                          ],
-                          "mode": "edit"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "update",
-                    "Ticket",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "TicketUpdated",
-                        "failure": "TicketUpdateFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TICKET_UPDATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TicketView",
-          "category": "interaction",
-          "linkedEntity": "Ticket",
-          "emits": [
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoaded",
-              "description": "Fired when Ticket finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Ticket]"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "VIEW",
-              "triggers": "VIEW",
-              "source": {
-                "kind": "trait",
-                "trait": "TicketBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit"
-              },
-              {
-                "key": "TicketLoaded",
-                "name": "Ticket loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Ticket]"
-                  }
-                ]
-              },
-              {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.assignee",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.description",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.priority",
-                    "medium"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "open"
-                  ],
-                  [
-                    "set",
-                    "@entity.subject",
-                    ""
-                  ],
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "id": "@payload.id",
-                      "emit": {
-                        "failure": "TicketLoadFailed",
-                        "success": "TicketLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.subject"
-                            }
-                          ],
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Subject"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.subject",
-                              "variant": "body"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "content": "Description",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.description",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Priority",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.priority",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Status",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.status",
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Assignee"
-                            },
-                            {
-                              "content": "@entity.assignee",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "icon": "edit",
-                              "type": "button",
-                              "variant": "primary",
-                              "action": "EDIT",
-                              "label": "Edit"
-                            },
-                            {
-                              "action": "CLOSE",
-                              "label": "Close",
-                              "variant": "ghost",
-                              "type": "button"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TicketDelete",
-          "category": "interaction",
-          "linkedEntity": "Ticket",
-          "emits": [
-            {
               "event": "TICKET_DELETED",
               "scope": "external",
               "payloadSchema": [
@@ -1904,65 +692,31 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "TicketDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoadFailed",
-              "description": "Fired when Ticket fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TicketLoaded",
-              "description": "Fired when Ticket finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Ticket]"
-                }
-              ]
             }
           ],
           "listens": [
             {
-              "event": "DELETE",
-              "triggers": "DELETE",
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
               "source": {
                 "kind": "trait",
-                "trait": "TicketBrowse"
+                "trait": "TicketCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketDelete"
               }
             }
           ],
@@ -1971,9 +725,6 @@
               {
                 "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "confirming"
               }
             ],
             "events": [
@@ -1982,49 +733,30 @@
                 "name": "Initialize"
               },
               {
-                "key": "DELETE",
-                "name": "Delete",
+                "key": "DO_CREATE",
+                "name": "Do Create",
                 "payloadSchema": [
                   {
-                    "name": "id",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
                   }
                 ]
               },
               {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "TICKET_DELETED",
-                "name": "Ticket Deleted"
-              },
-              {
-                "key": "TicketDeleteFailed",
-                "name": "Ticket delete failed",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
                 "payloadSchema": [
                   {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
+                    "name": "data",
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "TicketDeleted",
-                "name": "Ticket deleted",
+                "key": "DO_DELETE",
+                "name": "Do Delete",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -2033,43 +765,37 @@
                 ]
               },
               {
-                "key": "TicketLoadFailed",
-                "name": "Ticket load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "TICKET_CREATED",
+                "name": "Ticket Created"
               },
               {
-                "key": "TicketLoaded",
-                "name": "Ticket loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Ticket]"
-                  }
-                ]
+                "key": "TICKET_UPDATED",
+                "name": "Ticket Updated"
+              },
+              {
+                "key": "TICKET_DELETED",
+                "name": "Ticket Deleted"
               }
             ],
             "transitions": [
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "INIT",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
                 "effects": [
                   [
-                    "fetch",
+                    "persist",
+                    "create",
                     "Ticket",
+                    "@payload.data",
                     {
                       "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
+                        "success": "TICKET_CREATED"
                       }
                     }
                   ]
@@ -2077,182 +803,35 @@
               },
               {
                 "from": "idle",
-                "to": "confirming",
-                "event": "DELETE",
+                "to": "idle",
+                "event": "DO_UPDATE",
                 "effects": [
                   [
-                    "set",
-                    "@entity.pendingId",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
+                    "persist",
+                    "update",
                     "Ticket",
+                    "@payload.data",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
+                        "success": "TICKET_UPDATED"
                       }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-triangle"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Ticket",
-                              "variant": "h3"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "error",
-                          "message": "This action cannot be undone.",
-                          "type": "alert"
-                        },
-                        {
-                          "children": [
-                            {
-                              "label": "Cancel",
-                              "action": "CANCEL",
-                              "variant": "ghost",
-                              "type": "button"
-                            },
-                            {
-                              "type": "button",
-                              "variant": "danger",
-                              "action": "CONFIRM_DELETE",
-                              "icon": "check",
-                              "label": "Delete"
-                            }
-                          ],
-                          "gap": "sm",
-                          "justify": "end",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        }
-                      ],
-                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "confirming",
+                "from": "idle",
                 "to": "idle",
-                "event": "CONFIRM_DELETE",
+                "event": "DO_DELETE",
                 "effects": [
                   [
                     "persist",
                     "delete",
                     "Ticket",
-                    "@entity.pendingId",
+                    "@payload.id",
                     {
                       "emit": {
-                        "success": "TicketDeleted",
-                        "failure": "TicketDeleteFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "failure": "TicketLoadFailed",
-                        "success": "TicketLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TICKET_DELETED"
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "emit": {
-                        "success": "TicketLoaded",
-                        "failure": "TicketLoadFailed"
+                        "success": "TICKET_DELETED"
                       }
                     }
                   ]
@@ -2260,7 +839,7 @@
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -2272,7 +851,22 @@
               "ref": "TicketAppLayout"
             },
             {
-              "ref": "TicketBrowse"
+              "ref": "TicketCatalog"
+            },
+            {
+              "ref": "TicketSearch"
+            },
+            {
+              "ref": "TicketFilter"
+            },
+            {
+              "ref": "TicketStats"
+            },
+            {
+              "ref": "TicketGraphs"
+            },
+            {
+              "ref": "TicketBrowseList"
             },
             {
               "ref": "TicketCreate"
@@ -2285,16 +879,30 @@
             },
             {
               "ref": "TicketDelete"
+            },
+            {
+              "ref": "TicketPersistor"
             }
           ]
         }
       ]
     },
     {
-      "name": "ResponseOrbital",
+      "name": "TicketReplyOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-service-email",
+          "as": "Email"
+        }
+      ],
       "entity": {
-        "name": "Response",
-        "persistence": "runtime",
+        "name": "TicketReply",
+        "collection": "ticketreplies",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -2303,86 +911,71 @@
           },
           {
             "name": "ticketId",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "body",
-            "type": "string"
+            "type": "string",
+            "required": true
           },
           {
             "name": "author",
-            "type": "string"
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "customerEmail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "default": ""
           },
           {
             "name": "createdAt",
-            "type": "datetime"
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
           }
         ]
       },
       "traits": [
         {
-          "name": "ResponseBrowse",
+          "name": "TicketReplyBrowse",
           "category": "interaction",
-          "linkedEntity": "Response",
+          "linkedEntity": "TicketReply",
           "emits": [
             {
-              "event": "RESOLVE",
+              "event": "CREATE",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "id",
+                  "name": "source",
                   "type": "string"
                 }
               ]
             },
             {
-              "event": "COMPOSE"
-            },
-            {
-              "event": "VIEW",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.ticketId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.body",
-                  "type": "string"
-                },
-                {
-                  "name": "row.author",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "datetime"
-                }
-              ]
-            },
-            {
-              "event": "ResponseLoaded",
-              "description": "Fired when Response finishes loading",
+              "event": "TicketReplyLoaded",
+              "description": "Fired when TicketReply finishes loading",
               "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
-                  "type": "[Response]"
+                  "type": "[TicketReply]"
                 }
               ]
             },
             {
-              "event": "ResponseLoadFailed",
-              "description": "Fired when Response fails to load",
+              "event": "TicketReplyLoadFailed",
+              "description": "Fired when TicketReply fails to load",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -2398,20 +991,11 @@
           ],
           "listens": [
             {
-              "event": "SEND",
+              "event": "REPLY_CREATED",
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "ResponseCompose"
-              }
-            },
-            {
-              "event": "ASSIGN",
-              "triggers": "INIT",
-              "source": {
-                "kind": "orbital",
-                "orbital": "TicketOrbital",
-                "trait": "TicketBrowse"
+                "trait": "TicketReplyPersistor"
               }
             }
           ],
@@ -2428,18 +1012,18 @@
                 "name": "Initialize"
               },
               {
-                "key": "ResponseLoaded",
-                "name": "Response loaded",
+                "key": "TicketReplyLoaded",
+                "name": "TicketReply loaded",
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[Response]"
+                    "type": "[TicketReply]"
                   }
                 ]
               },
               {
-                "key": "ResponseLoadFailed",
-                "name": "Response load failed",
+                "key": "TicketReplyLoadFailed",
+                "name": "TicketReply load failed",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -2452,16 +1036,8 @@
                 ]
               },
               {
-                "key": "RESOLVE",
-                "name": "Resolve"
-              },
-              {
-                "key": "COMPOSE",
-                "name": "Compose"
-              },
-              {
-                "key": "VIEW",
-                "name": "View"
+                "key": "CREATE",
+                "name": "Create"
               }
             ],
             "transitions": [
@@ -2472,11 +1048,11 @@
                 "effects": [
                   [
                     "fetch",
-                    "Response",
+                    "TicketReply",
                     {
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
+                        "failure": "TicketReplyLoadFailed",
+                        "success": "TicketReplyLoaded"
                       }
                     }
                   ],
@@ -2484,22 +1060,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading…",
                           "type": "typography"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -2507,156 +1083,123 @@
               {
                 "from": "browsing",
                 "to": "browsing",
-                "event": "ResponseLoaded",
+                "event": "TicketReplyLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "icon": "inbox",
-                          "label": "Tickets",
-                          "href": "/tickets"
-                        },
-                        {
-                          "href": "/responses",
-                          "label": "Responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "justify": "between",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "name": "message-circle",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Responses",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "icon": "edit",
-                                      "action": "COMPOSE",
-                                      "label": "Compose",
-                                      "variant": "primary",
-                                      "type": "button"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "sm"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "variant": "card",
-                              "entity": "@payload.data",
-                              "gap": "sm",
-                              "fields": [
-                                {
-                                  "variant": "h4",
-                                  "icon": "message-circle",
-                                  "name": "author"
-                                },
-                                {
-                                  "name": "body",
-                                  "variant": "body"
-                                },
-                                {
-                                  "variant": "caption",
-                                  "name": "createdAt",
-                                  "format": "date"
-                                }
-                              ],
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "variant": "ghost",
-                                  "event": "VIEW"
-                                }
-                              ]
-                            }
-                          ],
-                          "className": "max-w-5xl mx-auto w-full",
-                          "gap": "lg",
-                          "direction": "vertical"
-                        }
-                      ],
-                      "appName": "Helpdesk"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ResponseLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Replies"
+                                }
+                              ],
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Compose",
+                              "icon": "edit",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TicketReplyComposerForm",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "name": "author",
+                              "icon": "message-circle"
+                            },
+                            {
+                              "name": "body",
+                              "variant": "body"
+                            },
+                            {
+                              "format": "date",
+                              "variant": "caption",
+                              "name": "createdAt"
+                            }
+                          ],
+                          "type": "data-list",
+                          "variant": "card"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "TicketReplyLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
                           "type": "icon",
-                          "name": "alert-triangle",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "name": "alert-triangle"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load response"
+                          "content": "Failed to load replies",
+                          "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
                           "variant": "body",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "@payload.error",
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
                           "label": "Retry",
-                          "variant": "primary"
+                          "action": "INIT",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
-                      "align": "center"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2666,56 +1209,172 @@
           "scope": "collection"
         },
         {
-          "name": "ResponseCompose",
+          "name": "TicketReplyComposerForm",
           "category": "interaction",
-          "linkedEntity": "Response",
           "emits": [
             {
-              "event": "SEND"
-            },
-            {
-              "event": "ResponseLoadFailed",
-              "description": "Fired when Response fails to load",
-              "scope": "internal",
+              "event": "SEND",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
             },
             {
-              "event": "ResponseLoaded",
-              "description": "Fired when Response finishes loading",
-              "scope": "internal",
+              "event": "CREATE",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "[Response]"
-                }
-              ]
-            },
-            {
-              "event": "ResponseSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "ready",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND",
+                "name": "Send"
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "content": "New reply",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "textarea",
+                          "placeholder": "Write your reply…"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "icon": "save",
+                              "action": "CREATE",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Save Draft"
+                            },
+                            {
+                              "action": "SEND",
+                              "icon": "send",
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Send Reply"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TicketReplyCreate",
+          "linkedEntity": "TicketReply",
+          "config": {
+            "fields": [
+              "ticketId",
+              "body",
+              "author",
+              "customerEmail",
+              "subject"
+            ],
+            "icon": "message-circle",
+            "title": "New Reply",
+            "mode": "create"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketReplyComposerForm"
+              }
             },
             {
-              "event": "ResponseSaved",
-              "scope": "internal",
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketReplyBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Email.traits.ServiceEmailEmail",
+          "name": "TicketReplyEmail",
+          "config": {
+            "subject": "Re: your ticket",
+            "recipient": "",
+            "body": "",
+            "sender": "support@example.com",
+            "uiTrait": "@trait.TicketReplyComposerForm"
+          },
+          "listens": [
+            {
+              "event": "SEND",
+              "triggers": "SEND",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketReplyComposerForm"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TicketReplyPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "TicketReply",
+          "emits": [
+            {
+              "event": "REPLY_CREATED",
+              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -2726,22 +1385,19 @@
           ],
           "listens": [
             {
-              "event": "COMPOSE",
-              "triggers": "COMPOSE",
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
               "source": {
                 "kind": "trait",
-                "trait": "ResponseBrowse"
+                "trait": "TicketReplyCreate"
               }
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "closed",
+                "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "open"
               }
             ],
             "events": [
@@ -2750,530 +1406,69 @@
                 "name": "Initialize"
               },
               {
-                "key": "COMPOSE",
-                "name": "Compose"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SEND",
-                "name": "Send",
+                "key": "DO_CREATE",
+                "name": "Do Create",
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "string"
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "ResponseLoadFailed",
-                "name": "Response load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseLoaded",
-                "name": "Response loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Response]"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseSaveFailed",
-                "name": "Response save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseSaved",
-                "name": "Response saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
+                "key": "REPLY_CREATED",
+                "name": "Reply Created"
               }
             ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Response",
-                    {
-                      "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
-                      }
-                    }
-                  ]
-                ]
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "COMPOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "edit"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "New Response",
-                              "variant": "h3"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "mode": "create",
-                          "submitEvent": "SEND",
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "ticketId",
-                            "body",
-                            "author"
-                          ]
-                        }
-                      ],
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SEND",
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
                 "effects": [
                   [
                     "persist",
                     "create",
-                    "Response",
+                    "TicketReply",
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ResponseSaveFailed",
-                        "success": "ResponseSaved"
+                        "success": "REPLY_CREATED"
                       }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
-        },
-        {
-          "name": "ResponseView",
-          "category": "interaction",
-          "linkedEntity": "Response",
-          "emits": [
-            {
-              "event": "ResponseLoaded",
-              "description": "Fired when Response finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[Response]"
-                }
-              ]
-            },
-            {
-              "event": "ResponseLoadFailed",
-              "description": "Fired when Response fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "VIEW",
-              "triggers": "VIEW",
-              "source": {
-                "kind": "trait",
-                "trait": "ResponseBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save"
-              },
-              {
-                "key": "ResponseLoaded",
-                "name": "Response loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Response]"
-                  }
-                ]
-              },
-              {
-                "key": "ResponseLoadFailed",
-                "name": "Response load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.author",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.body",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.ticketId",
-                    ""
-                  ],
-                  [
-                    "fetch",
-                    "Response",
-                    {
-                      "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "Response",
-                    {
-                      "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
-                      },
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.ticketId"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Ticket ID"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.ticketId",
-                              "variant": "body"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Body",
-                              "type": "typography"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.body",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "content": "Author",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.author"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Created At",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.createdAt",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Close",
-                              "action": "CLOSE",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "justify": "end",
-                          "direction": "horizontal"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
         {
-          "name": "Responses",
-          "path": "/responses",
+          "name": "Replies",
+          "path": "/replies",
           "traits": [
             {
-              "ref": "ResponseBrowse"
+              "ref": "TicketReplyBrowse"
             },
             {
-              "ref": "ResponseCompose"
+              "ref": "TicketReplyComposerForm"
             },
             {
-              "ref": "ResponseView"
+              "ref": "TicketReplyCreate"
+            },
+            {
+              "ref": "TicketReplyEmail"
+            },
+            {
+              "ref": "TicketReplyPersistor"
             }
           ]
         }
@@ -3281,9 +1476,16 @@
     },
     {
       "name": "SupportMetricsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
       "entity": {
-        "name": "SupportMetrics",
-        "persistence": "runtime",
+        "name": "SupportMetric",
+        "collection": "supportmetrics",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -3291,1432 +1493,131 @@
             "required": true
           },
           {
-            "name": "openTickets",
-            "type": "number"
-          },
-          {
-            "name": "resolvedTickets",
-            "type": "number"
-          },
-          {
-            "name": "avgResponseTime",
+            "name": "name",
             "type": "string"
           },
           {
-            "name": "satisfactionScore",
-            "type": "number"
+            "name": "category",
+            "type": "string"
           },
           {
-            "name": "activeAgents",
-            "type": "number"
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "in-progress",
+              "resolved",
+              "closed"
+            ]
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          {
+            "name": "responseHours",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "SupportMetricsBrowse",
+          "linkedEntity": "SupportMetric",
+          "config": {
+            "fields": [
+              {
+                "name": "name",
+                "variant": "h4",
+                "label": "Name"
+              },
+              {
+                "label": "Category",
+                "name": "category",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
+                "label": "Priority",
+                "name": "priority",
+                "variant": "badge"
+              }
+            ],
+            "pageSize": 100.0,
+            "displayPageSize": 5.0
+          }
+        },
+        {
           "name": "SupportMetricsDisplay",
           "category": "interaction",
-          "linkedEntity": "SupportMetrics",
-          "emits": [
-            {
-              "event": "SupportMetricsLoaded",
-              "description": "Fired when SupportMetrics finishes loading",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[SupportMetrics]"
-                }
-              ]
-            },
-            {
-              "event": "SupportMetricsLoadFailed",
-              "description": "Fired when SupportMetrics fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "RESOLVE",
-              "triggers": "INIT",
-              "source": {
-                "kind": "orbital",
-                "orbital": "ResponseOrbital",
-                "trait": "ResponseBrowse"
-              }
-            }
-          ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "composing",
                 "isInitial": true
-              },
-              {
-                "name": "displaying"
-              },
-              {
-                "name": "refreshing"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "LOADED",
-                "name": "Loaded"
-              },
-              {
-                "key": "REFRESH",
-                "name": "Refresh"
-              },
-              {
-                "key": "REFRESHED",
-                "name": "Refreshed"
-              },
-              {
-                "key": "SupportMetricsLoaded",
-                "name": "SupportMetrics loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[SupportMetrics]"
-                  }
-                ]
-              },
-              {
-                "key": "SupportMetricsLoadFailed",
-                "name": "SupportMetrics load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               }
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "displaying",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.activeAgents",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.avgResponseTime",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.openTickets",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.resolvedTickets",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.satisfactionScore",
-                    0.0
-                  ],
-                  [
-                    "fetch",
-                    "SupportMetrics",
-                    {
-                      "emit": {
-                        "success": "SupportMetricsLoaded",
-                        "failure": "SupportMetricsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "scaled-diagram",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "href": "/",
-                                      "label": "Home"
-                                    },
-                                    {
-                                      "label": "Support Metrics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "justify": "between",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
-                                      "children": [
-                                        {
-                                          "name": "activity",
-                                          "type": "icon"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "content": "Support Metrics",
-                                          "variant": "h2"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH",
-                                      "label": "Refresh",
-                                      "type": "button",
-                                      "variant": "secondary"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "value": "@entity.openTickets",
-                                          "label": "OpenTickets",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "label": "ResolvedTickets",
-                                          "value": "@entity.resolvedTickets",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "type": "typography",
-                                                  "content": "AvgResponseTime",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "variant": "h3",
-                                                  "content": "@entity.avgResponseTime",
-                                                  "type": "typography"
-                                                }
-                                              ]
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "SatisfactionScore",
-                                          "value": "@entity.satisfactionScore"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ActiveAgents",
-                                          "value": "@entity.activeAgents"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "type": "box",
-                                  "padding": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "gap": "md",
-                                  "cols": 2.0,
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "type": "typography",
-                                          "content": "Chart View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "type": "grid"
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "value": 22.0,
-                                      "date": "May"
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "color": "primary",
-                                      "label": "Current"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ],
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "height": 200.0,
-                                  "width": 400.0
-                                }
-                              ],
-                              "type": "stack"
+                              "type": "icon",
+                              "name": "activity"
+                            },
+                            {
+                              "content": "Support Metrics",
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ]
-                        }
-                      ],
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
                         },
                         {
-                          "href": "/responses",
-                          "icon": "message-circle",
-                          "label": "Responses"
+                          "type": "divider"
                         },
                         {
-                          "icon": "layout-list",
-                          "href": "/metrics",
-                          "label": "Metrics"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "LOADED",
-                "effects": [
-                  [
-                    "fetch",
-                    "SupportMetrics",
-                    {
-                      "emit": {
-                        "failure": "SupportMetricsLoadFailed",
-                        "success": "SupportMetricsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Support Metrics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "name": "activity",
-                                          "type": "icon"
-                                        },
-                                        {
-                                          "variant": "h2",
-                                          "type": "typography",
-                                          "content": "Support Metrics"
-                                        }
-                                      ],
-                                      "direction": "horizontal",
-                                      "gap": "md"
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "variant": "secondary",
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "value": "@entity.openTickets",
-                                          "type": "stat-display",
-                                          "label": "OpenTickets"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ResolvedTickets",
-                                          "value": "@entity.resolvedTickets"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "gap": "sm",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "content": "AvgResponseTime",
-                                                  "type": "typography",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.avgResponseTime"
-                                                }
-                                              ],
-                                              "type": "stack"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "label": "SatisfactionScore",
-                                          "value": "@entity.satisfactionScore",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "value": "@entity.activeAgents",
-                                          "type": "stat-display",
-                                          "label": "ActiveAgents"
-                                        }
-                                      ],
-                                      "type": "simple-grid",
-                                      "cols": 3.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "content": "Chart View",
-                                          "variant": "caption"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "type": "grid",
-                                  "cols": 2.0
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "color": "primary",
-                                      "label": "Current"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
+                          "variant": "h3",
+                          "content": "Recent",
+                          "type": "typography"
                         },
-                        {
-                          "href": "/responses",
-                          "icon": "message-circle",
-                          "label": "Responses"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Metrics",
-                          "href": "/metrics"
-                        }
-                      ],
-                      "appName": "Helpdesk"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "displaying",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "SupportMetrics",
-                    {
-                      "emit": {
-                        "failure": "SupportMetricsLoadFailed",
-                        "success": "SupportMetricsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Support Metrics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "justify": "between",
-                                  "children": [
-                                    {
-                                      "gap": "md",
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "activity"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "content": "Support Metrics",
-                                          "variant": "h2"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "label": "Refresh",
-                                      "type": "button",
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH",
-                                      "variant": "secondary"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "label": "OpenTickets",
-                                          "value": "@entity.openTickets",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ResolvedTickets",
-                                          "value": "@entity.resolvedTickets"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "content": "AvgResponseTime",
-                                                  "type": "typography",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "h3",
-                                                  "content": "@entity.avgResponseTime"
-                                                }
-                                              ],
-                                              "gap": "sm"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "SatisfactionScore",
-                                          "value": "@entity.satisfactionScore"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ActiveAgents",
-                                          "value": "@entity.activeAgents"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "padding": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "cols": 2.0,
-                                  "type": "grid",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "type": "typography",
-                                          "content": "Graph View"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12.0
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "value": 15.0,
-                                      "date": "Mar"
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25.0
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "value": 30.0,
-                                      "date": "Jun"
-                                    }
-                                  ],
-                                  "type": "line-chart"
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "type": "graph-view",
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "width": 400.0,
-                                  "height": 200.0
-                                }
-                              ],
-                              "type": "stack"
-                            }
-                          ]
-                        }
-                      ],
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "icon": "message-circle",
-                          "href": "/responses"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "refreshing",
-                "event": "REFRESH",
-                "effects": [
-                  [
-                    "fetch",
-                    "SupportMetrics",
-                    {
-                      "emit": {
-                        "success": "SupportMetricsLoaded",
-                        "failure": "SupportMetricsLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "icon": "inbox",
-                          "href": "/tickets"
-                        },
-                        {
-                          "icon": "message-circle",
-                          "href": "/responses",
-                          "label": "Responses"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "gap": "lg",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "items": [
-                                    {
-                                      "href": "/",
-                                      "label": "Home"
-                                    },
-                                    {
-                                      "label": "Support Metrics"
-                                    }
-                                  ],
-                                  "type": "breadcrumb"
-                                },
-                                {
-                                  "gap": "md",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
-                                      "children": [
-                                        {
-                                          "name": "activity",
-                                          "type": "icon"
-                                        },
-                                        {
-                                          "content": "Support Metrics",
-                                          "type": "typography",
-                                          "variant": "h2"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "icon": "refresh-cw",
-                                      "label": "Refresh",
-                                      "type": "button",
-                                      "action": "REFRESH",
-                                      "variant": "secondary"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "type": "box",
-                                  "padding": "md",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "cols": 3.0,
-                                      "children": [
-                                        {
-                                          "label": "OpenTickets",
-                                          "value": "@entity.openTickets",
-                                          "type": "stat-display"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ResolvedTickets",
-                                          "value": "@entity.resolvedTickets"
-                                        },
-                                        {
-                                          "children": [
-                                            {
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "content": "AvgResponseTime",
-                                                  "type": "typography",
-                                                  "variant": "caption"
-                                                },
-                                                {
-                                                  "variant": "h3",
-                                                  "content": "@entity.avgResponseTime",
-                                                  "type": "typography"
-                                                }
-                                              ],
-                                              "type": "stack",
-                                              "gap": "sm"
-                                            }
-                                          ],
-                                          "type": "card"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.satisfactionScore",
-                                          "label": "SatisfactionScore"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "label": "ActiveAgents",
-                                          "value": "@entity.activeAgents"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "variant": "caption",
-                                          "content": "Graph View",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    }
-                                  ],
-                                  "type": "grid",
-                                  "cols": 2.0,
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19.0
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "type": "chart-legend"
-                                },
-                                {
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process"
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End"
-                                    }
-                                  ],
-                                  "edges": [
-                                    {
-                                      "source": "a",
-                                      "target": "b"
-                                    },
-                                    {
-                                      "target": "c",
-                                      "source": "b"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "width": 400.0,
-                                  "height": 200.0
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "scaled-diagram"
-                        }
-                      ],
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "refreshing",
-                "to": "displaying",
-                "event": "REFRESHED",
-                "effects": [
-                  [
-                    "fetch",
-                    "SupportMetrics",
-                    {
-                      "emit": {
-                        "failure": "SupportMetricsLoadFailed",
-                        "success": "SupportMetricsLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "children": [
-                        {
-                          "type": "scaled-diagram",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "lg",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "breadcrumb",
-                                  "items": [
-                                    {
-                                      "label": "Home",
-                                      "href": "/"
-                                    },
-                                    {
-                                      "label": "Support Metrics"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "justify": "between",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "activity"
-                                        },
-                                        {
-                                          "content": "Support Metrics",
-                                          "type": "typography",
-                                          "variant": "h2"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md"
-                                    },
-                                    {
-                                      "type": "button",
-                                      "variant": "secondary",
-                                      "label": "Refresh",
-                                      "icon": "refresh-cw",
-                                      "action": "REFRESH"
-                                    }
-                                  ],
-                                  "gap": "md"
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "padding": "md",
-                                  "type": "box",
-                                  "children": [
-                                    {
-                                      "type": "simple-grid",
-                                      "children": [
-                                        {
-                                          "type": "stat-display",
-                                          "label": "OpenTickets",
-                                          "value": "@entity.openTickets"
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.resolvedTickets",
-                                          "label": "ResolvedTickets"
-                                        },
-                                        {
-                                          "type": "card",
-                                          "children": [
-                                            {
-                                              "gap": "sm",
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "children": [
-                                                {
-                                                  "content": "AvgResponseTime",
-                                                  "variant": "caption",
-                                                  "type": "typography"
-                                                },
-                                                {
-                                                  "content": "@entity.avgResponseTime",
-                                                  "type": "typography",
-                                                  "variant": "h3"
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "stat-display",
-                                          "value": "@entity.satisfactionScore",
-                                          "label": "SatisfactionScore"
-                                        },
-                                        {
-                                          "value": "@entity.activeAgents",
-                                          "type": "stat-display",
-                                          "label": "ActiveAgents"
-                                        }
-                                      ],
-                                      "cols": 3.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "divider"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "Chart View",
-                                          "variant": "caption",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "card"
-                                    },
-                                    {
-                                      "type": "card",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "type": "grid",
-                                  "gap": "md",
-                                  "cols": 2.0
-                                },
-                                {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "value": 12.0,
-                                      "date": "Jan"
-                                    },
-                                    {
-                                      "value": 19.0,
-                                      "date": "Feb"
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15.0
-                                    },
-                                    {
-                                      "value": 25.0,
-                                      "date": "Apr"
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22.0
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30.0
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "label": "Previous"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "edges": [
-                                    {
-                                      "target": "b",
-                                      "source": "a"
-                                    },
-                                    {
-                                      "source": "b",
-                                      "target": "c"
-                                    }
-                                  ],
-                                  "type": "graph-view",
-                                  "height": 200.0,
-                                  "width": 400.0,
-                                  "nodes": [
-                                    {
-                                      "label": "Start",
-                                      "id": "a"
-                                    },
-                                    {
-                                      "label": "Process",
-                                      "id": "b"
-                                    },
-                                    {
-                                      "label": "End",
-                                      "id": "c"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "href": "/tickets",
-                          "label": "Tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "href": "/responses",
-                          "label": "Responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Metrics",
-                          "href": "/metrics"
-                        }
+                        "@trait.SupportMetricsBrowse"
                       ]
                     }
                   ]
@@ -4724,7 +1625,7 @@
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -4734,6 +1635,9 @@
           "traits": [
             {
               "ref": "SupportMetricsDisplay"
+            },
+            {
+              "ref": "SupportMetricsBrowse"
             }
           ]
         }

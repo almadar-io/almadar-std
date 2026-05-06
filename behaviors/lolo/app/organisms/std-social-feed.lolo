@@ -1,23 +1,31 @@
-app std-social-feed "1.0.0"
-"Social feed: posts with comments. Pick for Twitter/Instagram-style timelines with replies."
+app std-social-feed "2.0.0"
+"Social feed: posts with images, likes, and threaded comments. Pick for Twitter/Instagram-style timelines."
 
 orbital PostOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Storage      from "std/behaviors/std-service-storage"
 
-  entity Post [runtime] {
+  entity Post [persistent: posts] {
     id : string!
-    title : string = ""
+    author : string!
     content : string = ""
-    author : string = ""
-    createdAt : datetime = ""
+    image : string = ""
+    timestamp : datetime = ""
     likes : number = 0
+    tag : string = ""
+    pendingId : string = ""
   }
 
   trait PostAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.PostBrowse",
+      contentTrait: "@trait.FeedCatalog",
       appName: "SocialFeed",
-      navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }],
+      navItems: [{ label: "Feed", href: "/feed", icon: "rss" }, { label: "Comments", href: "/comments", icon: "message-circle" }],
       searchEvent: "POST_SEARCH",
       notifications: [],
       notificationClickEvent: "POST_NOTIFICATIONS_OPEN"
@@ -28,218 +36,421 @@ orbital PostOrbital {
     }
   }
 
-  type PostLoaded     = Event { data : [Post] }                  "Fired when Post finishes loading"
-  type PostLoadFailed = Event { error : string, code : string } "Fired when Post fails to load"
-  type PostSaved = Event { id : string }
-  type PostSaveFailed = Event { error : string, code : string }
-  type CommentSaved = Event { id : string }
-  type CommentSaveFailed = Event { error : string, code : string }
-  trait PostBrowse -> Post [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      POST_SEARCH -> browsing
-        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      POST_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to feed", action: "INIT", variant: "ghost" }] })
-      PostLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] })
-      PostLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load post" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  ;; Page-chrome trait. Header (rss icon + Feed + New Post) + toolbar (search) +
+  ;; stats row + embedded list. AppLayout's contentTrait points here.
+  trait FeedCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "rss" },
+              { type: "typography", content: "Feed", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Post", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.PostSearch"
+          ]},
+          "@trait.PostStats",
+          { type: "divider" },
+          "@trait.PostBrowseList"
+        ]})
+      POST_SEARCH -> composing
+      POST_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to feed", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-COMMENT -> external { id: string }
-CREATE
-      VIEW { id : string!, row : Post }
-PostLoaded
-      PostLoadFailed
-PostSaved
-      PostSaveFailed
-CommentSaved
-      CommentSaveFailed
+      CREATE -> external { source : string }
     }
     listens {
       PostAppLayout.POST_SEARCH -> POST_SEARCH
       PostAppLayout.POST_NOTIFICATIONS_OPEN -> POST_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Post }
       POST_SEARCH { value : string }
       POST_NOTIFICATIONS_OPEN { id : string }
-          PostLoadFailed { error : string, code : string }
-
-      PostSaveFailed { error : string, code : string }
-      CommentSaveFailed { error : string, code : string }
     }
   }
-  trait PostCreate -> Post [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-      CREATE -> open
-        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Post", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "content", "author", "likes"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Post @payload.data { emit: { success: "PostSaved", failure: "PostSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-emits {
-PostLoadFailed
-      PostLoaded
-PostSaveFailed
-      PostSaved
-    }
 
-        listens {
+  ;; Search atom binding.
+  trait PostSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search posts…",
+      event: "POST_SEARCH"
+    }
+  }
+
+  ;; Stats atom — totals, today, top author, by-tag. Binds without linkedEntity
+  ;; so it stays on the atom-owned StatsItem entity.
+  trait PostStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Feed",
+      metrics: [
+        { aggregation: "count", label: "Total Posts", icon: "rss",          variant: "primary", format: "number" },
+        { aggregation: "count", label: "Today",       icon: "calendar",     variant: "info",    format: "number", filter: ["fn", "row", ["=", "@row.timestamp", "today"]] },
+        { aggregation: "mode",  label: "Top Author",  icon: "user",         variant: "default", format: "text",   field: "author" },
+        { aggregation: "mode",  label: "Top Tag",     icon: "hash",         variant: "warning", format: "text",   field: "tag" }
+      ]
+    }
+    listens {
+      PostBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  ;; Card-variant browse list with image. Re-fetches on persist events from
+  ;; PostPersistor and on search input.
+  trait PostBrowseList = Browse.traits.BrowseItemBrowse -> Post {
+    config: {
+      fields: [
+        { name: "author",    variant: "h4",      icon: "user" },
+        { name: "content",   variant: "body" },
+        { name: "timestamp", variant: "caption", format: "date" },
+        { name: "likes",     variant: "badge",   format: "number" }
+      ],
+      imageField: "image",
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "md",
+      variant: "card"
+    }
+    listens {
+      PostSearch.SEARCH            -> REFETCH_QUERY
+      PostPersistor.POST_CREATED   -> INIT
+      PostPersistor.POST_UPDATED   -> INIT
+      PostPersistor.POST_DELETED   -> INIT
+    }
+  }
+
+  ;; Modal bindings — Create / Edit / View. Atoms render the modal slot only;
+  ;; persist side-effects are owned by PostPersistor.
+  trait PostCreate = Modal.traits.ModalRecordModal -> Post {
+    config: {
+      icon: "plus-circle",
+      title: "New Post",
+      mode: "create",
+      fields: ["author", "content", "image", "tag"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      FeedCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Post }
       SAVE { data : object! }
-          PostLoadFailed { error : string, code : string }
-      PostBrowse.CREATE -> CREATE
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait PostView -> Post [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.author "")
-        (set @entity.content "")
-        (set @entity.createdAt "")
+
+  trait PostEdit = Modal.traits.ModalRecordModal -> Post {
+    config: {
+      icon: "edit",
+      title: "Edit Post",
+      mode: "edit",
+      fields: ["author", "content", "image", "tag"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      PostBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Post }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait PostView = Modal.traits.ModalRecordModal -> Post {
+    config: {
+      icon: "eye",
+      title: "View Post",
+      mode: "edit",
+      fields: ["author", "content", "image", "tag", "likes"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      PostBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Post }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Confirmation binding for delete. CONFIRM renamed to CONFIRM_DELETE so
+  ;; the persistor coordinator routes cleanly.
+  trait PostDeleteConfirm = Confirmation.traits.ConfirmActionConfirmation -> Post {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Post",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      PostBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Post }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Storage atom binding — image upload. Inline form drives the picker;
+  ;; uploaded URL is consumed by the PostCreate/Edit form via the user.
+  trait PostImageUpload = Storage.traits.ServiceStorageStorage {
+    config: {
+      bucket: "social-feed-images",
+      acl: "public",
+      maxSize: 10485760,
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
+      uiTrait: "@trait.PostImageUploadForm"
+    }
+  }
+
+  ;; Custom image picker UI — fills Storage's uiTrait slot.
+  trait PostImageUploadForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "typography", variant: "caption", content: "Attach an image" },
+          { type: "input", inputType: "text", placeholder: "Choose image…" },
+          { type: "button", label: "Upload", action: "UPLOAD", variant: "ghost", icon: "upload" }
+        ]})
+    }
+    emits {
+      UPLOAD -> external { source : string, file : string }
+    }
+  }
+
+  ;; Coordinator: owns persist side-effects from Modal/Confirm trait emits.
+  trait PostPersistor -> Post [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Post @payload.data { emit: { success: "POST_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Post @payload.data { emit: { success: "POST_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Post @payload.id { emit: { success: "POST_DELETED" } })
+    }
+    emits {
+      POST_CREATED -> external { id : string }
+      POST_UPDATED -> external { id : string }
+      POST_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      PostCreate.SAVE              -> DO_CREATE
+      PostEdit.SAVE                -> DO_UPDATE
+      PostLikeTracker.DO_UPDATE    -> DO_UPDATE
+      PostDeleteConfirm.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  ;; Like-counting state machine — domain-specific, no atom for reactions.
+  ;; Renders a heart button + count next to each post; emits LIKE which
+  ;; persists an increment.
+  trait PostLikeTracker -> Post [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
         (set @entity.likes 0)
-        (set @entity.title "")
-        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-      VIEW -> open
-        (fetch Post {id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" }, emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Likes" }, { type: "typography", variant: "body", content: "@entity.likes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
+        (fetch Post)
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+          { type: "button", label: "Like", action: "LIKE", variant: "ghost", icon: "heart" },
+          { type: "typography", variant: "caption", content: "@entity.likes" }
+        ]})
+      LIKE -> ready
+        (set @entity.likes @payload.data.likes)
+        (emit DO_UPDATE { data: @payload.data })
     }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
+    emits {
+      DO_UPDATE -> external { data : object! }
     }
-emits {
-PostLoaded
-      PostLoadFailed
-    }
-
-        listens {
-      VIEW { id : string! }
-      SAVE { data : object! }
-          PostLoadFailed { error : string, code : string }
-      PostBrowse.VIEW -> VIEW
+    listens {
+      LIKE { id : string, data : object! }
     }
   }
-  page "/feed" as FeedPage -> PostAppLayout, PostBrowse, PostCreate, PostView
+
+  page "/feed" as FeedPage -> PostAppLayout, FeedCatalog, PostSearch, PostStats, PostBrowseList, PostCreate, PostEdit, PostView, PostDeleteConfirm, PostImageUpload, PostImageUploadForm, PostPersistor, PostLikeTracker
 }
+
 orbital CommentOrbital {
-  entity Comment [runtime] {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity Comment [persistent: comments] {
     id : string!
-    body : string
+    postId : string!
     author : string = ""
-    postId : string
+    body : string = ""
     createdAt : datetime = ""
+    pendingId : string = ""
   }
 
-  type CommentLoaded     = Event { data : [Comment] }                  "Fired when Comment finishes loading"
-  type CommentLoadFailed = Event { error : string, code : string } "Fired when Comment fails to load"
-  type CommentSaveFailed = Event { error : string, code : string }
-  type CommentSaved = Event { id : string }
-  trait CommentBrowse -> Comment [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      CommentLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
-      CommentLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load comment" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  ;; Page-chrome trait for /comments — header + embedded browse list.
+  trait CommentDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "message-circle" },
+              { type: "typography", content: "Comments", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Comment", action: "CREATE", variant: "primary", icon: "edit" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.CommentBrowseList"
+        ]})
     }
     emits {
-COMPOSE
-      VIEW { id : string!, row : Comment }
-CommentLoaded
-      CommentLoadFailed
-    }
-    listens {
-      CommentCompose.SEND -> INIT
-      PostOrbital.PostBrowse.COMMENT -> INIT
-          CommentLoadFailed { error : string, code : string }
+      CREATE -> external { source : string }
     }
   }
-  trait CommentCompose -> Comment [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
-      COMPOSE -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New Comment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["body", "author", "postId"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SEND -> closed
-        (persist create Comment @payload.data { emit: { success: "CommentSaved", failure: "CommentSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-    emits {
-SEND
-      CommentLoadFailed
-CommentLoaded
-      CommentSaveFailed
-CommentSaved
-    
-    }
-    listens {
-      CommentLoadFailed { error : string, code : string }
-      SEND { data : string }
-      CommentBrowse.COMPOSE -> COMPOSE
-    }
-  }
-  trait CommentView -> Comment [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.author "")
-        (set @entity.body "")
-        (set @entity.createdAt "")
-        (set @entity.postId "")
-        (fetch Comment { emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
-      VIEW -> open
-        (fetch Comment {id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" }, emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.body" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Post ID" }, { type: "typography", variant: "body", content: "@entity.postId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-emits {
-CommentLoaded
-      CommentLoadFailed
-    }
 
-        listens {
-      CommentLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      CommentBrowse.VIEW -> VIEW
+  trait CommentBrowseList = Browse.traits.BrowseItemBrowse -> Comment {
+    config: {
+      fields: [
+        { name: "author",    variant: "h4",      icon: "user" },
+        { name: "body",      variant: "body" },
+        { name: "createdAt", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm",
+      variant: "card"
+    }
+    listens {
+      CommentPersistor.COMMENT_CREATED -> INIT
+      CommentPersistor.COMMENT_UPDATED -> INIT
+      CommentPersistor.COMMENT_DELETED -> INIT
     }
   }
-  page "/messages" -> CommentBrowse, CommentCompose, CommentView
+
+  trait CommentCreate = Modal.traits.ModalRecordModal -> Comment {
+    config: {
+      icon: "plus-circle",
+      title: "New Comment",
+      mode: "create",
+      fields: ["postId", "author", "body"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      CommentDisplay.CREATE -> CREATE
+      CREATE { id : string, row : Comment }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait CommentEdit = Modal.traits.ModalRecordModal -> Comment {
+    config: {
+      icon: "edit",
+      title: "Edit Comment",
+      mode: "edit",
+      fields: ["postId", "author", "body"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      CommentBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Comment }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait CommentView = Modal.traits.ModalRecordModal -> Comment {
+    config: {
+      icon: "eye",
+      title: "View Comment",
+      mode: "edit",
+      fields: ["postId", "author", "body", "createdAt"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      CommentBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Comment }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait CommentDeleteConfirm = Confirmation.traits.ConfirmActionConfirmation -> Comment {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Comment",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      CommentBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Comment }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait CommentPersistor -> Comment [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Comment @payload.data { emit: { success: "COMMENT_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Comment @payload.data { emit: { success: "COMMENT_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Comment @payload.id { emit: { success: "COMMENT_DELETED" } })
+    }
+    emits {
+      COMMENT_CREATED -> external { id : string }
+      COMMENT_UPDATED -> external { id : string }
+      COMMENT_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      CommentCreate.SAVE              -> DO_CREATE
+      CommentEdit.SAVE                -> DO_UPDATE
+      CommentDeleteConfirm.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/comments" -> CommentDisplay, CommentBrowseList, CommentCreate, CommentEdit, CommentView, CommentDeleteConfirm, CommentPersistor
 }

@@ -1,23 +1,32 @@
-app std-finance-tracker "1.0.0"
-"Personal finance tracker: transactions, budget summary, and periodic reports."
+app std-finance-tracker "2.0.0"
+"Finance tracker: transactions with stats + graphs, summary dashboard, exportable reports."
 
 orbital TransactionOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
 
   entity Transaction [persistent: transactions] {
     id : string!
     description : string!
     amount : number!
-    category : string
+    category : string = ""
+    account : string = ""
+    type : "income" | "expense" = "expense"
     date : datetime
     pendingId : string = ""
   }
 
   trait TransactionAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.TransactionBrowse",
+      contentTrait: "@trait.TransactionCatalog",
       appName: "Finance Tracker",
-      navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }],
+      navItems: [{ label: "Transactions", href: "/transactions", icon: "receipt" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }],
       searchEvent: "TRANSACTION_SEARCH",
       notifications: [],
       notificationClickEvent: "TRANSACTION_NOTIFICATIONS_OPEN"
@@ -28,360 +37,400 @@ orbital TransactionOrbital {
     }
   }
 
-  type TransactionLoaded     = Event { data : [Transaction] }                  "Fired when Transaction finishes loading"
-  type TransactionLoadFailed = Event { error : string, code : string } "Fired when Transaction fails to load"
-  type TransactionSaved = Event { id : string }
-  type TransactionSaveFailed = Event { error : string, code : string }
-  type TransactionUpdated = Event { id : string }
-  type TransactionUpdateFailed = Event { error : string, code : string }
-  type TransactionDeleted = Event { id : string }
-  type TransactionDeleteFailed = Event { error : string, code : string }
-  type FinanceReportSaved = Event { id : string }
-  type FinanceReportSaveFailed = Event { error : string, code : string }
-  trait TransactionBrowse -> Transaction [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      TRANSACTION_SEARCH -> browsing
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      TRANSACTION_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to transactions", action: "INIT", variant: "ghost" }] })
-      TransactionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Transactions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Transaction", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "description", variant: "h3", icon: "credit-card" }, { name: "category", variant: "badge" }, { name: "amount", variant: "h4", format: "currency" }, { name: "date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] })
-      TransactionLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load transaction" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  trait TransactionCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "receipt" },
+              { type: "typography", content: "Transactions", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Add Transaction", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.TransactionSearch",
+            "@trait.TransactionFilter"
+          ]},
+          "@trait.TransactionStats",
+          "@trait.TransactionGraphs",
+          { type: "divider" },
+          "@trait.TransactionBrowseList"
+        ]})
+      TRANSACTION_SEARCH -> composing
+      TRANSACTION_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to transactions", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-CREATE
-      VIEW { id : string!, row : Transaction }
-EDIT { id : string!, row : Transaction }
-DELETE { id : string!, row : Transaction }
-TransactionLoaded
-      TransactionLoadFailed
-TransactionSaved
-      TransactionSaveFailed
-TransactionUpdated
-      TransactionUpdateFailed
-TransactionDeleted
-      TransactionDeleteFailed
-FinanceReportSaved
-      FinanceReportSaveFailed
+      CREATE -> external { source : string }
     }
     listens {
-      TransactionCreate.TRANSACTION_CREATED -> INIT
-      TransactionEdit.TRANSACTION_UPDATED -> INIT
-      TransactionDelete.TRANSACTION_DELETED -> INIT
       TransactionAppLayout.TRANSACTION_SEARCH -> TRANSACTION_SEARCH
       TransactionAppLayout.TRANSACTION_NOTIFICATIONS_OPEN -> TRANSACTION_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Transaction }
-      EDIT { id : string!, row : Transaction }
-      DELETE { id : string!, row : Transaction }
       TRANSACTION_SEARCH { value : string }
       TRANSACTION_NOTIFICATIONS_OPEN { id : string }
-          TransactionLoadFailed { error : string, code : string }
+    }
+  }
 
-      TransactionSaveFailed { error : string, code : string }
-      TransactionUpdateFailed { error : string, code : string }
-      TransactionDeleteFailed { error : string, code : string }
-      FinanceReportSaveFailed { error : string, code : string }
+  trait TransactionSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search transactions…",
+      event: "TRANSACTION_SEARCH"
     }
   }
-  trait TransactionCreate -> Transaction [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-      CREATE -> open
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Transaction", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["description", "amount", "category", "date"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Transaction @payload.data { emit: { success: "TransactionSaved", failure: "TransactionSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TRANSACTION_CREATED)
-    }
-    emits {
-TRANSACTION_CREATED -> external { id: string }
-TransactionLoadFailed
-      TransactionLoaded
-TransactionSaveFailed
-      TransactionSaved
-    }
-    listens {
-      SAVE { data : object! }
-          TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse.CREATE -> CREATE
-    }
-  }
-  trait TransactionEdit -> Transaction [interaction, collection] {
-    listens {
-      TransactionView.EDIT -> EDIT
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-      EDIT -> open
-        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Transaction", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["description", "amount", "category", "date"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Transaction @payload.data { emit: { success: "TransactionUpdated", failure: "TransactionUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TRANSACTION_UPDATED)
-    }
-    emits {
-TRANSACTION_UPDATED -> external { id: string }
-TransactionLoadFailed
-      TransactionLoaded
-TransactionUpdateFailed
-      TransactionUpdated
-    }
-    listens {
-      EDIT { id : string!, row : Transaction }
-      SAVE { data : object! }
-          TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse.EDIT -> EDIT
-    }
-  }
-  trait TransactionView -> Transaction [interaction, collection] {
-    emits {
-EDIT { id : string }
-TransactionLoaded
-      TransactionLoadFailed
-    }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.amount 0)
-        (set @entity.category "")
-        (set @entity.date "")
-        (set @entity.description "")
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-      VIEW -> open
-        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.description" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Amount" }, { type: "typography", variant: "body", content: "@entity.amount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
-    listens {
-      VIEW { id : string! }
-      SAVE { data : object! }
-          TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse.VIEW -> VIEW
+  trait TransactionFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "category", label: "Category", filterType: "text" },
+        { field: "account",  label: "Account",  filterType: "text" },
+        { field: "type",     label: "Type",     filterType: "select", options: ["income", "expense"] }
+      ],
+      event: "TRANSACTION_FILTER"
     }
   }
-  trait TransactionDelete -> Transaction [interaction, collection] {
+
+  trait TransactionStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Transactions",
+      metrics: [
+        { aggregation: "sum",   field: "amount", label: "Income",       icon: "trending-up",   variant: "success", format: "currency", filter: ["fn", "row", ["=", "@row.type", "income"]] },
+        { aggregation: "sum",   field: "amount", label: "Expenses",     icon: "trending-down", variant: "error",   format: "currency", filter: ["fn", "row", ["=", "@row.type", "expense"]] },
+        { aggregation: "count", label: "Savings Rate", icon: "percent", variant: "primary",    format: "number" }
+      ]
+    }
+    listens {
+      TransactionBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait TransactionGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Spending by Category",
+      subtitle: "Distribution across categories",
+      chartType: "pie",
+      categoryField: "category",
+      aggregation: "sum",
+      valueField: "amount",
+      height: 240,
+      showLegend: true
+    }
+    listens {
+      TransactionBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait TransactionBrowseList = Browse.traits.BrowseItemBrowse -> Transaction {
+    config: {
+      fields: [
+        { name: "date",        variant: "caption", format: "date" },
+        { name: "description", variant: "h4",      icon: "receipt" },
+        { name: "category",    variant: "badge" },
+        { name: "amount",      variant: "h4",      format: "currency" },
+        { name: "type",        variant: "badge" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      TransactionSearch.SEARCH                  -> REFETCH_QUERY
+      TransactionFilter.FILTER                  -> REFETCH_FILTER
+      TransactionPersistor.TRANSACTION_CREATED  -> INIT
+      TransactionPersistor.TRANSACTION_UPDATED  -> INIT
+      TransactionPersistor.TRANSACTION_DELETED  -> INIT
+    }
+  }
+
+  trait TransactionCreate = Modal.traits.ModalRecordModal -> Transaction {
+    config: {
+      icon: "plus-circle",
+      title: "Add Transaction",
+      mode: "create",
+      fields: ["description", "amount", "category", "account", "type", "date"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      TransactionCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Transaction }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TransactionEdit = Modal.traits.ModalRecordModal -> Transaction {
+    config: {
+      icon: "edit",
+      title: "Edit Transaction",
+      mode: "edit",
+      fields: ["description", "amount", "category", "account", "type", "date"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      TransactionBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Transaction }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TransactionView = Modal.traits.ModalRecordModal -> Transaction {
+    config: {
+      icon: "eye",
+      title: "View Transaction",
+      mode: "edit",
+      fields: ["description", "amount", "category", "account", "type", "date"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      TransactionBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Transaction }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TransactionDelete = Confirmation.traits.ConfirmActionConfirmation -> Transaction {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Transaction",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      TransactionBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Transaction }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TransactionPersistor -> Transaction [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Transaction {id: "@payload.id" , emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" }, emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Transaction", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Transaction @entity.pendingId { emit: { success: "TransactionDeleted", failure: "TransactionDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-        (emit TRANSACTION_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Transaction { emit: { success: "TransactionLoaded", failure: "TransactionLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Transaction @payload.data { emit: { success: "TRANSACTION_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Transaction @payload.data { emit: { success: "TRANSACTION_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Transaction @payload.id { emit: { success: "TRANSACTION_DELETED" } })
     }
     emits {
-TRANSACTION_DELETED -> external { id: string }
-TransactionDeleteFailed
-      TransactionDeleted
-TransactionLoadFailed
-      TransactionLoaded
+      TRANSACTION_CREATED -> external { id : string }
+      TRANSACTION_UPDATED -> external { id : string }
+      TRANSACTION_DELETED -> external { id : string }
     }
     listens {
-      DELETE { id : string! }
-          TransactionLoadFailed { error : string, code : string }
-      TransactionBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      TransactionCreate.SAVE          -> DO_CREATE
+      TransactionEdit.SAVE            -> DO_UPDATE
+      TransactionDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/transactions" as TransactionsPage -> TransactionAppLayout, TransactionBrowse, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete
+
+  page "/transactions" as TransactionsPage -> TransactionAppLayout, TransactionCatalog, TransactionSearch, TransactionFilter, TransactionStats, TransactionGraphs, TransactionBrowseList, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete, TransactionPersistor
 }
+
 orbital FinanceSummaryOrbital {
   entity FinanceSummary [runtime] {
     id : string!
-    totalIncome : number
-    totalExpenses : number
-    balance : number
-    savingsRate : number
+    totalIncome : number = 0
+    totalExpenses : number = 0
+    balance : number = 0
+    savingsRate : number = 0
   }
 
-  type FinanceSummaryLoaded     = Event { data : [FinanceSummary] }                  "Fired when FinanceSummary finishes loading"
-  type FinanceSummaryLoadFailed = Event { error : string, code : string } "Fired when FinanceSummary fails to load"
-  trait FinanceSummaryDisplay -> FinanceSummary [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
+  type FinanceSummaryLoaded     = Event { data : [FinanceSummary] }        "Fired when FinanceSummary finishes loading"
+  type FinanceSummaryLoadFailed = Event { error : string, code : string }  "Fired when FinanceSummary fails to load"
+
+  trait FinanceSummaryDisplay -> FinanceSummary [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
         (set @entity.balance 0)
         (set @entity.savingsRate 0)
         (set @entity.totalExpenses 0)
         (set @entity.totalIncome 0)
         (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] },
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "pie-chart" },
+              { type: "typography", content: "Financial Summary", variant: "h2" }
+            ]},
+            { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }
+          ]},
+          { type: "divider" },
+          { type: "simple-grid", cols: 4, children: [
+            { type: "stat-display", label: "Total Income",   value: "@entity.totalIncome",   icon: "trending-up",   variant: "success" },
+            { type: "stat-display", label: "Total Expenses", value: "@entity.totalExpenses", icon: "trending-down", variant: "error" },
+            { type: "stat-display", label: "Balance",        value: "@entity.balance",       icon: "wallet",        variant: "primary" },
+            { type: "stat-display", label: "Savings Rate",   value: "@entity.savingsRate",   icon: "percent",       variant: "primary" }
+          ]}
+        ]})
+      REFRESH -> composing
         (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
     }
-    state displaying {
-      INIT -> displaying
-        (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch FinanceSummary { emit: { success: "FinanceSummaryLoaded", failure: "FinanceSummaryLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "TotalIncome", value: "@entity.totalIncome" }, { type: "stat-display", label: "TotalExpenses", value: "@entity.totalExpenses" }, { type: "stat-display", label: "Balance", value: "@entity.balance" }, { type: "stat-display", label: "SavingsRate", value: "@entity.savingsRate" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-FinanceSummaryLoaded
+    emits {
+      FinanceSummaryLoaded
       FinanceSummaryLoadFailed
     }
-
-        listens {
+    listens {
       FinanceSummaryLoadFailed { error : string, code : string }
     }
   }
+
   page "/summary" -> FinanceSummaryDisplay
 }
+
 orbital FinanceReportOrbital {
+  uses Modal from "std/behaviors/std-modal"
+
   entity FinanceReport [persistent: financereports] {
     id : string!
     title : string!
     period : string!
-    total : number
+    dateRange : string = ""
+    filters : string = ""
+    total : number = 0
     generatedAt : datetime
+    pendingId : string = ""
   }
 
-  type FinanceReportLoaded     = Event { data : [FinanceReport] }                  "Fired when FinanceReport finishes loading"
-  type FinanceReportLoadFailed = Event { error : string, code : string } "Fired when FinanceReport fails to load"
-  type FinanceReportSaveFailed = Event { error : string, code : string }
-  type FinanceReportSaved = Event { id : string }
+  type FinanceReportLoaded     = Event { data : [FinanceReport] }         "Fired when FinanceReport finishes loading"
+  type FinanceReportLoadFailed = Event { error : string, code : string }  "Fired when FinanceReport fails to load"
+
   trait FinanceReportBrowse -> FinanceReport [interaction, collection] {
+    initial: browsing
     state browsing {
       INIT -> browsing
         (fetch FinanceReport { emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
       FinanceReportLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Reports", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create FinanceReport", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "period", variant: "badge" }, { name: "total", variant: "h4", format: "currency" }, { name: "generatedAt", label: "Generated", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "file-text" },
+              { type: "typography", content: "Reports", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Report", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "alert", variant: "info", message: "Generated reports are downloadable as PDF or CSV." },
+          { type: "data-list", entity: @payload.data, itemActions: [
+            { label: "Preview",      event: "VIEW",         variant: "ghost" },
+            { label: "Download PDF", event: "EXPORT_PDF",   variant: "primary" },
+            { label: "Download CSV", event: "EXPORT_CSV",   variant: "ghost" }
+          ], fields: [
+            { name: "title",       variant: "h3",      icon: "file-text" },
+            { name: "period",      variant: "badge" },
+            { name: "dateRange",   label: "Date Range", variant: "caption" },
+            { name: "total",       variant: "h4",      format: "currency" },
+            { name: "generatedAt", label: "Generated",  variant: "caption", format: "date" }
+          ], variant: "card", gap: "sm" }
+        ]})
       FinanceReportLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load financereport" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load reports" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+      EXPORT_PDF -> browsing
+        (notify success "Downloading PDF…")
+      EXPORT_CSV -> browsing
+        (notify success "Downloading CSV…")
     }
     emits {
-CREATE
+      CREATE -> external { source : string }
       VIEW { id : string!, row : FinanceReport }
-FinanceReportLoaded
+      EXPORT_PDF { id : string!, row : FinanceReport }
+      EXPORT_CSV { id : string!, row : FinanceReport }
+      FinanceReportLoaded
       FinanceReportLoadFailed
     }
     listens {
-          FinanceReportLoadFailed { error : string, code : string }
+      FinanceReportPersistor.REPORT_CREATED -> INIT
+      EXPORT_PDF { id : string, row : FinanceReport }
+      EXPORT_CSV { id : string, row : FinanceReport }
+      FinanceReportLoadFailed { error : string, code : string }
     }
   }
-  trait FinanceReportCreate -> FinanceReport [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch FinanceReport { emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
-      CREATE -> open
-        (fetch FinanceReport { emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "New FinanceReport", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "period", "total", "generatedAt"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create FinanceReport @payload.data { emit: { success: "FinanceReportSaved", failure: "FinanceReportSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
 
-emits {
-FinanceReportLoadFailed
-      FinanceReportLoaded
-FinanceReportSaveFailed
-      FinanceReportSaved
+  trait FinanceReportView = Modal.traits.ModalRecordModal -> FinanceReport {
+    config: {
+      icon: "eye",
+      title: "Report Preview",
+      mode: "edit",
+      fields: ["title", "period", "dateRange", "total", "generatedAt"]
     }
-
-        listens {
-      FinanceReportLoadFailed { error : string, code : string }
-      SAVE { data : string }
-      FinanceReportBrowse.CREATE -> CREATE
+    events {
+      OPEN: VIEW
     }
-  }
-  trait FinanceReportView -> FinanceReport [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.generatedAt "")
-        (set @entity.period "")
-        (set @entity.title "")
-        (set @entity.total 0)
-        (fetch FinanceReport { emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
-      VIEW -> open
-        (fetch FinanceReport {id: "@payload.id" , emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" }, emit: { success: "FinanceReportLoaded", failure: "FinanceReportLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Period" }, { type: "typography", variant: "body", content: "@entity.period" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Total" }, { type: "typography", variant: "body", content: "@entity.total" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Generated At" }, { type: "typography", variant: "body", content: "@entity.generatedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-
-emits {
-FinanceReportLoaded
-      FinanceReportLoadFailed
-    }
-
-        listens {
-      FinanceReportLoadFailed { error : string, code : string }
-      VIEW { id : string }
+    listens {
       FinanceReportBrowse.VIEW -> VIEW
+      VIEW { id : string, row : FinanceReport }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView
+
+  trait FinanceReportCreate = Modal.traits.ModalRecordModal -> FinanceReport {
+    config: {
+      icon: "plus-circle",
+      title: "New Report",
+      mode: "create",
+      fields: ["title", "period", "dateRange", "filters"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      FinanceReportBrowse.CREATE -> CREATE
+      CREATE { id : string, row : FinanceReport }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait FinanceReportPersistor -> FinanceReport [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create FinanceReport @payload.data { emit: { success: "REPORT_CREATED" } })
+    }
+    emits {
+      REPORT_CREATED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      FinanceReportCreate.SAVE -> DO_CREATE
+    }
+  }
+
+  page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView, FinanceReportPersistor
 }

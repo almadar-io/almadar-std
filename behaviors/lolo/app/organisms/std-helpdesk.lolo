@@ -1,24 +1,32 @@
-app std-helpdesk "1.0.0"
-"Helpdesk: support tickets, responses, and team metrics. Pick for customer support apps."
+app std-helpdesk "2.0.0"
+"Helpdesk: support tickets, threaded replies, email-out, and team metrics. Pick for customer support apps."
 
 orbital TicketOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
 
-  entity Ticket [runtime] {
+  entity Ticket [persistent: tickets] {
     id : string!
-    subject : string = ""
+    subject : string!
     description : string = ""
     priority : "low" | "medium" | "high" | "critical" = "medium"
     status : "open" | "in-progress" | "resolved" | "closed" = "open"
     assignee : string = ""
+    customerEmail : string = ""
     pendingId : string = ""
   }
 
   trait TicketAppLayout = AppShell.traits.AppLayout {
     config: {
-      contentTrait: "@trait.TicketBrowse",
+      contentTrait: "@trait.TicketCatalog",
       appName: "Helpdesk",
-      navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
+      navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Replies", href: "/replies", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }],
       searchEvent: "TICKET_SEARCH",
       notifications: [],
       notificationClickEvent: "TICKET_NOTIFICATIONS_OPEN"
@@ -29,365 +37,427 @@ orbital TicketOrbital {
     }
   }
 
-  type TicketLoaded     = Event { data : [Ticket] }                  "Fired when Ticket finishes loading"
-  type TicketLoadFailed = Event { error : string, code : string } "Fired when Ticket fails to load"
-  type TicketSaved = Event { id : string }
-  type TicketSaveFailed = Event { error : string, code : string }
-  type TicketUpdated = Event { id : string }
-  type TicketUpdateFailed = Event { error : string, code : string }
-  type TicketDeleted = Event { id : string }
-  type TicketDeleteFailed = Event { error : string, code : string }
-  type ResponseSaved = Event { id : string }
-  type ResponseSaveFailed = Event { error : string, code : string }
-  trait TicketBrowse -> Ticket [interaction, collection] {
-    state browsing {
-      INIT -> browsing
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      TICKET_SEARCH -> browsing
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching…" }] })
-      TICKET_NOTIFICATIONS_OPEN -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [{ type: "icon", name: "bell" }, { type: "typography", variant: "h3", content: "No notifications" }, { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." }, { type: "button", label: "Back to tickets", action: "INIT", variant: "ghost" }] })
-      TicketLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "inbox" }, { type: "typography", content: "Tickets", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Ticket", action: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 1, children: [{ type: "stat-display", label: "Open Tickets", value: "@payload.data.length", icon: "inbox" }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Delete", event: "DELETE", variant: "danger" }], fields: [{ name: "subject", variant: "h3", icon: "inbox" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "description", variant: "caption" }], variant: "card", gap: "sm" }] })
-      TicketLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load ticket" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+  ;; Page-chrome trait. Owns the header (icon + Tickets + New Ticket button)
+  ;; + toolbar (search/filter) + stat row + graphs + embedded list. The
+  ;; AppLayout's `contentTrait` points here.
+  trait TicketCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "inbox" },
+              { type: "typography", content: "Tickets", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Ticket", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.TicketSearch",
+            "@trait.TicketFilter"
+          ]},
+          "@trait.TicketStats",
+          "@trait.TicketGraphs",
+          { type: "divider" },
+          "@trait.TicketBrowseList"
+        ]})
+      TICKET_SEARCH -> composing
+      TICKET_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to tickets", action: "INIT", variant: "ghost" }
+        ]})
     }
     emits {
-ASSIGN -> external { id: string }
-CREATE
-      VIEW { id : string!, row : Ticket }
-EDIT { id : string!, row : Ticket }
-DELETE { id : string!, row : Ticket }
-TicketLoaded
-      TicketLoadFailed
-TicketSaved
-      TicketSaveFailed
-TicketUpdated
-      TicketUpdateFailed
-TicketDeleted
-      TicketDeleteFailed
-ResponseSaved
-      ResponseSaveFailed
+      CREATE -> external { source : string }
     }
     listens {
-      TicketCreate.TICKET_CREATED -> INIT
-      TicketEdit.TICKET_UPDATED -> INIT
-      TicketDelete.TICKET_DELETED -> INIT
       TicketAppLayout.TICKET_SEARCH -> TICKET_SEARCH
       TicketAppLayout.TICKET_NOTIFICATIONS_OPEN -> TICKET_NOTIFICATIONS_OPEN
-      VIEW { id : string!, row : Ticket }
-      EDIT { id : string!, row : Ticket }
-      DELETE { id : string!, row : Ticket }
       TICKET_SEARCH { value : string }
       TICKET_NOTIFICATIONS_OPEN { id : string }
-          TicketLoadFailed { error : string, code : string }
+    }
+  }
 
-      TicketSaveFailed { error : string, code : string }
-      TicketUpdateFailed { error : string, code : string }
-      TicketDeleteFailed { error : string, code : string }
-      ResponseSaveFailed { error : string, code : string }
+  ;; Search + filter — bind from std-search / std-filter atoms. They emit
+  ;; SEARCH and FILTER which the BrowseList listens for and re-fetches.
+  trait TicketSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search tickets…",
+      event: "TICKET_SEARCH"
     }
   }
-  trait TicketCreate -> Ticket [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-      CREATE -> open
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle" }, { type: "typography", content: "Create Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
+
+  trait TicketFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "priority", label: "Priority", filterType: "select", options: ["low", "medium", "high", "critical"] },
+        { field: "status",   label: "Status",   filterType: "select", options: ["open", "in-progress", "resolved", "closed"] }
+      ],
+      event: "TICKET_FILTER"
     }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist create Ticket @payload.data { emit: { success: "TicketSaved", failure: "TicketSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TICKET_CREATED)
-    }
-    emits {
-TICKET_CREATED -> external { id: string }
-TicketLoadFailed
-      TicketLoaded
-TicketSaveFailed
-      TicketSaved
+  }
+
+  ;; Aggregations on the Ticket collection. Stats + Graphs listen to the
+  ;; Browse list's BrowseItemLoaded event and aggregate by config.
+  trait TicketStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Tickets",
+      metrics: [
+        { aggregation: "count", label: "Total",     icon: "inbox",        variant: "primary", format: "number" },
+        { aggregation: "count", label: "Open",      icon: "circle",       variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "open"]] },
+        { aggregation: "count", label: "Resolved",  icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "resolved"]] }
+      ]
     }
     listens {
+      TicketBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait TicketGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Tickets by Priority",
+      subtitle: "Volume across priority buckets",
+      chartType: "bar",
+      categoryField: "priority",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      TicketBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  ;; Data-grid list bound from std-browse. Embedded into TicketCatalog via
+  ;; `@trait.TicketBrowseList`. Re-fetches on persist events from the
+  ;; coordinator and on search/filter input.
+  trait TicketBrowseList = Browse.traits.BrowseItemBrowse -> Ticket {
+    config: {
+      fields: [
+        { name: "subject",     variant: "h3",      icon: "inbox" },
+        { name: "priority",    variant: "badge" },
+        { name: "status",      variant: "badge" },
+        { name: "assignee",    variant: "body" },
+        { name: "description", variant: "caption" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      TicketSearch.SEARCH               -> REFETCH_QUERY
+      TicketFilter.FILTER               -> REFETCH_FILTER
+      TicketPersistor.TICKET_CREATED    -> INIT
+      TicketPersistor.TICKET_UPDATED    -> INIT
+      TicketPersistor.TICKET_DELETED    -> INIT
+    }
+  }
+
+  ;; Modal bindings — Create / Edit / View. Atoms only render to the modal
+  ;; slot; the persist side-effect lives in the coordinator (Persistor).
+  trait TicketCreate = Modal.traits.ModalRecordModal -> Ticket {
+    config: {
+      icon: "plus-circle",
+      title: "New Ticket",
+      mode: "create",
+      fields: ["subject", "description", "priority", "status", "assignee", "customerEmail"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      TicketCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Ticket }
       SAVE { data : object! }
-          TicketLoadFailed { error : string, code : string }
-      TicketBrowse.CREATE -> CREATE
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait TicketEdit -> Ticket [interaction, collection] {
-    listens {
-      TicketView.EDIT -> EDIT
+
+  trait TicketEdit = Modal.traits.ModalRecordModal -> Ticket {
+    config: {
+      icon: "edit",
+      title: "Edit Ticket",
+      mode: "edit",
+      fields: ["subject", "description", "priority", "status", "assignee", "customerEmail"]
     }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-      EDIT -> open
-        (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "Edit Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: @payload.row, mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (persist update Ticket @payload.data { emit: { success: "TicketUpdated", failure: "TicketUpdateFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (emit TICKET_UPDATED)
-    }
-    emits {
-TICKET_UPDATED -> external { id: string }
-TicketLoadFailed
-      TicketLoaded
-TicketUpdateFailed
-      TicketUpdated
+    events {
+      OPEN: EDIT
     }
     listens {
-      EDIT { id : string!, row : Ticket }
+      TicketBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Ticket }
       SAVE { data : object! }
-          TicketLoadFailed { error : string, code : string }
-      TicketBrowse.EDIT -> EDIT
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait TicketView -> Ticket [interaction, collection] {
-    emits {
-EDIT { id : string }
-TicketLoaded
-      TicketLoadFailed
+
+  trait TicketView = Modal.traits.ModalRecordModal -> Ticket {
+    config: {
+      icon: "eye",
+      title: "View Ticket",
+      mode: "edit",
+      fields: ["subject", "description", "priority", "status", "assignee", "customerEmail"]
     }
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.assignee "")
-        (set @entity.description "")
-        (set @entity.priority "medium")
-        (set @entity.status "open")
-        (set @entity.subject "")
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-      VIEW -> open
-        (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Priority" }, { type: "typography", variant: "body", content: "@entity.priority" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Assignee" }, { type: "typography", variant: "body", content: "@entity.assignee" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
+    events {
+      OPEN: VIEW
     }
     listens {
-      VIEW { id : string! }
+      TicketBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Ticket }
       SAVE { data : object! }
-          TicketLoadFailed { error : string, code : string }
-      TicketBrowse.VIEW -> VIEW
+      ModalRecordLoadFailed { error : string, code : string }
     }
   }
-  trait TicketDelete -> Ticket [interaction, collection] {
+
+  ;; Confirmation binding for delete. CONFIRM is renamed to CONFIRM_DELETE so
+  ;; the coordinator below can route it cleanly.
+  trait TicketDelete = Confirmation.traits.ConfirmActionConfirmation -> Ticket {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Ticket",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      TicketBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Ticket }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: owns the persist side-effects triggered by Modal/Confirm
+  ;; trait emits. Mirrors std-cart's CartItemPersistor.
+  trait TicketPersistor -> Ticket [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-      DELETE -> confirming
-        (set @entity.pendingId @payload.id)
-        (fetch Ticket {id: "@payload.id" , emit: { success: "TicketLoaded", failure: "TicketLoadFailed" }, emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Delete Ticket", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", action: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", action: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
-    }
-    state confirming {
-      CONFIRM_DELETE -> idle
-        (persist delete Ticket @entity.pendingId { emit: { success: "TicketDeleted", failure: "TicketDeleteFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-        (emit TICKET_DELETED)
-      CANCEL -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
-      CLOSE -> idle
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (fetch Ticket { emit: { success: "TicketLoaded", failure: "TicketLoadFailed" } })
+      DO_CREATE -> idle
+        (persist create Ticket @payload.data { emit: { success: "TICKET_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Ticket @payload.data { emit: { success: "TICKET_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Ticket @payload.id { emit: { success: "TICKET_DELETED" } })
     }
     emits {
-TICKET_DELETED -> external { id: string }
-TicketDeleteFailed
-      TicketDeleted
-TicketLoadFailed
-      TicketLoaded
+      TICKET_CREATED -> external { id : string }
+      TICKET_UPDATED -> external { id : string }
+      TICKET_DELETED -> external { id : string }
     }
     listens {
-      DELETE { id : string! }
-          TicketLoadFailed { error : string, code : string }
-      TicketBrowse.DELETE -> DELETE
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      TicketCreate.SAVE          -> DO_CREATE
+      TicketEdit.SAVE            -> DO_UPDATE
+      TicketDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
-  page "/tickets" as TicketsPage -> TicketAppLayout, TicketBrowse, TicketCreate, TicketEdit, TicketView, TicketDelete
+
+  page "/tickets" as TicketsPage -> TicketAppLayout, TicketCatalog, TicketSearch, TicketFilter, TicketStats, TicketGraphs, TicketBrowseList, TicketCreate, TicketEdit, TicketView, TicketDelete, TicketPersistor
 }
-orbital ResponseOrbital {
-  entity Response [runtime] {
+
+orbital TicketReplyOrbital {
+  uses Modal from "std/behaviors/std-modal"
+  uses Email from "std/behaviors/std-service-email"
+
+  entity TicketReply [persistent: ticketreplies] {
     id : string!
-    ticketId : string
-    body : string
-    author : string
-    createdAt : datetime
+    ticketId : string!
+    body : string!
+    author : string = ""
+    customerEmail : string = ""
+    subject : string = ""
+    createdAt : string = ""
+    pendingId : string = ""
   }
 
-  type ResponseLoaded     = Event { data : [Response] }                  "Fired when Response finishes loading"
-  type ResponseLoadFailed = Event { error : string, code : string } "Fired when Response fails to load"
-  type ResponseSaveFailed = Event { error : string, code : string }
-  type ResponseSaved = Event { id : string }
-  trait ResponseBrowse -> Response [interaction, collection] {
+  type TicketReplyLoaded     = Event { data : [TicketReply] }                  "Fired when TicketReply finishes loading"
+  type TicketReplyLoadFailed = Event { error : string, code : string }         "Fired when TicketReply fails to load"
+  type TicketReplySaved      = Event { id : string }
+  type TicketReplySaveFailed = Event { error : string, code : string }
+
+  trait TicketReplyBrowse -> TicketReply [interaction, collection] {
+    initial: browsing
     state browsing {
       INIT -> browsing
-        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (fetch TicketReply { emit: { success: "TicketReplyLoaded", failure: "TicketReplyLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      ResponseLoaded -> browsing
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle" }, { type: "typography", content: "Responses", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", action: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: @payload.data, itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }], fields: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
-      ResponseLoadFailed -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load response" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+      TicketReplyLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "message-circle" },
+              { type: "typography", content: "Replies", variant: "h2" }
+            ]},
+            { type: "button", label: "Compose", action: "CREATE", variant: "primary", icon: "edit" }
+          ]},
+          { type: "divider" },
+          "@trait.TicketReplyComposerForm",
+          { type: "divider" },
+          { type: "data-list", entity: @payload.data, fields: [
+            { name: "author",        variant: "h4",      icon: "message-circle" },
+            { name: "body",          variant: "body" },
+            { name: "createdAt",     variant: "caption", format: "date" }
+          ], variant: "card", gap: "sm" }
+        ]})
+      TicketReplyLoadFailed -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load replies" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
     }
     emits {
-RESOLVE -> external { id: string }
-COMPOSE
-      VIEW { id : string!, row : Response }
-ResponseLoaded
-      ResponseLoadFailed
+      CREATE -> external { source : string }
+      TicketReplyLoaded
+      TicketReplyLoadFailed
     }
     listens {
-      ResponseCompose.SEND -> INIT
-      TicketOrbital.TicketBrowse.ASSIGN -> INIT
-          ResponseLoadFailed { error : string, code : string }
+      TicketReplyPersistor.REPLY_CREATED -> INIT
+      TicketReplyLoadFailed { error : string, code : string }
     }
   }
-  trait ResponseCompose -> Response [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
-      COMPOSE -> open
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit" }, { type: "typography", content: "New Response", variant: "h3" }] }, { type: "divider" }, { type: "form-section", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["ticketId", "body", "author"] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SEND -> closed
-        (persist create Response @payload.data { emit: { success: "ResponseSaved", failure: "ResponseSaveFailed" } })
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-    emits {
-SEND
-      ResponseLoadFailed
-ResponseLoaded
-      ResponseSaveFailed
-ResponseSaved
-    
-    }
-    listens {
-      ResponseLoadFailed { error : string, code : string }
-      SEND { data : string }
-      ResponseBrowse.COMPOSE -> COMPOSE
-    }
-  }
-  trait ResponseView -> Response [interaction, collection] {
-    initial: closed
-    state closed {
-      INIT -> closed
-        (set @entity.author "")
-        (set @entity.body "")
-        (set @entity.createdAt "")
-        (set @entity.ticketId "")
-        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
-      VIEW -> open
-        (fetch Response {id: "@payload.id" , emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" }, emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.ticketId" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Ticket ID" }, { type: "typography", variant: "body", content: "@entity.ticketId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
-    }
-    state open {
-      CLOSE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-        (notify Cancelled info)
-      SAVE -> closed
-        (render-ui modal null)
-        (render-ui main { type: "box" })
-    }
-emits {
-ResponseLoaded
-      ResponseLoadFailed
-    }
 
-        listens {
-      ResponseLoadFailed { error : string, code : string }
-      VIEW { id : string }
-      ResponseBrowse.VIEW -> VIEW
+  ;; Composer form — fills the Email service's `uiTrait` slot AND drives the
+  ;; new-reply flow. Emits SEND (consumed by Email) and CREATE (consumed by
+  ;; the Modal-bound Compose trait below).
+  trait TicketReplyComposerForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "typography", variant: "h3", content: "New reply" },
+          { type: "textarea", placeholder: "Write your reply…" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [
+            { type: "button", label: "Save Draft", action: "CREATE", variant: "ghost", icon: "save" },
+            { type: "button", label: "Send Reply", action: "SEND",   variant: "primary", icon: "send" }
+          ]}
+        ]})
+    }
+    emits {
+      SEND   -> external { source : string }
+      CREATE -> external { source : string }
     }
   }
-  page "/responses" -> ResponseBrowse, ResponseCompose, ResponseView
+
+  ;; Modal binding — record-modal create flow for replies.
+  trait TicketReplyCreate = Modal.traits.ModalRecordModal -> TicketReply {
+    config: {
+      icon: "message-circle",
+      title: "New Reply",
+      mode: "create",
+      fields: ["ticketId", "body", "author", "customerEmail", "subject"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      TicketReplyComposerForm.CREATE -> CREATE
+      TicketReplyBrowse.CREATE       -> CREATE
+      CREATE { id : string, row : TicketReply }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Email service binding. The composer's SEND triggers the call-service.
+  ;; Recipient/subject/body are declared as static defaults at the bind site;
+  ;; consumers replace these via runtime input or higher-level wiring. uiTrait
+  ;; points at the consumer's composer.
+  trait TicketReplyEmail = Email.traits.ServiceEmailEmail {
+    config: {
+      recipient: "",
+      subject:   "Re: your ticket",
+      body:      "",
+      sender:    "support@example.com",
+      uiTrait:   "@trait.TicketReplyComposerForm"
+    }
+    listens {
+      TicketReplyComposerForm.SEND -> SEND
+      EmailSent { id : string }
+      FAILED { error : string! }
+      ServiceEmailLoadFailed { message : string }
+      ServiceEmailEmailFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: persists drafts and forwards saved-event ids.
+  trait TicketReplyPersistor -> TicketReply [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create TicketReply @payload.data { emit: { success: "REPLY_CREATED" } })
+    }
+    emits {
+      REPLY_CREATED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      TicketReplyCreate.SAVE -> DO_CREATE
+    }
+  }
+
+  page "/replies" -> TicketReplyBrowse, TicketReplyComposerForm, TicketReplyCreate, TicketReplyEmail, TicketReplyPersistor
 }
+
 orbital SupportMetricsOrbital {
-  entity SupportMetrics [runtime] {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity SupportMetric [persistent: supportmetrics] {
     id : string!
-    openTickets : number
-    resolvedTickets : number
-    avgResponseTime : string
-    satisfactionScore : number
-    activeAgents : number
+    name : string
+    category : string
+    status : "open" | "in-progress" | "resolved" | "closed" = "open"
+    priority : "low" | "medium" | "high" | "critical" = "medium"
+    responseHours : number = 0
   }
 
-  type SupportMetricsLoaded     = Event { data : [SupportMetrics] }                  "Fired when SupportMetrics finishes loading"
-  type SupportMetricsLoadFailed = Event { error : string, code : string } "Fired when SupportMetrics fails to load"
-  trait SupportMetricsDisplay -> SupportMetrics [interaction, collection] {
-    initial: loading
-    state loading {
-      INIT -> displaying
-        (set @entity.activeAgents 0)
-        (set @entity.avgResponseTime "")
-        (set @entity.openTickets 0)
-        (set @entity.resolvedTickets 0)
-        (set @entity.satisfactionScore 0)
-        (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      LOADED -> displaying
-        (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state displaying {
-      INIT -> displaying
-        (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-      REFRESH -> refreshing
-        (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-    state refreshing {
-      REFRESHED -> displaying
-        (fetch SupportMetrics { emit: { success: "SupportMetricsLoaded", failure: "SupportMetricsLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "OpenTickets", value: "@entity.openTickets" }, { type: "stat-display", label: "ResolvedTickets", value: "@entity.resolvedTickets" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: "@entity.avgResponseTime" }] }] }, { type: "stat-display", label: "SatisfactionScore", value: "@entity.satisfactionScore" }, { type: "stat-display", label: "ActiveAgents", value: "@entity.activeAgents" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
-    }
-emits {
-SupportMetricsLoaded
-      SupportMetricsLoadFailed
-    }
+  type SupportMetricLoaded     = Event { data : [SupportMetric] }
+  type SupportMetricLoadFailed = Event { error : string, code : string }
 
-        listens {
-      ResponseOrbital.ResponseBrowse.RESOLVE -> INIT
-          SupportMetricsLoadFailed { error : string, code : string }
+  trait SupportMetricsBrowse = Browse.traits.BrowseItemBrowse -> SupportMetric {
+    config: {
+      pageSize: 100,
+      displayPageSize: 5,
+      fields: [
+        { name: "name",     label: "Name",     variant: "h4" },
+        { name: "category", label: "Category", variant: "caption" },
+        { name: "status",   label: "Status",   variant: "badge" },
+        { name: "priority", label: "Priority", variant: "badge" }
+      ]
     }
   }
-  page "/metrics" -> SupportMetricsDisplay
+
+  ;; Page-chrome trait: pure layout, embeds Browse via sibling-trait
+  ;; reference. Stats/Graphs aggregations live on the /tickets page in
+  ;; TicketOrbital — duplicating Stats/Graphs imports here would clash on
+  ;; their atom-owned StatsItem / GraphItem entities.
+  trait SupportMetricsDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", variant: "h2", content: "Support Metrics" }
+          ]},
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recent" },
+          "@trait.SupportMetricsBrowse"
+        ]})
+    }
+  }
+
+  page "/metrics" -> SupportMetricsDisplay, SupportMetricsBrowse
 }

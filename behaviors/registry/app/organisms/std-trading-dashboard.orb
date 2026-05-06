@@ -1,6 +1,6 @@
 {
   "name": "std-trading-dashboard",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Trading dashboard: portfolio positions, trade orders, and live market feed.",
   "orbitals": [
     {
@@ -9,11 +9,40 @@
         {
           "from": "std/behaviors/std-app-layout",
           "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
         }
       ],
       "entity": {
         "name": "Portfolio",
-        "persistence": "runtime",
+        "collection": "portfolios",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -21,24 +50,34 @@
             "required": true
           },
           {
-            "name": "totalValue",
+            "name": "symbol",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "qty",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "avgCost",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "marketValue",
             "type": "number",
             "default": 0.0
           },
           {
-            "name": "dailyChange",
+            "name": "dailyPnl",
             "type": "number",
             "default": 0.0
           },
           {
-            "name": "positions",
-            "type": "number",
-            "default": 0.0
-          },
-          {
-            "name": "cashBalance",
-            "type": "number",
-            "default": 0.0
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -47,157 +86,44 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PortfolioAppLayout",
           "config": {
+            "notificationClickEvent": "PORTFOLIO_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Portfolio",
+                "href": "/portfolio",
                 "icon": "layout-list",
-                "href": "/portfolio"
+                "label": "Portfolio"
               },
               {
-                "href": "/orders",
                 "label": "Orders",
+                "href": "/orders",
                 "icon": "clipboard-list"
               },
               {
+                "icon": "activity",
                 "label": "Market",
-                "href": "/market",
-                "icon": "layout-list"
+                "href": "/market"
               }
             ],
-            "contentTrait": "@trait.PortfolioDisplay",
-            "notifications": [],
-            "notificationClickEvent": "PORTFOLIO_NOTIFICATIONS_OPEN",
             "searchEvent": "PORTFOLIO_SEARCH",
-            "appName": "Trading Dashboard"
+            "contentTrait": "@trait.PortfolioCatalog",
+            "appName": "Trading Dashboard",
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "PORTFOLIO_NOTIFICATIONS_OPEN",
-            "SEARCH": "PORTFOLIO_SEARCH"
+            "SEARCH": "PORTFOLIO_SEARCH",
+            "NOTIFY_CLICK": "PORTFOLIO_NOTIFICATIONS_OPEN"
           }
         },
         {
-          "name": "PortfolioDisplay",
+          "name": "PortfolioCatalog",
           "category": "interaction",
-          "linkedEntity": "Portfolio",
           "emits": [
             {
-              "event": "PortfolioLoaded",
-              "description": "Fired when Portfolio finishes loading",
-              "scope": "internal",
+              "event": "CREATE",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "[Portfolio]"
-                }
-              ]
-            },
-            {
-              "event": "PortfolioLoadFailed",
-              "description": "Fired when Portfolio fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "MarketFeedSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "MarketFeedSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
@@ -224,28 +150,14 @@
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "composing",
                 "isInitial": true
-              },
-              {
-                "name": "displaying"
-              },
-              {
-                "name": "refreshing"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "LOADED",
-                "name": "Loaded"
-              },
-              {
-                "key": "REFRESH",
-                "name": "Refresh"
               },
               {
                 "key": "PORTFOLIO_SEARCH",
@@ -268,1021 +180,96 @@
                 ]
               },
               {
-                "key": "REFRESHED",
-                "name": "Refreshed"
-              },
-              {
-                "key": "PortfolioLoaded",
-                "name": "Portfolio loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Portfolio]"
-                  }
-                ]
-              },
-              {
-                "key": "PortfolioLoadFailed",
-                "name": "Portfolio load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderSaved",
-                "name": "Trade order saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderSaveFailed",
-                "name": "Trade order save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderUpdated",
-                "name": "Trade order updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderUpdateFailed",
-                "name": "Trade order update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderDeleted",
-                "name": "Trade order deleted",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderDeleteFailed",
-                "name": "Trade order delete failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "MarketFeedSaved",
-                "name": "Market feed saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "MarketFeedSaveFailed",
-                "name": "Market feed save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "CREATE",
+                "name": "Create"
               }
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "displaying",
+                "from": "composing",
+                "to": "composing",
                 "event": "INIT",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.cashBalance",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.dailyChange",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.positions",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.totalValue",
-                    0.0
-                  ],
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
                   [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "breadcrumb",
-                          "items": [
-                            {
-                              "label": "Home",
-                              "href": "/"
-                            },
-                            {
-                              "label": "Portfolio"
-                            }
-                          ]
-                        },
-                        {
-                          "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
+                              "align": "center",
+                              "gap": "sm",
                               "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "trending-up"
                                 },
                                 {
-                                  "variant": "h2",
-                                  "content": "Portfolio",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "icon": "refresh-cw",
-                              "type": "button",
-                              "action": "REFRESH",
-                              "label": "Refresh",
-                              "variant": "secondary"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "box",
-                          "padding": "md",
-                          "children": [
-                            {
-                              "type": "simple-grid",
-                              "cols": 3.0,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "TotalValue",
-                                  "value": "@entity.totalValue"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.dailyChange",
-                                  "label": "DailyChange"
-                                },
-                                {
-                                  "label": "Positions",
-                                  "type": "stat-display",
-                                  "value": "@entity.positions"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "value": "@entity.cashBalance",
-                                  "label": "CashBalance"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Chart View"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Graph View"
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "grid",
-                          "cols": 2.0
-                        },
-                        {
-                          "type": "line-chart",
-                          "data": [
-                            {
-                              "date": "Jan",
-                              "value": 12.0
-                            },
-                            {
-                              "date": "Feb",
-                              "value": 19.0
-                            },
-                            {
-                              "date": "Mar",
-                              "value": 15.0
-                            },
-                            {
-                              "date": "Apr",
-                              "value": 25.0
-                            },
-                            {
-                              "date": "May",
-                              "value": 22.0
-                            },
-                            {
-                              "value": 30.0,
-                              "date": "Jun"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "chart-legend",
-                          "items": [
-                            {
-                              "label": "Current",
-                              "color": "primary"
-                            },
-                            {
-                              "label": "Previous",
-                              "color": "muted"
-                            }
-                          ]
-                        },
-                        {
-                          "width": 400.0,
-                          "height": 200.0,
-                          "nodes": [
-                            {
-                              "id": "a",
-                              "label": "Start"
-                            },
-                            {
-                              "label": "Process",
-                              "id": "b"
-                            },
-                            {
-                              "label": "End",
-                              "id": "c"
-                            }
-                          ],
-                          "edges": [
-                            {
-                              "source": "a",
-                              "target": "b"
-                            },
-                            {
-                              "source": "b",
-                              "target": "c"
-                            }
-                          ],
-                          "type": "graph-view"
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "LOADED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "breadcrumb",
-                          "items": [
-                            {
-                              "href": "/",
-                              "label": "Home"
-                            },
-                            {
-                              "label": "Portfolio"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "name": "trending-up",
-                                  "type": "icon"
-                                },
-                                {
                                   "type": "typography",
                                   "content": "Portfolio",
                                   "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "action": "REFRESH",
-                              "type": "button",
-                              "variant": "secondary",
-                              "icon": "refresh-cw",
-                              "label": "Refresh"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "padding": "md",
-                          "type": "box",
-                          "children": [
-                            {
-                              "cols": 3.0,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "TotalValue",
-                                  "value": "@entity.totalValue"
-                                },
-                                {
-                                  "label": "DailyChange",
-                                  "value": "@entity.dailyChange",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "value": "@entity.positions",
-                                  "type": "stat-display",
-                                  "label": "Positions"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "CashBalance",
-                                  "value": "@entity.cashBalance"
-                                }
-                              ],
-                              "type": "simple-grid"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "md",
-                          "type": "grid",
-                          "children": [
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "content": "Chart View",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Graph View"
-                                }
-                              ],
-                              "type": "card"
-                            }
-                          ],
-                          "cols": 2.0
-                        },
-                        {
-                          "type": "line-chart",
-                          "data": [
-                            {
-                              "value": 12.0,
-                              "date": "Jan"
-                            },
-                            {
-                              "value": 19.0,
-                              "date": "Feb"
-                            },
-                            {
-                              "value": 15.0,
-                              "date": "Mar"
-                            },
-                            {
-                              "value": 25.0,
-                              "date": "Apr"
-                            },
-                            {
-                              "date": "May",
-                              "value": 22.0
-                            },
-                            {
-                              "value": 30.0,
-                              "date": "Jun"
-                            }
-                          ]
-                        },
-                        {
-                          "items": [
-                            {
-                              "label": "Current",
-                              "color": "primary"
-                            },
-                            {
-                              "color": "muted",
-                              "label": "Previous"
-                            }
-                          ],
-                          "type": "chart-legend"
-                        },
-                        {
-                          "height": 200.0,
-                          "type": "graph-view",
-                          "nodes": [
-                            {
-                              "label": "Start",
-                              "id": "a"
-                            },
-                            {
-                              "label": "Process",
-                              "id": "b"
-                            },
-                            {
-                              "label": "End",
-                              "id": "c"
-                            }
-                          ],
-                          "edges": [
-                            {
-                              "source": "a",
-                              "target": "b"
-                            },
-                            {
-                              "source": "b",
-                              "target": "c"
-                            }
-                          ],
-                          "width": 400.0
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "displaying",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "items": [
-                            {
-                              "label": "Home",
-                              "href": "/"
-                            },
-                            {
-                              "label": "Portfolio"
-                            }
-                          ],
-                          "type": "breadcrumb"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "name": "trending-up",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Portfolio",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "icon": "refresh-cw",
-                              "label": "Refresh",
-                              "action": "REFRESH",
-                              "variant": "secondary",
-                              "type": "button"
-                            }
-                          ],
-                          "justify": "between",
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "padding": "md",
-                          "type": "box",
-                          "children": [
-                            {
-                              "cols": 3.0,
-                              "children": [
-                                {
-                                  "label": "TotalValue",
-                                  "type": "stat-display",
-                                  "value": "@entity.totalValue"
-                                },
-                                {
-                                  "value": "@entity.dailyChange",
-                                  "type": "stat-display",
-                                  "label": "DailyChange"
-                                },
-                                {
-                                  "value": "@entity.positions",
-                                  "label": "Positions",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "value": "@entity.cashBalance",
-                                  "label": "CashBalance",
-                                  "type": "stat-display"
-                                }
-                              ],
-                              "type": "simple-grid"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Chart View"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": "Graph View",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "type": "card"
-                            }
-                          ],
-                          "cols": 2.0,
-                          "gap": "md",
-                          "type": "grid"
-                        },
-                        {
-                          "data": [
-                            {
-                              "value": 12.0,
-                              "date": "Jan"
-                            },
-                            {
-                              "value": 19.0,
-                              "date": "Feb"
-                            },
-                            {
-                              "value": 15.0,
-                              "date": "Mar"
-                            },
-                            {
-                              "value": 25.0,
-                              "date": "Apr"
-                            },
-                            {
-                              "value": 22.0,
-                              "date": "May"
-                            },
-                            {
-                              "value": 30.0,
-                              "date": "Jun"
-                            }
-                          ],
-                          "type": "line-chart"
-                        },
-                        {
-                          "type": "chart-legend",
-                          "items": [
-                            {
-                              "color": "primary",
-                              "label": "Current"
-                            },
-                            {
-                              "color": "muted",
-                              "label": "Previous"
-                            }
-                          ]
-                        },
-                        {
-                          "width": 400.0,
-                          "height": 200.0,
-                          "edges": [
-                            {
-                              "source": "a",
-                              "target": "b"
-                            },
-                            {
-                              "target": "c",
-                              "source": "b"
-                            }
-                          ],
-                          "type": "graph-view",
-                          "nodes": [
-                            {
-                              "label": "Start",
-                              "id": "a"
-                            },
-                            {
-                              "id": "b",
-                              "label": "Process"
-                            },
-                            {
-                              "label": "End",
-                              "id": "c"
-                            }
-                          ]
-                        }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "refreshing",
-                "event": "REFRESH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "breadcrumb",
-                          "items": [
-                            {
-                              "label": "Home",
-                              "href": "/"
-                            },
-                            {
-                              "label": "Portfolio"
-                            }
-                          ]
-                        },
-                        {
-                          "justify": "between",
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "name": "trending-up",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Portfolio",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "label": "Refresh",
-                              "variant": "secondary",
-                              "icon": "refresh-cw",
-                              "type": "button",
-                              "action": "REFRESH"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "padding": "md",
-                          "type": "box",
-                          "children": [
-                            {
-                              "type": "simple-grid",
-                              "cols": 3.0,
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "value": "@entity.totalValue",
-                                  "label": "TotalValue",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "DailyChange",
-                                  "value": "@entity.dailyChange"
-                                },
-                                {
-                                  "label": "Positions",
-                                  "type": "stat-display",
-                                  "value": "@entity.positions"
-                                },
-                                {
-                                  "value": "@entity.cashBalance",
-                                  "type": "stat-display",
-                                  "label": "CashBalance"
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "type": "button",
+                                  "label": "Add Position",
+                                  "action": "CREATE"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "grid",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "gap": "md",
                           "children": [
-                            {
-                              "children": [
-                                {
-                                  "content": "Chart View",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "card"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Graph View",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "type": "card"
-                            }
-                          ],
-                          "cols": 2.0
-                        },
-                        {
-                          "type": "line-chart",
-                          "data": [
-                            {
-                              "date": "Jan",
-                              "value": 12.0
-                            },
-                            {
-                              "value": 19.0,
-                              "date": "Feb"
-                            },
-                            {
-                              "date": "Mar",
-                              "value": 15.0
-                            },
-                            {
-                              "date": "Apr",
-                              "value": 25.0
-                            },
-                            {
-                              "value": 22.0,
-                              "date": "May"
-                            },
-                            {
-                              "date": "Jun",
-                              "value": 30.0
-                            }
+                            "@trait.PortfolioSearch",
+                            "@trait.PortfolioFilter"
                           ]
                         },
+                        "@trait.PortfolioStats",
+                        "@trait.PortfolioGraphs",
                         {
-                          "items": [
-                            {
-                              "color": "primary",
-                              "label": "Current"
-                            },
-                            {
-                              "label": "Previous",
-                              "color": "muted"
-                            }
-                          ],
-                          "type": "chart-legend"
+                          "type": "divider"
                         },
-                        {
-                          "edges": [
-                            {
-                              "target": "b",
-                              "source": "a"
-                            },
-                            {
-                              "target": "c",
-                              "source": "b"
-                            }
-                          ],
-                          "width": 400.0,
-                          "nodes": [
-                            {
-                              "label": "Start",
-                              "id": "a"
-                            },
-                            {
-                              "id": "b",
-                              "label": "Process"
-                            },
-                            {
-                              "id": "c",
-                              "label": "End"
-                            }
-                          ],
-                          "height": 200.0,
-                          "type": "graph-view"
-                        }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "displaying",
-                "to": "displaying",
-                "event": "PORTFOLIO_SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Searching…"
-                        }
+                        "@trait.PortfolioBrowseList"
                       ]
                     }
                   ]
                 ]
               },
               {
-                "from": "displaying",
-                "to": "displaying",
+                "from": "composing",
+                "to": "composing",
+                "event": "PORTFOLIO_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
                 "event": "PORTFOLIO_NOTIFICATIONS_OPEN",
                 "effects": [
                   [
@@ -1299,238 +286,532 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "variant": "h3"
                         },
                         {
-                          "content": "You're all caught up.",
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "You're all caught up."
                         },
                         {
                           "variant": "ghost",
+                          "label": "Back to portfolio",
                           "action": "INIT",
-                          "type": "button",
-                          "label": "Back to portfolio"
+                          "type": "button"
                         }
                       ],
-                      "align": "center",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "refreshing",
-                "to": "displaying",
-                "event": "REFRESHED",
-                "effects": [
-                  [
-                    "fetch",
-                    "Portfolio",
-                    {
-                      "emit": {
-                        "success": "PortfolioLoaded",
-                        "failure": "PortfolioLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "breadcrumb",
-                          "items": [
-                            {
-                              "href": "/",
-                              "label": "Home"
-                            },
-                            {
-                              "label": "Portfolio"
-                            }
-                          ]
-                        },
-                        {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "trending-up"
-                                },
-                                {
-                                  "content": "Portfolio",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "variant": "secondary",
-                              "icon": "refresh-cw",
-                              "label": "Refresh",
-                              "action": "REFRESH",
-                              "type": "button"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "simple-grid",
-                              "cols": 3.0,
-                              "children": [
-                                {
-                                  "value": "@entity.totalValue",
-                                  "label": "TotalValue",
-                                  "type": "stat-display"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "DailyChange",
-                                  "value": "@entity.dailyChange"
-                                },
-                                {
-                                  "value": "@entity.positions",
-                                  "type": "stat-display",
-                                  "label": "Positions"
-                                },
-                                {
-                                  "type": "stat-display",
-                                  "label": "CashBalance",
-                                  "value": "@entity.cashBalance"
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "box",
-                          "padding": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "cols": 2.0,
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Chart View"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": "Graph View",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "card"
-                            }
-                          ],
-                          "type": "grid"
-                        },
-                        {
-                          "data": [
-                            {
-                              "date": "Jan",
-                              "value": 12.0
-                            },
-                            {
-                              "value": 19.0,
-                              "date": "Feb"
-                            },
-                            {
-                              "date": "Mar",
-                              "value": 15.0
-                            },
-                            {
-                              "date": "Apr",
-                              "value": 25.0
-                            },
-                            {
-                              "date": "May",
-                              "value": 22.0
-                            },
-                            {
-                              "date": "Jun",
-                              "value": 30.0
-                            }
-                          ],
-                          "type": "line-chart"
-                        },
-                        {
-                          "type": "chart-legend",
-                          "items": [
-                            {
-                              "color": "primary",
-                              "label": "Current"
-                            },
-                            {
-                              "label": "Previous",
-                              "color": "muted"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "graph-view",
-                          "width": 400.0,
-                          "nodes": [
-                            {
-                              "label": "Start",
-                              "id": "a"
-                            },
-                            {
-                              "label": "Process",
-                              "id": "b"
-                            },
-                            {
-                              "id": "c",
-                              "label": "End"
-                            }
-                          ],
-                          "edges": [
-                            {
-                              "source": "a",
-                              "target": "b"
-                            },
-                            {
-                              "source": "b",
-                              "target": "c"
-                            }
-                          ],
-                          "height": 200.0
-                        }
-                      ]
+                      "align": "center"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "PortfolioSearch",
+          "config": {
+            "event": "PORTFOLIO_SEARCH",
+            "placeholder": "Search positions…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "PortfolioFilter",
+          "config": {
+            "event": "PORTFOLIO_FILTER",
+            "filters": [
+              {
+                "label": "Symbol",
+                "filterType": "text",
+                "field": "symbol"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "PortfolioStats",
+          "config": {
+            "metrics": [
+              {
+                "variant": "primary",
+                "label": "Total Value",
+                "format": "currency",
+                "aggregation": "sum",
+                "field": "marketValue",
+                "icon": "dollar-sign"
+              },
+              {
+                "format": "currency",
+                "label": "Daily PnL",
+                "aggregation": "sum",
+                "field": "dailyPnl",
+                "variant": "success",
+                "icon": "trending-up"
+              },
+              {
+                "aggregation": "count",
+                "variant": "info",
+                "format": "number",
+                "icon": "layout-list",
+                "label": "Positions"
+              },
+              {
+                "label": "Winners",
+                "aggregation": "count",
+                "variant": "success",
+                "format": "number",
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    ">",
+                    "@row.dailyPnl",
+                    0.0
+                  ]
+                ]
+              }
+            ],
+            "title": "Portfolio"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "PortfolioGraphs",
+          "config": {
+            "showLegend": false,
+            "subtitle": "Profit and loss across positions",
+            "title": "Daily PnL",
+            "categoryField": "symbol",
+            "valueField": "dailyPnl",
+            "aggregation": "sum",
+            "height": 240.0,
+            "chartType": "line"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "PortfolioBrowseList",
+          "linkedEntity": "Portfolio",
+          "config": {
+            "gap": "sm",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0,
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "trending-up",
+                "name": "symbol"
+              },
+              {
+                "label": "Qty",
+                "format": "number",
+                "name": "qty",
+                "variant": "body"
+              },
+              {
+                "label": "Avg Cost",
+                "variant": "body",
+                "format": "currency",
+                "name": "avgCost"
+              },
+              {
+                "variant": "h4",
+                "format": "currency",
+                "label": "Market Value",
+                "name": "marketValue"
+              },
+              {
+                "label": "Daily PnL",
+                "variant": "badge",
+                "name": "dailyPnl",
+                "format": "currency"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioFilter"
+              }
+            },
+            {
+              "event": "PORTFOLIO_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioPersistor"
+              }
+            },
+            {
+              "event": "PORTFOLIO_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioPersistor"
+              }
+            },
+            {
+              "event": "PORTFOLIO_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PortfolioCreate",
+          "linkedEntity": "Portfolio",
+          "config": {
+            "fields": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ],
+            "icon": "plus-circle",
+            "title": "Add Position",
+            "mode": "create"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PortfolioEdit",
+          "linkedEntity": "Portfolio",
+          "config": {
+            "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Position",
+            "fields": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PortfolioView",
+          "linkedEntity": "Portfolio",
+          "config": {
+            "icon": "eye",
+            "fields": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ],
+            "mode": "edit",
+            "title": "View Position"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "PortfolioDelete",
+          "linkedEntity": "Portfolio",
+          "config": {
+            "title": "Close Position",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Close",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PortfolioPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Portfolio",
+          "emits": [
+            {
+              "event": "PORTFOLIO_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PORTFOLIO_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PORTFOLIO_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PortfolioDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PORTFOLIO_CREATED",
+                "name": "Portfolio Created"
+              },
+              {
+                "key": "PORTFOLIO_UPDATED",
+                "name": "Portfolio Updated"
+              },
+              {
+                "key": "PORTFOLIO_DELETED",
+                "name": "Portfolio Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Portfolio",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PORTFOLIO_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Portfolio",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PORTFOLIO_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Portfolio",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "PORTFOLIO_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -1542,7 +823,37 @@
               "ref": "PortfolioAppLayout"
             },
             {
-              "ref": "PortfolioDisplay"
+              "ref": "PortfolioCatalog"
+            },
+            {
+              "ref": "PortfolioSearch"
+            },
+            {
+              "ref": "PortfolioFilter"
+            },
+            {
+              "ref": "PortfolioStats"
+            },
+            {
+              "ref": "PortfolioGraphs"
+            },
+            {
+              "ref": "PortfolioBrowseList"
+            },
+            {
+              "ref": "PortfolioCreate"
+            },
+            {
+              "ref": "PortfolioEdit"
+            },
+            {
+              "ref": "PortfolioView"
+            },
+            {
+              "ref": "PortfolioDelete"
+            },
+            {
+              "ref": "PortfolioPersistor"
             }
           ]
         }
@@ -1550,6 +861,20 @@
     },
     {
       "name": "TradeOrderOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
       "entity": {
         "name": "TradeOrder",
         "collection": "tradeorders",
@@ -1568,7 +893,11 @@
           {
             "name": "side",
             "type": "string",
-            "required": true
+            "default": "buy",
+            "values": [
+              "buy",
+              "sell"
+            ]
           },
           {
             "name": "quantity",
@@ -1577,7 +906,18 @@
           },
           {
             "name": "price",
-            "type": "number"
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "filled",
+              "cancelled"
+            ]
           },
           {
             "name": "pendingId",
@@ -1588,161 +928,161 @@
       },
       "traits": [
         {
-          "name": "TradeOrderBrowse",
+          "name": "TradeOrderCatalog",
           "category": "interaction",
-          "linkedEntity": "TradeOrder",
           "emits": [
             {
-              "event": "CREATE"
-            },
-            {
-              "event": "VIEW",
+              "event": "CREATE",
+              "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.symbol",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.side",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.quantity",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.price",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.symbol",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.side",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.quantity",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.price",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.symbol",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.side",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.quantity",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.price",
-                  "type": "number"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoaded",
-              "description": "Fired when TradeOrder finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TradeOrder]"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoadFailed",
-              "description": "Fired when TradeOrder fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
+                  "name": "source",
                   "type": "string"
                 }
               ]
             }
           ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard-list"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Trade Orders"
+                                }
+                              ],
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "label": "New Order",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "action": "CREATE"
+                                }
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TradeOrderBrowseList"
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TradeOrderBrowseList",
+          "linkedEntity": "TradeOrder",
+          "config": {
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Cancel",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0,
+            "fields": [
+              {
+                "icon": "trending-up",
+                "name": "symbol",
+                "variant": "h3"
+              },
+              {
+                "variant": "badge",
+                "name": "side"
+              },
+              {
+                "format": "number",
+                "name": "quantity",
+                "variant": "body"
+              },
+              {
+                "format": "currency",
+                "name": "price",
+                "variant": "h4"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ],
+            "gap": "sm"
+          },
           "listens": [
             {
               "event": "TRADE_ORDER_CREATED",
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "TradeOrderCreate"
+                "trait": "TradeOrderPersistor"
               }
             },
             {
@@ -1750,12 +1090,190 @@
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "TradeOrderEdit"
+                "trait": "TradeOrderPersistor"
               }
             },
             {
               "event": "TRADE_ORDER_DELETED",
               "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TradeOrderCreate",
+          "linkedEntity": "TradeOrder",
+          "config": {
+            "title": "New Order",
+            "fields": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ],
+            "mode": "create",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TradeOrderEdit",
+          "linkedEntity": "TradeOrder",
+          "config": {
+            "title": "Edit Order",
+            "fields": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ],
+            "mode": "edit",
+            "icon": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TradeOrderView",
+          "linkedEntity": "TradeOrder",
+          "config": {
+            "icon": "eye",
+            "title": "View Order",
+            "fields": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ],
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "TradeOrderDelete",
+          "linkedEntity": "TradeOrder",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Cancel Order",
+            "alertMessage": "Cancel this pending order?",
+            "confirmLabel": "Cancel Order"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TradeOrderPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "TradeOrder",
+          "emits": [
+            {
+              "event": "TRADE_ORDER_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TRADE_ORDER_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TRADE_ORDER_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TradeOrderEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
               "source": {
                 "kind": "trait",
                 "trait": "TradeOrderDelete"
@@ -1765,7 +1283,7 @@
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "idle",
                 "isInitial": true
               }
             ],
@@ -1775,360 +1293,33 @@
                 "name": "Initialize"
               },
               {
-                "key": "TradeOrderLoaded",
-                "name": "TradeOrder loaded",
+                "key": "DO_CREATE",
+                "name": "Do Create",
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[TradeOrder]"
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "TradeOrderLoadFailed",
-                "name": "TradeOrder load failed",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
                 "payloadSchema": [
                   {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
+                    "name": "data",
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "CREATE",
-                "name": "Create"
-              },
-              {
-                "key": "VIEW",
-                "name": "View"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit"
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Loading orders…",
-                          "color": "muted",
-                          "variant": "caption"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TradeOrderLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "href": "/portfolio",
-                          "label": "Portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "href": "/orders",
-                          "icon": "clipboard-list",
-                          "label": "Orders"
-                        },
-                        {
-                          "href": "/market",
-                          "icon": "layout-list",
-                          "label": "Market"
-                        }
-                      ],
-                      "appName": "Trading Dashboard",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "name": "shopping-cart",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Trade Orders",
-                                      "variant": "h2"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "label": "Create TradeOrder",
-                                      "type": "button",
-                                      "action": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "type": "stack"
-                                }
-                              ],
-                              "justify": "between"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "itemActions": [
-                                {
-                                  "variant": "ghost",
-                                  "label": "View",
-                                  "event": "VIEW"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "variant": "ghost",
-                                  "event": "EDIT"
-                                },
-                                {
-                                  "event": "DELETE",
-                                  "label": "Delete",
-                                  "variant": "danger"
-                                }
-                              ],
-                              "fields": [
-                                {
-                                  "icon": "trending-up",
-                                  "name": "symbol",
-                                  "variant": "h3"
-                                },
-                                {
-                                  "name": "side",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "variant": "body",
-                                  "format": "number",
-                                  "name": "quantity"
-                                },
-                                {
-                                  "variant": "h4",
-                                  "name": "price",
-                                  "format": "currency"
-                                }
-                              ],
-                              "variant": "card",
-                              "entity": "@payload.data",
-                              "gap": "sm",
-                              "type": "data-list"
-                            }
-                          ],
-                          "direction": "vertical"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TradeOrderLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load orders"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "@payload.error"
-                        },
-                        {
-                          "type": "button",
-                          "action": "INIT",
-                          "label": "Retry",
-                          "icon": "rotate-ccw",
-                          "variant": "primary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TradeOrderCreate",
-          "category": "interaction",
-          "linkedEntity": "TradeOrder",
-          "emits": [
-            {
-              "event": "TRADE_ORDER_CREATED"
-            },
-            {
-              "event": "TradeOrderLoadFailed",
-              "description": "Fired when TradeOrder fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoaded",
-              "description": "Fired when TradeOrder finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TradeOrder]"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderSaveFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderSaved",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "CREATE",
-              "triggers": "CREATE",
-              "source": {
-                "kind": "trait",
-                "trait": "TradeOrderBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CREATE",
-                "name": "Create"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
+                "key": "DO_DELETE",
+                "name": "Do Delete",
                 "payloadSchema": [
                   {
-                    "name": "data",
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -2138,159 +1329,24 @@
                 "name": "Trade Order Created"
               },
               {
-                "key": "TradeOrderLoadFailed",
-                "name": "TradeOrder load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "TRADE_ORDER_UPDATED",
+                "name": "Trade Order Updated"
               },
               {
-                "key": "TradeOrderLoaded",
-                "name": "TradeOrder loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[TradeOrder]"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderSaveFailed",
-                "name": "TradeOrder save failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderSaved",
-                "name": "TradeOrder saved",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
+                "key": "TRADE_ORDER_DELETED",
+                "name": "Trade Order Deleted"
               }
             ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      }
-                    }
-                  ]
-                ]
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "failure": "TradeOrderLoadFailed",
-                        "success": "TradeOrderLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "plus-circle"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "Create TradeOrder"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "submitEvent": "SAVE",
-                          "mode": "create",
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "symbol",
-                            "side",
-                            "quantity",
-                            "price"
-                          ]
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
                 "effects": [
                   [
                     "persist",
@@ -2299,313 +1355,16 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "TradeOrderSaved",
-                        "failure": "TradeOrderSaveFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TRADE_ORDER_CREATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TradeOrderEdit",
-          "category": "interaction",
-          "linkedEntity": "TradeOrder",
-          "emits": [
-            {
-              "event": "TRADE_ORDER_UPDATED"
-            },
-            {
-              "event": "TradeOrderLoadFailed",
-              "description": "Fired when TradeOrder fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoaded",
-              "description": "Fired when TradeOrder finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TradeOrder]"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderUpdateFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderUpdated",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TradeOrderView"
-              }
-            },
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "TradeOrderBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "row",
-                    "type": "TradeOrder"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TRADE_ORDER_UPDATED",
-                "name": "Trade Order Updated"
-              },
-              {
-                "key": "TradeOrderLoadFailed",
-                "name": "TradeOrder load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderLoaded",
-                "name": "TradeOrder loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[TradeOrder]"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderUpdateFailed",
-                "name": "TradeOrder update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderUpdated",
-                "name": "TradeOrder updated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
+                        "success": "TRADE_ORDER_CREATED"
                       }
                     }
                   ]
                 ]
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      },
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "edit",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Edit TradeOrder"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "entity": "@payload.row",
-                          "mode": "edit",
-                          "type": "form-section",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "symbol",
-                            "side",
-                            "quantity",
-                            "price"
-                          ],
-                          "submitEvent": "SAVE"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
                 "effects": [
                   [
                     "persist",
@@ -2614,544 +1373,7 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "TradeOrderUpdated",
-                        "failure": "TradeOrderUpdateFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TRADE_ORDER_UPDATED"
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TradeOrderView",
-          "category": "interaction",
-          "linkedEntity": "TradeOrder",
-          "emits": [
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoaded",
-              "description": "Fired when TradeOrder finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TradeOrder]"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoadFailed",
-              "description": "Fired when TradeOrder fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "VIEW",
-              "triggers": "VIEW",
-              "source": {
-                "kind": "trait",
-                "trait": "TradeOrderBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit"
-              },
-              {
-                "key": "TradeOrderLoaded",
-                "name": "TradeOrder loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[TradeOrder]"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderLoadFailed",
-                "name": "TradeOrder load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.price",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.quantity",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.side",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.symbol",
-                    ""
-                  ],
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "failure": "TradeOrderLoadFailed",
-                        "success": "TradeOrderLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "id": "@payload.id",
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.symbol"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Symbol"
-                            },
-                            {
-                              "content": "@entity.symbol",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Side"
-                            },
-                            {
-                              "content": "@entity.side",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Quantity"
-                            },
-                            {
-                              "content": "@entity.quantity",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Price",
-                              "type": "typography"
-                            },
-                            {
-                              "variant": "body",
-                              "content": "@entity.price",
-                              "type": "typography"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "button",
-                              "icon": "edit",
-                              "action": "EDIT",
-                              "variant": "primary",
-                              "label": "Edit"
-                            },
-                            {
-                              "label": "Close",
-                              "action": "CLOSE",
-                              "type": "button",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "justify": "end"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "name": "TradeOrderDelete",
-          "category": "interaction",
-          "linkedEntity": "TradeOrder",
-          "emits": [
-            {
-              "event": "TRADE_ORDER_DELETED"
-            },
-            {
-              "event": "TradeOrderDeleteFailed",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderDeleted",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoadFailed",
-              "description": "Fired when TradeOrder fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TradeOrderLoaded",
-              "description": "Fired when TradeOrder finishes loading; payload.data holds the list",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[TradeOrder]"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "DELETE",
-              "triggers": "DELETE",
-              "source": {
-                "kind": "trait",
-                "trait": "TradeOrderBrowse"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "confirming"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "TRADE_ORDER_DELETED",
-                "name": "Trade Order Deleted"
-              },
-              {
-                "key": "TradeOrderDeleteFailed",
-                "name": "TradeOrder delete failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderDeleted",
-                "name": "TradeOrder deleted",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderLoadFailed",
-                "name": "TradeOrder load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TradeOrderLoaded",
-                "name": "TradeOrder loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[TradeOrder]"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
+                        "success": "TRADE_ORDER_UPDATED"
                       }
                     }
                   ]
@@ -3159,182 +1381,17 @@
               },
               {
                 "from": "idle",
-                "to": "confirming",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.pendingId",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      },
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-triangle"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete TradeOrder",
-                              "variant": "h3"
-                            }
-                          ],
-                          "align": "center",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "alert",
-                          "message": "This action cannot be undone.",
-                          "variant": "error"
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "ghost",
-                              "type": "button",
-                              "action": "CANCEL",
-                              "label": "Cancel"
-                            },
-                            {
-                              "variant": "danger",
-                              "action": "CONFIRM_DELETE",
-                              "type": "button",
-                              "label": "Delete",
-                              "icon": "check"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end",
-                          "gap": "sm"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
                 "to": "idle",
-                "event": "CONFIRM_DELETE",
+                "event": "DO_DELETE",
                 "effects": [
                   [
                     "persist",
                     "delete",
                     "TradeOrder",
-                    "@entity.pendingId",
+                    "@payload.id",
                     {
                       "emit": {
-                        "success": "TradeOrderDeleted",
-                        "failure": "TradeOrderDeleteFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "failure": "TradeOrderLoadFailed",
-                        "success": "TradeOrderLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "emit",
-                    "TRADE_ORDER_DELETED"
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "success": "TradeOrderLoaded",
-                        "failure": "TradeOrderLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "confirming",
-                "to": "idle",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "TradeOrder",
-                    {
-                      "emit": {
-                        "failure": "TradeOrderLoadFailed",
-                        "success": "TradeOrderLoaded"
+                        "success": "TRADE_ORDER_DELETED"
                       }
                     }
                   ]
@@ -3342,7 +1399,7 @@
               }
             ]
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -3351,7 +1408,10 @@
           "path": "/orders",
           "traits": [
             {
-              "ref": "TradeOrderBrowse"
+              "ref": "TradeOrderCatalog"
+            },
+            {
+              "ref": "TradeOrderBrowseList"
             },
             {
               "ref": "TradeOrderCreate"
@@ -3364,6 +1424,9 @@
             },
             {
               "ref": "TradeOrderDelete"
+            },
+            {
+              "ref": "TradeOrderPersistor"
             }
           ]
         }
@@ -3371,6 +1434,12 @@
     },
     {
       "name": "MarketFeedOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-selection",
+          "as": "Selection"
+        }
+      ],
       "entity": {
         "name": "MarketFeed",
         "persistence": "runtime",
@@ -3392,35 +1461,35 @@
           },
           {
             "name": "change",
-            "type": "number"
+            "type": "number",
+            "default": 0.0
           },
           {
             "name": "volume",
-            "type": "number"
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "dailyPnl",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
+          "ref": "Selection.traits.SelectableItemSelection",
+          "name": "MarketSelection",
+          "linkedEntity": "MarketFeed",
+          "config": {
+            "multi": true
+          }
+        },
+        {
           "name": "MarketFeedAsync",
           "category": "interaction",
           "linkedEntity": "MarketFeed",
           "emits": [
-            {
-              "event": "MarketFeedLoadFailed",
-              "description": "Fired when MarketFeed fails to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
             {
               "event": "MarketFeedLoaded",
               "description": "Fired when MarketFeed finishes loading",
@@ -3433,7 +1502,8 @@
               ]
             },
             {
-              "event": "MarketFeedSaveFailed",
+              "event": "MarketFeedLoadFailed",
+              "description": "Fired when MarketFeed fails to load",
               "scope": "internal",
               "payloadSchema": [
                 {
@@ -3452,6 +1522,20 @@
               "payloadSchema": [
                 {
                   "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MarketFeedSaveFailed",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
                   "type": "string"
                 }
               ]
@@ -3505,20 +1589,6 @@
                 "name": "Retry"
               },
               {
-                "key": "MarketFeedLoadFailed",
-                "name": "MarketFeed load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
                 "key": "MarketFeedLoaded",
                 "name": "MarketFeed loaded",
                 "payloadSchema": [
@@ -3529,8 +1599,8 @@
                 ]
               },
               {
-                "key": "MarketFeedSaveFailed",
-                "name": "MarketFeed save failed",
+                "key": "MarketFeedLoadFailed",
+                "name": "MarketFeed load failed",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -3551,6 +1621,20 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "MarketFeedSaveFailed",
+                "name": "MarketFeed save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -3564,8 +1648,8 @@
                     "MarketFeed",
                     {
                       "emit": {
-                        "failure": "MarketFeedLoadFailed",
-                        "success": "MarketFeedLoaded"
+                        "success": "MarketFeedLoaded",
+                        "failure": "MarketFeedLoadFailed"
                       }
                     }
                   ],
@@ -3573,68 +1657,45 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "activity"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "MarketFeed"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "align": "center"
+                              "type": "icon",
+                              "name": "activity"
                             },
                             {
-                              "type": "divider"
-                            },
-                            {
-                              "color": "muted",
-                              "type": "typography",
-                              "content": "Ready to start marketfeed operation.",
-                              "variant": "body"
-                            },
-                            {
-                              "action": "START",
-                              "type": "button",
-                              "icon": "play",
-                              "label": "Start",
-                              "variant": "primary"
+                              "content": "Market Feed",
+                              "variant": "h2",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Connect to live market data."
+                        },
+                        {
+                          "icon": "play",
+                          "action": "START",
+                          "label": "Start Stream",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "href": "/portfolio",
-                          "icon": "layout-list",
-                          "label": "Portfolio"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ]
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -3648,44 +1709,21 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "href": "/market",
-                          "label": "Market"
-                        }
-                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "message": "Processing marketfeed...",
-                              "type": "loading-state",
-                              "title": "Connecting to market feed..."
-                            },
-                            {
-                              "variant": "text",
-                              "type": "skeleton"
-                            }
-                          ]
+                          "type": "loading-state",
+                          "title": "Connecting to market feed…",
+                          "message": "Streaming ticks…"
+                        },
+                        {
+                          "type": "skeleton",
+                          "variant": "text"
                         }
-                      ],
-                      "type": "dashboard-layout"
+                      ]
                     }
                   ]
                 ]
@@ -3711,59 +1749,132 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "label": "Portfolio",
-                          "href": "/portfolio"
-                        },
-                        {
-                          "href": "/orders",
-                          "icon": "clipboard-list",
-                          "label": "Orders"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Market",
-                          "href": "/market"
-                        }
-                      ],
-                      "type": "dashboard-layout",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "check-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "success",
-                              "message": "Market feed connected.",
-                              "type": "alert"
-                            },
-                            {
                               "direction": "horizontal",
-                              "justify": "center",
-                              "gap": "sm",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "variant": "ghost",
+                                  "type": "icon",
+                                  "name": "activity"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Live Market Feed",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "sm"
+                            },
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "alert",
+                                  "variant": "success",
+                                  "message": "Connected"
+                                },
+                                {
                                   "label": "Reset",
                                   "action": "RESET",
+                                  "variant": "ghost",
                                   "type": "button",
                                   "icon": "rotate-ccw"
                                 }
                               ]
                             }
+                          ],
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-list",
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "icon": "trending-up",
+                              "name": "symbol"
+                            },
+                            {
+                              "variant": "h3",
+                              "name": "price",
+                              "format": "currency"
+                            },
+                            {
+                              "name": "change",
+                              "variant": "badge",
+                              "format": "currency"
+                            },
+                            {
+                              "variant": "caption",
+                              "format": "number",
+                              "name": "volume"
+                            }
+                          ],
+                          "variant": "card",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "line-chart",
+                          "data": [
+                            {
+                              "date": "09:30",
+                              "value": 100.0
+                            },
+                            {
+                              "date": "10:00",
+                              "value": 102.0
+                            },
+                            {
+                              "date": "10:30",
+                              "value": 99.0
+                            },
+                            {
+                              "value": 105.0,
+                              "date": "11:00"
+                            },
+                            {
+                              "value": 107.0,
+                              "date": "11:30"
+                            },
+                            {
+                              "value": 104.0,
+                              "date": "12:00"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "chart-legend",
+                          "items": [
+                            {
+                              "color": "primary",
+                              "label": "Price"
+                            },
+                            {
+                              "label": "Volume",
+                              "color": "muted"
+                            }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -3777,63 +1888,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "icon": "clipboard-list",
-                          "href": "/orders"
-                        },
-                        {
-                          "href": "/market",
-                          "icon": "layout-list",
-                          "label": "Market"
-                        }
-                      ],
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "lg",
-                          "align": "center",
-                          "direction": "vertical",
+                          "onRetry": "RETRY",
+                          "title": "Stream Disconnected",
+                          "message": "Market feed disconnected.",
+                          "type": "error-state"
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "title": "Operation Failed",
-                              "type": "error-state",
-                              "message": "Market feed disconnected.",
-                              "onRetry": "RETRY"
+                              "type": "button",
+                              "label": "Retry",
+                              "icon": "refresh-cw",
+                              "action": "RETRY",
+                              "variant": "primary"
                             },
                             {
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "justify": "center",
-                              "children": [
-                                {
-                                  "action": "RETRY",
-                                  "type": "button",
-                                  "label": "Retry",
-                                  "variant": "primary",
-                                  "icon": "refresh-cw"
-                                },
-                                {
-                                  "icon": "rotate-ccw",
-                                  "action": "RESET",
-                                  "variant": "ghost",
-                                  "label": "Reset",
-                                  "type": "button"
-                                }
-                              ],
-                              "type": "stack"
+                              "label": "Reset",
+                              "variant": "ghost",
+                              "action": "RESET",
+                              "icon": "rotate-ccw",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3847,68 +1935,45 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "navItems": [
-                        {
-                          "icon": "layout-list",
-                          "label": "Portfolio",
-                          "href": "/portfolio"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "label": "Orders",
-                          "href": "/orders"
-                        },
-                        {
-                          "href": "/market",
-                          "label": "Market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "activity"
-                                },
-                                {
-                                  "content": "MarketFeed",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "align": "center"
+                              "type": "icon",
+                              "name": "activity"
                             },
                             {
-                              "type": "divider"
-                            },
-                            {
-                              "content": "Ready to start marketfeed operation.",
-                              "type": "typography",
-                              "variant": "body",
-                              "color": "muted"
-                            },
-                            {
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "play",
-                              "action": "START",
-                              "label": "Start"
+                              "content": "Market Feed",
+                              "variant": "h2",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "Connect to live market data."
+                        },
+                        {
+                          "action": "START",
+                          "variant": "primary",
+                          "label": "Start Stream",
+                          "type": "button",
+                          "icon": "play"
                         }
                       ],
-                      "appName": "Trading Dashboard"
+                      "align": "center",
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3922,68 +1987,45 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "vertical",
-                          "gap": "lg",
                           "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "name": "activity",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "MarketFeed",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "align": "center",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "divider"
+                              "name": "activity",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "variant": "body",
-                              "color": "muted",
-                              "content": "Ready to start marketfeed operation."
-                            },
-                            {
-                              "label": "Start",
-                              "type": "button",
-                              "icon": "play",
-                              "action": "START",
-                              "variant": "primary"
+                              "content": "Market Feed",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "Connect to live market data."
+                        },
+                        {
+                          "icon": "play",
+                          "variant": "primary",
+                          "action": "START",
+                          "type": "button",
+                          "label": "Start Stream"
                         }
                       ],
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "icon": "layout-list",
-                          "href": "/portfolio"
-                        },
-                        {
-                          "icon": "clipboard-list",
-                          "href": "/orders",
-                          "label": "Orders"
-                        },
-                        {
-                          "icon": "layout-list",
-                          "label": "Market",
-                          "href": "/market"
-                        }
-                      ]
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -3997,44 +2039,21 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Trading Dashboard",
+                      "align": "center",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "title": "Connecting to market feed...",
-                              "message": "Processing marketfeed...",
-                              "type": "loading-state"
-                            },
-                            {
-                              "type": "skeleton",
-                              "variant": "text"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "lg",
-                          "align": "center"
-                        }
-                      ],
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "icon": "layout-list",
-                          "href": "/portfolio"
+                          "type": "loading-state",
+                          "message": "Streaming ticks…",
+                          "title": "Connecting to market feed…"
                         },
                         {
-                          "href": "/orders",
-                          "label": "Orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
+                          "variant": "text",
+                          "type": "skeleton"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -4051,6 +2070,9 @@
           "traits": [
             {
               "ref": "MarketFeedAsync"
+            },
+            {
+              "ref": "MarketSelection"
             }
           ]
         }
