@@ -195,15 +195,56 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
     fields: params.fields ?? [],
     ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
-  // Multi-orbital organism: each orbital is constructed via
-  // `makeOrbitalWithUses(...)`. Trait/page references go through
-  // `makeTraitRef`/`makePageRef`. Inline trait state machines —
-  // authored in the `.lolo` source — embed as typed literals.
-  // params.entityName / params.fields are ignored here; each
-  // orbital owns its canonical entity and fields.
-  void params;
-  return [
-    makeOrbitalWithUses({
+  /**
+   * Rebind a canonical primary orbital using the consumer's typed
+   * params. Walks the trait array swapping any `linkedEntity` that
+   * matched the canonical primary entity name; appends extra fields;
+   * threads pagePath + per-trait config overrides. Auxiliary
+   * orbitals are returned verbatim — they own their own entities.
+   */
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
+    const canonicalName = 'BattleState';
+    const targetName = params.entityName || canonicalName;
+    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
+    const extraFields = Array.isArray(params.fields) ? params.fields : [];
+    const mergedEntity: Entity = {
+      ...(orb.entity as Entity),
+      name: targetName,
+      fields: [...baseFields, ...extraFields],
+      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
+    };
+    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) {
+        out.linkedEntity = targetName;
+      }
+      if (params.config !== undefined) {
+        out.config = params.config as TraitConfig;
+      }
+      return out;
+    });
+    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) {
+        out.linkedEntity = targetName;
+      }
+      if (idx === 0 && params.pagePath !== undefined) {
+        out.path = params.pagePath;
+      }
+      return out;
+    });
+    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
+  };
+  void entity;
+  const orbitalsOut: OrbitalDefinition[] = [];
+  {
+    const built = makeOrbitalWithUses({
       name: 'BattleStateOrbital',
       uses: [],
       entity: {
@@ -1071,8 +1112,11 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
           ],
         } as never,
       ],
-    }),
-    makeOrbitalWithUses({
+    });
+    orbitalsOut.push(applyPrimaryParams(built));
+  }
+  {
+    const built = makeOrbitalWithUses({
       name: 'WorldZoneOrbital',
       uses: [],
       entity: {
@@ -1508,8 +1552,11 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
           ],
         } as never,
       ],
-    }),
-    makeOrbitalWithUses({
+    });
+    orbitalsOut.push(built);
+  }
+  {
+    const built = makeOrbitalWithUses({
       name: 'RpgItemOrbital',
       uses: [],
       entity: {
@@ -2934,8 +2981,11 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
           ],
         } as never,
       ],
-    }),
-    makeOrbitalWithUses({
+    });
+    orbitalsOut.push(built);
+  }
+  {
+    const built = makeOrbitalWithUses({
       name: 'MissionOrbital',
       uses: [],
       entity: {
@@ -3708,6 +3758,8 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
           ],
         } as never,
       ],
-    }),
-  ];
+    });
+    orbitalsOut.push(built);
+  }
+  return orbitalsOut;
 }

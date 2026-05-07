@@ -39,7 +39,7 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
 export interface StdStatsConfig {
   /** Default: `"Summary"` */
   title?: string;
-  /** Default: `[{"label":"Total Items","format":"number","aggregation":"count","icon":"list","variant":"primary"},{"label":"Active","variant":"success","icon":"check-circle","aggregation":"count","format":"number"},{"format":"number","field":"value","aggregation":"avg","label":"Avg Value","variant":"info","icon":"trending-up"}]` */
+  /** Default: `[{"variant":"primary","format":"number","icon":"list","label":"Total Items","aggregation":"count"},{"variant":"success","label":"Active","format":"number","icon":"check-circle","aggregation":"count"},{"variant":"info","format":"number","aggregation":"avg","field":"value","label":"Avg Value","icon":"trending-up"}]` */
   metrics?: TraitConfig[];
 }
 
