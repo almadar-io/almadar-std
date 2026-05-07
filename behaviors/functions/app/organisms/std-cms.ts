@@ -34,921 +34,1447 @@ export interface StdCmsConfig {
 }
 
 /**
- * Params for the std-cms descriptor helpers.
+ * Tunable params for the ArticleOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Article.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdCmsParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdCmsArticleOrbitalParams {
+  /** Override the canonical entity name (default: 'Article'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdCmsConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Cms.traits.ArticleAppLayout`. */
-export function stdCmsArticleAppLayoutTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the ArticleOrbital orbital with consumer params. */
+export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Article';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ArticleOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'articles',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'slug',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'content',
+          'type': 'string',
+        },
+        {
+          'name': 'author',
+          'type': 'string',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'draft',
+          'values': [
+            'draft',
+            'review',
+            'published',
+            'archived',
+          ],
+        },
+        {
+          'name': 'publishedAt',
+          'type': 'datetime',
+        },
+        {
+          'name': 'heroImage',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ArticleAppLayout',
+        'config': {
+          'contentTrait': '@trait.ArticleCatalog',
+          'navItems': [
+            {
+              'icon': 'layout-grid',
+              'label': 'CMS Hub',
+              'href': '/cms-hub',
+            },
+            {
+              'label': 'Articles',
+              'icon': 'file-text',
+              'href': '/articles',
+            },
+            {
+              'href': '/media',
+              'icon': 'image',
+              'label': 'Media',
+            },
+            {
+              'label': 'Categories',
+              'href': '/categories',
+              'icon': 'folder',
+            },
+          ],
+          'notifications': [],
+          'appName': 'CmsApp',
+          'notificationClickEvent': 'ARTICLE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'ARTICLE_SEARCH',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'ARTICLE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ARTICLE_SEARCH',
+        },
+      }),
+      {
+        'name': 'ArticleCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ARTICLE_SEARCH',
+            'triggers': 'ARTICLE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleAppLayout',
+            },
+          },
+          {
+            'event': 'ARTICLE_NOTIFICATIONS_OPEN',
+            'triggers': 'ARTICLE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ARTICLE_SEARCH',
+              'name': 'Article Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ARTICLE_NOTIFICATIONS_OPEN',
+              'name': 'Article Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'file-text',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Articles',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'Create Article',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                              },
+                            ],
+                          },
+                        ],
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.ArticleSearch',
+                          '@trait.ArticleFilter',
+                        ],
+                      },
+                      '@trait.ArticleStats',
+                      '@trait.ArticleGraphs',
+                      '@trait.ArticleBrowseList',
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ARTICLE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ARTICLE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-8',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'type': 'typography',
+                      },
+                      {
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to articles',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ArticleBrowseList',
+        'linkedEntity': 'Article',
+        'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
+          'gap': 'sm',
+          'variant': 'card',
+          'fields': [
+            {
+              'icon': 'file-text',
+              'name': 'title',
+              'variant': 'h3',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'author',
+              'variant': 'caption',
+            },
+            {
+              'name': 'category',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'publishedAt',
+            },
+          ],
+          'cols': 1,
+          'imageField': 'heroImage',
+        },
+        'listens': [
+          {
+            'event': 'ARTICLE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticlePersistor',
+            },
+          },
+          {
+            'event': 'ARTICLE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticlePersistor',
+            },
+          },
+          {
+            'event': 'ARTICLE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticlePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ArticleSearch',
+        'config': {
+          'searchEvent': 'ARTICLE_SEARCH',
+          'placeholder': 'Search articles...',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'ArticleFilter',
+        'config': {
+          'facets': [
+            {
+              'field': 'status',
+              'label': 'Status',
+              'values': [
+                'draft',
+                'published',
+                'archived',
+              ],
+            },
+            {
+              'label': 'Category',
+              'values': [],
+              'field': 'category',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ArticleStats',
+        'config': {
+          'metrics': [
+            {
+              'aggregation': 'count',
+              'label': 'Total',
+            },
+            {
+              'label': 'Published',
+              'filter': {
+                'status': 'published',
+              },
+              'aggregation': 'count',
+            },
+            {
+              'filter': {
+                'status': 'draft',
+              },
+              'label': 'Drafts',
+              'aggregation': 'count',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'ArticleGraphs',
+        'config': {
+          'categoryField': 'status',
+          'chartType': 'pie',
+          'title': 'Articles by Status',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ArticleCreate',
+        'linkedEntity': 'Article',
+        'config': {
+          'title': 'Create Article',
+          'fields': [
+            'title',
+            'slug',
+            'content',
+            'author',
+            'category',
+            'status',
+            'publishedAt',
+            'heroImage',
+          ],
+          'mode': 'create',
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ArticleEdit',
+        'linkedEntity': 'Article',
+        'config': {
+          'mode': 'edit',
+          'icon': 'edit',
+          'fields': [
+            'title',
+            'slug',
+            'content',
+            'author',
+            'category',
+            'status',
+            'publishedAt',
+            'heroImage',
+          ],
+          'title': 'Edit Article',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ArticleView',
+        'linkedEntity': 'Article',
+        'config': {
+          'fields': [
+            'title',
+            'slug',
+            'content',
+            'author',
+            'category',
+            'status',
+            'publishedAt',
+            'heroImage',
+          ],
+          'title': 'View Article',
+          'mode': 'view',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'ArticleDelete',
+        'linkedEntity': 'Article',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Article',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ArticleHeroImageUpload',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'ArticleHeroUploaded',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'url',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ArticleHeroUploadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'UPLOAD',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+              {
+                'name': 'file',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+              'payloadSchema': [
+                {
+                  'name': 'source',
+                  'type': 'string',
+                },
+                {
+                  'name': 'file',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ArticleHeroUploaded',
+              'name': 'Article hero uploaded',
+            },
+            {
+              'key': 'ArticleHeroUploadFailed',
+              'name': 'Article hero upload failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'sm',
+                    'children': [
+                      {
+                        'placeholder': 'Paste hero image URL...',
+                        'inputType': 'text',
+                        'type': 'input',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                        'label': 'Upload Hero',
+                        'icon': 'upload',
+                        'variant': 'secondary',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'UPLOAD',
+              'effects': [
+                [
+                  'call-service',
+                  'storage',
+                  'upload',
+                  {
+                    'acl': 'public',
+                    'bucket': 'articles',
+                    'file': '@payload.file',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ArticleHeroUploadFailed',
+                      'success': 'ArticleHeroUploaded',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ArticlePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Article',
+        'emits': [
+          {
+            'event': 'ARTICLE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ARTICLE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ARTICLE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleDelete',
+            },
+          },
+          {
+            'event': 'ArticleHeroUploaded',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleHeroImageUpload',
+            },
+          },
+          {
+            'event': 'ArticleHeroUploadFailed',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ArticleHeroImageUpload',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ARTICLE_CREATED',
+              'name': 'Article Created',
+            },
+            {
+              'key': 'ARTICLE_UPDATED',
+              'name': 'Article Updated',
+            },
+            {
+              'key': 'ARTICLE_DELETED',
+              'name': 'Article Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Article',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ARTICLE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Article',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ARTICLE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Article',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'ARTICLE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ArticlesPage',
+        'path': '/articles',
+        'traits': [
+          {
+            'ref': 'ArticleAppLayout',
+          },
+          {
+            'ref': 'ArticleCatalog',
+          },
+          {
+            'ref': 'ArticleBrowseList',
+          },
+          {
+            'ref': 'ArticleSearch',
+          },
+          {
+            'ref': 'ArticleFilter',
+          },
+          {
+            'ref': 'ArticleStats',
+          },
+          {
+            'ref': 'ArticleGraphs',
+          },
+          {
+            'ref': 'ArticleHeroImageUpload',
+          },
+          {
+            'ref': 'ArticleCreate',
+          },
+          {
+            'ref': 'ArticleEdit',
+          },
+          {
+            'ref': 'ArticleView',
+          },
+          {
+            'ref': 'ArticleDelete',
+          },
+          {
+            'ref': 'ArticlePersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleCatalog`. */
-export function stdCmsArticleCatalogTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleBrowseList`. */
-export function stdCmsArticleBrowseListTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleSearch`. */
-export function stdCmsArticleSearchTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleFilter`. */
-export function stdCmsArticleFilterTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleStats`. */
-export function stdCmsArticleStatsTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleGraphs`. */
-export function stdCmsArticleGraphsTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleCreate`. */
-export function stdCmsArticleCreateTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleEdit`. */
-export function stdCmsArticleEditTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleView`. */
-export function stdCmsArticleViewTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleDelete`. */
-export function stdCmsArticleDeleteTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticleHeroImageUpload`. */
-export function stdCmsArticleHeroImageUploadTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticleHeroImageUpload`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Cms.traits.ArticlePersistor`. */
-export function stdCmsArticlePersistorTrait(params: StdCmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ArticlePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Cms.pages.ArticlesPage`. */
-export function stdCmsPage(params: StdCmsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ArticlesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Article';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ArticleOrbital',
-      uses: [
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the MediaAssetOrbital orbital.
+ *
+ * Canonical entity: MediaAsset.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCmsMediaAssetOrbitalParams {
+  /** Override the canonical entity name (default: 'MediaAsset'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the MediaAssetOrbital orbital with consumer params. */
+export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'MediaAsset';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'MediaAssetOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-gallery',
+        'as': 'Gallery',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'mediaassets',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'altText',
+          'type': 'string',
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'type',
+          'type': 'string',
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'url',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Article',
-        'collection': 'articles',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'MediaAssetAppLayout',
+        'linkedEntity': 'MediaAsset',
+        'config': {
+          'searchEvent': 'MEDIA_SEARCH',
+          'navItems': [
+            {
+              'label': 'CMS Hub',
+              'href': '/cms-hub',
+              'icon': 'layout-grid',
+            },
+            {
+              'href': '/articles',
+              'label': 'Articles',
+              'icon': 'file-text',
+            },
+            {
+              'href': '/media',
+              'icon': 'image',
+              'label': 'Media',
+            },
+            {
+              'label': 'Categories',
+              'href': '/categories',
+              'icon': 'folder',
+            },
+          ],
+          'contentTrait': '@trait.MediaCatalog',
+          'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
+          'appName': 'CmsApp',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'MEDIA_SEARCH',
+          'NOTIFY_CLICK': 'MEDIA_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'MediaCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'slug',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'content',
-            'type': 'string',
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'draft',
-            'values': [
-              'draft',
-              'review',
-              'published',
-              'archived',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'publishedAt',
-            'type': 'datetime',
-          },
-          {
-            'name': 'heroImage',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ArticleAppLayout',
-          'config': {
-            'contentTrait': '@trait.ArticleCatalog',
-            'navItems': [
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'CMS Hub',
+                        'icon': 'layout-grid',
+                        'href': '/cms-hub',
+                      },
+                      {
+                        'label': 'Articles',
+                        'href': '/articles',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Media',
+                        'href': '/media',
+                        'icon': 'image',
+                      },
+                      {
+                        'label': 'Categories',
+                        'href': '/categories',
+                        'icon': 'folder',
+                      },
+                    ],
+                    'appName': 'CmsApp',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'image',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Media Library',
+                                  },
+                                ],
+                              },
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'label': 'Create MediaAsset',
+                                    'action': 'CREATE',
+                                    'icon': 'plus',
+                                    'type': 'button',
+                                    'variant': 'secondary',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          '@trait.MediaUpload',
+                          '@trait.MediaAssetGallery',
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Gallery.traits.GalleryItemGallery',
+        'name': 'MediaAssetGallery',
+        'linkedEntity': 'MediaAsset',
+        'config': {
+          'titleField': 'name',
+          'gap': 'md',
+          'cols': 4,
+          'imageField': 'url',
+        },
+        'listens': [
+          {
+            'event': 'MEDIA_UPLOADED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MediaUpload',
+            },
+          },
+          {
+            'event': 'MEDIA_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MediaPersistor',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'MediaUpload',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'MEDIA_UPLOADED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'layout-grid',
-                'label': 'CMS Hub',
-                'href': '/cms-hub',
+                'name': 'id',
+                'type': 'string',
               },
               {
-                'label': 'Articles',
-                'icon': 'file-text',
-                'href': '/articles',
-              },
-              {
-                'href': '/media',
-                'icon': 'image',
-                'label': 'Media',
-              },
-              {
-                'label': 'Categories',
-                'href': '/categories',
-                'icon': 'folder',
+                'name': 'url',
+                'type': 'string',
               },
             ],
-            'notifications': [],
-            'appName': 'CmsApp',
-            'notificationClickEvent': 'ARTICLE_NOTIFICATIONS_OPEN',
-            'searchEvent': 'ARTICLE_SEARCH',
           },
-          'events': {
-            'NOTIFY_CLICK': 'ARTICLE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'ARTICLE_SEARCH',
+          {
+            'event': 'StorageUploaded',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'url',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'ArticleCatalog',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'MediaSaved',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MediaUploadFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'UPLOAD',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+              {
+                'name': 'file',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'uploading',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
+                {
+                  'name': 'file',
+                  'type': 'string',
+                },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'ARTICLE_SEARCH',
-              'triggers': 'ARTICLE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleAppLayout',
-              },
-            },
-            {
-              'event': 'ARTICLE_NOTIFICATIONS_OPEN',
-              'triggers': 'ARTICLE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ARTICLE_SEARCH',
-                'name': 'Article Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ARTICLE_NOTIFICATIONS_OPEN',
-                'name': 'Article Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'name': 'file-text',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Articles',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'label': 'Create Article',
-                                  'icon': 'plus',
-                                  'action': 'CREATE',
-                                },
-                              ],
-                            },
-                          ],
-                          'align': 'center',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            '@trait.ArticleSearch',
-                            '@trait.ArticleFilter',
-                          ],
-                        },
-                        '@trait.ArticleStats',
-                        '@trait.ArticleGraphs',
-                        '@trait.ArticleBrowseList',
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ARTICLE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ARTICLE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                          'variant': 'caption',
-                          'type': 'typography',
-                        },
-                        {
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                          'type': 'button',
-                          'label': 'Back to articles',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ArticleBrowseList',
-          'linkedEntity': 'Article',
-          'config': {
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'event': 'VIEW',
-                'label': 'View',
-              },
-              {
-                'variant': 'ghost',
-                'label': 'Edit',
-                'event': 'EDIT',
-              },
-              {
-                'event': 'DELETE',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-            'variant': 'card',
-            'fields': [
-              {
-                'icon': 'file-text',
-                'name': 'title',
-                'variant': 'h3',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'author',
-                'variant': 'caption',
-              },
-              {
-                'name': 'category',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'caption',
-                'name': 'publishedAt',
-              },
-            ],
-            'cols': 1,
-            'imageField': 'heroImage',
-          },
-          'listens': [
-            {
-              'event': 'ARTICLE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticlePersistor',
-              },
-            },
-            {
-              'event': 'ARTICLE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticlePersistor',
-              },
-            },
-            {
-              'event': 'ARTICLE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticlePersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'ArticleSearch',
-          'config': {
-            'searchEvent': 'ARTICLE_SEARCH',
-            'placeholder': 'Search articles...',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'ArticleFilter',
-          'config': {
-            'facets': [
-              {
-                'field': 'status',
-                'label': 'Status',
-                'values': [
-                  'draft',
-                  'published',
-                  'archived',
-                ],
-              },
-              {
-                'label': 'Category',
-                'values': [],
-                'field': 'category',
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'ArticleStats',
-          'config': {
-            'metrics': [
-              {
-                'aggregation': 'count',
-                'label': 'Total',
-              },
-              {
-                'label': 'Published',
-                'filter': {
-                  'status': 'published',
-                },
-                'aggregation': 'count',
-              },
-              {
-                'filter': {
-                  'status': 'draft',
-                },
-                'label': 'Drafts',
-                'aggregation': 'count',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'ArticleGraphs',
-          'config': {
-            'categoryField': 'status',
-            'chartType': 'pie',
-            'title': 'Articles by Status',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ArticleCreate',
-          'linkedEntity': 'Article',
-          'config': {
-            'title': 'Create Article',
-            'fields': [
-              'title',
-              'slug',
-              'content',
-              'author',
-              'category',
-              'status',
-              'publishedAt',
-              'heroImage',
-            ],
-            'mode': 'create',
-            'icon': 'plus-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ArticleEdit',
-          'linkedEntity': 'Article',
-          'config': {
-            'mode': 'edit',
-            'icon': 'edit',
-            'fields': [
-              'title',
-              'slug',
-              'content',
-              'author',
-              'category',
-              'status',
-              'publishedAt',
-              'heroImage',
-            ],
-            'title': 'Edit Article',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ArticleView',
-          'linkedEntity': 'Article',
-          'config': {
-            'fields': [
-              'title',
-              'slug',
-              'content',
-              'author',
-              'category',
-              'status',
-              'publishedAt',
-              'heroImage',
-            ],
-            'title': 'View Article',
-            'mode': 'view',
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'ArticleDelete',
-          'linkedEntity': 'Article',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Article',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'ArticleHeroImageUpload',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'ArticleHeroUploaded',
-              'scope': 'external',
+              'key': 'StorageUploaded',
+              'name': 'Storage uploaded',
               'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
                 {
                   'name': 'url',
                   'type': 'string',
@@ -956,7 +1482,8 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'ArticleHeroUploadFailed',
+              'key': 'MediaUploadFailed',
+              'name': 'Media upload failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -969,1970 +1496,1367 @@ export function stdCms(params: StdCmsParams): OrbitalDefinition[] {
               ],
             },
             {
+              'key': 'MEDIA_UPLOADED',
+              'name': 'Media Uploaded',
+            },
+            {
+              'key': 'MediaSaved',
+              'name': 'Media saved',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'sm',
+                    'type': 'stack',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'placeholder': 'Paste file URL...',
+                        'type': 'input',
+                        'inputType': 'text',
+                      },
+                      {
+                        'variant': 'primary',
+                        'label': 'Upload File',
+                        'icon': 'upload',
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'uploading',
               'event': 'UPLOAD',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-                {
-                  'name': 'file',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'call-service',
+                  'storage',
+                  'upload',
                   {
-                    'name': 'source',
-                    'type': 'string',
+                    'bucket': 'media',
+                    'file': '@payload.file',
+                    'acl': 'public',
                   },
                   {
-                    'name': 'file',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ArticleHeroUploaded',
-                'name': 'Article hero uploaded',
-              },
-              {
-                'key': 'ArticleHeroUploadFailed',
-                'name': 'Article hero upload failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'sm',
-                      'children': [
-                        {
-                          'placeholder': 'Paste hero image URL...',
-                          'inputType': 'text',
-                          'type': 'input',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                          'label': 'Upload Hero',
-                          'icon': 'upload',
-                          'variant': 'secondary',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
+                    'emit': {
+                      'failure': 'MediaUploadFailed',
+                      'success': 'StorageUploaded',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'UPLOAD',
-                'effects': [
-                  [
-                    'call-service',
-                    'storage',
-                    'upload',
-                    {
-                      'acl': 'public',
-                      'bucket': 'articles',
-                      'file': '@payload.file',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ArticleHeroUploadFailed',
-                        'success': 'ArticleHeroUploaded',
-                      },
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'loading-state',
+                    'title': 'Uploading...',
+                    'message': 'Uploading file to storage.',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ArticlePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Article',
-          'emits': [
-            {
-              'event': 'ARTICLE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
               ],
             },
             {
-              'event': 'ARTICLE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ARTICLE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleDelete',
-              },
-            },
-            {
-              'event': 'ArticleHeroUploaded',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleHeroImageUpload',
-              },
-            },
-            {
-              'event': 'ArticleHeroUploadFailed',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ArticleHeroImageUpload',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ARTICLE_CREATED',
-                'name': 'Article Created',
-              },
-              {
-                'key': 'ARTICLE_UPDATED',
-                'name': 'Article Updated',
-              },
-              {
-                'key': 'ARTICLE_DELETED',
-                'name': 'Article Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Article',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ARTICLE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Article',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ARTICLE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Article',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'ARTICLE_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ArticlesPage',
-          'path': '/articles',
-          'traits': [
-            {
-              'ref': 'ArticleAppLayout',
-            },
-            {
-              'ref': 'ArticleCatalog',
-            },
-            {
-              'ref': 'ArticleBrowseList',
-            },
-            {
-              'ref': 'ArticleSearch',
-            },
-            {
-              'ref': 'ArticleFilter',
-            },
-            {
-              'ref': 'ArticleStats',
-            },
-            {
-              'ref': 'ArticleGraphs',
-            },
-            {
-              'ref': 'ArticleHeroImageUpload',
-            },
-            {
-              'ref': 'ArticleCreate',
-            },
-            {
-              'ref': 'ArticleEdit',
-            },
-            {
-              'ref': 'ArticleView',
-            },
-            {
-              'ref': 'ArticleDelete',
-            },
-            {
-              'ref': 'ArticlePersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'MediaAssetOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-gallery',
-          'as': 'Gallery',
-        },
-        {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
-        },
-      ],
-      entity: {
-        'name': 'MediaAsset',
-        'collection': 'mediaassets',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'altText',
-            'type': 'string',
-          },
-          {
-            'name': 'type',
-            'type': 'string',
-          },
-          {
-            'name': 'url',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'MediaAssetAppLayout',
-          'linkedEntity': 'MediaAsset',
-          'config': {
-            'searchEvent': 'MEDIA_SEARCH',
-            'navItems': [
-              {
-                'label': 'CMS Hub',
-                'href': '/cms-hub',
-                'icon': 'layout-grid',
-              },
-              {
-                'href': '/articles',
-                'label': 'Articles',
-                'icon': 'file-text',
-              },
-              {
-                'href': '/media',
-                'icon': 'image',
-                'label': 'Media',
-              },
-              {
-                'label': 'Categories',
-                'href': '/categories',
-                'icon': 'folder',
-              },
-            ],
-            'contentTrait': '@trait.MediaCatalog',
-            'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
-            'appName': 'CmsApp',
-            'notifications': [],
-          },
-          'events': {
-            'SEARCH': 'MEDIA_SEARCH',
-            'NOTIFY_CLICK': 'MEDIA_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'MediaCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'CMS Hub',
-                          'icon': 'layout-grid',
-                          'href': '/cms-hub',
-                        },
-                        {
-                          'label': 'Articles',
-                          'href': '/articles',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Media',
-                          'href': '/media',
-                          'icon': 'image',
-                        },
-                        {
-                          'label': 'Categories',
-                          'href': '/categories',
-                          'icon': 'folder',
-                        },
-                      ],
-                      'appName': 'CmsApp',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'image',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Media Library',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'label': 'Create MediaAsset',
-                                      'action': 'CREATE',
-                                      'icon': 'plus',
-                                      'type': 'button',
-                                      'variant': 'secondary',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            '@trait.MediaUpload',
-                            '@trait.MediaAssetGallery',
-                          ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Gallery.traits.GalleryItemGallery',
-          'name': 'MediaAssetGallery',
-          'linkedEntity': 'MediaAsset',
-          'config': {
-            'titleField': 'name',
-            'gap': 'md',
-            'cols': 4,
-            'imageField': 'url',
-          },
-          'listens': [
-            {
-              'event': 'MEDIA_UPLOADED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'MediaUpload',
-              },
-            },
-            {
-              'event': 'MEDIA_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'MediaPersistor',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'MediaUpload',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'MEDIA_UPLOADED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-                {
-                  'name': 'url',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
+              'from': 'uploading',
+              'to': 'idle',
               'event': 'StorageUploaded',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-                {
-                  'name': 'url',
-                  'type': 'string',
-                },
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'MediaAsset',
+                  {
+                    'name': '@payload.id',
+                    'url': '@payload.url',
+                    'type': 'image',
+                  },
+                  {
+                    'emit': {
+                      'success': 'MediaSaved',
+                      'failure': 'MediaUploadFailed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'MEDIA_UPLOADED',
+                  {
+                    'url': '@payload.url',
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'sm',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'success',
+                        'message': 'Upload complete.',
+                        'type': 'alert',
+                      },
+                      {
+                        'action': 'INIT',
+                        'label': 'Upload Another',
+                        'variant': 'ghost',
+                        'type': 'button',
+                      },
+                    ],
+                  },
+                ],
               ],
             },
             {
-              'event': 'MediaSaved',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
+              'from': 'uploading',
+              'to': 'idle',
               'event': 'MediaUploadFailed',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'UPLOAD',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-                {
-                  'name': 'file',
-                  'type': 'string',
-                },
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'error-state',
+                    'message': '@payload.error',
+                    'onRetry': 'INIT',
+                    'title': 'Upload Failed',
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'uploading',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-                'payloadSchema': [
-                  {
-                    'name': 'source',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'file',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'StorageUploaded',
-                'name': 'Storage uploaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'url',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MediaUploadFailed',
-                'name': 'Media upload failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MEDIA_UPLOADED',
-                'name': 'Media Uploaded',
-              },
-              {
-                'key': 'MediaSaved',
-                'name': 'Media saved',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'sm',
-                      'type': 'stack',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'placeholder': 'Paste file URL...',
-                          'type': 'input',
-                          'inputType': 'text',
-                        },
-                        {
-                          'variant': 'primary',
-                          'label': 'Upload File',
-                          'icon': 'upload',
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'uploading',
-                'event': 'UPLOAD',
-                'effects': [
-                  [
-                    'call-service',
-                    'storage',
-                    'upload',
-                    {
-                      'bucket': 'media',
-                      'file': '@payload.file',
-                      'acl': 'public',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'MediaUploadFailed',
-                        'success': 'StorageUploaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'loading-state',
-                      'title': 'Uploading...',
-                      'message': 'Uploading file to storage.',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'uploading',
-                'to': 'idle',
-                'event': 'StorageUploaded',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'MediaAsset',
-                    {
-                      'name': '@payload.id',
-                      'url': '@payload.url',
-                      'type': 'image',
-                    },
-                    {
-                      'emit': {
-                        'success': 'MediaSaved',
-                        'failure': 'MediaUploadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'MEDIA_UPLOADED',
-                    {
-                      'url': '@payload.url',
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'gap': 'sm',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'name': 'check-circle',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'success',
-                          'message': 'Upload complete.',
-                          'type': 'alert',
-                        },
-                        {
-                          'action': 'INIT',
-                          'label': 'Upload Another',
-                          'variant': 'ghost',
-                          'type': 'button',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'uploading',
-                'to': 'idle',
-                'event': 'MediaUploadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'error-state',
-                      'message': '@payload.error',
-                      'onRetry': 'INIT',
-                      'title': 'Upload Failed',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'MediaAssetCreate',
-          'linkedEntity': 'MediaAsset',
-          'config': {
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'title': 'Add Media Asset',
-            'fields': [
-              'name',
-              'altText',
-              'type',
-              'url',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'MediaCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'MediaAssetView',
-          'linkedEntity': 'MediaAsset',
-          'config': {
-            'mode': 'view',
-            'title': 'View Media Asset',
-            'icon': 'eye',
-            'fields': [
-              'name',
-              'altText',
-              'type',
-              'url',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-        }),
-        {
-          'name': 'MediaPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'MediaAsset',
-          'emits': [
-            {
-              'event': 'MEDIA_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'MediaAssetCreate',
-              },
-            },
-            {
-              'event': 'MediaSaved',
-              'triggers': 'MediaSaved',
-              'source': {
-                'kind': 'trait',
-                'trait': 'MediaUpload',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'MediaSaved',
-                'name': 'Media saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MEDIA_CREATED',
-                'name': 'Media Created',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'MediaAsset',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'MEDIA_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'MediaSaved',
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'MediaPage',
-          'path': '/media',
-          'traits': [
-            {
-              'ref': 'MediaAssetAppLayout',
-            },
-            {
-              'ref': 'MediaCatalog',
-            },
-            {
-              'ref': 'MediaAssetGallery',
-            },
-            {
-              'ref': 'MediaUpload',
-            },
-            {
-              'ref': 'MediaAssetCreate',
-            },
-            {
-              'ref': 'MediaAssetView',
-            },
-            {
-              'ref': 'MediaPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CategoryOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'MediaAssetCreate',
+        'linkedEntity': 'MediaAsset',
+        'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'Add Media Asset',
+          'fields': [
+            'name',
+            'altText',
+            'type',
+            'url',
+          ],
         },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+        'events': {
+          'OPEN': 'CREATE',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Category',
-        'collection': 'categorys',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'slug',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-          },
-          {
-            'name': 'parentCategory',
-            'type': 'string',
-          },
-          {
-            'name': 'articleCount',
-            'type': 'number',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MediaCatalog',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'CategoryAppLayout',
-          'linkedEntity': 'Category',
-          'config': {
-            'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
-            'appName': 'CmsApp',
-            'searchEvent': 'CATEGORY_SEARCH',
-            'contentTrait': '@trait.CategoryCatalog',
-            'notifications': [],
-            'navItems': [
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'MediaAssetView',
+        'linkedEntity': 'MediaAsset',
+        'config': {
+          'mode': 'view',
+          'title': 'View Media Asset',
+          'icon': 'eye',
+          'fields': [
+            'name',
+            'altText',
+            'type',
+            'url',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+      }),
+      {
+        'name': 'MediaPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'MediaAsset',
+        'emits': [
+          {
+            'event': 'MEDIA_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'layout-grid',
-                'label': 'CMS Hub',
-                'href': '/cms-hub',
-              },
-              {
-                'icon': 'file-text',
-                'href': '/articles',
-                'label': 'Articles',
-              },
-              {
-                'icon': 'image',
-                'href': '/media',
-                'label': 'Media',
-              },
-              {
-                'label': 'Categories',
-                'icon': 'folder',
-                'href': '/categories',
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'events': {
-            'SEARCH': 'CATEGORY_SEARCH',
-            'NOTIFY_CLICK': 'CATEGORY_NOTIFICATIONS_OPEN',
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MediaAssetCreate',
+            },
           },
-        }),
-        {
-          'name': 'CategoryCatalog',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'MediaSaved',
+            'triggers': 'MediaSaved',
+            'source': {
+              'kind': 'trait',
+              'trait': 'MediaUpload',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MediaSaved',
+              'name': 'Media saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
                   'type': 'string',
                 },
               ],
             },
+            {
+              'key': 'MEDIA_CREATED',
+              'name': 'Media Created',
+            },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'CMS Hub',
-                          'href': '/cms-hub',
-                          'icon': 'layout-grid',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'href': '/articles',
-                          'label': 'Articles',
-                        },
-                        {
-                          'icon': 'image',
-                          'label': 'Media',
-                          'href': '/media',
-                        },
-                        {
-                          'href': '/categories',
-                          'label': 'Categories',
-                          'icon': 'folder',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'gap': 'sm',
-                                  'align': 'center',
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'folder',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'Categories',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'children': [
-                                    {
-                                      'label': 'Create Category',
-                                      'action': 'CREATE',
-                                      'type': 'button',
-                                      'icon': 'plus',
-                                      'variant': 'primary',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            '@trait.CategoryBrowseList',
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'CmsApp',
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'MediaAsset',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'MEDIA_CREATED',
                     },
-                  ],
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'CategoryBrowseList',
-          'linkedEntity': 'Category',
-          'config': {
-            'variant': 'card',
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'label': 'View',
-                'event': 'VIEW',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'DELETE',
-                'variant': 'danger',
-                'label': 'Delete',
-              },
-            ],
-            'fields': [
-              {
-                'icon': 'folder',
-                'name': 'name',
-                'variant': 'h3',
-              },
-              {
-                'variant': 'badge',
-                'name': 'articleCount',
-                'label': 'Articles',
-                'format': 'number',
-              },
-              {
-                'name': 'description',
-                'variant': 'body',
-              },
-              {
-                'name': 'slug',
-                'variant': 'caption',
-              },
-            ],
-            'cols': 1,
-            'gap': 'sm',
-          },
-          'listens': [
-            {
-              'event': 'CATEGORY_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryPersistor',
-              },
+              ],
             },
             {
-              'event': 'CATEGORY_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryPersistor',
-              },
-            },
-            {
-              'event': 'CATEGORY_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryPersistor',
-              },
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'MediaSaved',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CategoryCreate',
-          'linkedEntity': 'Category',
-          'config': {
-            'icon': 'plus-circle',
-            'title': 'Create Category',
-            'mode': 'create',
-            'fields': [
-              'name',
-              'slug',
-              'description',
-              'parentCategory',
-              'articleCount',
-            ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'MediaPage',
+        'path': '/media',
+        'traits': [
+          {
+            'ref': 'MediaAssetAppLayout',
           },
-          'events': {
-            'OPEN': 'CREATE',
+          {
+            'ref': 'MediaCatalog',
           },
-          'listens': [
+          {
+            'ref': 'MediaAssetGallery',
+          },
+          {
+            'ref': 'MediaUpload',
+          },
+          {
+            'ref': 'MediaAssetCreate',
+          },
+          {
+            'ref': 'MediaAssetView',
+          },
+          {
+            'ref': 'MediaPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the CategoryOrbital orbital.
+ *
+ * Canonical entity: Category.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCmsCategoryOrbitalParams {
+  /** Override the canonical entity name (default: 'Category'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CategoryOrbital orbital with consumer params. */
+export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Category';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CategoryOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'categorys',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'slug',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'parentCategory',
+          'type': 'string',
+        },
+        {
+          'name': 'articleCount',
+          'type': 'number',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CategoryAppLayout',
+        'linkedEntity': 'Category',
+        'config': {
+          'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
+          'appName': 'CmsApp',
+          'searchEvent': 'CATEGORY_SEARCH',
+          'contentTrait': '@trait.CategoryCatalog',
+          'notifications': [],
+          'navItems': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryCatalog',
-              },
+              'icon': 'layout-grid',
+              'label': 'CMS Hub',
+              'href': '/cms-hub',
+            },
+            {
+              'icon': 'file-text',
+              'href': '/articles',
+              'label': 'Articles',
+            },
+            {
+              'icon': 'image',
+              'href': '/media',
+              'label': 'Media',
+            },
+            {
+              'label': 'Categories',
+              'icon': 'folder',
+              'href': '/categories',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CategoryEdit',
-          'linkedEntity': 'Category',
-          'config': {
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'slug',
-              'description',
-              'parentCategory',
-              'articleCount',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Category',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryBrowseList',
+        },
+        'events': {
+          'SEARCH': 'CATEGORY_SEARCH',
+          'NOTIFY_CLICK': 'CATEGORY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'CategoryCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
               },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CategoryView',
-          'linkedEntity': 'Category',
-          'config': {
-            'icon': 'eye',
-            'title': 'View Category',
-            'fields': [
-              'name',
-              'slug',
-              'description',
-              'parentCategory',
-              'articleCount',
-            ],
-            'mode': 'view',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
+          'events': [
             {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'CMS Hub',
+                        'href': '/cms-hub',
+                        'icon': 'layout-grid',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'href': '/articles',
+                        'label': 'Articles',
+                      },
+                      {
+                        'icon': 'image',
+                        'label': 'Media',
+                        'href': '/media',
+                      },
+                      {
+                        'href': '/categories',
+                        'label': 'Categories',
+                        'icon': 'folder',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'gap': 'sm',
+                                'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'folder',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'Categories',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                              },
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'children': [
+                                  {
+                                    'label': 'Create Category',
+                                    'action': 'CREATE',
+                                    'type': 'button',
+                                    'icon': 'plus',
+                                    'variant': 'primary',
+                                  },
+                                ],
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          '@trait.CategoryBrowseList',
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'CmsApp',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'CategoryBrowseList',
+        'linkedEntity': 'Category',
+        'config': {
+          'variant': 'card',
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryBrowseList',
-              },
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'CategoryDelete',
-          'linkedEntity': 'Category',
-          'config': {
-            'icon': 'alert-triangle',
-            'title': 'Delete Category',
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryBrowseList',
-              },
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-        }),
-        {
-          'name': 'CategoryPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Category',
-          'emits': [
+          'fields': [
             {
-              'event': 'CATEGORY_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'icon': 'folder',
+              'name': 'name',
+              'variant': 'h3',
             },
             {
-              'event': 'CATEGORY_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'badge',
+              'name': 'articleCount',
+              'label': 'Articles',
+              'format': 'number',
             },
             {
-              'event': 'CATEGORY_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'description',
+              'variant': 'body',
+            },
+            {
+              'name': 'slug',
+              'variant': 'caption',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CategoryDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CATEGORY_CREATED',
-                'name': 'Category Created',
-              },
-              {
-                'key': 'CATEGORY_UPDATED',
-                'name': 'Category Updated',
-              },
-              {
-                'key': 'CATEGORY_DELETED',
-                'name': 'Category Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Category',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CATEGORY_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Category',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CATEGORY_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Category',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'CATEGORY_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'CategoriesPage',
-          'path': '/categories',
-          'traits': [
-            {
-              'ref': 'CategoryAppLayout',
-            },
-            {
-              'ref': 'CategoryCatalog',
-            },
-            {
-              'ref': 'CategoryBrowseList',
-            },
-            {
-              'ref': 'CategoryCreate',
-            },
-            {
-              'ref': 'CategoryEdit',
-            },
-            {
-              'ref': 'CategoryView',
-            },
-            {
-              'ref': 'CategoryDelete',
-            },
-            {
-              'ref': 'CategoryPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CmsHubOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'cols': 1,
+          'gap': 'sm',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'HubArticle',
-        'collection': 'articles',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'CATEGORY_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryPersistor',
+            },
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
+            'event': 'CATEGORY_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryPersistor',
+            },
           },
           {
-            'name': 'slug',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'draft',
-            'values': [
-              'draft',
-              'review',
-              'published',
-              'archived',
-            ],
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-          },
-          {
-            'name': 'publishedAt',
-            'type': 'datetime',
-          },
-          {
-            'name': 'heroImage',
-            'type': 'string',
-            'default': '',
+            'event': 'CATEGORY_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'CmsHubAppLayout',
-          'linkedEntity': 'HubArticle',
-          'config': {
-            'contentTrait': '@trait.CmsHubDisplay',
-            'appName': 'CmsApp',
-            'navItems': [
-              {
-                'icon': 'layout-grid',
-                'label': 'CMS Hub',
-                'href': '/cms-hub',
-              },
-              {
-                'label': 'Articles',
-                'href': '/articles',
-                'icon': 'file-text',
-              },
-              {
-                'href': '/media',
-                'label': 'Media',
-                'icon': 'image',
-              },
-              {
-                'href': '/categories',
-                'icon': 'folder',
-                'label': 'Categories',
-              },
-            ],
-            'searchEvent': 'CMS_HUB_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'CMS_HUB_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'SEARCH': 'CMS_HUB_SEARCH',
-            'NOTIFY_CLICK': 'CMS_HUB_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'CmsHubDisplay',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'CmsApp',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'layout-grid',
-                                },
-                                {
-                                  'content': 'CMS Hub',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'content': 'Recent articles across the platform',
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'color': 'muted',
-                            },
-                            '@trait.HubBrowseList',
-                          ],
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'layout-grid',
-                          'label': 'CMS Hub',
-                          'href': '/cms-hub',
-                        },
-                        {
-                          'label': 'Articles',
-                          'icon': 'file-text',
-                          'href': '/articles',
-                        },
-                        {
-                          'icon': 'image',
-                          'label': 'Media',
-                          'href': '/media',
-                        },
-                        {
-                          'label': 'Categories',
-                          'icon': 'folder',
-                          'href': '/categories',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'HubBrowseList',
-          'linkedEntity': 'HubArticle',
-          'config': {
-            'variant': 'card',
-            'fields': [
-              {
-                'name': 'title',
-                'variant': 'h3',
-                'icon': 'file-text',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'author',
-                'variant': 'caption',
-              },
-              {
-                'name': 'category',
-                'variant': 'badge',
-              },
-            ],
-            'imageField': 'heroImage',
-            'gap': 'sm',
-            'itemActions': [],
-            'cols': 1,
-          },
-        }),
-      ],
-      pages: [
-        {
-          'name': 'CmsHubPage',
-          'path': '/cms-hub',
-          'traits': [
-            {
-              'ref': 'CmsHubAppLayout',
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CategoryCreate',
+        'linkedEntity': 'Category',
+        'config': {
+          'icon': 'plus-circle',
+          'title': 'Create Category',
+          'mode': 'create',
+          'fields': [
+            'name',
+            'slug',
+            'description',
+            'parentCategory',
+            'articleCount',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryCatalog',
             },
-            {
-              'ref': 'CmsHubDisplay',
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CategoryEdit',
+        'linkedEntity': 'Category',
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'slug',
+            'description',
+            'parentCategory',
+            'articleCount',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Category',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryBrowseList',
             },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CategoryView',
+        'linkedEntity': 'Category',
+        'config': {
+          'icon': 'eye',
+          'title': 'View Category',
+          'fields': [
+            'name',
+            'slug',
+            'description',
+            'parentCategory',
+            'articleCount',
+          ],
+          'mode': 'view',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'CategoryDelete',
+        'linkedEntity': 'Category',
+        'config': {
+          'icon': 'alert-triangle',
+          'title': 'Delete Category',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CategoryPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Category',
+        'emits': [
+          {
+            'event': 'CATEGORY_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CATEGORY_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CATEGORY_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CategoryDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'HubBrowseList',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CATEGORY_CREATED',
+              'name': 'Category Created',
+            },
+            {
+              'key': 'CATEGORY_UPDATED',
+              'name': 'Category Updated',
+            },
+            {
+              'key': 'CATEGORY_DELETED',
+              'name': 'Category Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Category',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CATEGORY_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Category',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CATEGORY_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Category',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'CATEGORY_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'CategoriesPage',
+        'path': '/categories',
+        'traits': [
+          {
+            'ref': 'CategoryAppLayout',
+          },
+          {
+            'ref': 'CategoryCatalog',
+          },
+          {
+            'ref': 'CategoryBrowseList',
+          },
+          {
+            'ref': 'CategoryCreate',
+          },
+          {
+            'ref': 'CategoryEdit',
+          },
+          {
+            'ref': 'CategoryView',
+          },
+          {
+            'ref': 'CategoryDelete',
+          },
+          {
+            'ref': 'CategoryPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the CmsHubOrbital orbital.
+ *
+ * Canonical entity: HubArticle.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCmsCmsHubOrbitalParams {
+  /** Override the canonical entity name (default: 'HubArticle'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CmsHubOrbital orbital with consumer params. */
+export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'HubArticle';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CmsHubOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'articles',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'slug',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'draft',
+          'values': [
+            'draft',
+            'review',
+            'published',
+            'archived',
+          ],
+        },
+        {
+          'name': 'author',
+          'type': 'string',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+        },
+        {
+          'name': 'publishedAt',
+          'type': 'datetime',
+        },
+        {
+          'name': 'heroImage',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CmsHubAppLayout',
+        'linkedEntity': 'HubArticle',
+        'config': {
+          'contentTrait': '@trait.CmsHubDisplay',
+          'appName': 'CmsApp',
+          'navItems': [
+            {
+              'icon': 'layout-grid',
+              'label': 'CMS Hub',
+              'href': '/cms-hub',
+            },
+            {
+              'label': 'Articles',
+              'href': '/articles',
+              'icon': 'file-text',
+            },
+            {
+              'href': '/media',
+              'label': 'Media',
+              'icon': 'image',
+            },
+            {
+              'href': '/categories',
+              'icon': 'folder',
+              'label': 'Categories',
+            },
+          ],
+          'searchEvent': 'CMS_HUB_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'CMS_HUB_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'CMS_HUB_SEARCH',
+          'NOTIFY_CLICK': 'CMS_HUB_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'CmsHubDisplay',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'CmsApp',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'layout-grid',
+                              },
+                              {
+                                'content': 'CMS Hub',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'content': 'Recent articles across the platform',
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'color': 'muted',
+                          },
+                          '@trait.HubBrowseList',
+                        ],
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'layout-grid',
+                        'label': 'CMS Hub',
+                        'href': '/cms-hub',
+                      },
+                      {
+                        'label': 'Articles',
+                        'icon': 'file-text',
+                        'href': '/articles',
+                      },
+                      {
+                        'icon': 'image',
+                        'label': 'Media',
+                        'href': '/media',
+                      },
+                      {
+                        'label': 'Categories',
+                        'icon': 'folder',
+                        'href': '/categories',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'HubBrowseList',
+        'linkedEntity': 'HubArticle',
+        'config': {
+          'variant': 'card',
+          'fields': [
+            {
+              'name': 'title',
+              'variant': 'h3',
+              'icon': 'file-text',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'author',
+              'variant': 'caption',
+            },
+            {
+              'name': 'category',
+              'variant': 'badge',
+            },
+          ],
+          'imageField': 'heroImage',
+          'gap': 'sm',
+          'itemActions': [],
+          'cols': 1,
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CmsHubPage',
+        'path': '/cms-hub',
+        'traits': [
+          {
+            'ref': 'CmsHubAppLayout',
+          },
+          {
+            'ref': 'CmsHubDisplay',
+          },
+          {
+            'ref': 'HubBrowseList',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-cms — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdCmsParams {
+  Article?: StdCmsArticleOrbitalParams;
+  MediaAsset?: StdCmsMediaAssetOrbitalParams;
+  Category?: StdCmsCategoryOrbitalParams;
+  CmsHub?: StdCmsCmsHubOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdCms(params: StdCmsParams = {}): OrbitalDefinition[] {
+  return [
+    stdCmsArticleOrbital(params.Article ?? {}),
+    stdCmsMediaAssetOrbital(params.MediaAsset ?? {}),
+    stdCmsCategoryOrbital(params.Category ?? {}),
+    stdCmsCmsHubOrbital(params.CmsHub ?? {}),
+  ];
 }

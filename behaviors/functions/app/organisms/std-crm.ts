@@ -34,1162 +34,806 @@ export interface StdCrmConfig {
 }
 
 /**
- * Params for the std-crm descriptor helpers.
+ * Tunable params for the ContactOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Contact.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdCrmParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdCrmContactOrbitalParams {
+  /** Override the canonical entity name (default: 'Contact'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdCrmConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Crm.traits.ContactAppLayout`. */
-export function stdCrmContactAppLayoutTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactCatalog`. */
-export function stdCrmContactCatalogTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactSearch`. */
-export function stdCrmContactSearchTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactFilter`. */
-export function stdCrmContactFilterTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactStats`. */
-export function stdCrmContactStatsTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactGraphs`. */
-export function stdCrmContactGraphsTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactBrowseList`. */
-export function stdCrmContactBrowseListTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactCreate`. */
-export function stdCrmContactCreateTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactEdit`. */
-export function stdCrmContactEditTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactView`. */
-export function stdCrmContactViewTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactDelete`. */
-export function stdCrmContactDeleteTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactPersistor`. */
-export function stdCrmContactPersistorTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Crm.traits.ContactEmailSend`. */
-export function stdCrmContactEmailSendTrait(params: StdCrmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ContactEmailSend`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Crm.pages.ContactsPage`. */
-export function stdCrmPage(params: StdCrmParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ContactsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Contact';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the ContactOrbital orbital with consumer params. */
+export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Contact';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ContactOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ContactOrbital',
-      uses: [
+      collection: 'contacts',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'company',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'industry',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'lifecycleStage',
+          'type': 'string',
+          'default': 'lead',
+          'values': [
+            'lead',
+            'mql',
+            'sql',
+            'customer',
+          ],
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'email',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'phone',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Contact',
-        'collection': 'contacts',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ContactAppLayout',
+        'config': {
+          'appName': 'CRM',
+          'navItems': [
+            {
+              'href': '/contacts',
+              'label': 'Contacts',
+              'icon': 'users',
+            },
+            {
+              'icon': 'briefcase',
+              'label': 'Deals',
+              'href': '/deals',
+            },
+            {
+              'label': 'Pipeline',
+              'href': '/pipeline',
+              'icon': 'bar-chart-2',
+            },
+            {
+              'icon': 'file-text',
+              'href': '/notes',
+              'label': 'Notes',
+            },
+          ],
+          'contentTrait': '@trait.ContactCatalog',
+          'searchEvent': 'CONTACT_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'CONTACT_SEARCH',
+          'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'ContactCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'company',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'industry',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'lifecycleStage',
-            'type': 'string',
-            'default': 'lead',
-            'values': [
-              'lead',
-              'mql',
-              'sql',
-              'customer',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'email',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'phone',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ContactAppLayout',
-          'config': {
-            'appName': 'CRM',
-            'navItems': [
-              {
-                'href': '/contacts',
-                'label': 'Contacts',
-                'icon': 'users',
-              },
-              {
-                'icon': 'briefcase',
-                'label': 'Deals',
-                'href': '/deals',
-              },
-              {
-                'label': 'Pipeline',
-                'href': '/pipeline',
-                'icon': 'bar-chart-2',
-              },
-              {
-                'icon': 'file-text',
-                'href': '/notes',
-                'label': 'Notes',
-              },
-            ],
-            'contentTrait': '@trait.ContactCatalog',
-            'searchEvent': 'CONTACT_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
+        'listens': [
+          {
+            'event': 'CONTACT_SEARCH',
+            'triggers': 'CONTACT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactAppLayout',
+            },
           },
-          'events': {
-            'SEARCH': 'CONTACT_SEARCH',
-            'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
+          {
+            'event': 'CONTACT_NOTIFICATIONS_OPEN',
+            'triggers': 'CONTACT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'ContactCatalog',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'ContactEmailSent',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactEmailSend',
+            },
+          },
+          {
+            'event': 'ContactEmailFailed',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactEmailSend',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CONTACT_SEARCH',
+              'name': 'Contact Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'CONTACT_NOTIFICATIONS_OPEN',
+              'name': 'Contact Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'user',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Contacts',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'label': 'New Contact',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'gap': 'md',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          '@trait.ContactSearch',
+                          '@trait.ContactFilter',
+                        ],
+                      },
+                      '@trait.ContactStats',
+                      '@trait.ContactGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ContactBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'CONTACT_SEARCH',
-              'triggers': 'CONTACT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'CONTACT_NOTIFICATIONS_OPEN',
-              'triggers': 'CONTACT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactAppLayout',
-              },
-            },
-            {
-              'event': 'ContactEmailSent',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactEmailSend',
-              },
-            },
-            {
-              'event': 'ContactEmailFailed',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactEmailSend',
-              },
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'type': 'typography',
+                      },
+                      {
+                        'label': 'Back to contacts',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CONTACT_SEARCH',
-                'name': 'Contact Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONTACT_NOTIFICATIONS_OPEN',
-                'name': 'Contact Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'user',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Contacts',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'label': 'New Contact',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'gap': 'md',
-                          'justify': 'between',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            '@trait.ContactSearch',
-                            '@trait.ContactFilter',
-                          ],
-                        },
-                        '@trait.ContactStats',
-                        '@trait.ContactGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ContactBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'CONTACT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'CONTACT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'content': 'You\'re all caught up.',
-                          'color': 'muted',
-                          'variant': 'caption',
-                          'type': 'typography',
-                        },
-                        {
-                          'label': 'Back to contacts',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                          'type': 'button',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-8',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'ContactSearch',
-          'config': {
-            'event': 'CONTACT_SEARCH',
-            'placeholder': 'Search contacts…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'ContactFilter',
-          'config': {
-            'filters': [
-              {
-                'options': [
-                  'technology',
-                  'finance',
-                  'healthcare',
-                  'retail',
-                  'manufacturing',
-                  'other',
-                ],
-                'label': 'Industry',
-                'field': 'industry',
-                'filterType': 'select',
-              },
-              {
-                'label': 'Lifecycle Stage',
-                'field': 'lifecycleStage',
-                'options': [
-                  'lead',
-                  'mql',
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ContactSearch',
+        'config': {
+          'event': 'CONTACT_SEARCH',
+          'placeholder': 'Search contacts…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'ContactFilter',
+        'config': {
+          'filters': [
+            {
+              'options': [
+                'technology',
+                'finance',
+                'healthcare',
+                'retail',
+                'manufacturing',
+                'other',
+              ],
+              'label': 'Industry',
+              'field': 'industry',
+              'filterType': 'select',
+            },
+            {
+              'label': 'Lifecycle Stage',
+              'field': 'lifecycleStage',
+              'options': [
+                'lead',
+                'mql',
+                'sql',
+                'customer',
+              ],
+              'filterType': 'select',
+            },
+          ],
+          'event': 'CONTACT_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ContactStats',
+        'config': {
+          'metrics': [
+            {
+              'label': 'Total',
+              'aggregation': 'count',
+              'icon': 'users',
+              'variant': 'primary',
+              'format': 'number',
+            },
+            {
+              'format': 'number',
+              'icon': 'flame',
+              'label': 'Hot Leads',
+              'aggregation': 'count',
+              'variant': 'warning',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.lifecycleStage',
                   'sql',
+                ],
+              ],
+            },
+            {
+              'label': 'Customers',
+              'icon': 'check-circle',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.lifecycleStage',
                   'customer',
                 ],
-                'filterType': 'select',
-              },
-            ],
-            'event': 'CONTACT_FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'ContactStats',
-          'config': {
-            'metrics': [
-              {
-                'label': 'Total',
-                'aggregation': 'count',
-                'icon': 'users',
-                'variant': 'primary',
-                'format': 'number',
-              },
-              {
-                'format': 'number',
-                'icon': 'flame',
-                'label': 'Hot Leads',
-                'aggregation': 'count',
-                'variant': 'warning',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.lifecycleStage',
-                    'sql',
-                  ],
-                ],
-              },
-              {
-                'label': 'Customers',
-                'icon': 'check-circle',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.lifecycleStage',
-                    'customer',
-                  ],
-                ],
-                'variant': 'success',
-                'format': 'number',
-                'aggregation': 'count',
-              },
-            ],
-            'title': 'Contacts',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactBrowseList',
-              },
+              ],
+              'variant': 'success',
+              'format': 'number',
+              'aggregation': 'count',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'ContactGraphs',
-          'config': {
-            'chartType': 'pie',
-            'subtitle': 'Funnel breakdown',
-            'aggregation': 'count',
-            'height': 240,
-            'categoryField': 'lifecycleStage',
-            'showLegend': true,
-            'title': 'Contacts by Lifecycle Stage',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactBrowseList',
-              },
+          'title': 'Contacts',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactBrowseList',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ContactBrowseList',
-          'linkedEntity': 'Contact',
-          'config': {
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'variant': 'ghost',
-                'label': 'View',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'variant': 'card',
-            'fields': [
-              {
-                'icon': 'user',
-                'variant': 'h3',
-                'name': 'name',
-              },
-              {
-                'name': 'industry',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'badge',
-                'name': 'lifecycleStage',
-              },
-              {
-                'name': 'email',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'caption',
-                'name': 'phone',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
           },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactSearch',
-              },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'ContactGraphs',
+        'config': {
+          'chartType': 'pie',
+          'subtitle': 'Funnel breakdown',
+          'aggregation': 'count',
+          'height': 240,
+          'categoryField': 'lifecycleStage',
+          'showLegend': true,
+          'title': 'Contacts by Lifecycle Stage',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactBrowseList',
             },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactFilter',
-              },
-            },
-            {
-              'event': 'CONTACT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactPersistor',
-              },
-            },
-            {
-              'event': 'CONTACT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactPersistor',
-              },
-            },
-            {
-              'event': 'CONTACT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ContactCreate',
-          'linkedEntity': 'Contact',
-          'config': {
-            'title': 'New Contact',
-            'mode': 'create',
-            'fields': [
-              'name',
-              'company',
-              'industry',
-              'lifecycleStage',
-              'email',
-              'phone',
-            ],
-            'icon': 'plus-circle',
           },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ContactEdit',
-          'linkedEntity': 'Contact',
-          'config': {
-            'icon': 'edit',
-            'title': 'Edit Contact',
-            'fields': [
-              'name',
-              'company',
-              'industry',
-              'lifecycleStage',
-              'email',
-              'phone',
-            ],
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ContactView',
-          'linkedEntity': 'Contact',
-          'config': {
-            'icon': 'eye',
-            'title': 'View Contact',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'company',
-              'industry',
-              'lifecycleStage',
-              'email',
-              'phone',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ContactBrowseList',
+        'linkedEntity': 'Contact',
+        'config': {
+          'itemActions': [
             {
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'View',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'ContactDelete',
-          'linkedEntity': 'Contact',
-          'config': {
-            'title': 'Delete Contact',
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
             {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'ContactPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Contact',
-          'emits': [
+          'variant': 'card',
+          'fields': [
             {
-              'event': 'CONTACT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'icon': 'user',
+              'variant': 'h3',
+              'name': 'name',
             },
             {
-              'event': 'CONTACT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'industry',
+              'variant': 'badge',
             },
             {
-              'event': 'CONTACT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'badge',
+              'name': 'lifecycleStage',
+            },
+            {
+              'name': 'email',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'caption',
+              'name': 'phone',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactCreate',
-              },
+          'gap': 'sm',
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactSearch',
             },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactEdit',
-              },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactFilter',
             },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ContactDelete',
-              },
+          },
+          {
+            'event': 'CONTACT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactPersistor',
             },
+          },
+          {
+            'event': 'CONTACT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactPersistor',
+            },
+          },
+          {
+            'event': 'CONTACT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ContactCreate',
+        'linkedEntity': 'Contact',
+        'config': {
+          'title': 'New Contact',
+          'mode': 'create',
+          'fields': [
+            'name',
+            'company',
+            'industry',
+            'lifecycleStage',
+            'email',
+            'phone',
           ],
-          'stateMachine': {
-            'states': [
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ContactEdit',
+        'linkedEntity': 'Contact',
+        'config': {
+          'icon': 'edit',
+          'title': 'Edit Contact',
+          'fields': [
+            'name',
+            'company',
+            'industry',
+            'lifecycleStage',
+            'email',
+            'phone',
+          ],
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ContactView',
+        'linkedEntity': 'Contact',
+        'config': {
+          'icon': 'eye',
+          'title': 'View Contact',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'company',
+            'industry',
+            'lifecycleStage',
+            'email',
+            'phone',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'ContactDelete',
+        'linkedEntity': 'Contact',
+        'config': {
+          'title': 'Delete Contact',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ContactPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Contact',
+        'emits': [
+          {
+            'event': 'CONTACT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONTACT_CREATED',
-                'name': 'Contact Created',
-              },
-              {
-                'key': 'CONTACT_UPDATED',
-                'name': 'Contact Updated',
-              },
-              {
-                'key': 'CONTACT_DELETED',
-                'name': 'Contact Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Contact',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CONTACT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Contact',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CONTACT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Contact',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'CONTACT_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ContactEmailSend',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'CONTACT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CONTACT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ContactDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ContactEmailSent',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1198,7 +842,144 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'ContactEmailFailed',
+              'key': 'CONTACT_CREATED',
+              'name': 'Contact Created',
+            },
+            {
+              'key': 'CONTACT_UPDATED',
+              'name': 'Contact Updated',
+            },
+            {
+              'key': 'CONTACT_DELETED',
+              'name': 'Contact Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Contact',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CONTACT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Contact',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CONTACT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Contact',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'CONTACT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ContactEmailSend',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'ContactEmailSent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ContactEmailFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SEND_EMAIL',
+              'name': 'Send Email',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ContactEmailSent',
+              'name': 'Contact email sent',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ContactEmailFailed',
+              'name': 'Contact email failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1211,881 +992,977 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SEND_EMAIL',
-                'name': 'Send Email',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ContactEmailSent',
-                'name': 'Contact email sent',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ContactEmailFailed',
-                'name': 'Contact email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'horizontal',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'variant': 'ghost',
-                          'type': 'button',
-                          'icon': 'mail',
-                          'label': 'Email Contact',
-                          'action': 'SEND_EMAIL',
-                        },
-                      ],
-                      'gap': 'sm',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'SEND_EMAIL',
-                'effects': [
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'subject': 'Hello from CRM',
-                      'sender': 'noreply@crm.example',
-                      'recipient': 'contact@example.com',
-                      'body': 'Reaching out from your account team.',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ContactEmailSent',
-                        'failure': 'ContactEmailFailed',
+                    'direction': 'horizontal',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'icon': 'mail',
+                        'label': 'Email Contact',
+                        'action': 'SEND_EMAIL',
                       },
-                    },
-                  ],
-                  [
-                    'notify',
-                    'info',
-                    'Email sent',
-                  ],
+                    ],
+                    'gap': 'sm',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ContactsPage',
-          'path': '/contacts',
-          'traits': [
-            {
-              'ref': 'ContactAppLayout',
+              ],
             },
             {
-              'ref': 'ContactCatalog',
-            },
-            {
-              'ref': 'ContactSearch',
-            },
-            {
-              'ref': 'ContactFilter',
-            },
-            {
-              'ref': 'ContactStats',
-            },
-            {
-              'ref': 'ContactGraphs',
-            },
-            {
-              'ref': 'ContactBrowseList',
-            },
-            {
-              'ref': 'ContactCreate',
-            },
-            {
-              'ref': 'ContactEdit',
-            },
-            {
-              'ref': 'ContactView',
-            },
-            {
-              'ref': 'ContactDelete',
-            },
-            {
-              'ref': 'ContactPersistor',
-            },
-            {
-              'ref': 'ContactEmailSend',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'DealOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Deal',
-        'collection': 'deals',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'contactId',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'amount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'stage',
-            'type': 'string',
-            'default': 'prospecting',
-            'values': [
-              'prospecting',
-              'qualified',
-              'proposal',
-              'negotiation',
-              'won',
-              'lost',
-            ],
-          },
-          {
-            'name': 'closedAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'DealAppLayout',
-          'linkedEntity': 'Deal',
-          'config': {
-            'searchEvent': 'DEAL_SEARCH',
-            'topBarActions': [],
-            'notifications': [],
-            'notificationClickEvent': 'DEAL_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.DealCatalog',
-            'appName': 'CRM',
-            'navItems': [
-              {
-                'href': '/contacts',
-                'icon': 'users',
-                'label': 'Contacts',
-              },
-              {
-                'href': '/deals',
-                'label': 'Deals',
-                'icon': 'briefcase',
-              },
-              {
-                'icon': 'bar-chart-2',
-                'label': 'Pipeline',
-                'href': '/pipeline',
-              },
-              {
-                'icon': 'file-text',
-                'label': 'Notes',
-                'href': '/notes',
-              },
-            ],
-          },
-          'events': {
-            'SEARCH': 'DEAL_SEARCH',
-            'NOTIFY_CLICK': 'DEAL_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'DealCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'SEND_EMAIL',
+              'effects': [
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'subject': 'Hello from CRM',
+                    'sender': 'noreply@crm.example',
+                    'recipient': 'contact@example.com',
+                    'body': 'Reaching out from your account team.',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ContactEmailSent',
+                      'failure': 'ContactEmailFailed',
+                    },
+                  },
+                ],
+                [
+                  'notify',
+                  'info',
+                  'Email sent',
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ContactsPage',
+        'path': '/contacts',
+        'traits': [
+          {
+            'ref': 'ContactAppLayout',
+          },
+          {
+            'ref': 'ContactCatalog',
+          },
+          {
+            'ref': 'ContactSearch',
+          },
+          {
+            'ref': 'ContactFilter',
+          },
+          {
+            'ref': 'ContactStats',
+          },
+          {
+            'ref': 'ContactGraphs',
+          },
+          {
+            'ref': 'ContactBrowseList',
+          },
+          {
+            'ref': 'ContactCreate',
+          },
+          {
+            'ref': 'ContactEdit',
+          },
+          {
+            'ref': 'ContactView',
+          },
+          {
+            'ref': 'ContactDelete',
+          },
+          {
+            'ref': 'ContactPersistor',
+          },
+          {
+            'ref': 'ContactEmailSend',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the DealOrbital orbital.
+ *
+ * Canonical entity: Deal.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCrmDealOrbitalParams {
+  /** Override the canonical entity name (default: 'Deal'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the DealOrbital orbital with consumer params. */
+export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Deal';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'DealOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'deals',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'contactId',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'amount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'stage',
+          'type': 'string',
+          'default': 'prospecting',
+          'values': [
+            'prospecting',
+            'qualified',
+            'proposal',
+            'negotiation',
+            'won',
+            'lost',
+          ],
+        },
+        {
+          'name': 'closedAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DealAppLayout',
+        'linkedEntity': 'Deal',
+        'config': {
+          'searchEvent': 'DEAL_SEARCH',
+          'topBarActions': [],
+          'notifications': [],
+          'notificationClickEvent': 'DEAL_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.DealCatalog',
+          'appName': 'CRM',
+          'navItems': [
+            {
+              'href': '/contacts',
+              'icon': 'users',
+              'label': 'Contacts',
+            },
+            {
+              'href': '/deals',
+              'label': 'Deals',
+              'icon': 'briefcase',
+            },
+            {
+              'icon': 'bar-chart-2',
+              'label': 'Pipeline',
+              'href': '/pipeline',
+            },
+            {
+              'icon': 'file-text',
+              'label': 'Notes',
+              'href': '/notes',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'DEAL_SEARCH',
+          'NOTIFY_CLICK': 'DEAL_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'DealCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'briefcase',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Deals',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                  'label': 'New Deal',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.DealBrowseList',
-                      ],
-                    },
-                  ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'briefcase',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Deals',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'label': 'New Deal',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DealBrowseList',
+                    ],
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'DealBrowseList',
-          'linkedEntity': 'Deal',
-          'config': {
-            'cols': 2,
-            'fields': [
-              {
-                'variant': 'h3',
-                'name': 'title',
-                'icon': 'briefcase',
-              },
-              {
-                'name': 'stage',
-                'variant': 'badge',
-              },
-              {
-                'name': 'amount',
-                'variant': 'h4',
-                'format': 'currency',
-              },
-              {
-                'name': 'contactId',
-                'label': 'Contact',
-                'variant': 'caption',
-              },
-              {
-                'label': 'Closed At',
-                'variant': 'caption',
-                'name': 'closedAt',
-                'format': 'date',
-              },
-            ],
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'label': 'View',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'md',
-            'variant': 'card',
-          },
-          'listens': [
-            {
-              'event': 'DEAL_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealPersistor',
-              },
-            },
-            {
-              'event': 'DEAL_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealPersistor',
-              },
-            },
-            {
-              'event': 'DEAL_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealPersistor',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DealCreate',
-          'linkedEntity': 'Deal',
-          'config': {
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'title': 'New Deal',
-            'fields': [
-              'title',
-              'contactId',
-              'amount',
-              'stage',
-              'closedAt',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'DealBrowseList',
+        'linkedEntity': 'Deal',
+        'config': {
+          'cols': 2,
+          'fields': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealCatalog',
-              },
+              'variant': 'h3',
+              'name': 'title',
+              'icon': 'briefcase',
+            },
+            {
+              'name': 'stage',
+              'variant': 'badge',
+            },
+            {
+              'name': 'amount',
+              'variant': 'h4',
+              'format': 'currency',
+            },
+            {
+              'name': 'contactId',
+              'label': 'Contact',
+              'variant': 'caption',
+            },
+            {
+              'label': 'Closed At',
+              'variant': 'caption',
+              'name': 'closedAt',
+              'format': 'date',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DealEdit',
-          'linkedEntity': 'Deal',
-          'config': {
-            'icon': 'edit',
-            'title': 'Edit Deal',
-            'mode': 'edit',
-            'fields': [
-              'title',
-              'contactId',
-              'amount',
-              'stage',
-              'closedAt',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DealView',
-          'linkedEntity': 'Deal',
-          'config': {
-            'mode': 'edit',
-            'fields': [
-              'title',
-              'contactId',
-              'amount',
-              'stage',
-              'closedAt',
-            ],
-            'icon': 'eye',
-            'title': 'View Deal',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
+          'itemActions': [
             {
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealBrowseList',
-              },
+              'label': 'View',
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'DealDelete',
-          'linkedEntity': 'Deal',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Deal',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
             {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'DealPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Deal',
-          'emits': [
-            {
-              'event': 'DEAL_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DEAL_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DEAL_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DealDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DEAL_CREATED',
-                'name': 'Deal Created',
-              },
-              {
-                'key': 'DEAL_UPDATED',
-                'name': 'Deal Updated',
-              },
-              {
-                'key': 'DEAL_DELETED',
-                'name': 'Deal Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Deal',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'DEAL_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Deal',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'DEAL_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Deal',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'DEAL_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Deals',
-          'path': '/deals',
-          'traits': [
-            {
-              'ref': 'DealAppLayout',
-            },
-            {
-              'ref': 'DealCatalog',
-            },
-            {
-              'ref': 'DealBrowseList',
-            },
-            {
-              'ref': 'DealCreate',
-            },
-            {
-              'ref': 'DealEdit',
-            },
-            {
-              'ref': 'DealView',
-            },
-            {
-              'ref': 'DealDelete',
-            },
-            {
-              'ref': 'DealPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PipelineOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'gap': 'md',
+          'variant': 'card',
         },
-      ],
-      entity: {
-        'name': 'Pipeline',
-        'persistence': 'runtime',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'DEAL_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealPersistor',
+            },
           },
           {
-            'name': 'totalDeals',
-            'type': 'number',
-            'default': 0,
+            'event': 'DEAL_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealPersistor',
+            },
           },
           {
-            'name': 'totalValue',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'wonDeals',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'lostDeals',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'conversionRate',
-            'type': 'number',
-            'default': 0,
+            'event': 'DEAL_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'PipelineAppLayout',
-          'linkedEntity': 'Pipeline',
-          'config': {
-            'searchEvent': 'PIPELINE_SEARCH',
-            'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
-            'appName': 'CRM',
-            'topBarActions': [],
-            'notifications': [],
-            'contentTrait': '@trait.PipelineDisplay',
-            'navItems': [
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DealCreate',
+        'linkedEntity': 'Deal',
+        'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'New Deal',
+          'fields': [
+            'title',
+            'contactId',
+            'amount',
+            'stage',
+            'closedAt',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DealEdit',
+        'linkedEntity': 'Deal',
+        'config': {
+          'icon': 'edit',
+          'title': 'Edit Deal',
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'contactId',
+            'amount',
+            'stage',
+            'closedAt',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DealView',
+        'linkedEntity': 'Deal',
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'contactId',
+            'amount',
+            'stage',
+            'closedAt',
+          ],
+          'icon': 'eye',
+          'title': 'View Deal',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'DealDelete',
+        'linkedEntity': 'Deal',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Deal',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'DealPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Deal',
+        'emits': [
+          {
+            'event': 'DEAL_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'label': 'Contacts',
-                'href': '/contacts',
-                'icon': 'users',
-              },
-              {
-                'label': 'Deals',
-                'href': '/deals',
-                'icon': 'briefcase',
-              },
-              {
-                'href': '/pipeline',
-                'label': 'Pipeline',
-                'icon': 'bar-chart-2',
-              },
-              {
-                'label': 'Notes',
-                'href': '/notes',
-                'icon': 'file-text',
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'events': {
-            'SEARCH': 'PIPELINE_SEARCH',
-            'NOTIFY_CLICK': 'PIPELINE_NOTIFICATIONS_OPEN',
+          {
+            'event': 'DEAL_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'PipelineDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'Pipeline',
-          'emits': [
+          {
+            'event': 'DEAL_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DealDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'PipelineLoaded',
-              'description': 'Fired when Pipeline finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DEAL_CREATED',
+              'name': 'Deal Created',
+            },
+            {
+              'key': 'DEAL_UPDATED',
+              'name': 'Deal Updated',
+            },
+            {
+              'key': 'DEAL_DELETED',
+              'name': 'Deal Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Deal',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DEAL_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Deal',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DEAL_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Deal',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'DEAL_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Deals',
+        'path': '/deals',
+        'traits': [
+          {
+            'ref': 'DealAppLayout',
+          },
+          {
+            'ref': 'DealCatalog',
+          },
+          {
+            'ref': 'DealBrowseList',
+          },
+          {
+            'ref': 'DealCreate',
+          },
+          {
+            'ref': 'DealEdit',
+          },
+          {
+            'ref': 'DealView',
+          },
+          {
+            'ref': 'DealDelete',
+          },
+          {
+            'ref': 'DealPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the PipelineOrbital orbital.
+ *
+ * Canonical entity: Pipeline.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCrmPipelineOrbitalParams {
+  /** Override the canonical entity name (default: 'Pipeline'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the PipelineOrbital orbital with consumer params. */
+export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Pipeline';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PipelineOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'totalDeals',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'totalValue',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'wonDeals',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'lostDeals',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'conversionRate',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PipelineAppLayout',
+        'linkedEntity': 'Pipeline',
+        'config': {
+          'searchEvent': 'PIPELINE_SEARCH',
+          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
+          'appName': 'CRM',
+          'topBarActions': [],
+          'notifications': [],
+          'contentTrait': '@trait.PipelineDisplay',
+          'navItems': [
+            {
+              'label': 'Contacts',
+              'href': '/contacts',
+              'icon': 'users',
+            },
+            {
+              'label': 'Deals',
+              'href': '/deals',
+              'icon': 'briefcase',
+            },
+            {
+              'href': '/pipeline',
+              'label': 'Pipeline',
+              'icon': 'bar-chart-2',
+            },
+            {
+              'label': 'Notes',
+              'href': '/notes',
+              'icon': 'file-text',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'PIPELINE_SEARCH',
+          'NOTIFY_CLICK': 'PIPELINE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'PipelineDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'Pipeline',
+        'emits': [
+          {
+            'event': 'PipelineLoaded',
+            'description': 'Fired when Pipeline finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Pipeline]',
+              },
+            ],
+          },
+          {
+            'event': 'PipelineLoadFailed',
+            'description': 'Fired when Pipeline fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'displaying',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'PipelineLoaded',
+              'name': 'Pipeline loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2094,9 +1971,8 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'PipelineLoadFailed',
-              'description': 'Fired when Pipeline fails to load',
-              'scope': 'internal',
+              'key': 'PipelineLoadFailed',
+              'name': 'Pipeline load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2109,858 +1985,906 @@ export function stdCrm(params: StdCrmParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'displaying',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'PipelineLoaded',
-                'name': 'Pipeline loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Pipeline]',
-                  },
-                ],
-              },
-              {
-                'key': 'PipelineLoadFailed',
-                'name': 'Pipeline load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.totalDeals',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.totalValue',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.wonDeals',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.lostDeals',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.conversionRate',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'Pipeline',
-                    {
-                      'emit': {
-                        'success': 'PipelineLoaded',
-                        'failure': 'PipelineLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'bar-chart-2',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Pipeline',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'button',
-                              'action': 'REFRESH',
-                              'icon': 'rotate-ccw',
-                              'label': 'Refresh',
-                              'variant': 'secondary',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'label': 'Total Deals',
-                              'type': 'stat-display',
-                              'value': '@entity.totalDeals',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Pipeline Value',
-                              'value': '@entity.totalValue',
-                              'format': 'currency',
-                            },
-                            {
-                              'label': 'Won',
-                              'type': 'stat-display',
-                              'value': '@entity.wonDeals',
-                            },
-                            {
-                              'value': '@entity.conversionRate',
-                              'type': 'stat-display',
-                              'label': 'Conversion Rate',
-                              'format': 'percent',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                          'cols': 4,
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'loading',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'Pipeline',
-                    {
-                      'emit': {
-                        'failure': 'PipelineLoadFailed',
-                        'success': 'PipelineLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Pipeline',
-          'path': '/pipeline',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'PipelineAppLayout',
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.totalDeals',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalValue',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.wonDeals',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.lostDeals',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.conversionRate',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'Pipeline',
+                  {
+                    'emit': {
+                      'success': 'PipelineLoaded',
+                      'failure': 'PipelineLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'bar-chart-2',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Pipeline',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'REFRESH',
+                            'icon': 'rotate-ccw',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'label': 'Total Deals',
+                            'type': 'stat-display',
+                            'value': '@entity.totalDeals',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Pipeline Value',
+                            'value': '@entity.totalValue',
+                            'format': 'currency',
+                          },
+                          {
+                            'label': 'Won',
+                            'type': 'stat-display',
+                            'value': '@entity.wonDeals',
+                          },
+                          {
+                            'value': '@entity.conversionRate',
+                            'type': 'stat-display',
+                            'label': 'Conversion Rate',
+                            'format': 'percent',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                        'cols': 4,
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'PipelineDisplay',
+              'from': 'displaying',
+              'to': 'loading',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'Pipeline',
+                  {
+                    'emit': {
+                      'failure': 'PipelineLoadFailed',
+                      'success': 'PipelineLoaded',
+                    },
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'NoteOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-calendar',
-          'as': 'Calendar',
-        },
-      ],
-      entity: {
-        'name': 'Note',
-        'collection': 'notes',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Pipeline',
+        'path': '/pipeline',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'PipelineAppLayout',
           },
           {
-            'name': 'subject',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'body',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'priority',
-            'type': 'string',
-            'default': 'medium',
-            'values': [
-              'low',
-              'medium',
-              'high',
-            ],
-          },
-          {
-            'name': 'followUpAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'createdAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'PipelineDisplay',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'NoteAppLayout',
-          'linkedEntity': 'Note',
-          'config': {
-            'searchEvent': 'NOTE_SEARCH',
-            'topBarActions': [],
-            'notifications': [],
-            'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.NoteCatalog',
-            'appName': 'CRM',
-            'navItems': [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the NoteOrbital orbital.
+ *
+ * Canonical entity: Note.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCrmNoteOrbitalParams {
+  /** Override the canonical entity name (default: 'Note'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the NoteOrbital orbital with consumer params. */
+export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Note';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'NoteOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-calendar',
+        'as': 'Calendar',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'notes',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'subject',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'body',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'author',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'priority',
+          'type': 'string',
+          'default': 'medium',
+          'values': [
+            'low',
+            'medium',
+            'high',
+          ],
+        },
+        {
+          'name': 'followUpAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'createdAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'NoteAppLayout',
+        'linkedEntity': 'Note',
+        'config': {
+          'searchEvent': 'NOTE_SEARCH',
+          'topBarActions': [],
+          'notifications': [],
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.NoteCatalog',
+          'appName': 'CRM',
+          'navItems': [
+            {
+              'href': '/contacts',
+              'label': 'Contacts',
+              'icon': 'users',
+            },
+            {
+              'icon': 'briefcase',
+              'label': 'Deals',
+              'href': '/deals',
+            },
+            {
+              'label': 'Pipeline',
+              'icon': 'bar-chart-2',
+              'href': '/pipeline',
+            },
+            {
+              'href': '/notes',
+              'icon': 'file-text',
+              'label': 'Notes',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'NOTE_SEARCH',
+        },
+      }),
+      {
+        'name': 'NoteCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'href': '/contacts',
-                'label': 'Contacts',
-                'icon': 'users',
-              },
-              {
-                'icon': 'briefcase',
-                'label': 'Deals',
-                'href': '/deals',
-              },
-              {
-                'label': 'Pipeline',
-                'icon': 'bar-chart-2',
-                'href': '/pipeline',
-              },
-              {
-                'href': '/notes',
-                'icon': 'file-text',
-                'label': 'Notes',
+                'name': 'source',
+                'type': 'string',
               },
             ],
           },
-          'events': {
-            'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'NOTE_SEARCH',
-          },
-        }),
-        {
-          'name': 'NoteCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'file-text',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Notes',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Note',
+                                'icon': 'edit',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Follow-Up Calendar',
+                      },
+                      '@trait.NoteCalendar',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.NoteBrowseList',
+                    ],
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'file-text',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Notes',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'align': 'center',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'label': 'New Note',
-                                  'icon': 'edit',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Follow-Up Calendar',
-                        },
-                        '@trait.NoteCalendar',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.NoteBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'NoteBrowseList',
-          'linkedEntity': 'Note',
-          'config': {
-            'variant': 'card',
-            'cols': 1,
-            'fields': [
-              {
-                'name': 'subject',
-                'variant': 'h4',
-                'icon': 'file-text',
-              },
-              {
-                'name': 'priority',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'caption',
-                'name': 'author',
-              },
-              {
-                'name': 'followUpAt',
-                'format': 'date',
-                'label': 'Follow-Up',
-                'variant': 'caption',
-              },
-              {
-                'name': 'createdAt',
-                'label': 'Created',
-                'variant': 'caption',
-                'format': 'date',
-              },
-            ],
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'NoteBrowseList',
+        'linkedEntity': 'Note',
+        'config': {
+          'variant': 'card',
+          'cols': 1,
+          'fields': [
             {
-              'event': 'NOTE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NotePersistor',
-              },
+              'name': 'subject',
+              'variant': 'h4',
+              'icon': 'file-text',
             },
             {
-              'event': 'NOTE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NotePersistor',
-              },
+              'name': 'priority',
+              'variant': 'badge',
             },
             {
-              'event': 'NOTE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NotePersistor',
-              },
+              'variant': 'caption',
+              'name': 'author',
+            },
+            {
+              'name': 'followUpAt',
+              'format': 'date',
+              'label': 'Follow-Up',
+              'variant': 'caption',
+            },
+            {
+              'name': 'createdAt',
+              'label': 'Created',
+              'variant': 'caption',
+              'format': 'date',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Calendar.traits.CalendarEventCalendar',
-          'name': 'NoteCalendar',
-          'linkedEntity': 'Note',
-          'config': {
-            'titleField': 'subject',
-            'dateField': 'followUpAt',
-            'colorField': 'priority',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'NoteCreate',
-          'linkedEntity': 'Note',
-          'config': {
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'fields': [
-              'subject',
-              'body',
-              'author',
-              'priority',
-              'followUpAt',
-            ],
-            'title': 'New Note',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+          'itemActions': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteCatalog',
-              },
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'NoteEdit',
-          'linkedEntity': 'Note',
-          'config': {
-            'title': 'Edit Note',
-            'icon': 'edit',
-            'mode': 'edit',
-            'fields': [
-              'subject',
-              'body',
-              'author',
-              'priority',
-              'followUpAt',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'Edit',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'NoteView',
-          'linkedEntity': 'Note',
-          'config': {
-            'icon': 'eye',
-            'mode': 'edit',
-            'fields': [
-              'subject',
-              'body',
-              'author',
-              'priority',
-              'followUpAt',
-            ],
-            'title': 'View Note',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
             {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'NoteDelete',
-          'linkedEntity': 'Note',
-          'config': {
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Note',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'NotePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Note',
-          'emits': [
-            {
-              'event': 'NOTE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'NOTE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
             },
-            {
-              'event': 'NOTE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'NOTE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
             },
-            {
-              'event': 'NOTE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'NOTE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
             },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Calendar.traits.CalendarEventCalendar',
+        'name': 'NoteCalendar',
+        'linkedEntity': 'Note',
+        'config': {
+          'titleField': 'subject',
+          'dateField': 'followUpAt',
+          'colorField': 'priority',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteCreate',
+        'linkedEntity': 'Note',
+        'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'subject',
+            'body',
+            'author',
+            'priority',
+            'followUpAt',
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteCreate',
-              },
+          'title': 'New Note',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteCatalog',
             },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'NoteDelete',
-              },
-            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteEdit',
+        'linkedEntity': 'Note',
+        'config': {
+          'title': 'Edit Note',
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'subject',
+            'body',
+            'author',
+            'priority',
+            'followUpAt',
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteView',
+        'linkedEntity': 'Note',
+        'config': {
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'subject',
+            'body',
+            'author',
+            'priority',
+            'followUpAt',
+          ],
+          'title': 'View Note',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'NoteDelete',
+        'linkedEntity': 'Note',
+        'config': {
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Note',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'NotePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Note',
+        'emits': [
+          {
+            'event': 'NOTE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'NOTE_CREATED',
-                'name': 'Note Created',
-              },
-              {
-                'key': 'NOTE_UPDATED',
-                'name': 'Note Updated',
-              },
-              {
-                'key': 'NOTE_DELETED',
-                'name': 'Note Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Note',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'NOTE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Note',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'NOTE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Note',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'NOTE_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Notes',
-          'path': '/notes',
-          'traits': [
-            {
-              'ref': 'NoteAppLayout',
+          {
+            'event': 'NOTE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'NOTE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteCreate',
             },
-            {
-              'ref': 'NoteCatalog',
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteEdit',
             },
-            {
-              'ref': 'NoteBrowseList',
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteDelete',
             },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'NoteCalendar',
-            },
-            {
-              'ref': 'NoteCreate',
-            },
-            {
-              'ref': 'NoteEdit',
-            },
-            {
-              'ref': 'NoteView',
-            },
-            {
-              'ref': 'NoteDelete',
-            },
-            {
-              'ref': 'NotePersistor',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'NOTE_CREATED',
+              'name': 'Note Created',
+            },
+            {
+              'key': 'NOTE_UPDATED',
+              'name': 'Note Updated',
+            },
+            {
+              'key': 'NOTE_DELETED',
+              'name': 'Note Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Note',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'NOTE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Note',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'NOTE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Note',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'NOTE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Notes',
+        'path': '/notes',
+        'traits': [
+          {
+            'ref': 'NoteAppLayout',
+          },
+          {
+            'ref': 'NoteCatalog',
+          },
+          {
+            'ref': 'NoteBrowseList',
+          },
+          {
+            'ref': 'NoteCalendar',
+          },
+          {
+            'ref': 'NoteCreate',
+          },
+          {
+            'ref': 'NoteEdit',
+          },
+          {
+            'ref': 'NoteView',
+          },
+          {
+            'ref': 'NoteDelete',
+          },
+          {
+            'ref': 'NotePersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-crm — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdCrmParams {
+  Contact?: StdCrmContactOrbitalParams;
+  Deal?: StdCrmDealOrbitalParams;
+  Pipeline?: StdCrmPipelineOrbitalParams;
+  Note?: StdCrmNoteOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdCrm(params: StdCrmParams = {}): OrbitalDefinition[] {
+  return [
+    stdCrmContactOrbital(params.Contact ?? {}),
+    stdCrmDealOrbital(params.Deal ?? {}),
+    stdCrmPipelineOrbital(params.Pipeline ?? {}),
+    stdCrmNoteOrbital(params.Note ?? {}),
+  ];
 }

@@ -34,1284 +34,1130 @@ export interface StdHelpdeskConfig {
 }
 
 /**
- * Params for the std-helpdesk descriptor helpers.
+ * Tunable params for the TicketOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Ticket.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdHelpdeskParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdHelpdeskTicketOrbitalParams {
+  /** Override the canonical entity name (default: 'Ticket'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdHelpdeskConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Helpdesk.traits.TicketAppLayout`. */
-export function stdHelpdeskTicketAppLayoutTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the TicketOrbital orbital with consumer params. */
+export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Ticket';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TicketOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'tickets',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'subject',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'priority',
+          'type': 'string',
+          'default': 'medium',
+          'values': [
+            'low',
+            'medium',
+            'high',
+            'critical',
+          ],
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'open',
+          'values': [
+            'open',
+            'in-progress',
+            'resolved',
+            'closed',
+          ],
+        },
+        {
+          'name': 'assignee',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'customerEmail',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TicketAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'href': '/tickets',
+              'label': 'Tickets',
+              'icon': 'inbox',
+            },
+            {
+              'icon': 'message-circle',
+              'href': '/replies',
+              'label': 'Replies',
+            },
+            {
+              'label': 'Metrics',
+              'icon': 'layout-list',
+              'href': '/metrics',
+            },
+          ],
+          'notifications': [],
+          'contentTrait': '@trait.TicketCatalog',
+          'appName': 'Helpdesk',
+          'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TICKET_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'TICKET_SEARCH',
+          'NOTIFY_CLICK': 'TICKET_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'TicketCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'TICKET_SEARCH',
+            'triggers': 'TICKET_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketAppLayout',
+            },
+          },
+          {
+            'event': 'TICKET_NOTIFICATIONS_OPEN',
+            'triggers': 'TICKET_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TICKET_SEARCH',
+              'name': 'Ticket Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TICKET_NOTIFICATIONS_OPEN',
+              'name': 'Ticket Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'inbox',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Tickets',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                          },
+                          {
+                            'children': [
+                              {
+                                'label': 'New Ticket',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.TicketSearch',
+                          '@trait.TicketFilter',
+                        ],
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      '@trait.TicketStats',
+                      '@trait.TicketGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TicketBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TICKET_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TICKET_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to tickets',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'TicketSearch',
+        'config': {
+          'event': 'TICKET_SEARCH',
+          'placeholder': 'Search tickets…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'TicketFilter',
+        'config': {
+          'filters': [
+            {
+              'filterType': 'select',
+              'options': [
+                'low',
+                'medium',
+                'high',
+                'critical',
+              ],
+              'field': 'priority',
+              'label': 'Priority',
+            },
+            {
+              'options': [
+                'open',
+                'in-progress',
+                'resolved',
+                'closed',
+              ],
+              'label': 'Status',
+              'filterType': 'select',
+              'field': 'status',
+            },
+          ],
+          'event': 'TICKET_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'TicketStats',
+        'config': {
+          'title': 'Tickets',
+          'metrics': [
+            {
+              'format': 'number',
+              'variant': 'primary',
+              'icon': 'inbox',
+              'label': 'Total',
+              'aggregation': 'count',
+            },
+            {
+              'icon': 'circle',
+              'label': 'Open',
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'open',
+                ],
+              ],
+              'variant': 'warning',
+              'format': 'number',
+            },
+            {
+              'icon': 'check-circle',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'resolved',
+                ],
+              ],
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'Resolved',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'TicketGraphs',
+        'config': {
+          'subtitle': 'Volume across priority buckets',
+          'categoryField': 'priority',
+          'aggregation': 'count',
+          'showLegend': false,
+          'chartType': 'bar',
+          'height': 240,
+          'title': 'Tickets by Priority',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'TicketBrowseList',
+        'linkedEntity': 'Ticket',
+        'config': {
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+          'fields': [
+            {
+              'name': 'subject',
+              'variant': 'h3',
+              'icon': 'inbox',
+            },
+            {
+              'variant': 'badge',
+              'name': 'priority',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'assignee',
+              'variant': 'body',
+            },
+            {
+              'name': 'description',
+              'variant': 'caption',
+            },
+          ],
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketFilter',
+            },
+          },
+          {
+            'event': 'TICKET_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketPersistor',
+            },
+          },
+          {
+            'event': 'TICKET_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketPersistor',
+            },
+          },
+          {
+            'event': 'TICKET_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TicketCreate',
+        'linkedEntity': 'Ticket',
+        'config': {
+          'title': 'New Ticket',
+          'fields': [
+            'subject',
+            'description',
+            'priority',
+            'status',
+            'assignee',
+            'customerEmail',
+          ],
+          'mode': 'create',
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TicketEdit',
+        'linkedEntity': 'Ticket',
+        'config': {
+          'mode': 'edit',
+          'icon': 'edit',
+          'fields': [
+            'subject',
+            'description',
+            'priority',
+            'status',
+            'assignee',
+            'customerEmail',
+          ],
+          'title': 'Edit Ticket',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TicketView',
+        'linkedEntity': 'Ticket',
+        'config': {
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'subject',
+            'description',
+            'priority',
+            'status',
+            'assignee',
+            'customerEmail',
+          ],
+          'title': 'View Ticket',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'TicketDelete',
+        'linkedEntity': 'Ticket',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Ticket',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TicketPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Ticket',
+        'emits': [
+          {
+            'event': 'TICKET_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TICKET_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TICKET_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TICKET_CREATED',
+              'name': 'Ticket Created',
+            },
+            {
+              'key': 'TICKET_UPDATED',
+              'name': 'Ticket Updated',
+            },
+            {
+              'key': 'TICKET_DELETED',
+              'name': 'Ticket Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Ticket',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TICKET_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Ticket',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TICKET_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Ticket',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'TICKET_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'TicketsPage',
+        'path': '/tickets',
+        'traits': [
+          {
+            'ref': 'TicketAppLayout',
+          },
+          {
+            'ref': 'TicketCatalog',
+          },
+          {
+            'ref': 'TicketSearch',
+          },
+          {
+            'ref': 'TicketFilter',
+          },
+          {
+            'ref': 'TicketStats',
+          },
+          {
+            'ref': 'TicketGraphs',
+          },
+          {
+            'ref': 'TicketBrowseList',
+          },
+          {
+            'ref': 'TicketCreate',
+          },
+          {
+            'ref': 'TicketEdit',
+          },
+          {
+            'ref': 'TicketView',
+          },
+          {
+            'ref': 'TicketDelete',
+          },
+          {
+            'ref': 'TicketPersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketCatalog`. */
-export function stdHelpdeskTicketCatalogTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketSearch`. */
-export function stdHelpdeskTicketSearchTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketFilter`. */
-export function stdHelpdeskTicketFilterTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketStats`. */
-export function stdHelpdeskTicketStatsTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketGraphs`. */
-export function stdHelpdeskTicketGraphsTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketBrowseList`. */
-export function stdHelpdeskTicketBrowseListTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketCreate`. */
-export function stdHelpdeskTicketCreateTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketEdit`. */
-export function stdHelpdeskTicketEditTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketView`. */
-export function stdHelpdeskTicketViewTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketDelete`. */
-export function stdHelpdeskTicketDeleteTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Helpdesk.traits.TicketPersistor`. */
-export function stdHelpdeskTicketPersistorTrait(params: StdHelpdeskParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TicketPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Helpdesk.pages.TicketsPage`. */
-export function stdHelpdeskPage(params: StdHelpdeskParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.TicketsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Ticket';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TicketOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Ticket',
-        'collection': 'tickets',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'subject',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'priority',
-            'type': 'string',
-            'default': 'medium',
-            'values': [
-              'low',
-              'medium',
-              'high',
-              'critical',
-            ],
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'open',
-            'values': [
-              'open',
-              'in-progress',
-              'resolved',
-              'closed',
-            ],
-          },
-          {
-            'name': 'assignee',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'customerEmail',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TicketAppLayout',
-          'config': {
-            'navItems': [
-              {
-                'href': '/tickets',
-                'label': 'Tickets',
-                'icon': 'inbox',
-              },
-              {
-                'icon': 'message-circle',
-                'href': '/replies',
-                'label': 'Replies',
-              },
-              {
-                'label': 'Metrics',
-                'icon': 'layout-list',
-                'href': '/metrics',
-              },
-            ],
-            'notifications': [],
-            'contentTrait': '@trait.TicketCatalog',
-            'appName': 'Helpdesk',
-            'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
-            'searchEvent': 'TICKET_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'TICKET_SEARCH',
-            'NOTIFY_CLICK': 'TICKET_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'TicketCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'TICKET_SEARCH',
-              'triggers': 'TICKET_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketAppLayout',
-              },
-            },
-            {
-              'event': 'TICKET_NOTIFICATIONS_OPEN',
-              'triggers': 'TICKET_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'TICKET_SEARCH',
-                'name': 'Ticket Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TICKET_NOTIFICATIONS_OPEN',
-                'name': 'Ticket Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'inbox',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Tickets',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'label': 'New Ticket',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            '@trait.TicketSearch',
-                            '@trait.TicketFilter',
-                          ],
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                        },
-                        '@trait.TicketStats',
-                        '@trait.TicketGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TicketBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TICKET_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TICKET_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'gap': 'md',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'You\'re all caught up.',
-                          'color': 'muted',
-                        },
-                        {
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                          'type': 'button',
-                          'label': 'Back to tickets',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'TicketSearch',
-          'config': {
-            'event': 'TICKET_SEARCH',
-            'placeholder': 'Search tickets…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'TicketFilter',
-          'config': {
-            'filters': [
-              {
-                'filterType': 'select',
-                'options': [
-                  'low',
-                  'medium',
-                  'high',
-                  'critical',
-                ],
-                'field': 'priority',
-                'label': 'Priority',
-              },
-              {
-                'options': [
-                  'open',
-                  'in-progress',
-                  'resolved',
-                  'closed',
-                ],
-                'label': 'Status',
-                'filterType': 'select',
-                'field': 'status',
-              },
-            ],
-            'event': 'TICKET_FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'TicketStats',
-          'config': {
-            'title': 'Tickets',
-            'metrics': [
-              {
-                'format': 'number',
-                'variant': 'primary',
-                'icon': 'inbox',
-                'label': 'Total',
-                'aggregation': 'count',
-              },
-              {
-                'icon': 'circle',
-                'label': 'Open',
-                'aggregation': 'count',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'open',
-                  ],
-                ],
-                'variant': 'warning',
-                'format': 'number',
-              },
-              {
-                'icon': 'check-circle',
-                'variant': 'success',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'resolved',
-                  ],
-                ],
-                'format': 'number',
-                'aggregation': 'count',
-                'label': 'Resolved',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'TicketGraphs',
-          'config': {
-            'subtitle': 'Volume across priority buckets',
-            'categoryField': 'priority',
-            'aggregation': 'count',
-            'showLegend': false,
-            'chartType': 'bar',
-            'height': 240,
-            'title': 'Tickets by Priority',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'TicketBrowseList',
-          'linkedEntity': 'Ticket',
-          'config': {
-            'gap': 'sm',
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'label': 'View',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'variant': 'danger',
-                'event': 'DELETE',
-                'label': 'Delete',
-              },
-            ],
-            'fields': [
-              {
-                'name': 'subject',
-                'variant': 'h3',
-                'icon': 'inbox',
-              },
-              {
-                'variant': 'badge',
-                'name': 'priority',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'assignee',
-                'variant': 'body',
-              },
-              {
-                'name': 'description',
-                'variant': 'caption',
-              },
-            ],
-            'cols': 1,
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketFilter',
-              },
-            },
-            {
-              'event': 'TICKET_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketPersistor',
-              },
-            },
-            {
-              'event': 'TICKET_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketPersistor',
-              },
-            },
-            {
-              'event': 'TICKET_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TicketCreate',
-          'linkedEntity': 'Ticket',
-          'config': {
-            'title': 'New Ticket',
-            'fields': [
-              'subject',
-              'description',
-              'priority',
-              'status',
-              'assignee',
-              'customerEmail',
-            ],
-            'mode': 'create',
-            'icon': 'plus-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TicketEdit',
-          'linkedEntity': 'Ticket',
-          'config': {
-            'mode': 'edit',
-            'icon': 'edit',
-            'fields': [
-              'subject',
-              'description',
-              'priority',
-              'status',
-              'assignee',
-              'customerEmail',
-            ],
-            'title': 'Edit Ticket',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TicketView',
-          'linkedEntity': 'Ticket',
-          'config': {
-            'icon': 'eye',
-            'mode': 'edit',
-            'fields': [
-              'subject',
-              'description',
-              'priority',
-              'status',
-              'assignee',
-              'customerEmail',
-            ],
-            'title': 'View Ticket',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'TicketDelete',
-          'linkedEntity': 'Ticket',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Ticket',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'TicketPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Ticket',
-          'emits': [
-            {
-              'event': 'TICKET_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TICKET_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TICKET_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TICKET_CREATED',
-                'name': 'Ticket Created',
-              },
-              {
-                'key': 'TICKET_UPDATED',
-                'name': 'Ticket Updated',
-              },
-              {
-                'key': 'TICKET_DELETED',
-                'name': 'Ticket Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Ticket',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TICKET_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Ticket',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TICKET_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Ticket',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'TICKET_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'TicketsPage',
-          'path': '/tickets',
-          'traits': [
-            {
-              'ref': 'TicketAppLayout',
-            },
-            {
-              'ref': 'TicketCatalog',
-            },
-            {
-              'ref': 'TicketSearch',
-            },
-            {
-              'ref': 'TicketFilter',
-            },
-            {
-              'ref': 'TicketStats',
-            },
-            {
-              'ref': 'TicketGraphs',
-            },
-            {
-              'ref': 'TicketBrowseList',
-            },
-            {
-              'ref': 'TicketCreate',
-            },
-            {
-              'ref': 'TicketEdit',
-            },
-            {
-              'ref': 'TicketView',
-            },
-            {
-              'ref': 'TicketDelete',
-            },
-            {
-              'ref': 'TicketPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TicketReplyOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the TicketReplyOrbital orbital.
+ *
+ * Canonical entity: TicketReply.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHelpdeskTicketReplyOrbitalParams {
+  /** Override the canonical entity name (default: 'TicketReply'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the TicketReplyOrbital orbital with consumer params. */
+export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'TicketReply';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TicketReplyOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'ticketreplies',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'ticketId',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
+          'name': 'body',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'author',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'customerEmail',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'subject',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'createdAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'TicketReply',
-        'collection': 'ticketreplies',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'ticketId',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'body',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'customerEmail',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'subject',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'createdAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TicketReplyAppLayout',
-          'linkedEntity': 'TicketReply',
-          'config': {
-            'navItems': [
-              {
-                'icon': 'inbox',
-                'label': 'Tickets',
-                'href': '/tickets',
-              },
-              {
-                'icon': 'message-circle',
-                'label': 'Replies',
-                'href': '/replies',
-              },
-              {
-                'label': 'Metrics',
-                'icon': 'layout-list',
-                'href': '/metrics',
-              },
-            ],
-            'searchEvent': 'TICKET_REPLY_SEARCH',
-            'notifications': [],
-            'contentTrait': '@trait.TicketReplyBrowse',
-            'appName': 'Helpdesk',
-            'notificationClickEvent': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
-            'SEARCH': 'TICKET_REPLY_SEARCH',
-          },
-        }),
-        {
-          'name': 'TicketReplyBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'TicketReply',
-          'emits': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TicketReplyAppLayout',
+        'linkedEntity': 'TicketReply',
+        'config': {
+          'navItems': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+              'icon': 'inbox',
+              'label': 'Tickets',
+              'href': '/tickets',
             },
             {
-              'event': 'TicketReplyLoaded',
-              'description': 'Fired when TicketReply finishes loading',
-              'scope': 'internal',
+              'icon': 'message-circle',
+              'label': 'Replies',
+              'href': '/replies',
+            },
+            {
+              'label': 'Metrics',
+              'icon': 'layout-list',
+              'href': '/metrics',
+            },
+          ],
+          'searchEvent': 'TICKET_REPLY_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.TicketReplyBrowse',
+          'appName': 'Helpdesk',
+          'notificationClickEvent': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TICKET_REPLY_SEARCH',
+        },
+      }),
+      {
+        'name': 'TicketReplyBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'TicketReply',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TicketReplyLoaded',
+            'description': 'Fired when TicketReply finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[TicketReply]',
+              },
+            ],
+          },
+          {
+            'event': 'TicketReplyLoadFailed',
+            'description': 'Fired when TicketReply fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'REPLY_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketReplyPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TicketReplyLoaded',
+              'name': 'TicketReply loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1320,9 +1166,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'TicketReplyLoadFailed',
-              'description': 'Fired when TicketReply fails to load',
-              'scope': 'internal',
+              'key': 'TicketReplyLoadFailed',
+              'name': 'TicketReply load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1334,708 +1179,751 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalDefinition[] {
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'REPLY_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketReplyPersistor',
-              },
+              'key': 'CREATE',
+              'name': 'Create',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'TicketReplyLoaded',
-                'name': 'TicketReply loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'TicketReply',
                   {
-                    'name': 'data',
-                    'type': '[TicketReply]',
+                    'emit': {
+                      'success': 'TicketReplyLoaded',
+                      'failure': 'TicketReplyLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'TicketReplyLoadFailed',
-                'name': 'TicketReply load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'TicketReply',
-                    {
-                      'emit': {
-                        'success': 'TicketReplyLoaded',
-                        'failure': 'TicketReplyLoadFailed',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Loading…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'TicketReplyLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'message-circle',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Replies',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Compose',
-                              'icon': 'edit',
-                              'variant': 'primary',
-                              'action': 'CREATE',
-                            },
-                          ],
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TicketReplyComposerForm',
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'data-list',
-                          'fields': [
-                            {
-                              'variant': 'h4',
-                              'name': 'author',
-                              'icon': 'message-circle',
-                            },
-                            {
-                              'variant': 'body',
-                              'name': 'body',
-                            },
-                            {
-                              'name': 'createdAt',
-                              'variant': 'caption',
-                              'format': 'date',
-                            },
-                          ],
-                          'entity': '@payload.data',
-                          'variant': 'card',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'className': 'max-w-5xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'TicketReplyLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'name': 'alert-triangle',
-                          'color': 'destructive',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Failed to load replies',
-                        },
-                        {
-                          'content': '@payload.error',
-                          'type': 'typography',
-                          'color': 'muted',
-                          'variant': 'body',
-                        },
-                        {
-                          'label': 'Retry',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'action': 'INIT',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'TicketReplyComposerForm',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'SEND',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SEND',
-                'name': 'Send',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'content': 'New reply',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'type': 'textarea',
-                          'placeholder': 'Write your reply…',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'justify': 'end',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'icon': 'save',
-                              'type': 'button',
-                              'label': 'Save Draft',
-                              'action': 'CREATE',
-                              'variant': 'ghost',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Send Reply',
-                              'icon': 'send',
-                              'variant': 'primary',
-                              'action': 'SEND',
-                            },
-                          ],
-                          'gap': 'sm',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TicketReplyCreate',
-          'linkedEntity': 'TicketReply',
-          'config': {
-            'mode': 'create',
-            'title': 'New Reply',
-            'fields': [
-              'ticketId',
-              'body',
-              'author',
-              'customerEmail',
-              'subject',
-            ],
-            'icon': 'message-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketReplyComposerForm',
-              },
-            },
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketReplyBrowse',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Email.traits.ServiceEmailEmail',
-          'name': 'TicketReplyEmail',
-          'config': {
-            'recipient': '',
-            'uiTrait': '@trait.TicketReplyComposerForm',
-            'body': '',
-            'subject': 'Re: your ticket',
-            'sender': 'support@example.com',
-          },
-          'listens': [
-            {
-              'event': 'SEND',
-              'triggers': 'SEND',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketReplyComposerForm',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'TicketReplyPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'TicketReply',
-          'emits': [
-            {
-              'event': 'REPLY_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TicketReplyCreate',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Loading…',
+                        'color': 'muted',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
-              },
-              {
-                'key': 'REPLY_CREATED',
-                'name': 'Reply Created',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'TicketReply',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'REPLY_CREATED',
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TicketReplyLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'message-circle',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Replies',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Compose',
+                            'icon': 'edit',
+                            'variant': 'primary',
+                            'action': 'CREATE',
+                          },
+                        ],
+                        'justify': 'between',
                       },
-                    },
-                  ],
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TicketReplyComposerForm',
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'data-list',
+                        'fields': [
+                          {
+                            'variant': 'h4',
+                            'name': 'author',
+                            'icon': 'message-circle',
+                          },
+                          {
+                            'variant': 'body',
+                            'name': 'body',
+                          },
+                          {
+                            'name': 'createdAt',
+                            'variant': 'caption',
+                            'format': 'date',
+                          },
+                        ],
+                        'entity': '@payload.data',
+                        'variant': 'card',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-5xl mx-auto w-full',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Replies',
-          'path': '/replies',
-          'traits': [
-            {
-              'ref': 'TicketReplyAppLayout',
+              ],
             },
             {
-              'ref': 'TicketReplyBrowse',
-            },
-            {
-              'ref': 'TicketReplyComposerForm',
-            },
-            {
-              'ref': 'TicketReplyCreate',
-            },
-            {
-              'ref': 'TicketReplyEmail',
-            },
-            {
-              'ref': 'TicketReplyPersistor',
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'TicketReplyLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Failed to load replies',
+                      },
+                      {
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'body',
+                      },
+                      {
+                        'label': 'Retry',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'SupportMetricsOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'SupportMetric',
-        'collection': 'supportmetrics',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'TicketReplyComposerForm',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'open',
-            'values': [
-              'open',
-              'in-progress',
-              'resolved',
-              'closed',
+            'event': 'SEND',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
           },
           {
-            'name': 'priority',
-            'type': 'string',
-            'default': 'medium',
-            'values': [
-              'low',
-              'medium',
-              'high',
-              'critical',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'responseHours',
-            'type': 'number',
-            'default': 0,
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'SupportMetricsAppLayout',
-          'linkedEntity': 'SupportMetric',
-          'config': {
-            'searchEvent': 'SUPPORT_METRICS_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
-            'appName': 'Helpdesk',
-            'contentTrait': '@trait.SupportMetricsDisplay',
-            'navItems': [
-              {
-                'icon': 'inbox',
-                'label': 'Tickets',
-                'href': '/tickets',
-              },
-              {
-                'href': '/replies',
-                'icon': 'message-circle',
-                'label': 'Replies',
-              },
-              {
-                'href': '/metrics',
-                'icon': 'layout-list',
-                'label': 'Metrics',
-              },
-            ],
-          },
-          'events': {
-            'SEARCH': 'SUPPORT_METRICS_SEARCH',
-            'NOTIFY_CLICK': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'SupportMetricsBrowse',
-          'linkedEntity': 'SupportMetric',
-          'config': {
-            'pageSize': 100,
-            'fields': [
-              {
-                'variant': 'h4',
-                'label': 'Name',
-                'name': 'name',
-              },
-              {
-                'variant': 'caption',
-                'name': 'category',
-                'label': 'Category',
-              },
-              {
-                'label': 'Status',
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'name': 'priority',
-                'label': 'Priority',
-                'variant': 'badge',
-              },
-            ],
-            'displayPageSize': 5,
-          },
-        }),
-        {
-          'name': 'SupportMetricsDisplay',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'activity',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Support Metrics',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Recent',
-                        },
-                        '@trait.SupportMetricsBrowse',
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Metrics',
-          'path': '/metrics',
-          'traits': [
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'SupportMetricsAppLayout',
-            },
-            {
-              'ref': 'SupportMetricsDisplay',
-            },
-            {
-              'ref': 'SupportMetricsBrowse',
+              'name': 'ready',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SEND',
+              'name': 'Send',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'content': 'New reply',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'textarea',
+                        'placeholder': 'Write your reply…',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'justify': 'end',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'icon': 'save',
+                            'type': 'button',
+                            'label': 'Save Draft',
+                            'action': 'CREATE',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Send Reply',
+                            'icon': 'send',
+                            'variant': 'primary',
+                            'action': 'SEND',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TicketReplyCreate',
+        'linkedEntity': 'TicketReply',
+        'config': {
+          'mode': 'create',
+          'title': 'New Reply',
+          'fields': [
+            'ticketId',
+            'body',
+            'author',
+            'customerEmail',
+            'subject',
+          ],
+          'icon': 'message-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketReplyComposerForm',
+            },
+          },
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketReplyBrowse',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Email.traits.ServiceEmailEmail',
+        'name': 'TicketReplyEmail',
+        'config': {
+          'recipient': '',
+          'uiTrait': '@trait.TicketReplyComposerForm',
+          'body': '',
+          'subject': 'Re: your ticket',
+          'sender': 'support@example.com',
+        },
+        'listens': [
+          {
+            'event': 'SEND',
+            'triggers': 'SEND',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketReplyComposerForm',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TicketReplyPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'TicketReply',
+        'emits': [
+          {
+            'event': 'REPLY_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TicketReplyCreate',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'REPLY_CREATED',
+              'name': 'Reply Created',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'TicketReply',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'REPLY_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Replies',
+        'path': '/replies',
+        'traits': [
+          {
+            'ref': 'TicketReplyAppLayout',
+          },
+          {
+            'ref': 'TicketReplyBrowse',
+          },
+          {
+            'ref': 'TicketReplyComposerForm',
+          },
+          {
+            'ref': 'TicketReplyCreate',
+          },
+          {
+            'ref': 'TicketReplyEmail',
+          },
+          {
+            'ref': 'TicketReplyPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the SupportMetricsOrbital orbital.
+ *
+ * Canonical entity: SupportMetric.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHelpdeskSupportMetricsOrbitalParams {
+  /** Override the canonical entity name (default: 'SupportMetric'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the SupportMetricsOrbital orbital with consumer params. */
+export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetricsOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'SupportMetric';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'SupportMetricsOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'supportmetrics',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'open',
+          'values': [
+            'open',
+            'in-progress',
+            'resolved',
+            'closed',
+          ],
+        },
+        {
+          'name': 'priority',
+          'type': 'string',
+          'default': 'medium',
+          'values': [
+            'low',
+            'medium',
+            'high',
+            'critical',
+          ],
+        },
+        {
+          'name': 'responseHours',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'SupportMetricsAppLayout',
+        'linkedEntity': 'SupportMetric',
+        'config': {
+          'searchEvent': 'SUPPORT_METRICS_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
+          'appName': 'Helpdesk',
+          'contentTrait': '@trait.SupportMetricsDisplay',
+          'navItems': [
+            {
+              'icon': 'inbox',
+              'label': 'Tickets',
+              'href': '/tickets',
+            },
+            {
+              'href': '/replies',
+              'icon': 'message-circle',
+              'label': 'Replies',
+            },
+            {
+              'href': '/metrics',
+              'icon': 'layout-list',
+              'label': 'Metrics',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'SUPPORT_METRICS_SEARCH',
+          'NOTIFY_CLICK': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'SupportMetricsBrowse',
+        'linkedEntity': 'SupportMetric',
+        'config': {
+          'pageSize': 100,
+          'fields': [
+            {
+              'variant': 'h4',
+              'label': 'Name',
+              'name': 'name',
+            },
+            {
+              'variant': 'caption',
+              'name': 'category',
+              'label': 'Category',
+            },
+            {
+              'label': 'Status',
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'name': 'priority',
+              'label': 'Priority',
+              'variant': 'badge',
+            },
+          ],
+          'displayPageSize': 5,
+        },
+      }),
+      {
+        'name': 'SupportMetricsDisplay',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'activity',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Support Metrics',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Recent',
+                      },
+                      '@trait.SupportMetricsBrowse',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Metrics',
+        'path': '/metrics',
+        'traits': [
+          {
+            'ref': 'SupportMetricsAppLayout',
+          },
+          {
+            'ref': 'SupportMetricsDisplay',
+          },
+          {
+            'ref': 'SupportMetricsBrowse',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-helpdesk — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdHelpdeskParams {
+  Ticket?: StdHelpdeskTicketOrbitalParams;
+  TicketReply?: StdHelpdeskTicketReplyOrbitalParams;
+  SupportMetrics?: StdHelpdeskSupportMetricsOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdHelpdesk(params: StdHelpdeskParams = {}): OrbitalDefinition[] {
+  return [
+    stdHelpdeskTicketOrbital(params.Ticket ?? {}),
+    stdHelpdeskTicketReplyOrbital(params.TicketReply ?? {}),
+    stdHelpdeskSupportMetricsOrbital(params.SupportMetrics ?? {}),
+  ];
 }

@@ -34,1243 +34,1083 @@ export interface StdFinanceTrackerConfig {
 }
 
 /**
- * Params for the std-finance-tracker descriptor helpers.
+ * Tunable params for the TransactionOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Transaction.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdFinanceTrackerParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdFinanceTrackerTransactionOrbitalParams {
+  /** Override the canonical entity name (default: 'Transaction'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdFinanceTrackerConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `FinanceTracker.traits.TransactionAppLayout`. */
-export function stdFinanceTrackerTransactionAppLayoutTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the TransactionOrbital orbital with consumer params. */
+export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTransactionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Transaction';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TransactionOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'transactions',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'amount',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'account',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'type',
+          'type': 'string',
+          'default': 'expense',
+          'values': [
+            'income',
+            'expense',
+          ],
+        },
+        {
+          'name': 'date',
+          'type': 'datetime',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TransactionAppLayout',
+        'config': {
+          'searchEvent': 'TRANSACTION_SEARCH',
+          'appName': 'Finance Tracker',
+          'notifications': [],
+          'contentTrait': '@trait.TransactionCatalog',
+          'notificationClickEvent': 'TRANSACTION_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'label': 'Transactions',
+              'icon': 'receipt',
+              'href': '/transactions',
+            },
+            {
+              'icon': 'layout-list',
+              'href': '/summary',
+              'label': 'Summary',
+            },
+            {
+              'href': '/reports',
+              'icon': 'bar-chart',
+              'label': 'Reports',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TRANSACTION_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TRANSACTION_SEARCH',
+        },
+      }),
+      {
+        'name': 'TransactionCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'TRANSACTION_SEARCH',
+            'triggers': 'TRANSACTION_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionAppLayout',
+            },
+          },
+          {
+            'event': 'TRANSACTION_NOTIFICATIONS_OPEN',
+            'triggers': 'TRANSACTION_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TRANSACTION_SEARCH',
+              'name': 'Transaction Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TRANSACTION_NOTIFICATIONS_OPEN',
+              'name': 'Transaction Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'receipt',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Transactions',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'children': [
+                              {
+                                'label': 'Add Transaction',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'type': 'button',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'align': 'center',
+                        'children': [
+                          '@trait.TransactionSearch',
+                          '@trait.TransactionFilter',
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      '@trait.TransactionStats',
+                      '@trait.TransactionGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TransactionBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TRANSACTION_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TRANSACTION_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'label': 'Back to transactions',
+                        'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'TransactionSearch',
+        'config': {
+          'placeholder': 'Search transactions…',
+          'event': 'TRANSACTION_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'TransactionFilter',
+        'config': {
+          'event': 'TRANSACTION_FILTER',
+          'filters': [
+            {
+              'label': 'Category',
+              'field': 'category',
+              'filterType': 'text',
+            },
+            {
+              'label': 'Account',
+              'filterType': 'text',
+              'field': 'account',
+            },
+            {
+              'field': 'type',
+              'label': 'Type',
+              'filterType': 'select',
+              'options': [
+                'income',
+                'expense',
+              ],
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'TransactionStats',
+        'config': {
+          'title': 'Transactions',
+          'metrics': [
+            {
+              'field': 'amount',
+              'format': 'currency',
+              'aggregation': 'sum',
+              'label': 'Income',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.type',
+                  'income',
+                ],
+              ],
+              'icon': 'trending-up',
+            },
+            {
+              'aggregation': 'sum',
+              'field': 'amount',
+              'variant': 'error',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.type',
+                  'expense',
+                ],
+              ],
+              'label': 'Expenses',
+              'icon': 'trending-down',
+              'format': 'currency',
+            },
+            {
+              'aggregation': 'count',
+              'variant': 'primary',
+              'format': 'number',
+              'label': 'Savings Rate',
+              'icon': 'percent',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'TransactionGraphs',
+        'config': {
+          'showLegend': true,
+          'categoryField': 'category',
+          'aggregation': 'sum',
+          'height': 240,
+          'title': 'Spending by Category',
+          'chartType': 'pie',
+          'valueField': 'amount',
+          'subtitle': 'Distribution across categories',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'TransactionBrowseList',
+        'linkedEntity': 'Transaction',
+        'config': {
+          'cols': 1,
+          'fields': [
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'date',
+            },
+            {
+              'name': 'description',
+              'variant': 'h4',
+              'icon': 'receipt',
+            },
+            {
+              'variant': 'badge',
+              'name': 'category',
+            },
+            {
+              'variant': 'h4',
+              'format': 'currency',
+              'name': 'amount',
+            },
+            {
+              'variant': 'badge',
+              'name': 'type',
+            },
+          ],
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionFilter',
+            },
+          },
+          {
+            'event': 'TRANSACTION_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionPersistor',
+            },
+          },
+          {
+            'event': 'TRANSACTION_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionPersistor',
+            },
+          },
+          {
+            'event': 'TRANSACTION_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TransactionCreate',
+        'linkedEntity': 'Transaction',
+        'config': {
+          'title': 'Add Transaction',
+          'mode': 'create',
+          'fields': [
+            'description',
+            'amount',
+            'category',
+            'account',
+            'type',
+            'date',
+          ],
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TransactionEdit',
+        'linkedEntity': 'Transaction',
+        'config': {
+          'mode': 'edit',
+          'title': 'Edit Transaction',
+          'icon': 'edit',
+          'fields': [
+            'description',
+            'amount',
+            'category',
+            'account',
+            'type',
+            'date',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TransactionView',
+        'linkedEntity': 'Transaction',
+        'config': {
+          'fields': [
+            'description',
+            'amount',
+            'category',
+            'account',
+            'type',
+            'date',
+          ],
+          'title': 'View Transaction',
+          'icon': 'eye',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'TransactionDelete',
+        'linkedEntity': 'Transaction',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Transaction',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TransactionPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Transaction',
+        'emits': [
+          {
+            'event': 'TRANSACTION_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TRANSACTION_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TRANSACTION_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TransactionDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TRANSACTION_CREATED',
+              'name': 'Transaction Created',
+            },
+            {
+              'key': 'TRANSACTION_UPDATED',
+              'name': 'Transaction Updated',
+            },
+            {
+              'key': 'TRANSACTION_DELETED',
+              'name': 'Transaction Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Transaction',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TRANSACTION_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Transaction',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TRANSACTION_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Transaction',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'TRANSACTION_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'TransactionsPage',
+        'path': '/transactions',
+        'traits': [
+          {
+            'ref': 'TransactionAppLayout',
+          },
+          {
+            'ref': 'TransactionCatalog',
+          },
+          {
+            'ref': 'TransactionSearch',
+          },
+          {
+            'ref': 'TransactionFilter',
+          },
+          {
+            'ref': 'TransactionStats',
+          },
+          {
+            'ref': 'TransactionGraphs',
+          },
+          {
+            'ref': 'TransactionBrowseList',
+          },
+          {
+            'ref': 'TransactionCreate',
+          },
+          {
+            'ref': 'TransactionEdit',
+          },
+          {
+            'ref': 'TransactionView',
+          },
+          {
+            'ref': 'TransactionDelete',
+          },
+          {
+            'ref': 'TransactionPersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionCatalog`. */
-export function stdFinanceTrackerTransactionCatalogTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionSearch`. */
-export function stdFinanceTrackerTransactionSearchTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionFilter`. */
-export function stdFinanceTrackerTransactionFilterTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionStats`. */
-export function stdFinanceTrackerTransactionStatsTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionGraphs`. */
-export function stdFinanceTrackerTransactionGraphsTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionBrowseList`. */
-export function stdFinanceTrackerTransactionBrowseListTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionCreate`. */
-export function stdFinanceTrackerTransactionCreateTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionEdit`. */
-export function stdFinanceTrackerTransactionEditTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionView`. */
-export function stdFinanceTrackerTransactionViewTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionDelete`. */
-export function stdFinanceTrackerTransactionDeleteTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FinanceTracker.traits.TransactionPersistor`. */
-export function stdFinanceTrackerTransactionPersistorTrait(params: StdFinanceTrackerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TransactionPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `FinanceTracker.pages.TransactionsPage`. */
-export function stdFinanceTrackerPage(params: StdFinanceTrackerParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.TransactionsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Transaction';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TransactionOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Transaction',
-        'collection': 'transactions',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'amount',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'account',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'type',
-            'type': 'string',
-            'default': 'expense',
-            'values': [
-              'income',
-              'expense',
-            ],
-          },
-          {
-            'name': 'date',
-            'type': 'datetime',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TransactionAppLayout',
-          'config': {
-            'searchEvent': 'TRANSACTION_SEARCH',
-            'appName': 'Finance Tracker',
-            'notifications': [],
-            'contentTrait': '@trait.TransactionCatalog',
-            'notificationClickEvent': 'TRANSACTION_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'label': 'Transactions',
-                'icon': 'receipt',
-                'href': '/transactions',
-              },
-              {
-                'icon': 'layout-list',
-                'href': '/summary',
-                'label': 'Summary',
-              },
-              {
-                'href': '/reports',
-                'icon': 'bar-chart',
-                'label': 'Reports',
-              },
-            ],
-          },
-          'events': {
-            'NOTIFY_CLICK': 'TRANSACTION_NOTIFICATIONS_OPEN',
-            'SEARCH': 'TRANSACTION_SEARCH',
-          },
-        }),
-        {
-          'name': 'TransactionCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'TRANSACTION_SEARCH',
-              'triggers': 'TRANSACTION_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionAppLayout',
-              },
-            },
-            {
-              'event': 'TRANSACTION_NOTIFICATIONS_OPEN',
-              'triggers': 'TRANSACTION_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'TRANSACTION_SEARCH',
-                'name': 'Transaction Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TRANSACTION_NOTIFICATIONS_OPEN',
-                'name': 'Transaction Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'receipt',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Transactions',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'children': [
-                                {
-                                  'label': 'Add Transaction',
-                                  'icon': 'plus',
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'align': 'center',
-                          'children': [
-                            '@trait.TransactionSearch',
-                            '@trait.TransactionFilter',
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        '@trait.TransactionStats',
-                        '@trait.TransactionGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TransactionBrowseList',
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TRANSACTION_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TRANSACTION_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'label': 'Back to transactions',
-                          'type': 'button',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'className': 'py-8',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'TransactionSearch',
-          'config': {
-            'placeholder': 'Search transactions…',
-            'event': 'TRANSACTION_SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'TransactionFilter',
-          'config': {
-            'event': 'TRANSACTION_FILTER',
-            'filters': [
-              {
-                'label': 'Category',
-                'field': 'category',
-                'filterType': 'text',
-              },
-              {
-                'label': 'Account',
-                'filterType': 'text',
-                'field': 'account',
-              },
-              {
-                'field': 'type',
-                'label': 'Type',
-                'filterType': 'select',
-                'options': [
-                  'income',
-                  'expense',
-                ],
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'TransactionStats',
-          'config': {
-            'title': 'Transactions',
-            'metrics': [
-              {
-                'field': 'amount',
-                'format': 'currency',
-                'aggregation': 'sum',
-                'label': 'Income',
-                'variant': 'success',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.type',
-                    'income',
-                  ],
-                ],
-                'icon': 'trending-up',
-              },
-              {
-                'aggregation': 'sum',
-                'field': 'amount',
-                'variant': 'error',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.type',
-                    'expense',
-                  ],
-                ],
-                'label': 'Expenses',
-                'icon': 'trending-down',
-                'format': 'currency',
-              },
-              {
-                'aggregation': 'count',
-                'variant': 'primary',
-                'format': 'number',
-                'label': 'Savings Rate',
-                'icon': 'percent',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'TransactionGraphs',
-          'config': {
-            'showLegend': true,
-            'categoryField': 'category',
-            'aggregation': 'sum',
-            'height': 240,
-            'title': 'Spending by Category',
-            'chartType': 'pie',
-            'valueField': 'amount',
-            'subtitle': 'Distribution across categories',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'TransactionBrowseList',
-          'linkedEntity': 'Transaction',
-          'config': {
-            'cols': 1,
-            'fields': [
-              {
-                'variant': 'caption',
-                'format': 'date',
-                'name': 'date',
-              },
-              {
-                'name': 'description',
-                'variant': 'h4',
-                'icon': 'receipt',
-              },
-              {
-                'variant': 'badge',
-                'name': 'category',
-              },
-              {
-                'variant': 'h4',
-                'format': 'currency',
-                'name': 'amount',
-              },
-              {
-                'variant': 'badge',
-                'name': 'type',
-              },
-            ],
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'label': 'View',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Edit',
-                'variant': 'ghost',
-                'event': 'EDIT',
-              },
-              {
-                'variant': 'danger',
-                'event': 'DELETE',
-                'label': 'Delete',
-              },
-            ],
-            'gap': 'sm',
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionFilter',
-              },
-            },
-            {
-              'event': 'TRANSACTION_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionPersistor',
-              },
-            },
-            {
-              'event': 'TRANSACTION_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionPersistor',
-              },
-            },
-            {
-              'event': 'TRANSACTION_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TransactionCreate',
-          'linkedEntity': 'Transaction',
-          'config': {
-            'title': 'Add Transaction',
-            'mode': 'create',
-            'fields': [
-              'description',
-              'amount',
-              'category',
-              'account',
-              'type',
-              'date',
-            ],
-            'icon': 'plus-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TransactionEdit',
-          'linkedEntity': 'Transaction',
-          'config': {
-            'mode': 'edit',
-            'title': 'Edit Transaction',
-            'icon': 'edit',
-            'fields': [
-              'description',
-              'amount',
-              'category',
-              'account',
-              'type',
-              'date',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TransactionView',
-          'linkedEntity': 'Transaction',
-          'config': {
-            'fields': [
-              'description',
-              'amount',
-              'category',
-              'account',
-              'type',
-              'date',
-            ],
-            'title': 'View Transaction',
-            'icon': 'eye',
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'TransactionDelete',
-          'linkedEntity': 'Transaction',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Transaction',
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'TransactionPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Transaction',
-          'emits': [
-            {
-              'event': 'TRANSACTION_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TRANSACTION_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TRANSACTION_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TransactionDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TRANSACTION_CREATED',
-                'name': 'Transaction Created',
-              },
-              {
-                'key': 'TRANSACTION_UPDATED',
-                'name': 'Transaction Updated',
-              },
-              {
-                'key': 'TRANSACTION_DELETED',
-                'name': 'Transaction Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Transaction',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TRANSACTION_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Transaction',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TRANSACTION_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Transaction',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'TRANSACTION_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'TransactionsPage',
-          'path': '/transactions',
-          'traits': [
-            {
-              'ref': 'TransactionAppLayout',
-            },
-            {
-              'ref': 'TransactionCatalog',
-            },
-            {
-              'ref': 'TransactionSearch',
-            },
-            {
-              'ref': 'TransactionFilter',
-            },
-            {
-              'ref': 'TransactionStats',
-            },
-            {
-              'ref': 'TransactionGraphs',
-            },
-            {
-              'ref': 'TransactionBrowseList',
-            },
-            {
-              'ref': 'TransactionCreate',
-            },
-            {
-              'ref': 'TransactionEdit',
-            },
-            {
-              'ref': 'TransactionView',
-            },
-            {
-              'ref': 'TransactionDelete',
-            },
-            {
-              'ref': 'TransactionPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'FinanceSummaryOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the FinanceSummaryOrbital orbital.
+ *
+ * Canonical entity: FinanceSummary.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdFinanceTrackerFinanceSummaryOrbitalParams {
+  /** Override the canonical entity name (default: 'FinanceSummary'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the FinanceSummaryOrbital orbital with consumer params. */
+export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTrackerFinanceSummaryOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'FinanceSummary';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'FinanceSummaryOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'totalIncome',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'totalExpenses',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'balance',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'savingsRate',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'FinanceSummary',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'FinanceSummaryAppLayout',
+        'linkedEntity': 'FinanceSummary',
+        'config': {
+          'navItems': [
+            {
+              'label': 'Transactions',
+              'href': '/transactions',
+              'icon': 'receipt',
+            },
+            {
+              'href': '/summary',
+              'label': 'Summary',
+              'icon': 'layout-list',
+            },
+            {
+              'href': '/reports',
+              'icon': 'bar-chart',
+              'label': 'Reports',
+            },
+          ],
+          'contentTrait': '@trait.FinanceSummaryDisplay',
+          'appName': 'Finance Tracker',
+          'searchEvent': 'FINANCE_SUMMARY_SEARCH',
+          'notificationClickEvent': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'FINANCE_SUMMARY_SEARCH',
+          'NOTIFY_CLICK': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'FinanceSummaryDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'FinanceSummary',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'totalIncome',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'totalExpenses',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'balance',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'savingsRate',
-            'type': 'number',
-            'default': 0,
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'FinanceSummaryAppLayout',
-          'linkedEntity': 'FinanceSummary',
-          'config': {
-            'navItems': [
+            'event': 'FinanceSummaryLoaded',
+            'description': 'Fired when FinanceSummary finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'label': 'Transactions',
-                'href': '/transactions',
-                'icon': 'receipt',
-              },
-              {
-                'href': '/summary',
-                'label': 'Summary',
-                'icon': 'layout-list',
-              },
-              {
-                'href': '/reports',
-                'icon': 'bar-chart',
-                'label': 'Reports',
+                'name': 'data',
+                'type': '[FinanceSummary]',
               },
             ],
-            'contentTrait': '@trait.FinanceSummaryDisplay',
-            'appName': 'Finance Tracker',
-            'searchEvent': 'FINANCE_SUMMARY_SEARCH',
-            'notificationClickEvent': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
-            'notifications': [],
           },
-          'events': {
-            'SEARCH': 'FINANCE_SUMMARY_SEARCH',
-            'NOTIFY_CLICK': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
+          {
+            'event': 'FinanceSummaryLoadFailed',
+            'description': 'Fired when FinanceSummary fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'FinanceSummaryDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'FinanceSummary',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'FinanceSummaryLoaded',
-              'description': 'Fired when FinanceSummary finishes loading',
-              'scope': 'internal',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'FinanceSummaryLoaded',
+              'name': 'FinanceSummary loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1279,9 +1119,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
               ],
             },
             {
-              'event': 'FinanceSummaryLoadFailed',
-              'description': 'Fired when FinanceSummary fails to load',
-              'scope': 'internal',
+              'key': 'FinanceSummaryLoadFailed',
+              'name': 'FinanceSummary load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1294,465 +1133,521 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'FinanceSummaryLoaded',
-                'name': 'FinanceSummary loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[FinanceSummary]',
-                  },
-                ],
-              },
-              {
-                'key': 'FinanceSummaryLoadFailed',
-                'name': 'FinanceSummary load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.balance',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.savingsRate',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.totalExpenses',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.totalIncome',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'FinanceSummary',
-                    {
-                      'emit': {
-                        'failure': 'FinanceSummaryLoadFailed',
-                        'success': 'FinanceSummaryLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'breadcrumb',
-                          'items': [
-                            {
-                              'label': 'Home',
-                              'href': '/',
-                            },
-                            {
-                              'label': 'Financial Summary',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'pie-chart',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Financial Summary',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'button',
-                              'action': 'REFRESH',
-                              'variant': 'secondary',
-                              'label': 'Refresh',
-                              'icon': 'refresh-cw',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'cols': 4,
-                          'children': [
-                            {
-                              'icon': 'trending-up',
-                              'label': 'Total Income',
-                              'value': '@entity.totalIncome',
-                              'type': 'stat-display',
-                              'variant': 'success',
-                            },
-                            {
-                              'variant': 'error',
-                              'value': '@entity.totalExpenses',
-                              'icon': 'trending-down',
-                              'type': 'stat-display',
-                              'label': 'Total Expenses',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Balance',
-                              'value': '@entity.balance',
-                              'icon': 'wallet',
-                              'variant': 'primary',
-                            },
-                            {
-                              'value': '@entity.savingsRate',
-                              'label': 'Savings Rate',
-                              'icon': 'percent',
-                              'type': 'stat-display',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'FinanceSummary',
-                    {
-                      'emit': {
-                        'failure': 'FinanceSummaryLoadFailed',
-                        'success': 'FinanceSummaryLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Summary',
-          'path': '/summary',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'FinanceSummaryAppLayout',
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.balance',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.savingsRate',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalExpenses',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalIncome',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'FinanceSummary',
+                  {
+                    'emit': {
+                      'failure': 'FinanceSummaryLoadFailed',
+                      'success': 'FinanceSummaryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'breadcrumb',
+                        'items': [
+                          {
+                            'label': 'Home',
+                            'href': '/',
+                          },
+                          {
+                            'label': 'Financial Summary',
+                          },
+                        ],
+                      },
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'pie-chart',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Financial Summary',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'REFRESH',
+                            'variant': 'secondary',
+                            'label': 'Refresh',
+                            'icon': 'refresh-cw',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 4,
+                        'children': [
+                          {
+                            'icon': 'trending-up',
+                            'label': 'Total Income',
+                            'value': '@entity.totalIncome',
+                            'type': 'stat-display',
+                            'variant': 'success',
+                          },
+                          {
+                            'variant': 'error',
+                            'value': '@entity.totalExpenses',
+                            'icon': 'trending-down',
+                            'type': 'stat-display',
+                            'label': 'Total Expenses',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Balance',
+                            'value': '@entity.balance',
+                            'icon': 'wallet',
+                            'variant': 'primary',
+                          },
+                          {
+                            'value': '@entity.savingsRate',
+                            'label': 'Savings Rate',
+                            'icon': 'percent',
+                            'type': 'stat-display',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'FinanceSummaryDisplay',
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'FinanceSummary',
+                  {
+                    'emit': {
+                      'failure': 'FinanceSummaryLoadFailed',
+                      'success': 'FinanceSummaryLoaded',
+                    },
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'FinanceReportOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-      ],
-      entity: {
-        'name': 'FinanceReport',
-        'collection': 'financereports',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Summary',
+        'path': '/summary',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'FinanceSummaryAppLayout',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'period',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'dateRange',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'filters',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'total',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'generatedAt',
-            'type': 'datetime',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'FinanceSummaryDisplay',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'FinanceReportAppLayout',
-          'linkedEntity': 'FinanceReport',
-          'config': {
-            'navItems': [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the FinanceReportOrbital orbital.
+ *
+ * Canonical entity: FinanceReport.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdFinanceTrackerFinanceReportOrbitalParams {
+  /** Override the canonical entity name (default: 'FinanceReport'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the FinanceReportOrbital orbital with consumer params. */
+export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerFinanceReportOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'FinanceReport';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'FinanceReportOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'financereports',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'period',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'dateRange',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'filters',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'total',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'generatedAt',
+          'type': 'datetime',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'FinanceReportAppLayout',
+        'linkedEntity': 'FinanceReport',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'receipt',
+              'label': 'Transactions',
+              'href': '/transactions',
+            },
+            {
+              'icon': 'layout-list',
+              'label': 'Summary',
+              'href': '/summary',
+            },
+            {
+              'href': '/reports',
+              'label': 'Reports',
+              'icon': 'bar-chart',
+            },
+          ],
+          'notifications': [],
+          'notificationClickEvent': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
+          'appName': 'Finance Tracker',
+          'searchEvent': 'FINANCE_REPORT_SEARCH',
+          'contentTrait': '@trait.FinanceReportBrowse',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'FINANCE_REPORT_SEARCH',
+        },
+      }),
+      {
+        'name': 'FinanceReportBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'FinanceReport',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'receipt',
-                'label': 'Transactions',
-                'href': '/transactions',
-              },
-              {
-                'icon': 'layout-list',
-                'label': 'Summary',
-                'href': '/summary',
-              },
-              {
-                'href': '/reports',
-                'label': 'Reports',
-                'icon': 'bar-chart',
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'notifications': [],
-            'notificationClickEvent': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
-            'appName': 'Finance Tracker',
-            'searchEvent': 'FINANCE_REPORT_SEARCH',
-            'contentTrait': '@trait.FinanceReportBrowse',
           },
-          'events': {
-            'NOTIFY_CLICK': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
-            'SEARCH': 'FINANCE_REPORT_SEARCH',
+          {
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.dateRange',
+                'type': 'string',
+              },
+              {
+                'name': 'row.filters',
+                'type': 'string',
+              },
+              {
+                'name': 'row.total',
+                'type': 'number',
+              },
+              {
+                'name': 'row.generatedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'FinanceReportBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'FinanceReport',
-          'emits': [
+          {
+            'event': 'EXPORT_PDF',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.dateRange',
+                'type': 'string',
+              },
+              {
+                'name': 'row.filters',
+                'type': 'string',
+              },
+              {
+                'name': 'row.total',
+                'type': 'number',
+              },
+              {
+                'name': 'row.generatedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EXPORT_CSV',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.dateRange',
+                'type': 'string',
+              },
+              {
+                'name': 'row.filters',
+                'type': 'string',
+              },
+              {
+                'name': 'row.total',
+                'type': 'number',
+              },
+              {
+                'name': 'row.generatedAt',
+                'type': 'datetime',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'FinanceReportLoaded',
+            'description': 'Fired when FinanceReport finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[FinanceReport]',
+              },
+            ],
+          },
+          {
+            'event': 'FinanceReportLoadFailed',
+            'description': 'Fired when FinanceReport fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'REPORT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FinanceReportPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
-              'event': 'VIEW',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.title',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.period',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.dateRange',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.filters',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.total',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.generatedAt',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'EXPORT_PDF',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.title',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.period',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.dateRange',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.filters',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.total',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.generatedAt',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'EXPORT_CSV',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.title',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.period',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.dateRange',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.filters',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.total',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.generatedAt',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'FinanceReportLoaded',
-              'description': 'Fired when FinanceReport finishes loading',
-              'scope': 'internal',
+              'key': 'FinanceReportLoaded',
+              'name': 'FinanceReport loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1761,9 +1656,8 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
               ],
             },
             {
-              'event': 'FinanceReportLoadFailed',
-              'description': 'Fired when FinanceReport fails to load',
-              'scope': 'internal',
+              'key': 'FinanceReportLoadFailed',
+              'name': 'FinanceReport load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1775,485 +1669,479 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalDefin
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'REPORT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'FinanceReportPersistor',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'FinanceReportLoaded',
-                'name': 'FinanceReport loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[FinanceReport]',
-                  },
-                ],
-              },
-              {
-                'key': 'FinanceReportLoadFailed',
-                'name': 'FinanceReport load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'EXPORT_PDF',
-                'name': 'Export Pdf',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'FinanceReport',
-                  },
-                ],
-              },
-              {
-                'key': 'EXPORT_CSV',
-                'name': 'Export Csv',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'FinanceReport',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'FinanceReport',
-                    {
-                      'emit': {
-                        'success': 'FinanceReportLoaded',
-                        'failure': 'FinanceReportLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': 'Loading…',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'FinanceReportLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'file-text',
-                                },
-                                {
-                                  'content': 'Reports',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                  'label': 'New Report',
-                                },
-                              ],
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'info',
-                          'message': 'Generated reports are downloadable as PDF or CSV.',
-                        },
-                        {
-                          'fields': [
-                            {
-                              'icon': 'file-text',
-                              'name': 'title',
-                              'variant': 'h3',
-                            },
-                            {
-                              'variant': 'badge',
-                              'name': 'period',
-                            },
-                            {
-                              'name': 'dateRange',
-                              'variant': 'caption',
-                              'label': 'Date Range',
-                            },
-                            {
-                              'name': 'total',
-                              'variant': 'h4',
-                              'format': 'currency',
-                            },
-                            {
-                              'label': 'Generated',
-                              'format': 'date',
-                              'name': 'generatedAt',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'type': 'data-list',
-                          'itemActions': [
-                            {
-                              'variant': 'ghost',
-                              'label': 'Preview',
-                              'event': 'VIEW',
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Download PDF',
-                              'event': 'EXPORT_PDF',
-                            },
-                            {
-                              'label': 'Download CSV',
-                              'event': 'EXPORT_CSV',
-                              'variant': 'ghost',
-                            },
-                          ],
-                          'variant': 'card',
-                          'entity': '@payload.data',
-                        },
-                      ],
-                      'className': 'max-w-5xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'FinanceReportLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'name': 'alert-triangle',
-                          'type': 'icon',
-                          'color': 'destructive',
-                        },
-                        {
-                          'content': 'Failed to load reports',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'content': '@payload.error',
-                          'variant': 'body',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'label': 'Retry',
-                          'action': 'INIT',
-                          'type': 'button',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                      'className': 'py-12',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'EXPORT_PDF',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Downloading PDF…',
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'EXPORT_CSV',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Downloading CSV…',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'FinanceReportView',
-          'linkedEntity': 'FinanceReport',
-          'config': {
-            'title': 'Report Preview',
-            'icon': 'eye',
-            'mode': 'edit',
-            'fields': [
-              'title',
-              'period',
-              'dateRange',
-              'total',
-              'generatedAt',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'FinanceReportBrowse',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'FinanceReportCreate',
-          'linkedEntity': 'FinanceReport',
-          'config': {
-            'title': 'New Report',
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'fields': [
-              'title',
-              'period',
-              'dateRange',
-              'filters',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'FinanceReportBrowse',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'FinanceReportPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'FinanceReport',
-          'emits': [
-            {
-              'event': 'REPORT_CREATED',
-              'scope': 'external',
+              'key': 'EXPORT_PDF',
+              'name': 'Export Pdf',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
+                {
+                  'name': 'row',
+                  'type': 'FinanceReport',
+                },
+              ],
+            },
+            {
+              'key': 'EXPORT_CSV',
+              'name': 'Export Csv',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'FinanceReport',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'FinanceReport',
+                  {
+                    'emit': {
+                      'success': 'FinanceReportLoaded',
+                      'failure': 'FinanceReportLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'Loading…',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'FinanceReportLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'file-text',
+                              },
+                              {
+                                'content': 'Reports',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'label': 'New Report',
+                              },
+                            ],
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'info',
+                        'message': 'Generated reports are downloadable as PDF or CSV.',
+                      },
+                      {
+                        'fields': [
+                          {
+                            'icon': 'file-text',
+                            'name': 'title',
+                            'variant': 'h3',
+                          },
+                          {
+                            'variant': 'badge',
+                            'name': 'period',
+                          },
+                          {
+                            'name': 'dateRange',
+                            'variant': 'caption',
+                            'label': 'Date Range',
+                          },
+                          {
+                            'name': 'total',
+                            'variant': 'h4',
+                            'format': 'currency',
+                          },
+                          {
+                            'label': 'Generated',
+                            'format': 'date',
+                            'name': 'generatedAt',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'type': 'data-list',
+                        'itemActions': [
+                          {
+                            'variant': 'ghost',
+                            'label': 'Preview',
+                            'event': 'VIEW',
+                          },
+                          {
+                            'variant': 'primary',
+                            'label': 'Download PDF',
+                            'event': 'EXPORT_PDF',
+                          },
+                          {
+                            'label': 'Download CSV',
+                            'event': 'EXPORT_CSV',
+                            'variant': 'ghost',
+                          },
+                        ],
+                        'variant': 'card',
+                        'entity': '@payload.data',
+                      },
+                    ],
+                    'className': 'max-w-5xl mx-auto w-full',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'FinanceReportLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                        'color': 'destructive',
+                      },
+                      {
+                        'content': 'Failed to load reports',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'label': 'Retry',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-12',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'EXPORT_PDF',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Downloading PDF…',
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'EXPORT_CSV',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Downloading CSV…',
+                ],
               ],
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'FinanceReportCreate',
-              },
-            },
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'FinanceReportView',
+        'linkedEntity': 'FinanceReport',
+        'config': {
+          'title': 'Report Preview',
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'period',
+            'dateRange',
+            'total',
+            'generatedAt',
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FinanceReportBrowse',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'FinanceReportCreate',
+        'linkedEntity': 'FinanceReport',
+        'config': {
+          'title': 'New Report',
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'title',
+            'period',
+            'dateRange',
+            'filters',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FinanceReportBrowse',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'FinanceReportPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'FinanceReport',
+        'emits': [
+          {
+            'event': 'REPORT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'REPORT_CREATED',
-                'name': 'Report Created',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'FinanceReport',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'REPORT_CREATED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Reports',
-          'path': '/reports',
-          'traits': [
-            {
-              'ref': 'FinanceReportAppLayout',
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FinanceReportCreate',
             },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'FinanceReportBrowse',
-            },
-            {
-              'ref': 'FinanceReportCreate',
-            },
-            {
-              'ref': 'FinanceReportView',
-            },
-            {
-              'ref': 'FinanceReportPersistor',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'REPORT_CREATED',
+              'name': 'Report Created',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'FinanceReport',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'REPORT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Reports',
+        'path': '/reports',
+        'traits': [
+          {
+            'ref': 'FinanceReportAppLayout',
+          },
+          {
+            'ref': 'FinanceReportBrowse',
+          },
+          {
+            'ref': 'FinanceReportCreate',
+          },
+          {
+            'ref': 'FinanceReportView',
+          },
+          {
+            'ref': 'FinanceReportPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-finance-tracker — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdFinanceTrackerParams {
+  Transaction?: StdFinanceTrackerTransactionOrbitalParams;
+  FinanceSummary?: StdFinanceTrackerFinanceSummaryOrbitalParams;
+  FinanceReport?: StdFinanceTrackerFinanceReportOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdFinanceTracker(params: StdFinanceTrackerParams = {}): OrbitalDefinition[] {
+  return [
+    stdFinanceTrackerTransactionOrbital(params.Transaction ?? {}),
+    stdFinanceTrackerFinanceSummaryOrbital(params.FinanceSummary ?? {}),
+    stdFinanceTrackerFinanceReportOrbital(params.FinanceReport ?? {}),
+  ];
 }

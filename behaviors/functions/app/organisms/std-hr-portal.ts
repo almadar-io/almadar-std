@@ -34,1460 +34,1342 @@ export interface StdHrPortalConfig {
 }
 
 /**
- * Params for the std-hr-portal descriptor helpers.
+ * Tunable params for the EmployeeOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Employee.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdHrPortalParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdHrPortalEmployeeOrbitalParams {
+  /** Override the canonical entity name (default: 'Employee'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdHrPortalConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `HrPortal.traits.EmployeeAppLayout`. */
-export function stdHrPortalEmployeeAppLayoutTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the EmployeeOrbital orbital with consumer params. */
+export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Employee';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'EmployeeOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'employees',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'email',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'department',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'role',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'hireDate',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'avatar',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'active',
+          'values': [
+            'active',
+            'leave',
+            'terminated',
+          ],
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'EmployeeAppLayout',
+        'config': {
+          'appName': 'HRPortal',
+          'contentTrait': '@trait.EmployeeCatalog',
+          'navItems': [
+            {
+              'icon': 'users',
+              'label': 'Employees',
+              'href': '/employees',
+            },
+            {
+              'href': '/onboarding',
+              'label': 'Onboarding',
+              'icon': 'clipboard-check',
+            },
+            {
+              'href': '/timeoff',
+              'icon': 'calendar',
+              'label': 'Time Off',
+            },
+            {
+              'icon': 'git-branch',
+              'href': '/org-chart',
+              'label': 'Org Chart',
+            },
+          ],
+          'searchEvent': 'EMPLOYEE_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'EMPLOYEE_SEARCH',
+        },
+      }),
+      {
+        'name': 'EmployeeCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EMPLOYEE_SEARCH',
+            'triggers': 'EMPLOYEE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeAppLayout',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+            'triggers': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EMPLOYEE_SEARCH',
+              'name': 'Employee Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+              'name': 'Employee Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'users',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Employees',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'label': 'Add Employee',
+                                'type': 'button',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          '@trait.EmployeeSearch',
+                          '@trait.EmployeeFilter',
+                        ],
+                      },
+                      '@trait.EmployeeStats',
+                      '@trait.EmployeeGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.EmployeeBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'EMPLOYEE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'label': 'Back to employees',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'EmployeeSearch',
+        'config': {
+          'placeholder': 'Search employees by name…',
+          'event': 'SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'EmployeeFilter',
+        'config': {
+          'filters': [
+            {
+              'field': 'department',
+              'options': [
+                'engineering',
+                'design',
+                'marketing',
+                'sales',
+                'hr',
+                'finance',
+              ],
+              'filterType': 'select',
+              'label': 'Department',
+            },
+            {
+              'options': [
+                'manager',
+                'lead',
+                'ic',
+                'intern',
+              ],
+              'field': 'role',
+              'label': 'Role',
+              'filterType': 'select',
+            },
+            {
+              'options': [
+                'active',
+                'leave',
+                'terminated',
+              ],
+              'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
+            },
+          ],
+          'event': 'FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'EmployeeStats',
+        'config': {
+          'title': 'Workforce Overview',
+          'metrics': [
+            {
+              'icon': 'users',
+              'format': 'number',
+              'label': 'Total Employees',
+              'variant': 'primary',
+              'aggregation': 'count',
+            },
+            {
+              'label': 'By Department',
+              'icon': 'layers',
+              'variant': 'default',
+              'aggregation': 'count',
+              'format': 'number',
+            },
+            {
+              'aggregation': 'count',
+              'variant': 'info',
+              'icon': 'user-plus',
+              'label': 'New This Month',
+              'format': 'number',
+            },
+            {
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'leave',
+                ],
+              ],
+              'icon': 'calendar-off',
+              'label': 'On Leave',
+              'variant': 'warning',
+              'aggregation': 'count',
+              'format': 'number',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'EmployeeGraphs',
+        'config': {
+          'categoryField': 'department',
+          'title': 'Employees by Department',
+          'height': 280,
+          'showLegend': true,
+          'aggregation': 'count',
+          'subtitle': 'Headcount distribution',
+          'chartType': 'pie',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'EmployeeBrowseList',
+        'linkedEntity': 'Employee',
+        'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'gap': 'sm',
+          'imageField': 'avatar',
+          'fields': [
+            {
+              'name': 'name',
+              'variant': 'h3',
+              'icon': 'user',
+            },
+            {
+              'variant': 'body',
+              'name': 'role',
+            },
+            {
+              'name': 'department',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'email',
+            },
+            {
+              'variant': 'caption',
+              'name': 'hireDate',
+              'label': 'Joined',
+              'format': 'date',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'EMPLOYEE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeCreate',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeEdit',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeDelete',
+            },
+          },
+          {
+            'event': 'ONBOARDED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'OnboardingOrbital',
+              'trait': 'OnboardingWizard',
+            },
+          },
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeFilter',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeCreate',
+        'linkedEntity': 'Employee',
+        'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'Add Employee',
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'hireDate',
+            'status',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+          'SAVE': 'EMPLOYEE_CREATED',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeEdit',
+        'linkedEntity': 'Employee',
+        'config': {
+          'title': 'Edit Employee',
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'hireDate',
+            'status',
+          ],
+          'mode': 'edit',
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+          'SAVE': 'EMPLOYEE_UPDATED',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeView',
+        'linkedEntity': 'Employee',
+        'config': {
+          'title': 'Employee Details',
+          'mode': 'edit',
+          'icon': 'eye',
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'hireDate',
+            'status',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'EmployeeDelete',
+        'linkedEntity': 'Employee',
+        'config': {
+          'title': 'Delete Employee',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'EMPLOYEE_DELETED',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'EmployeePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Employee',
+        'emits': [
+          {
+            'event': 'EMPLOYEE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'EMPLOYEE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'EMPLOYEE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EMPLOYEE_CREATED',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeCreate',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_UPDATED',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeEdit',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_DELETED',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Employee',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Employee',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'EMPLOYEE_CREATED',
+              'name': 'Employee Created',
+            },
+            {
+              'key': 'EMPLOYEE_UPDATED',
+              'name': 'Employee Updated',
+            },
+            {
+              'key': 'EMPLOYEE_DELETED',
+              'name': 'Employee Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Employee',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Employee',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Employee',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Storage.traits.ServiceStorageStorage',
+        'name': 'EmployeeAvatarUpload',
+        'config': {
+          'bucket': 'employee-avatars',
+          'maxSize': 5242880,
+          'acl': 'public-read',
+          'allowedMimeTypes': [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+          ],
+          'uiTrait': '@trait.EmployeeAvatarUploadForm',
+        },
+      }),
+      {
+        'name': 'EmployeeAvatarUploadForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'UPLOAD',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'image',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Upload Avatar',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'inputType': 'text',
+                        'type': 'input',
+                        'placeholder': 'Choose file path…',
+                      },
+                      {
+                        'variant': 'primary',
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                        'icon': 'upload',
+                        'label': 'Upload',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'EmployeesPage',
+        'path': '/employees',
+        'traits': [
+          {
+            'ref': 'EmployeeAppLayout',
+          },
+          {
+            'ref': 'EmployeeCatalog',
+          },
+          {
+            'ref': 'EmployeeSearch',
+          },
+          {
+            'ref': 'EmployeeFilter',
+          },
+          {
+            'ref': 'EmployeeStats',
+          },
+          {
+            'ref': 'EmployeeGraphs',
+          },
+          {
+            'ref': 'EmployeeBrowseList',
+          },
+          {
+            'ref': 'EmployeeCreate',
+          },
+          {
+            'ref': 'EmployeeEdit',
+          },
+          {
+            'ref': 'EmployeeView',
+          },
+          {
+            'ref': 'EmployeeDelete',
+          },
+          {
+            'ref': 'EmployeePersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'EmployeeAvatarPage',
+        'path': '/employees/upload',
+        'traits': [
+          {
+            'ref': 'EmployeeAppLayout',
+          },
+          {
+            'ref': 'EmployeeAvatarUpload',
+          },
+          {
+            'ref': 'EmployeeAvatarUploadForm',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeCatalog`. */
-export function stdHrPortalEmployeeCatalogTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeSearch`. */
-export function stdHrPortalEmployeeSearchTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeFilter`. */
-export function stdHrPortalEmployeeFilterTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeStats`. */
-export function stdHrPortalEmployeeStatsTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeGraphs`. */
-export function stdHrPortalEmployeeGraphsTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeBrowseList`. */
-export function stdHrPortalEmployeeBrowseListTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeCreate`. */
-export function stdHrPortalEmployeeCreateTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeEdit`. */
-export function stdHrPortalEmployeeEditTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeView`. */
-export function stdHrPortalEmployeeViewTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeDelete`. */
-export function stdHrPortalEmployeeDeleteTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeePersistor`. */
-export function stdHrPortalEmployeePersistorTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeAvatarUpload`. */
-export function stdHrPortalEmployeeAvatarUploadTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeAvatarUpload`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `HrPortal.traits.EmployeeAvatarUploadForm`. */
-export function stdHrPortalEmployeeAvatarUploadFormTrait(params: StdHrPortalParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeAvatarUploadForm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `HrPortal.pages.EmployeesPage`. */
-export function stdHrPortalEmployeesPagePage(params: StdHrPortalParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.EmployeesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `HrPortal.pages.EmployeeAvatarPage`. */
-export function stdHrPortalEmployeeAvatarPagePage(params: StdHrPortalParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.EmployeeAvatarPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Employee';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'EmployeeOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
-        },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
-      ],
-      entity: {
-        'name': 'Employee',
-        'collection': 'employees',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'email',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'department',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'role',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'hireDate',
-            'type': 'datetime',
-            'required': true,
-          },
-          {
-            'name': 'avatar',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'active',
-            'values': [
-              'active',
-              'leave',
-              'terminated',
-            ],
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'EmployeeAppLayout',
-          'config': {
-            'appName': 'HRPortal',
-            'contentTrait': '@trait.EmployeeCatalog',
-            'navItems': [
-              {
-                'icon': 'users',
-                'label': 'Employees',
-                'href': '/employees',
-              },
-              {
-                'href': '/onboarding',
-                'label': 'Onboarding',
-                'icon': 'clipboard-check',
-              },
-              {
-                'href': '/timeoff',
-                'icon': 'calendar',
-                'label': 'Time Off',
-              },
-              {
-                'icon': 'git-branch',
-                'href': '/org-chart',
-                'label': 'Org Chart',
-              },
-            ],
-            'searchEvent': 'EMPLOYEE_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'EMPLOYEE_SEARCH',
-          },
-        }),
-        {
-          'name': 'EmployeeCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EMPLOYEE_SEARCH',
-              'triggers': 'EMPLOYEE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeAppLayout',
-              },
-            },
-            {
-              'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-              'triggers': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EMPLOYEE_SEARCH',
-                'name': 'Employee Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-                'name': 'Employee Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'users',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Employees',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                  'label': 'Add Employee',
-                                  'type': 'button',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'align': 'center',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            '@trait.EmployeeSearch',
-                            '@trait.EmployeeFilter',
-                          ],
-                        },
-                        '@trait.EmployeeStats',
-                        '@trait.EmployeeGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.EmployeeBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'EMPLOYEE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'label': 'Back to employees',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                          'type': 'button',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'EmployeeSearch',
-          'config': {
-            'placeholder': 'Search employees by name…',
-            'event': 'SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'EmployeeFilter',
-          'config': {
-            'filters': [
-              {
-                'field': 'department',
-                'options': [
-                  'engineering',
-                  'design',
-                  'marketing',
-                  'sales',
-                  'hr',
-                  'finance',
-                ],
-                'filterType': 'select',
-                'label': 'Department',
-              },
-              {
-                'options': [
-                  'manager',
-                  'lead',
-                  'ic',
-                  'intern',
-                ],
-                'field': 'role',
-                'label': 'Role',
-                'filterType': 'select',
-              },
-              {
-                'options': [
-                  'active',
-                  'leave',
-                  'terminated',
-                ],
-                'filterType': 'select',
-                'field': 'status',
-                'label': 'Status',
-              },
-            ],
-            'event': 'FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'EmployeeStats',
-          'config': {
-            'title': 'Workforce Overview',
-            'metrics': [
-              {
-                'icon': 'users',
-                'format': 'number',
-                'label': 'Total Employees',
-                'variant': 'primary',
-                'aggregation': 'count',
-              },
-              {
-                'label': 'By Department',
-                'icon': 'layers',
-                'variant': 'default',
-                'aggregation': 'count',
-                'format': 'number',
-              },
-              {
-                'aggregation': 'count',
-                'variant': 'info',
-                'icon': 'user-plus',
-                'label': 'New This Month',
-                'format': 'number',
-              },
-              {
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'leave',
-                  ],
-                ],
-                'icon': 'calendar-off',
-                'label': 'On Leave',
-                'variant': 'warning',
-                'aggregation': 'count',
-                'format': 'number',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'EmployeeGraphs',
-          'config': {
-            'categoryField': 'department',
-            'title': 'Employees by Department',
-            'height': 280,
-            'showLegend': true,
-            'aggregation': 'count',
-            'subtitle': 'Headcount distribution',
-            'chartType': 'pie',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'EmployeeBrowseList',
-          'linkedEntity': 'Employee',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-            'imageField': 'avatar',
-            'fields': [
-              {
-                'name': 'name',
-                'variant': 'h3',
-                'icon': 'user',
-              },
-              {
-                'variant': 'body',
-                'name': 'role',
-              },
-              {
-                'name': 'department',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'caption',
-                'name': 'email',
-              },
-              {
-                'variant': 'caption',
-                'name': 'hireDate',
-                'label': 'Joined',
-                'format': 'date',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'EMPLOYEE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeCreate',
-              },
-            },
-            {
-              'event': 'EMPLOYEE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeEdit',
-              },
-            },
-            {
-              'event': 'EMPLOYEE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeDelete',
-              },
-            },
-            {
-              'event': 'ONBOARDED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'OnboardingOrbital',
-                'trait': 'OnboardingWizard',
-              },
-            },
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeFilter',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'EmployeeCreate',
-          'linkedEntity': 'Employee',
-          'config': {
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'title': 'Add Employee',
-            'fields': [
-              'name',
-              'email',
-              'department',
-              'role',
-              'hireDate',
-              'status',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-            'SAVE': 'EMPLOYEE_CREATED',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'EmployeeEdit',
-          'linkedEntity': 'Employee',
-          'config': {
-            'title': 'Edit Employee',
-            'fields': [
-              'name',
-              'email',
-              'department',
-              'role',
-              'hireDate',
-              'status',
-            ],
-            'mode': 'edit',
-            'icon': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-            'SAVE': 'EMPLOYEE_UPDATED',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'EmployeeView',
-          'linkedEntity': 'Employee',
-          'config': {
-            'title': 'Employee Details',
-            'mode': 'edit',
-            'icon': 'eye',
-            'fields': [
-              'name',
-              'email',
-              'department',
-              'role',
-              'hireDate',
-              'status',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'EmployeeDelete',
-          'linkedEntity': 'Employee',
-          'config': {
-            'title': 'Delete Employee',
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'EMPLOYEE_DELETED',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'EmployeePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Employee',
-          'emits': [
-            {
-              'event': 'EMPLOYEE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'EMPLOYEE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'EMPLOYEE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EMPLOYEE_CREATED',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeCreate',
-              },
-            },
-            {
-              'event': 'EMPLOYEE_UPDATED',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeEdit',
-              },
-            },
-            {
-              'event': 'EMPLOYEE_DELETED',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'EmployeeDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Employee',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Employee',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'EMPLOYEE_CREATED',
-                'name': 'Employee Created',
-              },
-              {
-                'key': 'EMPLOYEE_UPDATED',
-                'name': 'Employee Updated',
-              },
-              {
-                'key': 'EMPLOYEE_DELETED',
-                'name': 'Employee Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Employee',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'EMPLOYEE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Employee',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'EMPLOYEE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Employee',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'EMPLOYEE_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Storage.traits.ServiceStorageStorage',
-          'name': 'EmployeeAvatarUpload',
-          'config': {
-            'bucket': 'employee-avatars',
-            'maxSize': 5242880,
-            'acl': 'public-read',
-            'allowedMimeTypes': [
-              'image/jpeg',
-              'image/png',
-              'image/webp',
-            ],
-            'uiTrait': '@trait.EmployeeAvatarUploadForm',
-          },
-        }),
-        {
-          'name': 'EmployeeAvatarUploadForm',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'UPLOAD',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'image',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Upload Avatar',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'inputType': 'text',
-                          'type': 'input',
-                          'placeholder': 'Choose file path…',
-                        },
-                        {
-                          'variant': 'primary',
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                          'icon': 'upload',
-                          'label': 'Upload',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'EmployeesPage',
-          'path': '/employees',
-          'traits': [
-            {
-              'ref': 'EmployeeAppLayout',
-            },
-            {
-              'ref': 'EmployeeCatalog',
-            },
-            {
-              'ref': 'EmployeeSearch',
-            },
-            {
-              'ref': 'EmployeeFilter',
-            },
-            {
-              'ref': 'EmployeeStats',
-            },
-            {
-              'ref': 'EmployeeGraphs',
-            },
-            {
-              'ref': 'EmployeeBrowseList',
-            },
-            {
-              'ref': 'EmployeeCreate',
-            },
-            {
-              'ref': 'EmployeeEdit',
-            },
-            {
-              'ref': 'EmployeeView',
-            },
-            {
-              'ref': 'EmployeeDelete',
-            },
-            {
-              'ref': 'EmployeePersistor',
-            },
-          ],
-        } as never,
-        {
-          'name': 'EmployeeAvatarPage',
-          'path': '/employees/upload',
-          'traits': [
-            {
-              'ref': 'EmployeeAppLayout',
-            },
-            {
-              'ref': 'EmployeeAvatarUpload',
-            },
-            {
-              'ref': 'EmployeeAvatarUploadForm',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OnboardingOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the OnboardingOrbital orbital.
+ *
+ * Canonical entity: Onboarding.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHrPortalOnboardingOrbitalParams {
+  /** Override the canonical entity name (default: 'Onboarding'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OnboardingOrbital orbital with consumer params. */
+export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Onboarding';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OnboardingOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'onboardings',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
+          'name': 'employeeName',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'email',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'department',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'manager',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'equipmentReady',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'accessGranted',
+          'type': 'boolean',
+          'default': false,
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Onboarding',
-        'collection': 'onboardings',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'OnboardingAppLayout',
+        'linkedEntity': 'Onboarding',
+        'config': {
+          'appName': 'HRPortal',
+          'navItems': [
+            {
+              'label': 'Employees',
+              'href': '/employees',
+              'icon': 'users',
+            },
+            {
+              'icon': 'clipboard-check',
+              'href': '/onboarding',
+              'label': 'Onboarding',
+            },
+            {
+              'label': 'Time Off',
+              'href': '/timeoff',
+              'icon': 'calendar',
+            },
+            {
+              'href': '/org-chart',
+              'icon': 'git-branch',
+              'label': 'Org Chart',
+            },
+          ],
+          'notifications': [],
+          'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.OnboardingWizard',
+          'searchEvent': 'ONBOARDING_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'ONBOARDING_SEARCH',
+          'NOTIFY_CLICK': 'ONBOARDING_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'OnboardingWizard',
+        'category': 'interaction',
+        'linkedEntity': 'Onboarding',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'employeeName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'email',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'department',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'manager',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'equipmentReady',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'accessGranted',
-            'type': 'boolean',
-            'default': false,
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'OnboardingAppLayout',
-          'linkedEntity': 'Onboarding',
-          'config': {
-            'appName': 'HRPortal',
-            'navItems': [
+            'event': 'ONBOARDED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'label': 'Employees',
-                'href': '/employees',
-                'icon': 'users',
-              },
-              {
-                'icon': 'clipboard-check',
-                'href': '/onboarding',
-                'label': 'Onboarding',
-              },
-              {
-                'label': 'Time Off',
-                'href': '/timeoff',
-                'icon': 'calendar',
-              },
-              {
-                'href': '/org-chart',
-                'icon': 'git-branch',
-                'label': 'Org Chart',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'notifications': [],
-            'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.OnboardingWizard',
-            'searchEvent': 'ONBOARDING_SEARCH',
           },
-          'events': {
-            'SEARCH': 'ONBOARDING_SEARCH',
-            'NOTIFY_CLICK': 'ONBOARDING_NOTIFICATIONS_OPEN',
+          {
+            'event': 'OnboardingLoaded',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Onboarding]',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'OnboardingWizard',
-          'category': 'interaction',
-          'linkedEntity': 'Onboarding',
-          'emits': [
+          {
+            'event': 'OnboardingLoadFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OnboardingSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OnboardingSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OnboardingEmailSent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OnboardingEmailFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ONBOARDED',
-              'scope': 'external',
+              'name': 'step1',
+              'isInitial': true,
+            },
+            {
+              'name': 'step2',
+            },
+            {
+              'name': 'step3',
+            },
+            {
+              'name': 'review',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NEXT',
+              'name': 'Next',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PREV',
+              'name': 'Prev',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'OnboardingEmailSent',
+              'name': 'Onboarding email sent',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1496,8 +1378,30 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'OnboardingLoaded',
-              'scope': 'internal',
+              'key': 'OnboardingEmailFailed',
+              'name': 'Onboarding email failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'ONBOARDED',
+              'name': 'Onboarded',
+            },
+            {
+              'key': 'OnboardingLoaded',
+              'name': 'Onboarding loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1506,8 +1410,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'OnboardingLoadFailed',
-              'scope': 'internal',
+              'key': 'OnboardingLoadFailed',
+              'name': 'Onboarding load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1520,8 +1424,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'OnboardingSaved',
-              'scope': 'internal',
+              'key': 'OnboardingSaved',
+              'name': 'Onboarding saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1530,30 +1434,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'OnboardingSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OnboardingEmailSent',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OnboardingEmailFailed',
+              'key': 'OnboardingSaveFailed',
+              'name': 'Onboarding save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1566,1481 +1448,1522 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'step1',
-                'isInitial': true,
-              },
-              {
-                'name': 'step2',
-              },
-              {
-                'name': 'step3',
-              },
-              {
-                'name': 'review',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'NEXT',
-                'name': 'Next',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'step1',
+              'to': 'step1',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.employeeName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.department',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.manager',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.equipmentReady',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.accessGranted',
+                  false,
+                ],
+                [
+                  'fetch',
+                  'Onboarding',
                   {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
+                    'emit': {
+                      'success': 'OnboardingLoaded',
+                      'failure': 'OnboardingLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'PREV',
-                'name': 'Prev',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'OnboardingEmailSent',
-                'name': 'Onboarding email sent',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OnboardingEmailFailed',
-                'name': 'Onboarding email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'ONBOARDED',
-                'name': 'Onboarded',
-              },
-              {
-                'key': 'OnboardingLoaded',
-                'name': 'Onboarding loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Onboarding]',
-                  },
-                ],
-              },
-              {
-                'key': 'OnboardingLoadFailed',
-                'name': 'Onboarding load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OnboardingSaved',
-                'name': 'Onboarding saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OnboardingSaveFailed',
-                'name': 'Onboarding save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'step1',
-                'to': 'step1',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.employeeName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.department',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.manager',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.equipmentReady',
-                    false,
-                  ],
-                  [
-                    'set',
-                    '@entity.accessGranted',
-                    false,
-                  ],
-                  [
-                    'fetch',
-                    'Onboarding',
-                    {
-                      'emit': {
-                        'success': 'OnboardingLoaded',
-                        'failure': 'OnboardingLoadFailed',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'clipboard-check',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Employee Onboarding',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'clipboard-check',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Employee Onboarding',
-                              'variant': 'h2',
-                            },
-                          ],
-                          'align': 'center',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                        {
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Employee Details',
-                        },
-                        {
-                          'type': 'form-section',
-                          'mode': 'create',
-                          'submitEvent': 'NEXT',
-                          'fields': [
-                            {
-                              'min': 2,
-                              'name': 'employeeName',
-                              'required': true,
-                            },
-                            {
-                              'type': 'email',
-                              'required': true,
-                              'name': 'email',
-                            },
-                            {
-                              'required': true,
-                              'name': 'department',
-                            },
-                          ],
-                          'submitLabel': 'Continue',
-                          'showCancel': false,
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
+                      {
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Employee Details',
+                      },
+                      {
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'NEXT',
+                        'fields': [
+                          {
+                            'min': 2,
+                            'name': 'employeeName',
+                            'required': true,
+                          },
+                          {
+                            'type': 'email',
+                            'required': true,
+                            'name': 'email',
+                          },
+                          {
+                            'required': true,
+                            'name': 'department',
+                          },
+                        ],
+                        'submitLabel': 'Continue',
+                        'showCancel': false,
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'step1',
-                'to': 'step2',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+              ],
+            },
+            {
+              'from': 'step1',
+              'to': 'step2',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@payload.data.employeeName',
+                '@payload.data.email',
+                '@payload.data.department',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.employeeName',
                   '@payload.data.employeeName',
+                ],
+                [
+                  'set',
+                  '@entity.email',
                   '@payload.data.email',
+                ],
+                [
+                  'set',
+                  '@entity.department',
                   '@payload.data.department',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.employeeName',
-                    '@payload.data.employeeName',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '@payload.data.email',
-                  ],
-                  [
-                    'set',
-                    '@entity.department',
-                    '@payload.data.department',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Employee Onboarding',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 1,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Manager Assignment',
-                          'variant': 'h3',
-                        },
-                        {
-                          'cancelLabel': 'Back',
-                          'mode': 'edit',
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                          'type': 'form-section',
-                          'fields': [
-                            {
-                              'name': 'manager',
-                              'required': true,
-                            },
-                          ],
-                          'cancelEvent': 'PREV',
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Employee Onboarding',
+                        'variant': 'h2',
+                      },
+                      {
+                        'currentStep': 1,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Manager Assignment',
+                        'variant': 'h3',
+                      },
+                      {
+                        'cancelLabel': 'Back',
+                        'mode': 'edit',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
+                        'fields': [
+                          {
+                            'name': 'manager',
+                            'required': true,
+                          },
+                        ],
+                        'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step3',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.employeeName',
-                  '@entity.email',
-                  '@entity.department',
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step3',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.employeeName',
+                '@entity.email',
+                '@entity.department',
+                '@payload.data.manager',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.manager',
                   '@payload.data.manager',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.manager',
-                    '@payload.data.manager',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Employee Onboarding',
-                        },
-                        {
-                          'currentStep': 2,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Setup Checklist',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'form-section',
-                          'mode': 'edit',
-                          'entity': '@entity',
-                          'submitLabel': 'Continue',
-                          'fields': [
-                            'equipmentReady',
-                            'accessGranted',
-                          ],
-                          'cancelLabel': 'Back',
-                          'cancelEvent': 'PREV',
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step1',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'content': 'Employee Onboarding',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Employee Details',
-                          'variant': 'h3',
-                        },
-                        {
-                          'showCancel': false,
-                          'submitLabel': 'Continue',
-                          'mode': 'edit',
-                          'entity': '@entity',
-                          'type': 'form-section',
-                          'fields': [
-                            {
-                              'min': 2,
-                              'required': true,
-                              'name': 'employeeName',
-                            },
-                            {
-                              'name': 'email',
-                              'required': true,
-                              'type': 'email',
-                            },
-                            {
-                              'required': true,
-                              'name': 'department',
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step3',
-                'to': 'review',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.employeeName',
-                  '@entity.email',
-                  '@entity.department',
-                  '@entity.manager',
-                ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.equipmentReady',
-                    '@payload.data.equipmentReady',
-                  ],
-                  [
-                    'set',
-                    '@entity.accessGranted',
-                    '@payload.data.accessGranted',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'content': 'Review Onboarding',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                          'currentStep': 3,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'content': 'Employee',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.employeeName',
-                                },
-                              ],
-                              'justify': 'between',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                            },
-                            {
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Email',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@entity.email',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'gap': 'md',
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Department',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'content': '@entity.department',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Manager',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                  'content': '@entity.manager',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Equipment Ready',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': '@entity.equipmentReady',
-                                  'variant': 'body',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Access Granted',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.accessGranted',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'direction': 'vertical',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'button',
-                              'action': 'PREV',
-                              'variant': 'ghost',
-                              'icon': 'arrow-left',
-                              'label': 'Back',
-                            },
-                            {
-                              'variant': 'primary',
-                              'type': 'button',
-                              'action': 'COMPLETE',
-                              'icon': 'check',
-                              'label': 'Complete Onboarding',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'gap': 'sm',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step3',
-                'to': 'step2',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Employee Onboarding',
-                        },
-                        {
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                          'type': 'wizard-progress',
-                          'currentStep': 1,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Manager Assignment',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'submitEvent': 'NEXT',
-                          'cancelEvent': 'PREV',
-                          'submitLabel': 'Continue',
-                          'entity': '@entity',
-                          'type': 'form-section',
-                          'cancelLabel': 'Back',
-                          'fields': [
-                            {
-                              'name': 'manager',
-                              'required': true,
-                            },
-                          ],
-                          'mode': 'edit',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'guard': [
-                  'and',
-                  '@entity.employeeName',
-                  '@entity.email',
-                  '@entity.department',
-                  '@entity.manager',
-                ],
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Onboarding',
-                    '@entity',
-                    {
-                      'emit': {
-                        'failure': 'OnboardingSaveFailed',
-                        'success': 'OnboardingSaved',
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Employee Onboarding',
                       },
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'recipient': '@entity.email',
-                      'body': 'Welcome aboard! Your manager and equipment have been set up.',
-                      'sender': 'hr@example.com',
-                      'subject': 'Welcome to the team',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'OnboardingEmailFailed',
-                        'success': 'OnboardingEmailSent',
+                      {
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
                       },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ONBOARDED',
-                    {
-                      'id': '@entity.id',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'success',
-                    'Onboarding complete',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'name': 'check-circle',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': 'Onboarding Complete!',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'variant': 'body',
-                          'content': 'The new employee has been fully onboarded.',
-                          'color': 'muted',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'RESTART',
-                          'label': 'Start new onboarding',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'align': 'center',
-                      'className': 'max-w-xl mx-auto w-full py-12',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Setup Checklist',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'form-section',
+                        'mode': 'edit',
+                        'entity': '@entity',
+                        'submitLabel': 'Continue',
+                        'fields': [
+                          'equipmentReady',
+                          'accessGranted',
+                        ],
+                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'review',
-                'to': 'step3',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Employee Onboarding',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                          'currentStep': 2,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Setup Checklist',
-                          'type': 'typography',
-                        },
-                        {
-                          'entity': '@entity',
-                          'submitLabel': 'Continue',
-                          'cancelLabel': 'Back',
-                          'mode': 'edit',
-                          'fields': [
-                            'equipmentReady',
-                            'accessGranted',
-                          ],
-                          'cancelEvent': 'PREV',
-                          'type': 'form-section',
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'complete',
-                'event': 'OnboardingEmailSent',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Welcome email sent',
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'complete',
-                'event': 'OnboardingEmailFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Welcome email failed',
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'step1',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.employeeName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.department',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.manager',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.equipmentReady',
-                    false,
-                  ],
-                  [
-                    'set',
-                    '@entity.accessGranted',
-                    false,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Employee Onboarding',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Employee Details',
-                            'Manager Assignment',
-                            'Setup Checklist',
-                            'Review',
-                          ],
-                          'currentStep': 0,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Employee Details',
-                          'variant': 'h3',
-                        },
-                        {
-                          'submitEvent': 'NEXT',
-                          'fields': [
-                            {
-                              'name': 'employeeName',
-                              'required': true,
-                              'min': 2,
-                            },
-                            {
-                              'type': 'email',
-                              'required': true,
-                              'name': 'email',
-                            },
-                            {
-                              'name': 'department',
-                              'required': true,
-                            },
-                          ],
-                          'mode': 'create',
-                          'type': 'form-section',
-                          'showCancel': false,
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'OnboardingPage',
-          'path': '/onboarding',
-          'traits': [
-            {
-              'ref': 'OnboardingAppLayout',
+              ],
             },
             {
-              'ref': 'OnboardingWizard',
+              'from': 'step2',
+              'to': 'step1',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'content': 'Employee Onboarding',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Employee Details',
+                        'variant': 'h3',
+                      },
+                      {
+                        'showCancel': false,
+                        'submitLabel': 'Continue',
+                        'mode': 'edit',
+                        'entity': '@entity',
+                        'type': 'form-section',
+                        'fields': [
+                          {
+                            'min': 2,
+                            'required': true,
+                            'name': 'employeeName',
+                          },
+                          {
+                            'name': 'email',
+                            'required': true,
+                            'type': 'email',
+                          },
+                          {
+                            'required': true,
+                            'name': 'department',
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'review',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.employeeName',
+                '@entity.email',
+                '@entity.department',
+                '@entity.manager',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.equipmentReady',
+                  '@payload.data.equipmentReady',
+                ],
+                [
+                  'set',
+                  '@entity.accessGranted',
+                  '@payload.data.accessGranted',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'content': 'Review Onboarding',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                        'currentStep': 3,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'content': 'Employee',
+                                'variant': 'caption',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.employeeName',
+                              },
+                            ],
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                          },
+                          {
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Email',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.email',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Department',
+                                'type': 'typography',
+                              },
+                              {
+                                'content': '@entity.department',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Manager',
+                                'type': 'typography',
+                              },
+                              {
+                                'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.manager',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Equipment Ready',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': '@entity.equipmentReady',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Access Granted',
+                                'type': 'typography',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.accessGranted',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'vertical',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'button',
+                            'action': 'PREV',
+                            'variant': 'ghost',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
+                          },
+                          {
+                            'variant': 'primary',
+                            'type': 'button',
+                            'action': 'COMPLETE',
+                            'icon': 'check',
+                            'label': 'Complete Onboarding',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'step2',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Employee Onboarding',
+                      },
+                      {
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                        'type': 'wizard-progress',
+                        'currentStep': 1,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Manager Assignment',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'submitEvent': 'NEXT',
+                        'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                        'entity': '@entity',
+                        'type': 'form-section',
+                        'cancelLabel': 'Back',
+                        'fields': [
+                          {
+                            'name': 'manager',
+                            'required': true,
+                          },
+                        ],
+                        'mode': 'edit',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'guard': [
+                'and',
+                '@entity.employeeName',
+                '@entity.email',
+                '@entity.department',
+                '@entity.manager',
+              ],
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Onboarding',
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'OnboardingSaveFailed',
+                      'success': 'OnboardingSaved',
+                    },
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'recipient': '@entity.email',
+                    'body': 'Welcome aboard! Your manager and equipment have been set up.',
+                    'sender': 'hr@example.com',
+                    'subject': 'Welcome to the team',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'OnboardingEmailFailed',
+                      'success': 'OnboardingEmailSent',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ONBOARDED',
+                  {
+                    'id': '@entity.id',
+                  },
+                ],
+                [
+                  'notify',
+                  'success',
+                  'Onboarding complete',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Onboarding Complete!',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'variant': 'body',
+                        'content': 'The new employee has been fully onboarded.',
+                        'color': 'muted',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'RESTART',
+                        'label': 'Start new onboarding',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'align': 'center',
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'step3',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Employee Onboarding',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                        'currentStep': 2,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Setup Checklist',
+                        'type': 'typography',
+                      },
+                      {
+                        'entity': '@entity',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'mode': 'edit',
+                        'fields': [
+                          'equipmentReady',
+                          'accessGranted',
+                        ],
+                        'cancelEvent': 'PREV',
+                        'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'complete',
+              'event': 'OnboardingEmailSent',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Welcome email sent',
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'complete',
+              'event': 'OnboardingEmailFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Welcome email failed',
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'step1',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'set',
+                  '@entity.employeeName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.department',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.manager',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.equipmentReady',
+                  false,
+                ],
+                [
+                  'set',
+                  '@entity.accessGranted',
+                  false,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Employee Onboarding',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Employee Details',
+                          'Manager Assignment',
+                          'Setup Checklist',
+                          'Review',
+                        ],
+                        'currentStep': 0,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Employee Details',
+                        'variant': 'h3',
+                      },
+                      {
+                        'submitEvent': 'NEXT',
+                        'fields': [
+                          {
+                            'name': 'employeeName',
+                            'required': true,
+                            'min': 2,
+                          },
+                          {
+                            'type': 'email',
+                            'required': true,
+                            'name': 'email',
+                          },
+                          {
+                            'name': 'department',
+                            'required': true,
+                          },
+                        ],
+                        'mode': 'create',
+                        'type': 'form-section',
+                        'showCancel': false,
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TimeOffOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-calendar',
-          'as': 'Calendar',
-        },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
-      ],
-      entity: {
-        'name': 'TimeOff',
-        'collection': 'timeoffs',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'OnboardingPage',
+        'path': '/onboarding',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'OnboardingAppLayout',
           },
           {
-            'name': 'employeeName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'employeeEmail',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'leaveType',
-            'type': 'string',
-            'default': 'vacation',
-            'values': [
-              'vacation',
-              'sick',
-              'personal',
-              'bereavement',
-            ],
-          },
-          {
-            'name': 'startDate',
-            'type': 'datetime',
-            'required': true,
-          },
-          {
-            'name': 'endDate',
-            'type': 'datetime',
-            'required': true,
-          },
-          {
-            'name': 'reason',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'approved',
-              'denied',
-            ],
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'OnboardingWizard',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TimeOffAppLayout',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'navItems': [
-              {
-                'label': 'Employees',
-                'href': '/employees',
-                'icon': 'users',
-              },
-              {
-                'label': 'Onboarding',
-                'icon': 'clipboard-check',
-                'href': '/onboarding',
-              },
-              {
-                'label': 'Time Off',
-                'href': '/timeoff',
-                'icon': 'calendar',
-              },
-              {
-                'label': 'Org Chart',
-                'href': '/org-chart',
-                'icon': 'git-branch',
-              },
-            ],
-            'contentTrait': '@trait.TimeOffCatalog',
-            'notifications': [],
-            'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
-            'appName': 'HRPortal',
-            'searchEvent': 'TIME_OFF_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'TIME_OFF_SEARCH',
-            'NOTIFY_CLICK': 'TIME_OFF_NOTIFICATIONS_OPEN',
-          },
-        }),
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the TimeOffOrbital orbital.
+ *
+ * Canonical entity: TimeOff.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHrPortalTimeOffOrbitalParams {
+  /** Override the canonical entity name (default: 'TimeOff'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the TimeOffOrbital orbital with consumer params. */
+export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'TimeOff';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TimeOffOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-calendar',
+        'as': 'Calendar',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'timeoffs',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'TimeOffCatalog',
-          'category': 'interaction',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'employeeName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'employeeEmail',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'leaveType',
+          'type': 'string',
+          'default': 'vacation',
+          'values': [
+            'vacation',
+            'sick',
+            'personal',
+            'bereavement',
+          ],
+        },
+        {
+          'name': 'startDate',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'endDate',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'reason',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'approved',
+            'denied',
+          ],
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TimeOffAppLayout',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'navItems': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+              'label': 'Employees',
+              'href': '/employees',
+              'icon': 'users',
+            },
+            {
+              'label': 'Onboarding',
+              'icon': 'clipboard-check',
+              'href': '/onboarding',
+            },
+            {
+              'label': 'Time Off',
+              'href': '/timeoff',
+              'icon': 'calendar',
+            },
+            {
+              'label': 'Org Chart',
+              'href': '/org-chart',
+              'icon': 'git-branch',
             },
           ],
-          'stateMachine': {
-            'states': [
+          'contentTrait': '@trait.TimeOffCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
+          'appName': 'HRPortal',
+          'searchEvent': 'TIME_OFF_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'TIME_OFF_SEARCH',
+          'NOTIFY_CLICK': 'TIME_OFF_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'TimeOffCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'calendar',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Time Off Requests',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'label': 'Request Time Off',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                  'action': 'CREATE',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'justify': 'between',
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TimeOffCalendar',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TimeOffBrowseList',
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'calendar',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Time Off Requests',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'Request Time Off',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'justify': 'between',
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TimeOffCalendar',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TimeOffBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Calendar.traits.CalendarEventCalendar',
-          'name': 'TimeOffCalendar',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'colorField': 'status',
-            'dateField': 'startDate',
-            'titleField': 'reason',
-          },
-          'listens': [
-            {
-              'event': 'TIME_OFF_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffCreate',
-              },
-            },
-            {
-              'event': 'TIME_OFF_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffEdit',
-              },
-            },
-            {
-              'event': 'TIME_OFF_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffDelete',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'TimeOffBrowseList',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'gap': 'sm',
-            'fields': [
-              {
-                'icon': 'user',
-                'name': 'employeeName',
-                'label': 'Employee',
-                'variant': 'h4',
-              },
-              {
-                'label': 'Type',
-                'variant': 'badge',
-                'name': 'leaveType',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'format': 'date',
-                'name': 'startDate',
-                'label': 'From',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'caption',
-                'name': 'endDate',
-                'label': 'To',
-                'format': 'date',
-              },
-              {
-                'name': 'reason',
-                'variant': 'caption',
-              },
-            ],
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Delete',
-                'variant': 'danger',
-                'event': 'DELETE',
-              },
-            ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Calendar.traits.CalendarEventCalendar',
+        'name': 'TimeOffCalendar',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'colorField': 'status',
+          'dateField': 'startDate',
+          'titleField': 'reason',
+        },
+        'listens': [
+          {
+            'event': 'TIME_OFF_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffCreate',
+            },
           },
-          'listens': [
+          {
+            'event': 'TIME_OFF_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffEdit',
+            },
+          },
+          {
+            'event': 'TIME_OFF_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'TimeOffBrowseList',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'gap': 'sm',
+          'fields': [
             {
-              'event': 'TIME_OFF_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffCreate',
-              },
+              'icon': 'user',
+              'name': 'employeeName',
+              'label': 'Employee',
+              'variant': 'h4',
             },
             {
-              'event': 'TIME_OFF_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffEdit',
-              },
+              'label': 'Type',
+              'variant': 'badge',
+              'name': 'leaveType',
             },
             {
-              'event': 'TIME_OFF_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffDelete',
-              },
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'format': 'date',
+              'name': 'startDate',
+              'label': 'From',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'caption',
+              'name': 'endDate',
+              'label': 'To',
+              'format': 'date',
+            },
+            {
+              'name': 'reason',
+              'variant': 'caption',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TimeOffCreate',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'fields': [
-              'employeeName',
-              'employeeEmail',
-              'leaveType',
-              'startDate',
-              'endDate',
-              'reason',
-              'status',
-            ],
-            'title': 'Request Time Off',
-          },
-          'events': {
-            'SAVE': 'TIME_OFF_CREATED',
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+          'itemActions': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TimeOffEdit',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'title': 'Edit Time Off',
-            'icon': 'edit',
-            'mode': 'edit',
-            'fields': [
-              'employeeName',
-              'employeeEmail',
-              'leaveType',
-              'startDate',
-              'endDate',
-              'reason',
-              'status',
-            ],
-          },
-          'events': {
-            'SAVE': 'TIME_OFF_UPDATED',
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TimeOffView',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'icon': 'eye',
-            'fields': [
-              'employeeName',
-              'employeeEmail',
-              'leaveType',
-              'startDate',
-              'endDate',
-              'reason',
-              'status',
-            ],
-            'title': 'Time Off Details',
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'label': 'View',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffBrowseList',
-              },
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'TimeOffDelete',
-          'linkedEntity': 'TimeOff',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'icon': 'alert-triangle',
-            'title': 'Delete Time Off Request',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'CONFIRM': 'TIME_OFF_DELETED',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
             {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffBrowseList',
-              },
             },
           ],
-        }),
-        {
-          'name': 'TimeOffPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'TimeOff',
-          'emits': [
+        },
+        'listens': [
+          {
+            'event': 'TIME_OFF_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffCreate',
+            },
+          },
+          {
+            'event': 'TIME_OFF_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffEdit',
+            },
+          },
+          {
+            'event': 'TIME_OFF_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TimeOffCreate',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'fields': [
+            'employeeName',
+            'employeeEmail',
+            'leaveType',
+            'startDate',
+            'endDate',
+            'reason',
+            'status',
+          ],
+          'title': 'Request Time Off',
+        },
+        'events': {
+          'SAVE': 'TIME_OFF_CREATED',
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TimeOffEdit',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'title': 'Edit Time Off',
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'employeeName',
+            'employeeEmail',
+            'leaveType',
+            'startDate',
+            'endDate',
+            'reason',
+            'status',
+          ],
+        },
+        'events': {
+          'SAVE': 'TIME_OFF_UPDATED',
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TimeOffView',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'icon': 'eye',
+          'fields': [
+            'employeeName',
+            'employeeEmail',
+            'leaveType',
+            'startDate',
+            'endDate',
+            'reason',
+            'status',
+          ],
+          'title': 'Time Off Details',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'TimeOffDelete',
+        'linkedEntity': 'TimeOff',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'title': 'Delete Time Off Request',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'TIME_OFF_DELETED',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TimeOffPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'TimeOff',
+        'emits': [
+          {
+            'event': 'TIME_OFF_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'TIME_OFF_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'TIME_OFF_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'TimeOffEmailSent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TimeOffEmailFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'TIME_OFF_CREATED',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffCreate',
+            },
+          },
+          {
+            'event': 'TIME_OFF_UPDATED',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffEdit',
+            },
+          },
+          {
+            'event': 'TIME_OFF_DELETED',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TimeOffDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'TIME_OFF_CREATED',
-              'scope': 'external',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'TimeOff',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'TimeOff',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -3050,29 +2973,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'TIME_OFF_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'TIME_OFF_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'TimeOffEmailSent',
+              'key': 'TimeOffEmailSent',
+              'name': 'TimeOff email sent',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -3081,7 +2983,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'TimeOffEmailFailed',
+              'key': 'TimeOffEmailFailed',
+              'name': 'TimeOff email failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3093,358 +2996,351 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'TIME_OFF_CREATED',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffCreate',
-              },
+              'key': 'TIME_OFF_CREATED',
+              'name': 'Time Off Created',
             },
             {
-              'event': 'TIME_OFF_UPDATED',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffEdit',
-              },
+              'key': 'TIME_OFF_UPDATED',
+              'name': 'Time Off Updated',
             },
             {
-              'event': 'TIME_OFF_DELETED',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TimeOffDelete',
-              },
+              'key': 'TIME_OFF_DELETED',
+              'name': 'Time Off Deleted',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'TimeOff',
+                  '@payload.data',
                   {
-                    'name': 'data',
-                    'type': 'TimeOff',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'TimeOff',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'TimeOffEmailSent',
-                'name': 'TimeOff email sent',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TimeOffEmailFailed',
-                'name': 'TimeOff email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TIME_OFF_CREATED',
-                'name': 'Time Off Created',
-              },
-              {
-                'key': 'TIME_OFF_UPDATED',
-                'name': 'Time Off Updated',
-              },
-              {
-                'key': 'TIME_OFF_DELETED',
-                'name': 'Time Off Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'TimeOff',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TIME_OFF_CREATED',
-                      },
+                    'emit': {
+                      'success': 'TIME_OFF_CREATED',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'TimeOff',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TIME_OFF_UPDATED',
-                      },
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'TimeOff',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TIME_OFF_UPDATED',
                     },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'subject': 'Time-off @payload.data.status',
-                      'recipient': '@payload.data.employeeEmail',
-                      'sender': 'hr@example.com',
-                      'body': 'Your time-off request has been updated. Status: @payload.data.status.',
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'subject': 'Time-off @payload.data.status',
+                    'recipient': '@payload.data.employeeEmail',
+                    'sender': 'hr@example.com',
+                    'body': 'Your time-off request has been updated. Status: @payload.data.status.',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'TimeOffEmailFailed',
+                      'success': 'TimeOffEmailSent',
                     },
-                    {
-                      'emit': {
-                        'failure': 'TimeOffEmailFailed',
-                        'success': 'TimeOffEmailSent',
-                      },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'TimeOff',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'TIME_OFF_DELETED',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'TimeOff',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'TIME_OFF_DELETED',
-                      },
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'TimeOffEmailSent',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Notification email sent',
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'TimeOffEmailSent',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Notification email sent',
-                  ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'TimeOffEmailFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Email notification failed',
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'TimeOffEmailFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Email notification failed',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'TimeOffPage',
-          'path': '/timeoff',
-          'traits': [
-            {
-              'ref': 'TimeOffAppLayout',
-            },
-            {
-              'ref': 'TimeOffCatalog',
-            },
-            {
-              'ref': 'TimeOffCalendar',
-            },
-            {
-              'ref': 'TimeOffBrowseList',
-            },
-            {
-              'ref': 'TimeOffCreate',
-            },
-            {
-              'ref': 'TimeOffEdit',
-            },
-            {
-              'ref': 'TimeOffView',
-            },
-            {
-              'ref': 'TimeOffDelete',
-            },
-            {
-              'ref': 'TimeOffPersistor',
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OrgChartOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-related',
-          'as': 'Related',
-        },
-      ],
-      entity: {
-        'name': 'OrgNode',
-        'persistence': 'runtime',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'TimeOffPage',
+        'path': '/timeoff',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'TimeOffAppLayout',
           },
           {
-            'name': 'name',
-            'type': 'string',
-            'default': '',
+            'ref': 'TimeOffCatalog',
           },
           {
-            'name': 'role',
-            'type': 'string',
-            'default': '',
+            'ref': 'TimeOffCalendar',
           },
           {
-            'name': 'department',
-            'type': 'string',
-            'default': '',
+            'ref': 'TimeOffBrowseList',
           },
           {
-            'name': 'managerId',
-            'type': 'string',
-            'default': '',
+            'ref': 'TimeOffCreate',
+          },
+          {
+            'ref': 'TimeOffEdit',
+          },
+          {
+            'ref': 'TimeOffView',
+          },
+          {
+            'ref': 'TimeOffDelete',
+          },
+          {
+            'ref': 'TimeOffPersistor',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'OrgChartAppLayout',
-          'linkedEntity': 'OrgNode',
-          'config': {
-            'notificationClickEvent': 'ORG_CHART_NOTIFICATIONS_OPEN',
-            'navItems': [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the OrgChartOrbital orbital.
+ *
+ * Canonical entity: OrgNode.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHrPortalOrgChartOrbitalParams {
+  /** Override the canonical entity name (default: 'OrgNode'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OrgChartOrbital orbital with consumer params. */
+export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'OrgNode';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OrgChartOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-related',
+        'as': 'Related',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'role',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'department',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'managerId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'OrgChartAppLayout',
+        'linkedEntity': 'OrgNode',
+        'config': {
+          'notificationClickEvent': 'ORG_CHART_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/employees',
+              'icon': 'users',
+              'label': 'Employees',
+            },
+            {
+              'label': 'Onboarding',
+              'href': '/onboarding',
+              'icon': 'clipboard-check',
+            },
+            {
+              'icon': 'calendar',
+              'label': 'Time Off',
+              'href': '/timeoff',
+            },
+            {
+              'href': '/org-chart',
+              'icon': 'git-branch',
+              'label': 'Org Chart',
+            },
+          ],
+          'contentTrait': '@trait.OrgChartDisplay',
+          'notifications': [],
+          'appName': 'HRPortal',
+          'searchEvent': 'ORG_CHART_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'ORG_CHART_SEARCH',
+          'NOTIFY_CLICK': 'ORG_CHART_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Related.traits.RelatedItemList',
+        'name': 'EmployeeRelated',
+        'linkedEntity': 'OrgNode',
+        'config': {
+          'relationField': 'managerId',
+        },
+      }),
+      {
+        'name': 'OrgChartDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'OrgNode',
+        'emits': [
+          {
+            'event': 'OrgChartLoaded',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'href': '/employees',
-                'icon': 'users',
-                'label': 'Employees',
-              },
-              {
-                'label': 'Onboarding',
-                'href': '/onboarding',
-                'icon': 'clipboard-check',
-              },
-              {
-                'icon': 'calendar',
-                'label': 'Time Off',
-                'href': '/timeoff',
-              },
-              {
-                'href': '/org-chart',
-                'icon': 'git-branch',
-                'label': 'Org Chart',
+                'name': 'data',
+                'type': '[OrgNode]',
               },
             ],
-            'contentTrait': '@trait.OrgChartDisplay',
-            'notifications': [],
-            'appName': 'HRPortal',
-            'searchEvent': 'ORG_CHART_SEARCH',
           },
-          'events': {
-            'SEARCH': 'ORG_CHART_SEARCH',
-            'NOTIFY_CLICK': 'ORG_CHART_NOTIFICATIONS_OPEN',
+          {
+            'event': 'OrgChartLoadFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        makeTraitRef({
-          'ref': 'Related.traits.RelatedItemList',
-          'name': 'EmployeeRelated',
-          'linkedEntity': 'OrgNode',
-          'config': {
-            'relationField': 'managerId',
-          },
-        }),
-        {
-          'name': 'OrgChartDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'OrgNode',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'OrgChartLoaded',
-              'scope': 'internal',
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'displaying',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OrgChartLoaded',
+              'name': 'Org chart loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -3453,8 +3349,12 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'OrgChartLoadFailed',
-              'scope': 'internal',
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'OrgChartLoadFailed',
+              'name': 'Org chart load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3467,344 +3367,343 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'displaying',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'OrgChartLoaded',
-                'name': 'Org chart loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrgNode]',
-                  },
-                ],
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'OrgChartLoadFailed',
-                'name': 'Org chart load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.name',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.role',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.department',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.managerId',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'OrgNode',
-                    {
-                      'emit': {
-                        'failure': 'OrgChartLoadFailed',
-                        'success': 'OrgChartLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'name': 'git-branch',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Org Chart',
-                                },
-                              ],
-                              'align': 'center',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'button',
-                              'action': 'REFRESH',
-                              'variant': 'secondary',
-                              'label': 'Refresh',
-                              'icon': 'refresh-cw',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'graph-view',
-                          'width': 800,
-                          'height': 400,
-                          'edges': [
-                            {
-                              'source': 'ceo',
-                              'target': 'vp-eng',
-                            },
-                            {
-                              'target': 'vp-sales',
-                              'source': 'ceo',
-                            },
-                            {
-                              'source': 'vp-eng',
-                              'target': 'lead-fe',
-                            },
-                            {
-                              'source': 'vp-eng',
-                              'target': 'lead-be',
-                            },
-                          ],
-                          'nodes': [
-                            {
-                              'id': 'ceo',
-                              'label': 'CEO',
-                            },
-                            {
-                              'id': 'vp-eng',
-                              'label': 'VP Engineering',
-                            },
-                            {
-                              'label': 'VP Sales',
-                              'id': 'vp-sales',
-                            },
-                            {
-                              'label': 'Frontend Lead',
-                              'id': 'lead-fe',
-                            },
-                            {
-                              'label': 'Backend Lead',
-                              'id': 'lead-be',
-                            },
-                          ],
-                        },
-                      ],
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'OrgChartLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'git-branch',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Org Chart',
-                                },
-                              ],
-                            },
-                            {
-                              'variant': 'secondary',
-                              'label': 'Refresh',
-                              'icon': 'refresh-cw',
-                              'action': 'REFRESH',
-                              'type': 'button',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'width': 800,
-                          'nodes': [
-                            {
-                              'label': 'CEO',
-                              'id': 'ceo',
-                            },
-                            {
-                              'id': 'vp-eng',
-                              'label': 'VP Engineering',
-                            },
-                            {
-                              'id': 'vp-sales',
-                              'label': 'VP Sales',
-                            },
-                            {
-                              'id': 'lead-fe',
-                              'label': 'Frontend Lead',
-                            },
-                            {
-                              'label': 'Backend Lead',
-                              'id': 'lead-be',
-                            },
-                          ],
-                          'height': 400,
-                          'edges': [
-                            {
-                              'source': 'ceo',
-                              'target': 'vp-eng',
-                            },
-                            {
-                              'target': 'vp-sales',
-                              'source': 'ceo',
-                            },
-                            {
-                              'source': 'vp-eng',
-                              'target': 'lead-fe',
-                            },
-                            {
-                              'source': 'vp-eng',
-                              'target': 'lead-be',
-                            },
-                          ],
-                          'type': 'graph-view',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'loading',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrgNode',
-                    {
-                      'emit': {
-                        'success': 'OrgChartLoaded',
-                        'failure': 'OrgChartLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Refreshing…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'gap': 'md',
-                      'align': 'center',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'OrgChartPage',
-          'path': '/org-chart',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'OrgChartAppLayout',
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.name',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.role',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.department',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.managerId',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'OrgNode',
+                  {
+                    'emit': {
+                      'failure': 'OrgChartLoadFailed',
+                      'success': 'OrgChartLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'name': 'git-branch',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Org Chart',
+                              },
+                            ],
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'REFRESH',
+                            'variant': 'secondary',
+                            'label': 'Refresh',
+                            'icon': 'refresh-cw',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'graph-view',
+                        'width': 800,
+                        'height': 400,
+                        'edges': [
+                          {
+                            'source': 'ceo',
+                            'target': 'vp-eng',
+                          },
+                          {
+                            'target': 'vp-sales',
+                            'source': 'ceo',
+                          },
+                          {
+                            'source': 'vp-eng',
+                            'target': 'lead-fe',
+                          },
+                          {
+                            'source': 'vp-eng',
+                            'target': 'lead-be',
+                          },
+                        ],
+                        'nodes': [
+                          {
+                            'id': 'ceo',
+                            'label': 'CEO',
+                          },
+                          {
+                            'id': 'vp-eng',
+                            'label': 'VP Engineering',
+                          },
+                          {
+                            'label': 'VP Sales',
+                            'id': 'vp-sales',
+                          },
+                          {
+                            'label': 'Frontend Lead',
+                            'id': 'lead-fe',
+                          },
+                          {
+                            'label': 'Backend Lead',
+                            'id': 'lead-be',
+                          },
+                        ],
+                      },
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'OrgChartDisplay',
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'OrgChartLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'git-branch',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Org Chart',
+                              },
+                            ],
+                          },
+                          {
+                            'variant': 'secondary',
+                            'label': 'Refresh',
+                            'icon': 'refresh-cw',
+                            'action': 'REFRESH',
+                            'type': 'button',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'width': 800,
+                        'nodes': [
+                          {
+                            'label': 'CEO',
+                            'id': 'ceo',
+                          },
+                          {
+                            'id': 'vp-eng',
+                            'label': 'VP Engineering',
+                          },
+                          {
+                            'id': 'vp-sales',
+                            'label': 'VP Sales',
+                          },
+                          {
+                            'id': 'lead-fe',
+                            'label': 'Frontend Lead',
+                          },
+                          {
+                            'label': 'Backend Lead',
+                            'id': 'lead-be',
+                          },
+                        ],
+                        'height': 400,
+                        'edges': [
+                          {
+                            'source': 'ceo',
+                            'target': 'vp-eng',
+                          },
+                          {
+                            'target': 'vp-sales',
+                            'source': 'ceo',
+                          },
+                          {
+                            'source': 'vp-eng',
+                            'target': 'lead-fe',
+                          },
+                          {
+                            'source': 'vp-eng',
+                            'target': 'lead-be',
+                          },
+                        ],
+                        'type': 'graph-view',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'EmployeeRelated',
+              'from': 'displaying',
+              'to': 'loading',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'OrgNode',
+                  {
+                    'emit': {
+                      'success': 'OrgChartLoaded',
+                      'failure': 'OrgChartLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Refreshing…',
+                        'color': 'muted',
+                      },
+                    ],
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'OrgChartPage',
+        'path': '/org-chart',
+        'traits': [
+          {
+            'ref': 'OrgChartAppLayout',
+          },
+          {
+            'ref': 'OrgChartDisplay',
+          },
+          {
+            'ref': 'EmployeeRelated',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-hr-portal — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdHrPortalParams {
+  Employee?: StdHrPortalEmployeeOrbitalParams;
+  Onboarding?: StdHrPortalOnboardingOrbitalParams;
+  TimeOff?: StdHrPortalTimeOffOrbitalParams;
+  OrgChart?: StdHrPortalOrgChartOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdHrPortal(params: StdHrPortalParams = {}): OrbitalDefinition[] {
+  return [
+    stdHrPortalEmployeeOrbital(params.Employee ?? {}),
+    stdHrPortalOnboardingOrbital(params.Onboarding ?? {}),
+    stdHrPortalTimeOffOrbital(params.TimeOff ?? {}),
+    stdHrPortalOrgChartOrbital(params.OrgChart ?? {}),
+  ];
 }

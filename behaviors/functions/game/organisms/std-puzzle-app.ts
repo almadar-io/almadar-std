@@ -52,1018 +52,1055 @@ export interface StdPuzzleAppPuzzleLevelLoadFailedPayload {
 }
 
 /**
- * Params for the std-puzzle-app descriptor helpers.
+ * Tunable params for the PuzzleLevelOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: PuzzleLevel.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdPuzzleAppParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdPuzzleAppPuzzleLevelOrbitalParams {
+  /** Override the canonical entity name (default: 'PuzzleLevel'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdPuzzleAppEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `PuzzleApp.traits.PuzzleLevelPuzzleFlow`. */
-export function stdPuzzleAppPuzzleLevelPuzzleFlowTrait(params: StdPuzzleAppParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PuzzleLevelPuzzleFlow`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the PuzzleLevelOrbital orbital with consumer params. */
+export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'PuzzleLevel';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PuzzleLevelOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+          'default': 1,
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'moves',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completed',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'highScore',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'combo',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'multiplier',
+          'type': 'number',
+          'default': 1,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'PuzzleLevelPuzzleFlow',
+        'category': 'interaction',
+        'linkedEntity': 'PuzzleLevel',
+        'emits': [
+          {
+            'event': 'PuzzleLevelLoaded',
+            'description': 'Fired when PuzzleLevel finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+              },
+              {
+                'name': 'moves',
+                'type': 'number',
+              },
+              {
+                'name': 'completed',
+                'type': 'boolean',
+              },
+              {
+                'name': 'highScore',
+                'type': 'number',
+              },
+              {
+                'name': 'combo',
+                'type': 'number',
+              },
+              {
+                'name': 'multiplier',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'PuzzleLevelLoadFailed',
+            'description': 'Fired when PuzzleLevel fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'menu',
+              'isInitial': true,
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'paused',
+            },
+            {
+              'name': 'gameover',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'NAVIGATE',
+              'name': 'Navigate',
+            },
+            {
+              'key': 'MOVE',
+              'name': 'Move',
+            },
+            {
+              'key': 'HINT',
+              'name': 'Hint',
+            },
+            {
+              'key': 'PAUSE',
+              'name': 'Pause',
+            },
+            {
+              'key': 'GAME_OVER',
+              'name': 'Game Over',
+            },
+            {
+              'key': 'RESUME',
+              'name': 'Resume',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'PuzzleLevelLoaded',
+              'name': 'PuzzleLevel loaded',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'moves',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'highScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'combo',
+                  'type': 'number',
+                },
+                {
+                  'name': 'multiplier',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'PuzzleLevelLoadFailed',
+              'name': 'PuzzleLevel load failed',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'PuzzleLevel',
+                  {
+                    'emit': {
+                      'failure': 'PuzzleLevelLoadFailed',
+                      'success': 'PuzzleLevelLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'label': 'Start Puzzle',
+                            'event': 'START',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'title': 'Puzzle Challenge',
+                        'subtitle': 'Puzzle Challenge',
+                        'type': 'game-menu',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'playing',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'children': [
+                      {
+                        'type': 'game-canvas-2d',
+                        'width': 800,
+                        'fps': 60,
+                        'height': 600,
+                      },
+                    ],
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'MOVE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.moves',
+                  [
+                    '+',
+                    '@entity.moves',
+                    1,
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'Puzzle App',
+                    'children': [
+                      {
+                        'type': 'game-canvas-2d',
+                        'width': 800,
+                        'height': 600,
+                        'fps': 60,
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'HINT',
+            },
+            {
+              'from': 'playing',
+              'to': 'paused',
+              'event': 'PAUSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'menuItems': [
+                      {
+                        'label': 'Resume',
+                        'event': 'RESUME',
+                        'variant': 'primary',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'event': 'RESTART',
+                        'label': 'Quit',
+                      },
+                    ],
+                    'title': 'Paused',
+                    'type': 'game-menu',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'playing',
+              'to': 'gameover',
+              'event': 'GAME_OVER',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'stats': [
+                          {
+                            'value': '@entity.score',
+                            'label': 'Score',
+                          },
+                          {
+                            'label': 'Moves',
+                            'value': '@entity.moves',
+                          },
+                        ],
+                        'type': 'game-over-screen',
+                        'menuItems': [
+                          {
+                            'event': 'RESTART',
+                            'label': 'Play Again',
+                            'variant': 'primary',
+                          },
+                          {
+                            'label': 'Main Menu',
+                            'event': 'RESTART',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'title': 'Puzzle Complete',
+                      },
+                    ],
+                    'showTopBar': true,
+                    'appName': 'Puzzle App',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'paused',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'paused',
+              'to': 'playing',
+              'event': 'RESUME',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'children': [
+                      {
+                        'fps': 60,
+                        'type': 'game-canvas-2d',
+                        'height': 600,
+                        'width': 800,
+                      },
+                    ],
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'playing',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'width': 800,
+                        'fps': 60,
+                        'type': 'game-canvas-2d',
+                        'height': 600,
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'label': 'Start Puzzle',
+                            'variant': 'primary',
+                            'event': 'START',
+                          },
+                        ],
+                        'title': 'Puzzle Challenge',
+                        'subtitle': 'Puzzle Challenge',
+                        'type': 'game-menu',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'gameover',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'label': 'Start Puzzle',
+                            'variant': 'primary',
+                            'event': 'START',
+                          },
+                        ],
+                        'type': 'game-menu',
+                        'title': 'Puzzle Challenge',
+                        'subtitle': 'Puzzle Challenge',
+                      },
+                    ],
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'PuzzleLevelPuzzleScore',
+        'category': 'interaction',
+        'linkedEntity': 'PuzzleLevel',
+        'emits': [
+          {
+            'event': 'PuzzleLevelLoaded',
+            'description': 'Fired when PuzzleLevel finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+              },
+              {
+                'name': 'moves',
+                'type': 'number',
+              },
+              {
+                'name': 'completed',
+                'type': 'boolean',
+              },
+              {
+                'name': 'highScore',
+                'type': 'number',
+              },
+              {
+                'name': 'combo',
+                'type': 'number',
+              },
+              {
+                'name': 'multiplier',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'PuzzleLevelLoadFailed',
+            'description': 'Fired when PuzzleLevel fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ADD_SCORE',
+              'name': 'Add Score',
+              'payloadSchema': [
+                {
+                  'name': 'points',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'COMBO',
+              'name': 'Combo',
+              'payloadSchema': [
+                {
+                  'name': 'multiplier',
+                  'type': 'number',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'PuzzleLevelLoaded',
+              'name': 'PuzzleLevel loaded',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'level',
+                  'type': 'number',
+                },
+                {
+                  'name': 'score',
+                  'type': 'number',
+                },
+                {
+                  'name': 'moves',
+                  'type': 'number',
+                },
+                {
+                  'name': 'completed',
+                  'type': 'boolean',
+                },
+                {
+                  'name': 'highScore',
+                  'type': 'number',
+                },
+                {
+                  'name': 'combo',
+                  'type': 'number',
+                },
+                {
+                  'name': 'multiplier',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'PuzzleLevelLoadFailed',
+              'name': 'PuzzleLevel load failed',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'PuzzleLevel',
+                  {
+                    'emit': {
+                      'success': 'PuzzleLevelLoaded',
+                      'failure': 'PuzzleLevelLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ADD_SCORE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.score',
+                  [
+                    '+',
+                    '@entity.score',
+                    '@payload.points',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.combo',
+                  [
+                    '+',
+                    '@entity.combo',
+                    1,
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'children': [
+                      {
+                        'highScore': '@entity.highScore',
+                        'score': '@entity.score',
+                        'type': 'score-board',
+                        'combo': '@entity.combo',
+                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'COMBO',
+              'effects': [
+                [
+                  'set',
+                  '@entity.multiplier',
+                  '@payload.multiplier',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'type': 'score-board',
+                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
+                        'highScore': '@entity.highScore',
+                        'combo': '@entity.combo',
+                        'score': '@entity.score',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.combo',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.multiplier',
+                  1,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'type': 'score-board',
+                        'combo': '@entity.combo',
+                        'score': '@entity.score',
+                        'highScore': '@entity.highScore',
+                        'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
+                      },
+                    ],
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'PuzzlePage',
+        'path': '/puzzle',
+        'traits': [
+          {
+            'ref': 'PuzzleLevelPuzzleFlow',
+          },
+          {
+            'ref': 'PuzzleLevelPuzzleScore',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `PuzzleApp.traits.PuzzleLevelPuzzleScore`. */
-export function stdPuzzleAppPuzzleLevelPuzzleScoreTrait(params: StdPuzzleAppParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PuzzleLevelPuzzleScore`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `PuzzleApp.pages.PuzzlePage`. */
-export function stdPuzzleAppPage(params: StdPuzzleAppParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.PuzzlePage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (2 orbitals). */
-export function stdPuzzleApp(params: StdPuzzleAppParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'PuzzleLevel';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PuzzleLevelOrbital',
-      uses: [],
-      entity: {
-        'name': 'PuzzleLevel',
-        'persistence': 'runtime',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'level',
-            'type': 'number',
-            'default': 1,
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'moves',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'completed',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'highScore',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'combo',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'multiplier',
-            'type': 'number',
-            'default': 1,
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'PuzzleLevelPuzzleFlow',
-          'category': 'interaction',
-          'linkedEntity': 'PuzzleLevel',
-          'emits': [
-            {
-              'event': 'PuzzleLevelLoaded',
-              'description': 'Fired when PuzzleLevel finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'level',
-                  'type': 'number',
-                },
-                {
-                  'name': 'score',
-                  'type': 'number',
-                },
-                {
-                  'name': 'moves',
-                  'type': 'number',
-                },
-                {
-                  'name': 'completed',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'highScore',
-                  'type': 'number',
-                },
-                {
-                  'name': 'combo',
-                  'type': 'number',
-                },
-                {
-                  'name': 'multiplier',
-                  'type': 'number',
-                },
-              ],
-            },
-            {
-              'event': 'PuzzleLevelLoadFailed',
-              'description': 'Fired when PuzzleLevel fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'message',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'menu',
-                'isInitial': true,
-              },
-              {
-                'name': 'playing',
-              },
-              {
-                'name': 'paused',
-              },
-              {
-                'name': 'gameover',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'NAVIGATE',
-                'name': 'Navigate',
-              },
-              {
-                'key': 'MOVE',
-                'name': 'Move',
-              },
-              {
-                'key': 'HINT',
-                'name': 'Hint',
-              },
-              {
-                'key': 'PAUSE',
-                'name': 'Pause',
-              },
-              {
-                'key': 'GAME_OVER',
-                'name': 'Game Over',
-              },
-              {
-                'key': 'RESUME',
-                'name': 'Resume',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'PuzzleLevelLoaded',
-                'name': 'PuzzleLevel loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'moves',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'completed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'highScore',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'combo',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'multiplier',
-                    'type': 'number',
-                  },
-                ],
-              },
-              {
-                'key': 'PuzzleLevelLoadFailed',
-                'name': 'PuzzleLevel load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'PuzzleLevel',
-                    {
-                      'emit': {
-                        'failure': 'PuzzleLevelLoadFailed',
-                        'success': 'PuzzleLevelLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'label': 'Start Puzzle',
-                              'event': 'START',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'title': 'Puzzle Challenge',
-                          'subtitle': 'Puzzle Challenge',
-                          'type': 'game-menu',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'playing',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'children': [
-                        {
-                          'type': 'game-canvas-2d',
-                          'width': 800,
-                          'fps': 60,
-                          'height': 600,
-                        },
-                      ],
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'playing',
-                'to': 'playing',
-                'event': 'MOVE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.moves',
-                    [
-                      '+',
-                      '@entity.moves',
-                      1,
-                    ],
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'appName': 'Puzzle App',
-                      'children': [
-                        {
-                          'type': 'game-canvas-2d',
-                          'width': 800,
-                          'height': 600,
-                          'fps': 60,
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'playing',
-                'to': 'playing',
-                'event': 'HINT',
-              },
-              {
-                'from': 'playing',
-                'to': 'paused',
-                'event': 'PAUSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'menuItems': [
-                        {
-                          'label': 'Resume',
-                          'event': 'RESUME',
-                          'variant': 'primary',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'event': 'RESTART',
-                          'label': 'Quit',
-                        },
-                      ],
-                      'title': 'Paused',
-                      'type': 'game-menu',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'playing',
-                'to': 'gameover',
-                'event': 'GAME_OVER',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'value': '@entity.score',
-                              'label': 'Score',
-                            },
-                            {
-                              'label': 'Moves',
-                              'value': '@entity.moves',
-                            },
-                          ],
-                          'type': 'game-over-screen',
-                          'menuItems': [
-                            {
-                              'event': 'RESTART',
-                              'label': 'Play Again',
-                              'variant': 'primary',
-                            },
-                            {
-                              'label': 'Main Menu',
-                              'event': 'RESTART',
-                              'variant': 'secondary',
-                            },
-                          ],
-                          'title': 'Puzzle Complete',
-                        },
-                      ],
-                      'showTopBar': true,
-                      'appName': 'Puzzle App',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'paused',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'paused',
-                'to': 'playing',
-                'event': 'RESUME',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'children': [
-                        {
-                          'fps': 60,
-                          'type': 'game-canvas-2d',
-                          'height': 600,
-                          'width': 800,
-                        },
-                      ],
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'playing',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Puzzle App',
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'width': 800,
-                          'fps': 60,
-                          'type': 'game-canvas-2d',
-                          'height': 600,
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Puzzle App',
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'label': 'Start Puzzle',
-                              'variant': 'primary',
-                              'event': 'START',
-                            },
-                          ],
-                          'title': 'Puzzle Challenge',
-                          'subtitle': 'Puzzle Challenge',
-                          'type': 'game-menu',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'gameover',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'label': 'Start Puzzle',
-                              'variant': 'primary',
-                              'event': 'START',
-                            },
-                          ],
-                          'type': 'game-menu',
-                          'title': 'Puzzle Challenge',
-                          'subtitle': 'Puzzle Challenge',
-                        },
-                      ],
-                      'appName': 'Puzzle App',
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'PuzzleLevelPuzzleScore',
-          'category': 'interaction',
-          'linkedEntity': 'PuzzleLevel',
-          'emits': [
-            {
-              'event': 'PuzzleLevelLoaded',
-              'description': 'Fired when PuzzleLevel finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'level',
-                  'type': 'number',
-                },
-                {
-                  'name': 'score',
-                  'type': 'number',
-                },
-                {
-                  'name': 'moves',
-                  'type': 'number',
-                },
-                {
-                  'name': 'completed',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'highScore',
-                  'type': 'number',
-                },
-                {
-                  'name': 'combo',
-                  'type': 'number',
-                },
-                {
-                  'name': 'multiplier',
-                  'type': 'number',
-                },
-              ],
-            },
-            {
-              'event': 'PuzzleLevelLoadFailed',
-              'description': 'Fired when PuzzleLevel fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'message',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ADD_SCORE',
-                'name': 'Add Score',
-                'payloadSchema': [
-                  {
-                    'name': 'points',
-                    'type': 'number',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'COMBO',
-                'name': 'Combo',
-                'payloadSchema': [
-                  {
-                    'name': 'multiplier',
-                    'type': 'number',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'PuzzleLevelLoaded',
-                'name': 'PuzzleLevel loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'moves',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'completed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'highScore',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'combo',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'multiplier',
-                    'type': 'number',
-                  },
-                ],
-              },
-              {
-                'key': 'PuzzleLevelLoadFailed',
-                'name': 'PuzzleLevel load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'PuzzleLevel',
-                    {
-                      'emit': {
-                        'success': 'PuzzleLevelLoaded',
-                        'failure': 'PuzzleLevelLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ADD_SCORE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.score',
-                    [
-                      '+',
-                      '@entity.score',
-                      '@payload.points',
-                    ],
-                  ],
-                  [
-                    'set',
-                    '@entity.combo',
-                    [
-                      '+',
-                      '@entity.combo',
-                      1,
-                    ],
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'children': [
-                        {
-                          'highScore': '@entity.highScore',
-                          'score': '@entity.score',
-                          'type': 'score-board',
-                          'combo': '@entity.combo',
-                          'level': '@entity.level',
-                          'multiplier': '@entity.multiplier',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'COMBO',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.multiplier',
-                    '@payload.multiplier',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Puzzle App',
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'type': 'score-board',
-                          'level': '@entity.level',
-                          'multiplier': '@entity.multiplier',
-                          'highScore': '@entity.highScore',
-                          'combo': '@entity.combo',
-                          'score': '@entity.score',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.score',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.combo',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.multiplier',
-                    1,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Puzzle App',
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'type': 'score-board',
-                          'combo': '@entity.combo',
-                          'score': '@entity.score',
-                          'highScore': '@entity.highScore',
-                          'multiplier': '@entity.multiplier',
-                          'level': '@entity.level',
-                        },
-                      ],
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'PuzzlePage',
-          'path': '/puzzle',
-          'traits': [
-            {
-              'ref': 'PuzzleLevelPuzzleFlow',
-            },
-            {
-              'ref': 'PuzzleLevelPuzzleScore',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PuzzleScoreOrbital',
-      uses: [],
-      entity: {
-        'name': 'PuzzleScore',
-        'persistence': 'runtime',
-        'fields': [
+  return built;
+}
+
+/**
+ * Tunable params for the PuzzleScoreOrbital orbital.
+ *
+ * Canonical entity: PuzzleScore.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdPuzzleAppPuzzleScoreOrbitalParams {
+  /** Override the canonical entity name (default: 'PuzzleScore'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the PuzzleScoreOrbital orbital with consumer params. */
+export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'PuzzleScore';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PuzzleScoreOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'playerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'required': true,
+          'default': 0,
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+          'default': 1,
+        },
+        {
+          'name': 'moves',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'highScore',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'combo',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'multiplier',
+          'type': 'number',
+          'default': 1,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'PuzzleScoreScoreBoard',
+        'category': 'interaction',
+        'linkedEntity': 'PuzzleScore',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'PuzzleScoreLoaded',
+            'description': 'Fired when PuzzleScore finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'playerName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+              {
+                'name': 'moves',
+                'type': 'number',
+              },
+              {
+                'name': 'highScore',
+                'type': 'number',
+              },
+              {
+                'name': 'combo',
+                'type': 'number',
+              },
+              {
+                'name': 'multiplier',
+                'type': 'number',
+              },
+            ],
           },
           {
-            'name': 'playerName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'required': true,
-            'default': 0,
-          },
-          {
-            'name': 'level',
-            'type': 'number',
-            'default': 1,
-          },
-          {
-            'name': 'moves',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'highScore',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'combo',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'multiplier',
-            'type': 'number',
-            'default': 1,
+            'event': 'PuzzleScoreLoadFailed',
+            'description': 'Fired when PuzzleScore fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'PuzzleScoreScoreBoard',
-          'category': 'interaction',
-          'linkedEntity': 'PuzzleScore',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'PuzzleScoreLoaded',
-              'description': 'Fired when PuzzleScore finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ADD_SCORE',
+              'name': 'Add Score',
+              'payloadSchema': [
+                {
+                  'name': 'points',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'COMBO',
+              'name': 'Combo',
+              'payloadSchema': [
+                {
+                  'name': 'multiplier',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'PuzzleScoreLoaded',
+              'name': 'PuzzleScore loaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1103,9 +1140,8 @@ export function stdPuzzleApp(params: StdPuzzleAppParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'PuzzleScoreLoadFailed',
-              'description': 'Fired when PuzzleScore fails to load',
-              'scope': 'internal',
+              'key': 'PuzzleScoreLoadFailed',
+              'name': 'PuzzleScore load failed',
               'payloadSchema': [
                 {
                   'name': 'message',
@@ -1114,265 +1150,216 @@ export function stdPuzzleApp(params: StdPuzzleAppParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ADD_SCORE',
-                'name': 'Add Score',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'PuzzleScore',
                   {
-                    'name': 'points',
-                    'type': 'string',
+                    'emit': {
+                      'success': 'PuzzleScoreLoaded',
+                      'failure': 'PuzzleScoreLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'COMBO',
-                'name': 'Combo',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'multiplier',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'PuzzleScoreLoaded',
-                'name': 'PuzzleScore loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'playerName',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'moves',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'highScore',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'combo',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'multiplier',
-                    'type': 'number',
-                  },
-                ],
-              },
-              {
-                'key': 'PuzzleScoreLoadFailed',
-                'name': 'PuzzleScore load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'PuzzleScore',
-                    {
-                      'emit': {
-                        'success': 'PuzzleScoreLoaded',
-                        'failure': 'PuzzleScoreLoadFailed',
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'score': '@entity.score',
+                        'highScore': '@entity.highScore',
+                        'combo': '@entity.combo',
+                        'multiplier': '@entity.multiplier',
+                        'type': 'score-board',
+                        'level': '@entity.level',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'score': '@entity.score',
-                          'highScore': '@entity.highScore',
-                          'combo': '@entity.combo',
-                          'multiplier': '@entity.multiplier',
-                          'type': 'score-board',
-                          'level': '@entity.level',
-                        },
-                      ],
-                      'appName': 'Puzzle App',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ADD_SCORE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.score',
-                    [
-                      '+',
-                      '@entity.score',
-                      '@payload.points',
                     ],
-                  ],
-                  [
-                    'set',
-                    '@entity.combo',
-                    [
-                      '+',
-                      '@entity.combo',
-                      1,
-                    ],
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'level': '@entity.level',
-                          'type': 'score-board',
-                          'multiplier': '@entity.multiplier',
-                          'highScore': '@entity.highScore',
-                          'score': '@entity.score',
-                          'combo': '@entity.combo',
-                        },
-                      ],
-                    },
-                  ],
+                    'appName': 'Puzzle App',
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'COMBO',
-                'effects': [
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ADD_SCORE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.score',
                   [
-                    'set',
-                    '@entity.multiplier',
-                    '@payload.multiplier',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'Puzzle App',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'score': '@entity.score',
-                          'level': '@entity.level',
-                          'highScore': '@entity.highScore',
-                          'combo': '@entity.combo',
-                          'multiplier': '@entity.multiplier',
-                          'type': 'score-board',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
+                    '+',
                     '@entity.score',
-                    0,
+                    '@payload.points',
                   ],
+                ],
+                [
+                  'set',
+                  '@entity.combo',
                   [
-                    'set',
+                    '+',
                     '@entity.combo',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.multiplier',
                     1,
                   ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'appName': 'Puzzle App',
-                      'children': [
-                        {
-                          'score': '@entity.score',
-                          'multiplier': '@entity.multiplier',
-                          'level': '@entity.level',
-                          'type': 'score-board',
-                          'combo': '@entity.combo',
-                          'highScore': '@entity.highScore',
-                        },
-                      ],
-                    },
-                  ],
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Scores',
-          'path': '/scores',
-          'traits': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'level': '@entity.level',
+                        'type': 'score-board',
+                        'multiplier': '@entity.multiplier',
+                        'highScore': '@entity.highScore',
+                        'score': '@entity.score',
+                        'combo': '@entity.combo',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
             {
-              'ref': 'PuzzleScoreScoreBoard',
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'COMBO',
+              'effects': [
+                [
+                  'set',
+                  '@entity.multiplier',
+                  '@payload.multiplier',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'score': '@entity.score',
+                        'level': '@entity.level',
+                        'highScore': '@entity.highScore',
+                        'combo': '@entity.combo',
+                        'multiplier': '@entity.multiplier',
+                        'type': 'score-board',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.combo',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.multiplier',
+                  1,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'Puzzle App',
+                    'children': [
+                      {
+                        'score': '@entity.score',
+                        'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
+                        'type': 'score-board',
+                        'combo': '@entity.combo',
+                        'highScore': '@entity.highScore',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Scores',
+        'path': '/scores',
+        'traits': [
+          {
+            'ref': 'PuzzleScoreScoreBoard',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-puzzle-app — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdPuzzleAppParams {
+  PuzzleLevel?: StdPuzzleAppPuzzleLevelOrbitalParams;
+  PuzzleScore?: StdPuzzleAppPuzzleScoreOrbitalParams;
+}
+
+/** Whole-organism descriptor (2 orbitals). Composes per-orbital factories. */
+export function stdPuzzleApp(params: StdPuzzleAppParams = {}): OrbitalDefinition[] {
+  return [
+    stdPuzzleAppPuzzleLevelOrbital(params.PuzzleLevel ?? {}),
+    stdPuzzleAppPuzzleScoreOrbital(params.PuzzleScore ?? {}),
+  ];
 }

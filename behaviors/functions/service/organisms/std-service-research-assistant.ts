@@ -106,1585 +106,1655 @@ export interface StdServiceResearchAssistantResearchCustomBearerApiFailedPayload
 }
 
 /**
- * Params for the std-service-research-assistant descriptor helpers.
+ * Tunable params for the ResearchOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Research.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdServiceResearchAssistantParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdServiceResearchAssistantResearchOrbitalParams {
+  /** Override the canonical entity name (default: 'Research'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdServiceResearchAssistantEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `ServiceResearchAssistant.traits.ResearchPipeline`. */
-export function stdServiceResearchAssistantTrait(params: StdServiceResearchAssistantParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ResearchPipeline`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the ResearchOrbital orbital with consumer params. */
+export function stdServiceResearchAssistantResearchOrbital(params: StdServiceResearchAssistantResearchOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Research';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ResearchOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'query',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'videoTitle',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'videoDescription',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'summary',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pipelineStatus',
+          'type': 'string',
+          'default': 'idle',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'ResearchPipeline',
+        'category': 'interaction',
+        'linkedEntity': 'Research',
+        'emits': [
+          {
+            'event': 'ResearchYoutubeCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchYoutubeFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchLlmCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'result',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchLlmFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchRedisCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchRedisFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchStorageCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchStorageFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchCustomBearerApiCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchCustomBearerApiFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'searching',
+            },
+            {
+              'name': 'results',
+            },
+            {
+              'name': 'summarizing',
+            },
+            {
+              'name': 'complete',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SEARCH',
+              'name': 'Search',
+            },
+            {
+              'key': 'SEARCH_COMPLETE',
+              'name': 'Search Complete',
+              'payloadSchema': [
+                {
+                  'name': 'results',
+                  'type': '[Research]',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'SELECT_AND_SUMMARIZE',
+              'name': 'Select And Summarize',
+              'payloadSchema': [
+                {
+                  'name': 'videoId',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'VIDEO_FETCHED',
+              'name': 'Video Fetched',
+              'payloadSchema': [
+                {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'SUMMARY_COMPLETE',
+              'name': 'Summary Complete',
+              'payloadSchema': [
+                {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'ResearchYoutubeCompleted',
+              'name': 'Research youtube completed',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchYoutubeFailed',
+              'name': 'Research youtube failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchLlmCompleted',
+              'name': 'Research llm completed',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchLlmFailed',
+              'name': 'Research llm failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchRedisCompleted',
+              'name': 'Research redis completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchRedisFailed',
+              'name': 'Research redis failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchStorageCompleted',
+              'name': 'Research storage completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchStorageFailed',
+              'name': 'Research storage failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchCustomBearerApiCompleted',
+              'name': 'Research custom bearer api completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ResearchCustomBearerApiFailed',
+              'name': 'Research custom bearer api failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'search',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Content Research',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'card',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'variant': 'body',
+                                    'type': 'typography',
+                                    'content': 'Search YouTube for content to summarize',
+                                  },
+                                  {
+                                    'type': 'form-section',
+                                    'entity': '@entity',
+                                    'mode': 'edit',
+                                    'submitEvent': 'SEARCH',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'vertical',
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'icon': 'database',
+                        'href': '/cache',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'href': '/reports',
+                        'label': 'Reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'searching',
+              'event': 'SEARCH',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'searching',
+                ],
+                [
+                  'call-service',
+                  'youtube',
+                  'search',
+                  {
+                    'maxResults': 5,
+                    'type': 'video',
+                    'query': '@entity.query',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchYoutubeCompleted',
+                      'failure': 'ResearchYoutubeFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'label': 'Research',
+                        'icon': 'search',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'search',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Searching YouTube...',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.query',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'searching',
+              'to': 'results',
+              'event': 'SEARCH_COMPLETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'results',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'label': 'Research',
+                        'icon': 'search',
+                      },
+                      {
+                        'href': '/cache',
+                        'label': 'Cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'gap': 'sm',
+                                'children': [
+                                  {
+                                    'name': 'video',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Search Results',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'align': 'center',
+                                'type': 'stack',
+                              },
+                              {
+                                'type': 'button',
+                                'action': 'RESET',
+                                'label': 'New Search',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                              },
+                            ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'itemActions': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Summarize',
+                                'event': 'SELECT_AND_SUMMARIZE',
+                              },
+                            ],
+                            'fields': [
+                              {
+                                'variant': 'h4',
+                                'icon': 'video',
+                                'label': 'Title',
+                                'name': 'videoTitle',
+                              },
+                              {
+                                'name': 'videoDescription',
+                                'label': 'Description',
+                                'variant': 'caption',
+                              },
+                            ],
+                            'type': 'data-grid',
+                            'entity': '@payload.results',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'searching',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Pipeline Error',
+                          },
+                          {
+                            'variant': 'error',
+                            'message': '@entity.error',
+                            'type': 'alert',
+                          },
+                          {
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'label': 'Try Again',
+                            'variant': 'primary',
+                            'action': 'RESET',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'results',
+              'to': 'summarizing',
+              'event': 'SELECT_AND_SUMMARIZE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'summarizing',
+                ],
+                [
+                  'call-service',
+                  'youtube',
+                  'getVideo',
+                  {
+                    'videoId': '@payload.videoId',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ResearchYoutubeFailed',
+                      'success': 'ResearchYoutubeCompleted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'name': 'cpu',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Fetching & summarizing...',
+                            'variant': 'h3',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'content': '@entity.videoTitle',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'results',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'idle',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'search',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Content Research',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'content': 'Search YouTube for content to summarize',
+                                    'type': 'typography',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'entity': '@entity',
+                                    'mode': 'edit',
+                                    'type': 'form-section',
+                                    'submitEvent': 'SEARCH',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                  },
+                                ],
+                                'direction': 'vertical',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'label': 'Research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'icon': 'database',
+                        'href': '/cache',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'summarizing',
+              'to': 'summarizing',
+              'event': 'VIDEO_FETCHED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.videoTitle',
+                  '@payload.title',
+                ],
+                [
+                  'set',
+                  '@entity.videoDescription',
+                  '@payload.description',
+                ],
+                [
+                  'call-service',
+                  'llm',
+                  'summarize',
+                  {
+                    'text': '@entity.videoDescription',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchLlmCompleted',
+                      'failure': 'ResearchLlmFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'summarizing',
+              'to': 'complete',
+              'event': 'SUMMARY_COMPLETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.summary',
+                  '@payload.content',
+                ],
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'complete',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': 'check-circle',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Research Complete',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                              },
+                              {
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
+                                'type': 'button',
+                                'label': 'New Search',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'type': 'stack',
+                                    'direction': 'horizontal',
+                                    'children': [
+                                      {
+                                        'type': 'icon',
+                                        'name': 'video',
+                                      },
+                                      {
+                                        'variant': 'h3',
+                                        'type': 'typography',
+                                        'content': '@entity.videoTitle',
+                                      },
+                                    ],
+                                    'gap': 'sm',
+                                    'align': 'center',
+                                  },
+                                  {
+                                    'type': 'divider',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Summary',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'content': '@entity.summary',
+                                    'type': 'typography',
+                                    'variant': 'body',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'vertical',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                        'href': '/reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'summarizing',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'alert-triangle',
+                          },
+                          {
+                            'content': 'Pipeline Error',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                          {
+                            'variant': 'error',
+                            'type': 'alert',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'label': 'Try Again',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'icon': 'database',
+                        'href': '/cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.summary',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.videoTitle',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.videoDescription',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'href': '/cache',
+                        'label': 'Cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'search',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Content Research',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'card',
+                            'children': [
+                              {
+                                'direction': 'vertical',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Search YouTube for content to summarize',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'type': 'form-section',
+                                    'mode': 'edit',
+                                    'submitEvent': 'SEARCH',
+                                    'entity': '@entity',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                  },
+                                ],
+                                'type': 'stack',
+                              },
+                            ],
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pipelineStatus',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'href': '/cache',
+                        'icon': 'database',
+                        'label': 'Cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'search',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Content Research',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'card',
+                            'children': [
+                              {
+                                'gap': 'md',
+                                'direction': 'vertical',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Search YouTube for content to summarize',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'submitEvent': 'SEARCH',
+                                    'mode': 'edit',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                    'entity': '@entity',
+                                    'type': 'form-section',
+                                  },
+                                ],
+                                'type': 'stack',
+                              },
+                            ],
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ResearchPage',
+        'path': '/research',
+        'traits': [
+          {
+            'ref': 'ResearchPipeline',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Page descriptor: `ServiceResearchAssistant.pages.ResearchPage`. */
-export function stdServiceResearchAssistantPage(params: StdServiceResearchAssistantParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ResearchPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdServiceResearchAssistant(params: StdServiceResearchAssistantParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Research';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ResearchOrbital',
-      uses: [],
-      entity: {
-        'name': 'Research',
-        'persistence': 'runtime',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'query',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'videoTitle',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'videoDescription',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'summary',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pipelineStatus',
-            'type': 'string',
-            'default': 'idle',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the CacheEntryOrbital orbital.
+ *
+ * Canonical entity: CacheEntry.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceResearchAssistantCacheEntryOrbitalParams {
+  /** Override the canonical entity name (default: 'CacheEntry'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CacheEntryOrbital orbital with consumer params. */
+export function stdServiceResearchAssistantCacheEntryOrbital(params: StdServiceResearchAssistantCacheEntryOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'CacheEntry';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CacheEntryOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'ResearchPipeline',
-          'category': 'interaction',
-          'linkedEntity': 'Research',
-          'emits': [
-            {
-              'event': 'ResearchYoutubeCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'result',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchYoutubeFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchLlmCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'result',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchLlmFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchRedisCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchRedisFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchStorageCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchStorageFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchCustomBearerApiCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ResearchCustomBearerApiFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'searching',
-              },
-              {
-                'name': 'results',
-              },
-              {
-                'name': 'summarizing',
-              },
-              {
-                'name': 'complete',
-              },
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'key',
+          'type': 'string',
+        },
+        {
+          'name': 'value',
+          'type': 'string',
+        },
+        {
+          'name': 'ttl',
+          'type': 'number',
+        },
+        {
+          'name': 'result',
+          'type': 'string',
+        },
+        {
+          'name': 'redisStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'CacheEntryRedis',
+        'category': 'interaction',
+        'linkedEntity': 'CacheEntry',
+        'emits': [
+          {
+            'event': 'CacheEntryLoadFailed',
+            'description': 'Fired when CacheEntry fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
               {
                 'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
+                'type': 'string',
               },
               {
-                'key': 'SEARCH',
-                'name': 'Search',
-              },
-              {
-                'key': 'SEARCH_COMPLETE',
-                'name': 'Search Complete',
-                'payloadSchema': [
-                  {
-                    'name': 'results',
-                    'type': '[Research]',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'SELECT_AND_SUMMARIZE',
-                'name': 'Select And Summarize',
-                'payloadSchema': [
-                  {
-                    'name': 'videoId',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'VIDEO_FETCHED',
-                'name': 'Video Fetched',
-                'payloadSchema': [
-                  {
-                    'name': 'title',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'SUMMARY_COMPLETE',
-                'name': 'Summary Complete',
-                'payloadSchema': [
-                  {
-                    'name': 'content',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchYoutubeCompleted',
-                'name': 'Research youtube completed',
-                'payloadSchema': [
-                  {
-                    'name': 'result',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchYoutubeFailed',
-                'name': 'Research youtube failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchLlmCompleted',
-                'name': 'Research llm completed',
-                'payloadSchema': [
-                  {
-                    'name': 'result',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchLlmFailed',
-                'name': 'Research llm failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchRedisCompleted',
-                'name': 'Research redis completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchRedisFailed',
-                'name': 'Research redis failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchStorageCompleted',
-                'name': 'Research storage completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchStorageFailed',
-                'name': 'Research storage failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchCustomBearerApiCompleted',
-                'name': 'Research custom bearer api completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchCustomBearerApiFailed',
-                'name': 'Research custom bearer api failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.query',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'search',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Content Research',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'card',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'variant': 'body',
-                                      'type': 'typography',
-                                      'content': 'Search YouTube for content to summarize',
-                                    },
-                                    {
-                                      'type': 'form-section',
-                                      'entity': '@entity',
-                                      'mode': 'edit',
-                                      'submitEvent': 'SEARCH',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                  'direction': 'vertical',
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'href': '/reports',
-                          'label': 'Reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'searching',
-                'event': 'SEARCH',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'searching',
-                  ],
-                  [
-                    'call-service',
-                    'youtube',
-                    'search',
-                    {
-                      'maxResults': 5,
-                      'type': 'video',
-                      'query': '@entity.query',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchYoutubeCompleted',
-                        'failure': 'ResearchYoutubeFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'search',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Searching YouTube...',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.query',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'searching',
-                'to': 'results',
-                'event': 'SEARCH_COMPLETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'results',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'gap': 'sm',
-                                  'children': [
-                                    {
-                                      'name': 'video',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Search Results',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'type': 'stack',
-                                },
-                                {
-                                  'type': 'button',
-                                  'action': 'RESET',
-                                  'label': 'New Search',
-                                  'variant': 'ghost',
-                                  'icon': 'rotate-ccw',
-                                },
-                              ],
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'itemActions': [
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Summarize',
-                                  'event': 'SELECT_AND_SUMMARIZE',
-                                },
-                              ],
-                              'fields': [
-                                {
-                                  'variant': 'h4',
-                                  'icon': 'video',
-                                  'label': 'Title',
-                                  'name': 'videoTitle',
-                                },
-                                {
-                                  'name': 'videoDescription',
-                                  'label': 'Description',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'type': 'data-grid',
-                              'entity': '@payload.results',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'searching',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Pipeline Error',
-                            },
-                            {
-                              'variant': 'error',
-                              'message': '@entity.error',
-                              'type': 'alert',
-                            },
-                            {
-                              'type': 'button',
-                              'icon': 'rotate-ccw',
-                              'label': 'Try Again',
-                              'variant': 'primary',
-                              'action': 'RESET',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'align': 'center',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'results',
-                'to': 'summarizing',
-                'event': 'SELECT_AND_SUMMARIZE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'summarizing',
-                  ],
-                  [
-                    'call-service',
-                    'youtube',
-                    'getVideo',
-                    {
-                      'videoId': '@payload.videoId',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ResearchYoutubeFailed',
-                        'success': 'ResearchYoutubeCompleted',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'name': 'cpu',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Fetching & summarizing...',
-                              'variant': 'h3',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'content': '@entity.videoTitle',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'results',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'idle',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'search',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Content Research',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'content': 'Search YouTube for content to summarize',
-                                      'type': 'typography',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'entity': '@entity',
-                                      'mode': 'edit',
-                                      'type': 'form-section',
-                                      'submitEvent': 'SEARCH',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                    },
-                                  ],
-                                  'direction': 'vertical',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'summarizing',
-                'to': 'summarizing',
-                'event': 'VIDEO_FETCHED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.videoTitle',
-                    '@payload.title',
-                  ],
-                  [
-                    'set',
-                    '@entity.videoDescription',
-                    '@payload.description',
-                  ],
-                  [
-                    'call-service',
-                    'llm',
-                    'summarize',
-                    {
-                      'text': '@entity.videoDescription',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchLlmCompleted',
-                        'failure': 'ResearchLlmFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'summarizing',
-                'to': 'complete',
-                'event': 'SUMMARY_COMPLETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.summary',
-                    '@payload.content',
-                  ],
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'complete',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'check-circle',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Research Complete',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'variant': 'ghost',
-                                  'icon': 'rotate-ccw',
-                                  'action': 'RESET',
-                                  'type': 'button',
-                                  'label': 'New Search',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'children': [
-                                        {
-                                          'type': 'icon',
-                                          'name': 'video',
-                                        },
-                                        {
-                                          'variant': 'h3',
-                                          'type': 'typography',
-                                          'content': '@entity.videoTitle',
-                                        },
-                                      ],
-                                      'gap': 'sm',
-                                      'align': 'center',
-                                    },
-                                    {
-                                      'type': 'divider',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Summary',
-                                      'variant': 'caption',
-                                    },
-                                    {
-                                      'content': '@entity.summary',
-                                      'type': 'typography',
-                                      'variant': 'body',
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'direction': 'vertical',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                          'href': '/reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'summarizing',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'alert-triangle',
-                            },
-                            {
-                              'content': 'Pipeline Error',
-                              'type': 'typography',
-                              'variant': 'h2',
-                            },
-                            {
-                              'variant': 'error',
-                              'type': 'alert',
-                              'message': '@entity.error',
-                            },
-                            {
-                              'label': 'Try Again',
-                              'type': 'button',
-                              'variant': 'primary',
-                              'action': 'RESET',
-                              'icon': 'rotate-ccw',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.summary',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.videoTitle',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.videoDescription',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'search',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Content Research',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'card',
-                              'children': [
-                                {
-                                  'direction': 'vertical',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Search YouTube for content to summarize',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'type': 'form-section',
-                                      'mode': 'edit',
-                                      'submitEvent': 'SEARCH',
-                                      'entity': '@entity',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                },
-                              ],
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pipelineStatus',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'icon': 'database',
-                          'label': 'Cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'search',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Content Research',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'card',
-                              'children': [
-                                {
-                                  'gap': 'md',
-                                  'direction': 'vertical',
-                                  'children': [
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Search YouTube for content to summarize',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'submitEvent': 'SEARCH',
-                                      'mode': 'edit',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                      'entity': '@entity',
-                                      'type': 'form-section',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                },
-                              ],
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
+                'name': 'code',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ResearchPage',
-          'path': '/research',
-          'traits': [
-            {
-              'ref': 'ResearchPipeline',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CacheEntryOrbital',
-      uses: [],
-      entity: {
-        'name': 'CacheEntry',
-        'persistence': 'runtime',
-        'fields': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'CacheEntryLoaded',
+            'description': 'Fired when CacheEntry finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CacheEntry]',
+              },
+            ],
           },
           {
-            'name': 'key',
-            'type': 'string',
+            'event': 'ResearchRedisCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
           },
           {
-            'name': 'value',
-            'type': 'string',
-          },
-          {
-            'name': 'ttl',
-            'type': 'number',
-          },
-          {
-            'name': 'result',
-            'type': 'string',
-          },
-          {
-            'name': 'redisStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
+            'event': 'ResearchRedisFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'CacheEntryRedis',
-          'category': 'interaction',
-          'linkedEntity': 'CacheEntry',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CacheEntryLoadFailed',
-              'description': 'Fired when CacheEntry fails to load',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'executing',
+            },
+            {
+              'name': 'complete',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'GET_KEY',
+              'name': 'Get Key',
+            },
+            {
+              'key': 'SET_KEY',
+              'name': 'Set Key',
+            },
+            {
+              'key': 'DELETE_KEY',
+              'name': 'Delete Key',
+            },
+            {
+              'key': 'EXECUTED',
+              'name': 'Executed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'CacheEntryLoadFailed',
+              'name': 'CacheEntry load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1697,9 +1767,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'CacheEntryLoaded',
-              'description': 'Fired when CacheEntry finishes loading',
-              'scope': 'internal',
+              'key': 'CacheEntryLoaded',
+              'name': 'CacheEntry loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1708,8 +1777,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchRedisCompleted',
-              'scope': 'internal',
+              'key': 'ResearchRedisCompleted',
+              'name': 'Research redis completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1718,8 +1787,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchRedisFailed',
-              'scope': 'internal',
+              'key': 'ResearchRedisFailed',
+              'name': 'Research redis failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1732,859 +1801,913 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'executing',
-              },
-              {
-                'name': 'complete',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'GET_KEY',
-                'name': 'Get Key',
-              },
-              {
-                'key': 'SET_KEY',
-                'name': 'Set Key',
-              },
-              {
-                'key': 'DELETE_KEY',
-                'name': 'Delete Key',
-              },
-              {
-                'key': 'EXECUTED',
-                'name': 'Executed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'CacheEntryLoadFailed',
-                'name': 'CacheEntry load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CacheEntryLoaded',
-                'name': 'CacheEntry loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[CacheEntry]',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchRedisCompleted',
-                'name': 'Research redis completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchRedisFailed',
-                'name': 'Research redis failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.key',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.ttl',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.value',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'CacheEntry',
-                    {
-                      'emit': {
-                        'success': 'CacheEntryLoaded',
-                        'failure': 'CacheEntryLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'database',
-                                },
-                                {
-                                  'content': 'Redis Cache',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'direction': 'vertical',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'input',
-                                  'placeholder': 'cache-key',
-                                },
-                                {
-                                  'type': 'input',
-                                  'placeholder': 'cache-value',
-                                },
-                                {
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                  'placeholder': '3600',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'justify': 'center',
-                              'children': [
-                                {
-                                  'label': 'Get',
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'icon': 'download',
-                                  'action': 'GET_KEY',
-                                },
-                                {
-                                  'action': 'SET_KEY',
-                                  'label': 'Set',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Delete',
-                                  'icon': 'trash-2',
-                                  'action': 'DELETE_KEY',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'GET_KEY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'icon': 'database',
-                          'label': 'Cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Executing...',
-                          'message': 'Running redis operation...',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'redis',
-                    'get',
-                    {
-                      'key': '@entity.key',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchRedisCompleted',
-                        'failure': 'ResearchRedisFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'SET_KEY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Executing...',
-                          'message': 'Running redis operation...',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'href': '/cache',
-                          'label': 'Cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'redis',
-                    'set',
-                    {
-                      'ttl': '@entity.ttl',
-                      'value': '@entity.value',
-                      'key': '@entity.key',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchRedisCompleted',
-                        'failure': 'ResearchRedisFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'DELETE_KEY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'title': 'Executing...',
-                          'message': 'Running redis operation...',
-                          'type': 'loading-state',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'redis',
-                    'delete',
-                    {
-                      'key': '@entity.key',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchRedisCompleted',
-                        'failure': 'ResearchRedisFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'executing',
-                'to': 'complete',
-                'event': 'EXECUTED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.result',
-                    '@payload.data',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': 'Operation complete',
-                              'variant': 'success',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.result',
-                              'color': 'muted',
-                            },
-                            {
-                              'action': 'RESET',
-                              'variant': 'ghost',
-                              'icon': 'rotate-ccw',
-                              'label': 'Reset',
-                              'type': 'button',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'executing',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'error-state',
-                          'title': 'Redis Error',
-                          'onRetry': 'RESET',
-                          'message': '@entity.error',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'name': 'database',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Redis Cache',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'gap': 'md',
-                              'direction': 'vertical',
-                              'children': [
-                                {
-                                  'type': 'input',
-                                  'placeholder': 'cache-key',
-                                },
-                                {
-                                  'type': 'input',
-                                  'placeholder': 'cache-value',
-                                },
-                                {
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                  'placeholder': '3600',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'download',
-                                  'action': 'GET_KEY',
-                                  'label': 'Get',
-                                },
-                                {
-                                  'label': 'Set',
-                                  'variant': 'primary',
-                                  'action': 'SET_KEY',
-                                  'type': 'button',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'icon': 'trash-2',
-                                  'type': 'button',
-                                  'action': 'DELETE_KEY',
-                                  'label': 'Delete',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'justify': 'center',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'icon': 'search',
-                          'href': '/research',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'database',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Redis Cache',
-                                },
-                              ],
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'placeholder': 'cache-key',
-                                  'type': 'input',
-                                },
-                                {
-                                  'placeholder': 'cache-value',
-                                  'type': 'input',
-                                },
-                                {
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                  'placeholder': '3600',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'md',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Get',
-                                  'action': 'GET_KEY',
-                                  'type': 'button',
-                                  'icon': 'download',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Set',
-                                  'action': 'SET_KEY',
-                                  'variant': 'primary',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'icon': 'trash-2',
-                                  'variant': 'danger',
-                                  'type': 'button',
-                                  'action': 'DELETE_KEY',
-                                  'label': 'Delete',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'justify': 'center',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Cache',
-          'path': '/cache',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'CacheEntryRedis',
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.key',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.ttl',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.value',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'CacheEntry',
+                  {
+                    'emit': {
+                      'success': 'CacheEntryLoaded',
+                      'failure': 'CacheEntryLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'database',
+                              },
+                              {
+                                'content': 'Redis Cache',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'input',
+                                'placeholder': 'cache-key',
+                              },
+                              {
+                                'type': 'input',
+                                'placeholder': 'cache-value',
+                              },
+                              {
+                                'type': 'input',
+                                'inputType': 'number',
+                                'placeholder': '3600',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'justify': 'center',
+                            'children': [
+                              {
+                                'label': 'Get',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'icon': 'download',
+                                'action': 'GET_KEY',
+                              },
+                              {
+                                'action': 'SET_KEY',
+                                'label': 'Set',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'upload',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Delete',
+                                'icon': 'trash-2',
+                                'action': 'DELETE_KEY',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'icon': 'database',
+                        'href': '/cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'GET_KEY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'href': '/cache',
+                        'icon': 'database',
+                        'label': 'Cache',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Executing...',
+                        'message': 'Running redis operation...',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'redis',
+                  'get',
+                  {
+                    'key': '@entity.key',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchRedisCompleted',
+                      'failure': 'ResearchRedisFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'SET_KEY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Executing...',
+                        'message': 'Running redis operation...',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'href': '/research',
+                        'label': 'Research',
+                      },
+                      {
+                        'icon': 'database',
+                        'href': '/cache',
+                        'label': 'Cache',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                  },
+                ],
+                [
+                  'call-service',
+                  'redis',
+                  'set',
+                  {
+                    'ttl': '@entity.ttl',
+                    'value': '@entity.value',
+                    'key': '@entity.key',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchRedisCompleted',
+                      'failure': 'ResearchRedisFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'DELETE_KEY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'title': 'Executing...',
+                        'message': 'Running redis operation...',
+                        'type': 'loading-state',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'redis',
+                  'delete',
+                  {
+                    'key': '@entity.key',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchRedisCompleted',
+                      'failure': 'ResearchRedisFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'executing',
+              'to': 'complete',
+              'event': 'EXECUTED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.result',
+                  '@payload.data',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'check-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'alert',
+                            'message': 'Operation complete',
+                            'variant': 'success',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': '@entity.result',
+                            'color': 'muted',
+                          },
+                          {
+                            'action': 'RESET',
+                            'variant': 'ghost',
+                            'icon': 'rotate-ccw',
+                            'label': 'Reset',
+                            'type': 'button',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'executing',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'href': '/research',
+                        'label': 'Research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'error-state',
+                        'title': 'Redis Error',
+                        'onRetry': 'RESET',
+                        'message': '@entity.error',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'name': 'database',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Redis Cache',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'gap': 'md',
+                            'direction': 'vertical',
+                            'children': [
+                              {
+                                'type': 'input',
+                                'placeholder': 'cache-key',
+                              },
+                              {
+                                'type': 'input',
+                                'placeholder': 'cache-value',
+                              },
+                              {
+                                'type': 'input',
+                                'inputType': 'number',
+                                'placeholder': '3600',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'download',
+                                'action': 'GET_KEY',
+                                'label': 'Get',
+                              },
+                              {
+                                'label': 'Set',
+                                'variant': 'primary',
+                                'action': 'SET_KEY',
+                                'type': 'button',
+                                'icon': 'upload',
+                              },
+                              {
+                                'icon': 'trash-2',
+                                'type': 'button',
+                                'action': 'DELETE_KEY',
+                                'label': 'Delete',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'center',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'icon': 'search',
+                        'href': '/research',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'database',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Redis Cache',
+                              },
+                            ],
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'placeholder': 'cache-key',
+                                'type': 'input',
+                              },
+                              {
+                                'placeholder': 'cache-value',
+                                'type': 'input',
+                              },
+                              {
+                                'type': 'input',
+                                'inputType': 'number',
+                                'placeholder': '3600',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'vertical',
+                            'gap': 'md',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Get',
+                                'action': 'GET_KEY',
+                                'type': 'button',
+                                'icon': 'download',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Set',
+                                'action': 'SET_KEY',
+                                'variant': 'primary',
+                                'icon': 'upload',
+                              },
+                              {
+                                'icon': 'trash-2',
+                                'variant': 'danger',
+                                'type': 'button',
+                                'action': 'DELETE_KEY',
+                                'label': 'Delete',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'center',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReportOrbital',
-      uses: [],
-      entity: {
-        'name': 'Report',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Cache',
+        'path': '/cache',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'bucket',
-            'type': 'string',
-          },
-          {
-            'name': 'fileKey',
-            'type': 'string',
-          },
-          {
-            'name': 'prefix',
-            'type': 'string',
-          },
-          {
-            'name': 'content',
-            'type': 'string',
-          },
-          {
-            'name': 'storageStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'result',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
+            'ref': 'CacheEntryRedis',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ReportOrbital orbital.
+ *
+ * Canonical entity: Report.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceResearchAssistantReportOrbitalParams {
+  /** Override the canonical entity name (default: 'Report'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ReportOrbital orbital with consumer params. */
+export function stdServiceResearchAssistantReportOrbital(params: StdServiceResearchAssistantReportOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Report';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReportOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'ReportStorage',
-          'category': 'interaction',
-          'linkedEntity': 'Report',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'bucket',
+          'type': 'string',
+        },
+        {
+          'name': 'fileKey',
+          'type': 'string',
+        },
+        {
+          'name': 'prefix',
+          'type': 'string',
+        },
+        {
+          'name': 'content',
+          'type': 'string',
+        },
+        {
+          'name': 'storageStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'result',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'ReportStorage',
+        'category': 'interaction',
+        'linkedEntity': 'Report',
+        'emits': [
+          {
+            'event': 'ReportLoadFailed',
+            'description': 'Fired when Report fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReportLoaded',
+            'description': 'Fired when Report finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Report]',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchStorageCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchStorageFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ReportLoadFailed',
-              'description': 'Fired when Report fails to load',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'executing',
+            },
+            {
+              'name': 'complete',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD_FILE',
+              'name': 'Upload File',
+            },
+            {
+              'key': 'DOWNLOAD_FILE',
+              'name': 'Download File',
+            },
+            {
+              'key': 'LIST_FILES',
+              'name': 'List Files',
+            },
+            {
+              'key': 'DELETE_FILE',
+              'name': 'Delete File',
+            },
+            {
+              'key': 'EXECUTED',
+              'name': 'Executed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'ReportLoadFailed',
+              'name': 'Report load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2597,9 +2720,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ReportLoaded',
-              'description': 'Fired when Report finishes loading',
-              'scope': 'internal',
+              'key': 'ReportLoaded',
+              'name': 'Report loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2608,8 +2730,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchStorageCompleted',
-              'scope': 'internal',
+              'key': 'ResearchStorageCompleted',
+              'name': 'Research storage completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2618,8 +2740,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchStorageFailed',
-              'scope': 'internal',
+              'key': 'ResearchStorageFailed',
+              'name': 'Research storage failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2632,972 +2754,1018 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'executing',
-              },
-              {
-                'name': 'complete',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD_FILE',
-                'name': 'Upload File',
-              },
-              {
-                'key': 'DOWNLOAD_FILE',
-                'name': 'Download File',
-              },
-              {
-                'key': 'LIST_FILES',
-                'name': 'List Files',
-              },
-              {
-                'key': 'DELETE_FILE',
-                'name': 'Delete File',
-              },
-              {
-                'key': 'EXECUTED',
-                'name': 'Executed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'ReportLoadFailed',
-                'name': 'Report load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReportLoaded',
-                'name': 'Report loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Report]',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchStorageCompleted',
-                'name': 'Research storage completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchStorageFailed',
-                'name': 'Research storage failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.bucket',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.content',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.fileKey',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.prefix',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Report',
-                    {
-                      'emit': {
-                        'failure': 'ReportLoadFailed',
-                        'success': 'ReportLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'stretch',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'hard-drive',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Report Storage',
-                                },
-                              ],
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'bucket-name',
-                            },
-                            {
-                              'placeholder': 'path/to/file.txt',
-                              'type': 'input',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'path/prefix/',
-                            },
-                            {
-                              'placeholder': 'File content...',
-                              'type': 'textarea',
-                            },
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'UPLOAD_FILE',
-                                  'label': 'Upload',
-                                  'variant': 'primary',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'icon': 'download',
-                                  'type': 'button',
-                                  'variant': 'secondary',
-                                  'label': 'Download',
-                                  'action': 'DOWNLOAD_FILE',
-                                },
-                                {
-                                  'variant': 'secondary',
-                                  'action': 'LIST_FILES',
-                                  'icon': 'list',
-                                  'type': 'button',
-                                  'label': 'List',
-                                },
-                                {
-                                  'label': 'Delete',
-                                  'icon': 'trash-2',
-                                  'action': 'DELETE_FILE',
-                                  'variant': 'danger',
-                                  'type': 'button',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'justify': 'center',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'UPLOAD_FILE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'icon': 'search',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'message': 'Executing storage operation on report...',
-                          'type': 'loading-state',
-                          'title': 'Processing...',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'storage',
-                    'upload',
-                    {
-                      'key': '@entity.fileKey',
-                      'content': '@entity.content',
-                      'bucket': '@entity.bucket',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ResearchStorageFailed',
-                        'success': 'ResearchStorageCompleted',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'DOWNLOAD_FILE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'label': 'Research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'icon': 'database',
-                          'label': 'Cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'message': 'Executing storage operation on report...',
-                          'title': 'Processing...',
-                          'type': 'loading-state',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'storage',
-                    'download',
-                    {
-                      'key': '@entity.fileKey',
-                      'bucket': '@entity.bucket',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchStorageCompleted',
-                        'failure': 'ResearchStorageFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'LIST_FILES',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'message': 'Executing storage operation on report...',
-                          'title': 'Processing...',
-                          'type': 'loading-state',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'storage',
-                    'list',
-                    {
-                      'prefix': '@entity.prefix',
-                      'bucket': '@entity.bucket',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ResearchStorageFailed',
-                        'success': 'ResearchStorageCompleted',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'executing',
-                'event': 'DELETE_FILE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'message': 'Executing storage operation on report...',
-                          'title': 'Processing...',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'storage',
-                    'delete',
-                    {
-                      'bucket': '@entity.bucket',
-                      'key': '@entity.fileKey',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ResearchStorageCompleted',
-                        'failure': 'ResearchStorageFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'executing',
-                'to': 'complete',
-                'event': 'EXECUTED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.result',
-                    '@payload.data',
-                  ],
-                  [
-                    'set',
-                    '@entity.storageStatus',
-                    'complete',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'success',
-                              'message': 'Operation completed successfully',
-                              'type': 'alert',
-                            },
-                            {
-                              'content': '@entity.result',
-                              'color': 'muted',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                            {
-                              'action': 'RESET',
-                              'icon': 'rotate-ccw',
-                              'variant': 'ghost',
-                              'label': 'Back',
-                              'type': 'button',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'href': '/cache',
-                          'icon': 'database',
-                          'label': 'Cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'executing',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'set',
-                    '@entity.storageStatus',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'error-state',
-                              'message': '@entity.error',
-                              'title': 'Operation Failed',
-                            },
-                            {
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'icon': 'rotate-ccw',
-                              'label': 'Back',
-                              'action': 'RESET',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.storageStatus',
-                    'idle',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'label': 'Cache',
-                          'href': '/cache',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                          'href': '/reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'align': 'stretch',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'hard-drive',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Report Storage',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'md',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'bucket-name',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': 'path/to/file.txt',
-                            },
-                            {
-                              'placeholder': 'path/prefix/',
-                              'type': 'input',
-                            },
-                            {
-                              'type': 'textarea',
-                              'placeholder': 'File content...',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'label': 'Upload',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'upload',
-                                  'action': 'UPLOAD_FILE',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Download',
-                                  'action': 'DOWNLOAD_FILE',
-                                  'icon': 'download',
-                                  'variant': 'secondary',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'List',
-                                  'icon': 'list',
-                                  'action': 'LIST_FILES',
-                                  'variant': 'secondary',
-                                },
-                                {
-                                  'type': 'button',
-                                  'action': 'DELETE_FILE',
-                                  'label': 'Delete',
-                                  'variant': 'danger',
-                                  'icon': 'trash-2',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'justify': 'center',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.storageStatus',
-                    'idle',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'hard-drive',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Report Storage',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'placeholder': 'bucket-name',
-                              'type': 'input',
-                            },
-                            {
-                              'placeholder': 'path/to/file.txt',
-                              'type': 'input',
-                            },
-                            {
-                              'placeholder': 'path/prefix/',
-                              'type': 'input',
-                            },
-                            {
-                              'placeholder': 'File content...',
-                              'type': 'textarea',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'justify': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'action': 'UPLOAD_FILE',
-                                  'label': 'Upload',
-                                  'icon': 'upload',
-                                },
-                                {
-                                  'action': 'DOWNLOAD_FILE',
-                                  'variant': 'secondary',
-                                  'icon': 'download',
-                                  'type': 'button',
-                                  'label': 'Download',
-                                },
-                                {
-                                  'label': 'List',
-                                  'variant': 'secondary',
-                                  'type': 'button',
-                                  'icon': 'list',
-                                  'action': 'LIST_FILES',
-                                },
-                                {
-                                  'icon': 'trash-2',
-                                  'action': 'DELETE_FILE',
-                                  'variant': 'danger',
-                                  'label': 'Delete',
-                                  'type': 'button',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                          ],
-                          'align': 'stretch',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Reports',
-          'path': '/reports',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'ReportStorage',
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.bucket',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.content',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.fileKey',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.prefix',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Report',
+                  {
+                    'emit': {
+                      'failure': 'ReportLoadFailed',
+                      'success': 'ReportLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'align': 'stretch',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'hard-drive',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Report Storage',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': 'bucket-name',
+                          },
+                          {
+                            'placeholder': 'path/to/file.txt',
+                            'type': 'input',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': 'path/prefix/',
+                          },
+                          {
+                            'placeholder': 'File content...',
+                            'type': 'textarea',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'UPLOAD_FILE',
+                                'label': 'Upload',
+                                'variant': 'primary',
+                                'icon': 'upload',
+                              },
+                              {
+                                'icon': 'download',
+                                'type': 'button',
+                                'variant': 'secondary',
+                                'label': 'Download',
+                                'action': 'DOWNLOAD_FILE',
+                              },
+                              {
+                                'variant': 'secondary',
+                                'action': 'LIST_FILES',
+                                'icon': 'list',
+                                'type': 'button',
+                                'label': 'List',
+                              },
+                              {
+                                'label': 'Delete',
+                                'icon': 'trash-2',
+                                'action': 'DELETE_FILE',
+                                'variant': 'danger',
+                                'type': 'button',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'justify': 'center',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'label': 'Research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'UPLOAD_FILE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'icon': 'search',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'message': 'Executing storage operation on report...',
+                        'type': 'loading-state',
+                        'title': 'Processing...',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+                [
+                  'call-service',
+                  'storage',
+                  'upload',
+                  {
+                    'key': '@entity.fileKey',
+                    'content': '@entity.content',
+                    'bucket': '@entity.bucket',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ResearchStorageFailed',
+                      'success': 'ResearchStorageCompleted',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'DOWNLOAD_FILE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'label': 'Research',
+                        'icon': 'search',
+                      },
+                      {
+                        'href': '/cache',
+                        'icon': 'database',
+                        'label': 'Cache',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'message': 'Executing storage operation on report...',
+                        'title': 'Processing...',
+                        'type': 'loading-state',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'storage',
+                  'download',
+                  {
+                    'key': '@entity.fileKey',
+                    'bucket': '@entity.bucket',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchStorageCompleted',
+                      'failure': 'ResearchStorageFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'LIST_FILES',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'href': '/research',
+                        'label': 'Research',
+                      },
+                      {
+                        'href': '/cache',
+                        'label': 'Cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'message': 'Executing storage operation on report...',
+                        'title': 'Processing...',
+                        'type': 'loading-state',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'storage',
+                  'list',
+                  {
+                    'prefix': '@entity.prefix',
+                    'bucket': '@entity.bucket',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ResearchStorageFailed',
+                      'success': 'ResearchStorageCompleted',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'executing',
+              'event': 'DELETE_FILE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'message': 'Executing storage operation on report...',
+                        'title': 'Processing...',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'href': '/reports',
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'storage',
+                  'delete',
+                  {
+                    'bucket': '@entity.bucket',
+                    'key': '@entity.fileKey',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ResearchStorageCompleted',
+                      'failure': 'ResearchStorageFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'executing',
+              'to': 'complete',
+              'event': 'EXECUTED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.result',
+                  '@payload.data',
+                ],
+                [
+                  'set',
+                  '@entity.storageStatus',
+                  'complete',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'check-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'success',
+                            'message': 'Operation completed successfully',
+                            'type': 'alert',
+                          },
+                          {
+                            'content': '@entity.result',
+                            'color': 'muted',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                          {
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'variant': 'ghost',
+                            'label': 'Back',
+                            'type': 'button',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'href': '/cache',
+                        'icon': 'database',
+                        'label': 'Cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'executing',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.storageStatus',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'error-state',
+                            'message': '@entity.error',
+                            'title': 'Operation Failed',
+                          },
+                          {
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'label': 'Back',
+                            'action': 'RESET',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.storageStatus',
+                  'idle',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'icon': 'database',
+                        'label': 'Cache',
+                        'href': '/cache',
+                      },
+                      {
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                        'href': '/reports',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'stretch',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'hard-drive',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Report Storage',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': 'bucket-name',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': 'path/to/file.txt',
+                          },
+                          {
+                            'placeholder': 'path/prefix/',
+                            'type': 'input',
+                          },
+                          {
+                            'type': 'textarea',
+                            'placeholder': 'File content...',
+                          },
+                          {
+                            'children': [
+                              {
+                                'label': 'Upload',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'upload',
+                                'action': 'UPLOAD_FILE',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Download',
+                                'action': 'DOWNLOAD_FILE',
+                                'icon': 'download',
+                                'variant': 'secondary',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'List',
+                                'icon': 'list',
+                                'action': 'LIST_FILES',
+                                'variant': 'secondary',
+                              },
+                              {
+                                'type': 'button',
+                                'action': 'DELETE_FILE',
+                                'label': 'Delete',
+                                'variant': 'danger',
+                                'icon': 'trash-2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'justify': 'center',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.storageStatus',
+                  'idle',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'hard-drive',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Report Storage',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'placeholder': 'bucket-name',
+                            'type': 'input',
+                          },
+                          {
+                            'placeholder': 'path/to/file.txt',
+                            'type': 'input',
+                          },
+                          {
+                            'placeholder': 'path/prefix/',
+                            'type': 'input',
+                          },
+                          {
+                            'placeholder': 'File content...',
+                            'type': 'textarea',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'justify': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'type': 'button',
+                                'action': 'UPLOAD_FILE',
+                                'label': 'Upload',
+                                'icon': 'upload',
+                              },
+                              {
+                                'action': 'DOWNLOAD_FILE',
+                                'variant': 'secondary',
+                                'icon': 'download',
+                                'type': 'button',
+                                'label': 'Download',
+                              },
+                              {
+                                'label': 'List',
+                                'variant': 'secondary',
+                                'type': 'button',
+                                'icon': 'list',
+                                'action': 'LIST_FILES',
+                              },
+                              {
+                                'icon': 'trash-2',
+                                'action': 'DELETE_FILE',
+                                'variant': 'danger',
+                                'label': 'Delete',
+                                'type': 'button',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                        ],
+                        'align': 'stretch',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'KnowledgeQueryOrbital',
-      uses: [],
-      entity: {
-        'name': 'KnowledgeQuery',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Reports',
+        'path': '/reports',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'endpoint',
-            'type': 'string',
-          },
-          {
-            'name': 'method',
-            'type': 'string',
-          },
-          {
-            'name': 'requestBody',
-            'type': 'string',
-          },
-          {
-            'name': 'responseData',
-            'type': 'string',
-          },
-          {
-            'name': 'statusCode',
-            'type': 'string',
-          },
-          {
-            'name': 'callStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
+            'ref': 'ReportStorage',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the KnowledgeQueryOrbital orbital.
+ *
+ * Canonical entity: KnowledgeQuery.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceResearchAssistantKnowledgeQueryOrbitalParams {
+  /** Override the canonical entity name (default: 'KnowledgeQuery'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the KnowledgeQueryOrbital orbital with consumer params. */
+export function stdServiceResearchAssistantKnowledgeQueryOrbital(params: StdServiceResearchAssistantKnowledgeQueryOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'KnowledgeQuery';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'KnowledgeQueryOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'KnowledgeQueryCustomBearer',
-          'category': 'interaction',
-          'linkedEntity': 'KnowledgeQuery',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'endpoint',
+          'type': 'string',
+        },
+        {
+          'name': 'method',
+          'type': 'string',
+        },
+        {
+          'name': 'requestBody',
+          'type': 'string',
+        },
+        {
+          'name': 'responseData',
+          'type': 'string',
+        },
+        {
+          'name': 'statusCode',
+          'type': 'string',
+        },
+        {
+          'name': 'callStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'KnowledgeQueryCustomBearer',
+        'category': 'interaction',
+        'linkedEntity': 'KnowledgeQuery',
+        'emits': [
+          {
+            'event': 'KnowledgeQueryLoadFailed',
+            'description': 'Fired when KnowledgeQuery fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'KnowledgeQueryLoaded',
+            'description': 'Fired when KnowledgeQuery finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[KnowledgeQuery]',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchCustomBearerApiCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ResearchCustomBearerApiFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'KnowledgeQueryLoadFailed',
-              'description': 'Fired when KnowledgeQuery fails to load',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'calling',
+            },
+            {
+              'name': 'complete',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CALL_API',
+              'name': 'Call Api',
+            },
+            {
+              'key': 'API_RESPONSE',
+              'name': 'Api Response',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+                {
+                  'name': 'statusCode',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'KnowledgeQueryLoadFailed',
+              'name': 'KnowledgeQuery load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3610,9 +3778,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'KnowledgeQueryLoaded',
-              'description': 'Fired when KnowledgeQuery finishes loading',
-              'scope': 'internal',
+              'key': 'KnowledgeQueryLoaded',
+              'name': 'KnowledgeQuery loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -3621,8 +3788,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchCustomBearerApiCompleted',
-              'scope': 'internal',
+              'key': 'ResearchCustomBearerApiCompleted',
+              'name': 'Research custom bearer api completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -3631,8 +3798,8 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
             {
-              'event': 'ResearchCustomBearerApiFailed',
-              'scope': 'internal',
+              'key': 'ResearchCustomBearerApiFailed',
+              'name': 'Research custom bearer api failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3645,717 +3812,654 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'calling',
-              },
-              {
-                'name': 'complete',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CALL_API',
-                'name': 'Call Api',
-              },
-              {
-                'key': 'API_RESPONSE',
-                'name': 'Api Response',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'statusCode',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'KnowledgeQueryLoadFailed',
-                'name': 'KnowledgeQuery load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'KnowledgeQueryLoaded',
-                'name': 'KnowledgeQuery loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[KnowledgeQuery]',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchCustomBearerApiCompleted',
-                'name': 'Research custom bearer api completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ResearchCustomBearerApiFailed',
-                'name': 'Research custom bearer api failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.endpoint',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.method',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.requestBody',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'KnowledgeQuery',
-                    {
-                      'emit': {
-                        'failure': 'KnowledgeQueryLoadFailed',
-                        'success': 'KnowledgeQueryLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'shield',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Bearer API Tester',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': '/users',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'label': 'GET',
-                                  'value': 'GET',
-                                },
-                                {
-                                  'value': 'POST',
-                                  'label': 'POST',
-                                },
-                                {
-                                  'value': 'PUT',
-                                  'label': 'PUT',
-                                },
-                                {
-                                  'value': 'DELETE',
-                                  'label': 'DELETE',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'type': 'textarea',
-                              'placeholder': 'JSON request body',
-                            },
-                            {
-                              'variant': 'primary',
-                              'icon': 'send',
-                              'action': 'CALL_API',
-                              'label': 'Send Request',
-                              'type': 'button',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'align': 'center',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'href': '/cache',
-                          'label': 'Cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'href': '/reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'calling',
-                'event': 'CALL_API',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Calling API...',
-                          'message': 'Sending request to knowledgequery endpoint...',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'custom-bearer-api',
-                    'execute',
-                    {
-                      'body': '@entity.requestBody',
-                      'endpoint': '@entity.endpoint',
-                      'method': '@entity.method',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ResearchCustomBearerApiFailed',
-                        'success': 'ResearchCustomBearerApiCompleted',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'calling',
-                'to': 'complete',
-                'event': 'API_RESPONSE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.responseData',
-                    '@payload.data',
-                  ],
-                  [
-                    'set',
-                    '@entity.statusCode',
-                    '@payload.statusCode',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ResearchAssistant',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'check-circle',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Response',
-                            },
-                            {
-                              'label': '@entity.statusCode',
-                              'type': 'badge',
-                              'variant': 'info',
-                            },
-                            {
-                              'language': 'json',
-                              'type': 'code-block',
-                              'code': '@entity.responseData',
-                            },
-                            {
-                              'variant': 'ghost',
-                              'action': 'RESET',
-                              'icon': 'rotate-ccw',
-                              'label': 'New Request',
-                              'type': 'button',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/research',
-                          'icon': 'search',
-                          'label': 'Research',
-                        },
-                        {
-                          'icon': 'database',
-                          'href': '/cache',
-                          'label': 'Cache',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                          'href': '/reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'calling',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                          'href': '/reports',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'onRetry': 'RETRY',
-                          'message': '@entity.error',
-                          'type': 'error-state',
-                          'title': 'Request Failed',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'shield',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'Bearer API Tester',
-                              'type': 'typography',
-                            },
-                            {
-                              'placeholder': '/users',
-                              'type': 'input',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'value': 'GET',
-                                  'label': 'GET',
-                                },
-                                {
-                                  'label': 'POST',
-                                  'value': 'POST',
-                                },
-                                {
-                                  'label': 'PUT',
-                                  'value': 'PUT',
-                                },
-                                {
-                                  'value': 'DELETE',
-                                  'label': 'DELETE',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'type': 'textarea',
-                              'placeholder': 'JSON request body',
-                            },
-                            {
-                              'icon': 'send',
-                              'label': 'Send Request',
-                              'type': 'button',
-                              'action': 'CALL_API',
-                              'variant': 'primary',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'navItems': [
-                        {
-                          'label': 'Research',
-                          'href': '/research',
-                          'icon': 'search',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'icon': 'file-text',
-                          'href': '/reports',
-                          'label': 'Reports',
-                        },
-                        {
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RETRY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'href': '/research',
-                          'label': 'Research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'icon': 'database',
-                          'href': '/cache',
-                        },
-                        {
-                          'href': '/reports',
-                          'icon': 'file-text',
-                          'label': 'Reports',
-                        },
-                        {
-                          'icon': 'book-open',
-                          'label': 'Knowledge',
-                          'href': '/knowledge',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'name': 'shield',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Bearer API Tester',
-                              'variant': 'h2',
-                            },
-                            {
-                              'placeholder': '/users',
-                              'type': 'input',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'value': 'GET',
-                                  'label': 'GET',
-                                },
-                                {
-                                  'value': 'POST',
-                                  'label': 'POST',
-                                },
-                                {
-                                  'value': 'PUT',
-                                  'label': 'PUT',
-                                },
-                                {
-                                  'value': 'DELETE',
-                                  'label': 'DELETE',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'type': 'textarea',
-                              'placeholder': 'JSON request body',
-                            },
-                            {
-                              'icon': 'send',
-                              'label': 'Send Request',
-                              'variant': 'primary',
-                              'action': 'CALL_API',
-                              'type': 'button',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'icon': 'search',
-                          'label': 'Research',
-                          'href': '/research',
-                        },
-                        {
-                          'label': 'Cache',
-                          'href': '/cache',
-                          'icon': 'database',
-                        },
-                        {
-                          'href': '/reports',
-                          'label': 'Reports',
-                          'icon': 'file-text',
-                        },
-                        {
-                          'href': '/knowledge',
-                          'label': 'Knowledge',
-                          'icon': 'book-open',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'shield',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Bearer API Tester',
-                              'variant': 'h2',
-                            },
-                            {
-                              'type': 'input',
-                              'placeholder': '/users',
-                            },
-                            {
-                              'type': 'select',
-                              'options': [
-                                {
-                                  'value': 'GET',
-                                  'label': 'GET',
-                                },
-                                {
-                                  'value': 'POST',
-                                  'label': 'POST',
-                                },
-                                {
-                                  'label': 'PUT',
-                                  'value': 'PUT',
-                                },
-                                {
-                                  'label': 'DELETE',
-                                  'value': 'DELETE',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'textarea',
-                              'placeholder': 'JSON request body',
-                            },
-                            {
-                              'variant': 'primary',
-                              'action': 'CALL_API',
-                              'type': 'button',
-                              'label': 'Send Request',
-                              'icon': 'send',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'ResearchAssistant',
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Knowledge',
-          'path': '/knowledge',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'KnowledgeQueryCustomBearer',
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.endpoint',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.method',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.requestBody',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'KnowledgeQuery',
+                  {
+                    'emit': {
+                      'failure': 'KnowledgeQueryLoadFailed',
+                      'success': 'KnowledgeQueryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'shield',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Bearer API Tester',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': '/users',
+                          },
+                          {
+                            'options': [
+                              {
+                                'label': 'GET',
+                                'value': 'GET',
+                              },
+                              {
+                                'value': 'POST',
+                                'label': 'POST',
+                              },
+                              {
+                                'value': 'PUT',
+                                'label': 'PUT',
+                              },
+                              {
+                                'value': 'DELETE',
+                                'label': 'DELETE',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'type': 'textarea',
+                            'placeholder': 'JSON request body',
+                          },
+                          {
+                            'variant': 'primary',
+                            'icon': 'send',
+                            'action': 'CALL_API',
+                            'label': 'Send Request',
+                            'type': 'button',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'href': '/research',
+                        'label': 'Research',
+                      },
+                      {
+                        'href': '/cache',
+                        'label': 'Cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'href': '/reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                        'href': '/knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'calling',
+              'event': 'CALL_API',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Calling API...',
+                        'message': 'Sending request to knowledgequery endpoint...',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'custom-bearer-api',
+                  'execute',
+                  {
+                    'body': '@entity.requestBody',
+                    'endpoint': '@entity.endpoint',
+                    'method': '@entity.method',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ResearchCustomBearerApiFailed',
+                      'success': 'ResearchCustomBearerApiCompleted',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'calling',
+              'to': 'complete',
+              'event': 'API_RESPONSE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.responseData',
+                  '@payload.data',
+                ],
+                [
+                  'set',
+                  '@entity.statusCode',
+                  '@payload.statusCode',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ResearchAssistant',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Response',
+                          },
+                          {
+                            'label': '@entity.statusCode',
+                            'type': 'badge',
+                            'variant': 'info',
+                          },
+                          {
+                            'language': 'json',
+                            'type': 'code-block',
+                            'code': '@entity.responseData',
+                          },
+                          {
+                            'variant': 'ghost',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'label': 'New Request',
+                            'type': 'button',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/research',
+                        'icon': 'search',
+                        'label': 'Research',
+                      },
+                      {
+                        'icon': 'database',
+                        'href': '/cache',
+                        'label': 'Cache',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                        'href': '/reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'calling',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                        'href': '/reports',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'onRetry': 'RETRY',
+                        'message': '@entity.error',
+                        'type': 'error-state',
+                        'title': 'Request Failed',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'shield',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Bearer API Tester',
+                            'type': 'typography',
+                          },
+                          {
+                            'placeholder': '/users',
+                            'type': 'input',
+                          },
+                          {
+                            'options': [
+                              {
+                                'value': 'GET',
+                                'label': 'GET',
+                              },
+                              {
+                                'label': 'POST',
+                                'value': 'POST',
+                              },
+                              {
+                                'label': 'PUT',
+                                'value': 'PUT',
+                              },
+                              {
+                                'value': 'DELETE',
+                                'label': 'DELETE',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'type': 'textarea',
+                            'placeholder': 'JSON request body',
+                          },
+                          {
+                            'icon': 'send',
+                            'label': 'Send Request',
+                            'type': 'button',
+                            'action': 'CALL_API',
+                            'variant': 'primary',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'navItems': [
+                      {
+                        'label': 'Research',
+                        'href': '/research',
+                        'icon': 'search',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'icon': 'file-text',
+                        'href': '/reports',
+                        'label': 'Reports',
+                      },
+                      {
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'href': '/research',
+                        'label': 'Research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'icon': 'database',
+                        'href': '/cache',
+                      },
+                      {
+                        'href': '/reports',
+                        'icon': 'file-text',
+                        'label': 'Reports',
+                      },
+                      {
+                        'icon': 'book-open',
+                        'label': 'Knowledge',
+                        'href': '/knowledge',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'name': 'shield',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Bearer API Tester',
+                            'variant': 'h2',
+                          },
+                          {
+                            'placeholder': '/users',
+                            'type': 'input',
+                          },
+                          {
+                            'options': [
+                              {
+                                'value': 'GET',
+                                'label': 'GET',
+                              },
+                              {
+                                'value': 'POST',
+                                'label': 'POST',
+                              },
+                              {
+                                'value': 'PUT',
+                                'label': 'PUT',
+                              },
+                              {
+                                'value': 'DELETE',
+                                'label': 'DELETE',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'type': 'textarea',
+                            'placeholder': 'JSON request body',
+                          },
+                          {
+                            'icon': 'send',
+                            'label': 'Send Request',
+                            'variant': 'primary',
+                            'action': 'CALL_API',
+                            'type': 'button',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'icon': 'search',
+                        'label': 'Research',
+                        'href': '/research',
+                      },
+                      {
+                        'label': 'Cache',
+                        'href': '/cache',
+                        'icon': 'database',
+                      },
+                      {
+                        'href': '/reports',
+                        'label': 'Reports',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'href': '/knowledge',
+                        'label': 'Knowledge',
+                        'icon': 'book-open',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'shield',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Bearer API Tester',
+                            'variant': 'h2',
+                          },
+                          {
+                            'type': 'input',
+                            'placeholder': '/users',
+                          },
+                          {
+                            'type': 'select',
+                            'options': [
+                              {
+                                'value': 'GET',
+                                'label': 'GET',
+                              },
+                              {
+                                'value': 'POST',
+                                'label': 'POST',
+                              },
+                              {
+                                'label': 'PUT',
+                                'value': 'PUT',
+                              },
+                              {
+                                'label': 'DELETE',
+                                'value': 'DELETE',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'textarea',
+                            'placeholder': 'JSON request body',
+                          },
+                          {
+                            'variant': 'primary',
+                            'action': 'CALL_API',
+                            'type': 'button',
+                            'label': 'Send Request',
+                            'icon': 'send',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'ResearchAssistant',
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Knowledge',
+        'path': '/knowledge',
+        'traits': [
+          {
+            'ref': 'KnowledgeQueryCustomBearer',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-service-research-assistant — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdServiceResearchAssistantParams {
+  Research?: StdServiceResearchAssistantResearchOrbitalParams;
+  CacheEntry?: StdServiceResearchAssistantCacheEntryOrbitalParams;
+  Report?: StdServiceResearchAssistantReportOrbitalParams;
+  KnowledgeQuery?: StdServiceResearchAssistantKnowledgeQueryOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdServiceResearchAssistant(params: StdServiceResearchAssistantParams = {}): OrbitalDefinition[] {
+  return [
+    stdServiceResearchAssistantResearchOrbital(params.Research ?? {}),
+    stdServiceResearchAssistantCacheEntryOrbital(params.CacheEntry ?? {}),
+    stdServiceResearchAssistantReportOrbital(params.Report ?? {}),
+    stdServiceResearchAssistantKnowledgeQueryOrbital(params.KnowledgeQuery ?? {}),
+  ];
 }

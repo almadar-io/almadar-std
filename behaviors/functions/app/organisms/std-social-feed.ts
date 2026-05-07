@@ -34,1152 +34,772 @@ export interface StdSocialFeedConfig {
 }
 
 /**
- * Params for the std-social-feed descriptor helpers.
+ * Tunable params for the PostOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Post.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdSocialFeedParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdSocialFeedPostOrbitalParams {
+  /** Override the canonical entity name (default: 'Post'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdSocialFeedConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `SocialFeed.traits.PostAppLayout`. */
-export function stdSocialFeedPostAppLayoutTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.FeedCatalog`. */
-export function stdSocialFeedFeedCatalogTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FeedCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostSearch`. */
-export function stdSocialFeedPostSearchTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostStats`. */
-export function stdSocialFeedPostStatsTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostBrowseList`. */
-export function stdSocialFeedPostBrowseListTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostCreate`. */
-export function stdSocialFeedPostCreateTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostEdit`. */
-export function stdSocialFeedPostEditTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostView`. */
-export function stdSocialFeedPostViewTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostDeleteConfirm`. */
-export function stdSocialFeedPostDeleteConfirmTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostDeleteConfirm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostImageUpload`. */
-export function stdSocialFeedPostImageUploadTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostImageUpload`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostImageUploadForm`. */
-export function stdSocialFeedPostImageUploadFormTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostImageUploadForm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostPersistor`. */
-export function stdSocialFeedPostPersistorTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `SocialFeed.traits.PostLikeTracker`. */
-export function stdSocialFeedPostLikeTrackerTrait(params: StdSocialFeedParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PostLikeTracker`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `SocialFeed.pages.FeedPage`. */
-export function stdSocialFeedPage(params: StdSocialFeedParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.FeedPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (2 orbitals). */
-export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Post';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the PostOrbital orbital with consumer params. */
+export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Post';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PostOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PostOrbital',
-      uses: [
+      collection: 'posts',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'author',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'content',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'image',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'timestamp',
+          'type': 'datetime',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'likes',
+          'type': 'number',
+          'default': 0,
         },
         {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
+          'name': 'tag',
+          'type': 'string',
+          'default': '',
         },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Post',
-        'collection': 'posts',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PostAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'label': 'Feed',
+              'href': '/feed',
+              'icon': 'rss',
+            },
+            {
+              'label': 'Comments',
+              'href': '/comments',
+              'icon': 'message-circle',
+            },
+          ],
+          'contentTrait': '@trait.FeedCatalog',
+          'appName': 'SocialFeed',
+          'searchEvent': 'POST_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'POST_SEARCH',
+          'NOTIFY_CLICK': 'POST_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'FeedCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'content',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'image',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'timestamp',
-            'type': 'datetime',
-            'default': '',
-          },
-          {
-            'name': 'likes',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'tag',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'PostAppLayout',
-          'config': {
-            'navItems': [
-              {
-                'label': 'Feed',
-                'href': '/feed',
-                'icon': 'rss',
-              },
-              {
-                'label': 'Comments',
-                'href': '/comments',
-                'icon': 'message-circle',
-              },
-            ],
-            'contentTrait': '@trait.FeedCatalog',
-            'appName': 'SocialFeed',
-            'searchEvent': 'POST_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
+        'listens': [
+          {
+            'event': 'POST_SEARCH',
+            'triggers': 'POST_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostAppLayout',
+            },
           },
-          'events': {
-            'SEARCH': 'POST_SEARCH',
-            'NOTIFY_CLICK': 'POST_NOTIFICATIONS_OPEN',
+          {
+            'event': 'POST_NOTIFICATIONS_OPEN',
+            'triggers': 'POST_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'FeedCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'POST_SEARCH',
+              'name': 'Post Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'POST_NOTIFICATIONS_OPEN',
+              'name': 'Post Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'rss',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Feed',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'label': 'New Post',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.PostSearch',
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      '@trait.PostStats',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.PostBrowseList',
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'POST_SEARCH',
-              'triggers': 'POST_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'POST_NOTIFICATIONS_OPEN',
-              'triggers': 'POST_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'POST_SEARCH',
-                'name': 'Post Search',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'value',
-                    'type': 'string',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'action': 'INIT',
+                        'label': 'Back to feed',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'type': 'stack',
                   },
                 ],
-              },
-              {
-                'key': 'POST_NOTIFICATIONS_OPEN',
-                'name': 'Post Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'name': 'rss',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Feed',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                            },
-                            {
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'label': 'New Post',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            '@trait.PostSearch',
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        '@trait.PostStats',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.PostBrowseList',
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'POST_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'POST_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                          'type': 'typography',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'action': 'INIT',
-                          'label': 'Back to feed',
-                          'type': 'button',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'PostSearch',
-          'config': {
-            'event': 'POST_SEARCH',
-            'placeholder': 'Search posts…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'PostStats',
-          'config': {
-            'title': 'Feed',
-            'metrics': [
-              {
-                'aggregation': 'count',
-                'label': 'Total Posts',
-                'icon': 'rss',
-                'format': 'number',
-                'variant': 'primary',
-              },
-              {
-                'format': 'number',
-                'aggregation': 'count',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.timestamp',
-                    'today',
-                  ],
-                ],
-                'label': 'Today',
-                'icon': 'calendar',
-                'variant': 'info',
-              },
-              {
-                'aggregation': 'mode',
-                'label': 'Top Author',
-                'icon': 'user',
-                'field': 'author',
-                'format': 'text',
-                'variant': 'default',
-              },
-              {
-                'field': 'tag',
-                'aggregation': 'mode',
-                'icon': 'hash',
-                'variant': 'warning',
-                'label': 'Top Tag',
-                'format': 'text',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostBrowseList',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'PostBrowseList',
-          'linkedEntity': 'Post',
-          'config': {
-            'fields': [
-              {
-                'variant': 'h4',
-                'icon': 'user',
-                'name': 'author',
-              },
-              {
-                'variant': 'body',
-                'name': 'content',
-              },
-              {
-                'format': 'date',
-                'name': 'timestamp',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'badge',
-                'format': 'number',
-                'name': 'likes',
-              },
-            ],
-            'imageField': 'image',
-            'cols': 1,
-            'gap': 'md',
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'label': 'Edit',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'DELETE',
-                'variant': 'danger',
-                'label': 'Delete',
-              },
-            ],
-            'variant': 'card',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'PostSearch',
+        'config': {
+          'event': 'POST_SEARCH',
+          'placeholder': 'Search posts…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'PostStats',
+        'config': {
+          'title': 'Feed',
+          'metrics': [
             {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostSearch',
-              },
+              'aggregation': 'count',
+              'label': 'Total Posts',
+              'icon': 'rss',
+              'format': 'number',
+              'variant': 'primary',
             },
             {
-              'event': 'POST_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostPersistor',
-              },
+              'format': 'number',
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.timestamp',
+                  'today',
+                ],
+              ],
+              'label': 'Today',
+              'icon': 'calendar',
+              'variant': 'info',
             },
             {
-              'event': 'POST_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostPersistor',
-              },
+              'aggregation': 'mode',
+              'label': 'Top Author',
+              'icon': 'user',
+              'field': 'author',
+              'format': 'text',
+              'variant': 'default',
             },
             {
-              'event': 'POST_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostPersistor',
-              },
+              'field': 'tag',
+              'aggregation': 'mode',
+              'icon': 'hash',
+              'variant': 'warning',
+              'label': 'Top Tag',
+              'format': 'text',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PostCreate',
-          'linkedEntity': 'Post',
-          'config': {
-            'mode': 'create',
-            'title': 'New Post',
-            'fields': [
-              'author',
-              'content',
-              'image',
-              'tag',
-            ],
-            'icon': 'plus-circle',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostBrowseList',
+            },
           },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'PostBrowseList',
+        'linkedEntity': 'Post',
+        'config': {
+          'fields': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'FeedCatalog',
-              },
+              'variant': 'h4',
+              'icon': 'user',
+              'name': 'author',
+            },
+            {
+              'variant': 'body',
+              'name': 'content',
+            },
+            {
+              'format': 'date',
+              'name': 'timestamp',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'badge',
+              'format': 'number',
+              'name': 'likes',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PostEdit',
-          'linkedEntity': 'Post',
-          'config': {
-            'fields': [
-              'author',
-              'content',
-              'image',
-              'tag',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Post',
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
+          'imageField': 'image',
+          'cols': 1,
+          'gap': 'md',
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostBrowseList',
-              },
+              'label': 'Edit',
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PostView',
-          'linkedEntity': 'Post',
-          'config': {
-            'mode': 'edit',
-            'icon': 'eye',
-            'fields': [
-              'author',
-              'content',
-              'image',
-              'tag',
-              'likes',
-            ],
-            'title': 'View Post',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'PostDeleteConfirm',
-          'linkedEntity': 'Post',
-          'config': {
-            'title': 'Delete Post',
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostBrowseList',
-              },
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Storage.traits.ServiceStorageStorage',
-          'name': 'PostImageUpload',
-          'config': {
-            'uiTrait': '@trait.PostImageUploadForm',
-            'acl': 'public',
-            'maxSize': 10485760,
-            'bucket': 'social-feed-images',
-            'allowedMimeTypes': [
-              'image/png',
-              'image/jpeg',
-              'image/gif',
-              'image/webp',
-            ],
+          'variant': 'card',
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostSearch',
+            },
           },
-        }),
-        {
-          'name': 'PostImageUploadForm',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'UPLOAD',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-                {
-                  'name': 'file',
-                  'type': 'string',
-                },
-              ],
+          {
+            'event': 'POST_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostPersistor',
             },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'Attach an image',
-                        },
-                        {
-                          'inputType': 'text',
-                          'type': 'input',
-                          'placeholder': 'Choose image…',
-                        },
-                        {
-                          'icon': 'upload',
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                          'label': 'Upload',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'PostPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Post',
-          'emits': [
-            {
-              'event': 'POST_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          {
+            'event': 'POST_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostPersistor',
             },
-            {
-              'event': 'POST_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'POST_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostPersistor',
             },
-            {
-              'event': 'POST_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PostCreate',
+        'linkedEntity': 'Post',
+        'config': {
+          'mode': 'create',
+          'title': 'New Post',
+          'fields': [
+            'author',
+            'content',
+            'image',
+            'tag',
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostCreate',
-              },
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FeedCatalog',
             },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostEdit',
-              },
-            },
-            {
-              'event': 'DO_UPDATE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostLikeTracker',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PostDeleteConfirm',
-              },
-            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PostEdit',
+        'linkedEntity': 'Post',
+        'config': {
+          'fields': [
+            'author',
+            'content',
+            'image',
+            'tag',
           ],
-          'stateMachine': {
-            'states': [
+          'icon': 'edit',
+          'title': 'Edit Post',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PostView',
+        'linkedEntity': 'Post',
+        'config': {
+          'mode': 'edit',
+          'icon': 'eye',
+          'fields': [
+            'author',
+            'content',
+            'image',
+            'tag',
+            'likes',
+          ],
+          'title': 'View Post',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'PostDeleteConfirm',
+        'linkedEntity': 'Post',
+        'config': {
+          'title': 'Delete Post',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Storage.traits.ServiceStorageStorage',
+        'name': 'PostImageUpload',
+        'config': {
+          'uiTrait': '@trait.PostImageUploadForm',
+          'acl': 'public',
+          'maxSize': 10485760,
+          'bucket': 'social-feed-images',
+          'allowedMimeTypes': [
+            'image/png',
+            'image/jpeg',
+            'image/gif',
+            'image/webp',
+          ],
+        },
+      }),
+      {
+        'name': 'PostImageUploadForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'UPLOAD',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
+                'name': 'source',
+                'type': 'string',
               },
-            ],
-            'events': [
               {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'POST_CREATED',
-                'name': 'Post Created',
-              },
-              {
-                'key': 'POST_UPDATED',
-                'name': 'Post Updated',
-              },
-              {
-                'key': 'POST_DELETED',
-                'name': 'Post Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Post',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'POST_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Post',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'POST_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Post',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'POST_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'file',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'PostLikeTracker',
-          'category': 'interaction',
-          'linkedEntity': 'Post',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'DO_UPDATE',
-              'scope': 'external',
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'Attach an image',
+                      },
+                      {
+                        'inputType': 'text',
+                        'type': 'input',
+                        'placeholder': 'Choose image…',
+                      },
+                      {
+                        'icon': 'upload',
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                        'label': 'Upload',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'PostPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Post',
+        'emits': [
+          {
+            'event': 'POST_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'POST_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'POST_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostEdit',
+            },
+          },
+          {
+            'event': 'DO_UPDATE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostLikeTracker',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PostDeleteConfirm',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1188,822 +808,1024 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalDefinition[] 
                 },
               ],
             },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'LIKE',
-                'name': 'Like',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.likes',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'Post',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'icon': 'heart',
-                          'type': 'button',
-                          'action': 'LIKE',
-                          'variant': 'ghost',
-                          'label': 'Like',
-                        },
-                        {
-                          'variant': 'caption',
-                          'content': '@entity.likes',
-                          'type': 'typography',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'align': 'center',
-                      'gap': 'sm',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'LIKE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.likes',
-                    '@payload.data.likes',
-                  ],
-                  [
-                    'emit',
-                    'DO_UPDATE',
-                    {
-                      'data': '@payload.data',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'FeedPage',
-          'path': '/feed',
-          'traits': [
             {
-              'ref': 'PostAppLayout',
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
             },
             {
-              'ref': 'FeedCatalog',
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'ref': 'PostSearch',
+              'key': 'POST_CREATED',
+              'name': 'Post Created',
             },
             {
-              'ref': 'PostStats',
+              'key': 'POST_UPDATED',
+              'name': 'Post Updated',
             },
             {
-              'ref': 'PostBrowseList',
-            },
-            {
-              'ref': 'PostCreate',
-            },
-            {
-              'ref': 'PostEdit',
-            },
-            {
-              'ref': 'PostView',
-            },
-            {
-              'ref': 'PostDeleteConfirm',
-            },
-            {
-              'ref': 'PostImageUpload',
-            },
-            {
-              'ref': 'PostImageUploadForm',
-            },
-            {
-              'ref': 'PostPersistor',
-            },
-            {
-              'ref': 'PostLikeTracker',
+              'key': 'POST_DELETED',
+              'name': 'Post Deleted',
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CommentOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Post',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'POST_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Post',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'POST_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Post',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'POST_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
         },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Comment',
-        'collection': 'comments',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'PostLikeTracker',
+        'category': 'interaction',
+        'linkedEntity': 'Post',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'postId',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'author',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'body',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'createdAt',
-            'type': 'datetime',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'DO_UPDATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+                'required': true,
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'CommentAppLayout',
-          'linkedEntity': 'Comment',
-          'config': {
-            'contentTrait': '@trait.CommentDisplay',
-            'appName': 'SocialFeed',
-            'notifications': [],
-            'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'icon': 'rss',
-                'label': 'Feed',
-                'href': '/feed',
-              },
-              {
-                'icon': 'message-circle',
-                'href': '/comments',
-                'label': 'Comments',
-              },
-            ],
-            'searchEvent': 'COMMENT_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'COMMENT_SEARCH',
-            'NOTIFY_CLICK': 'COMMENT_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'CommentDisplay',
-          'category': 'interaction',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'LIKE',
+              'name': 'Like',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.likes',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'Post',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'icon': 'heart',
+                        'type': 'button',
+                        'action': 'LIKE',
+                        'variant': 'ghost',
+                        'label': 'Like',
+                      },
+                      {
+                        'variant': 'caption',
+                        'content': '@entity.likes',
+                        'type': 'typography',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'align': 'center',
+                    'gap': 'sm',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'LIKE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.likes',
+                  '@payload.data.likes',
+                ],
+                [
+                  'emit',
+                  'DO_UPDATE',
+                  {
+                    'data': '@payload.data',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'FeedPage',
+        'path': '/feed',
+        'traits': [
+          {
+            'ref': 'PostAppLayout',
+          },
+          {
+            'ref': 'FeedCatalog',
+          },
+          {
+            'ref': 'PostSearch',
+          },
+          {
+            'ref': 'PostStats',
+          },
+          {
+            'ref': 'PostBrowseList',
+          },
+          {
+            'ref': 'PostCreate',
+          },
+          {
+            'ref': 'PostEdit',
+          },
+          {
+            'ref': 'PostView',
+          },
+          {
+            'ref': 'PostDeleteConfirm',
+          },
+          {
+            'ref': 'PostImageUpload',
+          },
+          {
+            'ref': 'PostImageUploadForm',
+          },
+          {
+            'ref': 'PostPersistor',
+          },
+          {
+            'ref': 'PostLikeTracker',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the CommentOrbital orbital.
+ *
+ * Canonical entity: Comment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdSocialFeedCommentOrbitalParams {
+  /** Override the canonical entity name (default: 'Comment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CommentOrbital orbital with consumer params. */
+export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Comment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CommentOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'comments',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'postId',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'author',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'body',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'createdAt',
+          'type': 'datetime',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CommentAppLayout',
+        'linkedEntity': 'Comment',
+        'config': {
+          'contentTrait': '@trait.CommentDisplay',
+          'appName': 'SocialFeed',
+          'notifications': [],
+          'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'icon': 'rss',
+              'label': 'Feed',
+              'href': '/feed',
+            },
+            {
+              'icon': 'message-circle',
+              'href': '/comments',
+              'label': 'Comments',
+            },
+          ],
+          'searchEvent': 'COMMENT_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'COMMENT_SEARCH',
+          'NOTIFY_CLICK': 'COMMENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'CommentDisplay',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'COMMENT_SEARCH',
+            'triggers': 'COMMENT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentAppLayout',
+            },
+          },
+          {
+            'event': 'COMMENT_NOTIFICATIONS_OPEN',
+            'triggers': 'COMMENT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'COMMENT_SEARCH',
+              'name': 'Comment Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'COMMENT_NOTIFICATIONS_OPEN',
+              'name': 'Comment Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'align': 'center',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'message-circle',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Comments',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'icon': 'edit',
+                                'label': 'New Comment',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.CommentBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'COMMENT_SEARCH',
-              'triggers': 'COMMENT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'COMMENT_NOTIFICATIONS_OPEN',
-              'triggers': 'COMMENT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'COMMENT_SEARCH',
-                'name': 'Comment Search',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'value',
-                    'type': 'string',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'label': 'Back to comments',
+                        'type': 'button',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
-              },
-              {
-                'key': 'COMMENT_NOTIFICATIONS_OPEN',
-                'name': 'Comment Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'align': 'center',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'message-circle',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Comments',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'icon': 'edit',
-                                  'label': 'New Comment',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.CommentBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'COMMENT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'COMMENT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'label': 'Back to comments',
-                          'type': 'button',
-                          'action': 'INIT',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'CommentBrowseList',
-          'linkedEntity': 'Comment',
-          'config': {
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'label': 'View',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'label': 'Edit',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'DELETE',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'cols': 1,
-            'gap': 'sm',
-            'fields': [
-              {
-                'variant': 'h4',
-                'name': 'author',
-                'icon': 'user',
-              },
-              {
-                'name': 'body',
-                'variant': 'body',
-              },
-              {
-                'variant': 'caption',
-                'format': 'date',
-                'name': 'createdAt',
-              },
-            ],
-            'variant': 'card',
-          },
-          'listens': [
-            {
-              'event': 'COMMENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentPersistor',
-              },
-            },
-            {
-              'event': 'COMMENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentPersistor',
-              },
-            },
-            {
-              'event': 'COMMENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentPersistor',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CommentCreate',
-          'linkedEntity': 'Comment',
-          'config': {
-            'icon': 'plus-circle',
-            'fields': [
-              'postId',
-              'author',
-              'body',
-            ],
-            'mode': 'create',
-            'title': 'New Comment',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentDisplay',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CommentEdit',
-          'linkedEntity': 'Comment',
-          'config': {
-            'mode': 'edit',
-            'fields': [
-              'postId',
-              'author',
-              'body',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Comment',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CommentView',
-          'linkedEntity': 'Comment',
-          'config': {
-            'title': 'View Comment',
-            'mode': 'edit',
-            'fields': [
-              'postId',
-              'author',
-              'body',
-              'createdAt',
-            ],
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'CommentBrowseList',
+        'linkedEntity': 'Comment',
+        'config': {
+          'itemActions': [
             {
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentBrowseList',
-              },
+              'label': 'View',
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'CommentDeleteConfirm',
-          'linkedEntity': 'Comment',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Comment',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentBrowseList',
-              },
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'CommentPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Comment',
-          'emits': [
+          'cols': 1,
+          'gap': 'sm',
+          'fields': [
             {
-              'event': 'COMMENT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'h4',
+              'name': 'author',
+              'icon': 'user',
             },
             {
-              'event': 'COMMENT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'body',
+              'variant': 'body',
             },
             {
-              'event': 'COMMENT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'createdAt',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentCreate',
-              },
+          'variant': 'card',
+        },
+        'listens': [
+          {
+            'event': 'COMMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentPersistor',
             },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentEdit',
-              },
+          },
+          {
+            'event': 'COMMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentPersistor',
             },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CommentDeleteConfirm',
-              },
+          },
+          {
+            'event': 'COMMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentPersistor',
             },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CommentCreate',
+        'linkedEntity': 'Comment',
+        'config': {
+          'icon': 'plus-circle',
+          'fields': [
+            'postId',
+            'author',
+            'body',
           ],
-          'stateMachine': {
-            'states': [
+          'mode': 'create',
+          'title': 'New Comment',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentDisplay',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CommentEdit',
+        'linkedEntity': 'Comment',
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'postId',
+            'author',
+            'body',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Comment',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CommentView',
+        'linkedEntity': 'Comment',
+        'config': {
+          'title': 'View Comment',
+          'mode': 'edit',
+          'fields': [
+            'postId',
+            'author',
+            'body',
+            'createdAt',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'CommentDeleteConfirm',
+        'linkedEntity': 'Comment',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Comment',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CommentPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Comment',
+        'emits': [
+          {
+            'event': 'COMMENT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'COMMENT_CREATED',
-                'name': 'Comment Created',
-              },
-              {
-                'key': 'COMMENT_UPDATED',
-                'name': 'Comment Updated',
-              },
-              {
-                'key': 'COMMENT_DELETED',
-                'name': 'Comment Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Comment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'COMMENT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Comment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'COMMENT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Comment',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'COMMENT_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Comments',
-          'path': '/comments',
-          'traits': [
-            {
-              'ref': 'CommentAppLayout',
+          {
+            'event': 'COMMENT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'COMMENT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentCreate',
             },
-            {
-              'ref': 'CommentDisplay',
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentEdit',
             },
-            {
-              'ref': 'CommentBrowseList',
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CommentDeleteConfirm',
             },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'CommentCreate',
-            },
-            {
-              'ref': 'CommentEdit',
-            },
-            {
-              'ref': 'CommentView',
-            },
-            {
-              'ref': 'CommentDeleteConfirm',
-            },
-            {
-              'ref': 'CommentPersistor',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'COMMENT_CREATED',
+              'name': 'Comment Created',
+            },
+            {
+              'key': 'COMMENT_UPDATED',
+              'name': 'Comment Updated',
+            },
+            {
+              'key': 'COMMENT_DELETED',
+              'name': 'Comment Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Comment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'COMMENT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Comment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'COMMENT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Comment',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'COMMENT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Comments',
+        'path': '/comments',
+        'traits': [
+          {
+            'ref': 'CommentAppLayout',
+          },
+          {
+            'ref': 'CommentDisplay',
+          },
+          {
+            'ref': 'CommentBrowseList',
+          },
+          {
+            'ref': 'CommentCreate',
+          },
+          {
+            'ref': 'CommentEdit',
+          },
+          {
+            'ref': 'CommentView',
+          },
+          {
+            'ref': 'CommentDeleteConfirm',
+          },
+          {
+            'ref': 'CommentPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-social-feed — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdSocialFeedParams {
+  Post?: StdSocialFeedPostOrbitalParams;
+  Comment?: StdSocialFeedCommentOrbitalParams;
+}
+
+/** Whole-organism descriptor (2 orbitals). Composes per-orbital factories. */
+export function stdSocialFeed(params: StdSocialFeedParams = {}): OrbitalDefinition[] {
+  return [
+    stdSocialFeedPostOrbital(params.Post ?? {}),
+    stdSocialFeedCommentOrbital(params.Comment ?? {}),
+  ];
 }

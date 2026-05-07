@@ -34,2203 +34,2147 @@ export interface StdCicdPipelineConfig {
 }
 
 /**
- * Params for the std-cicd-pipeline descriptor helpers.
+ * Tunable params for the BuildOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Build.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdCicdPipelineParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdCicdPipelineBuildOrbitalParams {
+  /** Override the canonical entity name (default: 'Build'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdCicdPipelineConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `CicdPipeline.traits.BuildAppLayout`. */
-export function stdCicdPipelineBuildAppLayoutTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the BuildOrbital orbital with consumer params. */
+export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Build';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BuildOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'builds',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'branch',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'commit',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'running',
+            'success',
+            'failed',
+          ],
+        },
+        {
+          'name': 'duration',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'triggeredBy',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'day',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'startedAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BuildAppLayout',
+        'config': {
+          'searchEvent': 'BUILD_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'BUILD_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.BuildCatalog',
+          'navItems': [
+            {
+              'icon': 'hammer',
+              'label': 'Builds',
+              'href': '/builds',
+            },
+            {
+              'icon': 'layers',
+              'label': 'Stages',
+              'href': '/stages',
+            },
+            {
+              'icon': 'rocket',
+              'label': 'Deploy',
+              'href': '/deploy',
+            },
+          ],
+          'appName': 'CI/CD Pipeline',
+        },
+        'events': {
+          'SEARCH': 'BUILD_SEARCH',
+          'NOTIFY_CLICK': 'BUILD_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'BuildCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'BUILD_SEARCH',
+            'triggers': 'BUILD_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildAppLayout',
+            },
+          },
+          {
+            'event': 'BUILD_NOTIFICATIONS_OPEN',
+            'triggers': 'BUILD_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'BUILD_SEARCH',
+              'name': 'Build Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'BUILD_NOTIFICATIONS_OPEN',
+              'name': 'Build Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'hammer',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Builds',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'Create Build',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          '@trait.BuildSearch',
+                          '@trait.BuildFilter',
+                        ],
+                      },
+                      '@trait.BuildStats',
+                      '@trait.BuildGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.BuildBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'BUILD_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'BUILD_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to builds',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'BuildSearch',
+        'config': {
+          'placeholder': 'Search builds…',
+          'event': 'BUILD_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'BuildFilter',
+        'config': {
+          'event': 'BUILD_FILTER',
+          'filters': [
+            {
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'running',
+                'success',
+                'failed',
+              ],
+              'filterType': 'select',
+            },
+            {
+              'filterType': 'text',
+              'label': 'Branch',
+              'field': 'branch',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'BuildStats',
+        'config': {
+          'title': 'Build Health',
+          'metrics': [
+            {
+              'aggregation': 'count',
+              'format': 'number',
+              'icon': 'hammer',
+              'label': 'Total Today',
+              'variant': 'primary',
+            },
+            {
+              'aggregation': 'count',
+              'icon': 'check-circle',
+              'format': 'number',
+              'label': 'Success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'success',
+                ],
+              ],
+              'variant': 'success',
+            },
+            {
+              'variant': 'danger',
+              'aggregation': 'count',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'failed',
+                ],
+              ],
+              'label': 'Failed',
+              'icon': 'x-circle',
+            },
+            {
+              'icon': 'clock',
+              'aggregation': 'avg',
+              'label': 'Avg Duration',
+              'field': 'duration',
+              'variant': 'default',
+              'format': 'number',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'BuildGraphs',
+        'config': {
+          'subtitle': 'Volume across the past period',
+          'aggregation': 'count',
+          'height': 240,
+          'showLegend': false,
+          'categoryField': 'day',
+          'chartType': 'bar',
+          'title': 'Builds per day',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'BuildBrowseList',
+        'linkedEntity': 'Build',
+        'config': {
+          'cols': 1,
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'gap': 'sm',
+          'fields': [
+            {
+              'name': 'id',
+              'variant': 'caption',
+            },
+            {
+              'icon': 'git-branch',
+              'variant': 'h4',
+              'name': 'branch',
+            },
+            {
+              'name': 'commit',
+              'variant': 'body',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'duration',
+            },
+            {
+              'name': 'startedAt',
+              'format': 'date',
+              'variant': 'caption',
+              'label': 'Started',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildFilter',
+            },
+          },
+          {
+            'event': 'BUILD_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildPersistor',
+            },
+          },
+          {
+            'event': 'BUILD_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildPersistor',
+            },
+          },
+          {
+            'event': 'BUILD_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BuildCreate',
+        'linkedEntity': 'Build',
+        'config': {
+          'icon': 'plus-circle',
+          'title': 'Create Build',
+          'fields': [
+            'branch',
+            'commit',
+            'status',
+            'duration',
+            'triggeredBy',
+          ],
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BuildEdit',
+        'linkedEntity': 'Build',
+        'config': {
+          'fields': [
+            'branch',
+            'commit',
+            'status',
+            'duration',
+            'triggeredBy',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Build',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BuildView',
+        'linkedEntity': 'Build',
+        'config': {
+          'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Build',
+          'fields': [
+            'branch',
+            'commit',
+            'status',
+            'duration',
+            'triggeredBy',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'BuildDelete',
+        'linkedEntity': 'Build',
+        'config': {
+          'title': 'Delete Build',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'BuildPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Build',
+        'emits': [
+          {
+            'event': 'BUILD_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BUILD_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BUILD_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BuildDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'BUILD_CREATED',
+              'name': 'Build Created',
+            },
+            {
+              'key': 'BUILD_UPDATED',
+              'name': 'Build Updated',
+            },
+            {
+              'key': 'BUILD_DELETED',
+              'name': 'Build Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Build',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'BUILD_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Build',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'BUILD_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Build',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'BUILD_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'BuildsPage',
+        'path': '/builds',
+        'traits': [
+          {
+            'ref': 'BuildAppLayout',
+          },
+          {
+            'ref': 'BuildCatalog',
+          },
+          {
+            'ref': 'BuildSearch',
+          },
+          {
+            'ref': 'BuildFilter',
+          },
+          {
+            'ref': 'BuildStats',
+          },
+          {
+            'ref': 'BuildGraphs',
+          },
+          {
+            'ref': 'BuildBrowseList',
+          },
+          {
+            'ref': 'BuildCreate',
+          },
+          {
+            'ref': 'BuildEdit',
+          },
+          {
+            'ref': 'BuildView',
+          },
+          {
+            'ref': 'BuildDelete',
+          },
+          {
+            'ref': 'BuildPersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildCatalog`. */
-export function stdCicdPipelineBuildCatalogTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildSearch`. */
-export function stdCicdPipelineBuildSearchTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildFilter`. */
-export function stdCicdPipelineBuildFilterTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildStats`. */
-export function stdCicdPipelineBuildStatsTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildGraphs`. */
-export function stdCicdPipelineBuildGraphsTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildBrowseList`. */
-export function stdCicdPipelineBuildBrowseListTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildCreate`. */
-export function stdCicdPipelineBuildCreateTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildEdit`. */
-export function stdCicdPipelineBuildEditTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildView`. */
-export function stdCicdPipelineBuildViewTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildDelete`. */
-export function stdCicdPipelineBuildDeleteTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CicdPipeline.traits.BuildPersistor`. */
-export function stdCicdPipelineBuildPersistorTrait(params: StdCicdPipelineParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BuildPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `CicdPipeline.pages.BuildsPage`. */
-export function stdCicdPipelinePage(params: StdCicdPipelineParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.BuildsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Build';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BuildOrbital',
-      uses: [
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the StageOrbital orbital.
+ *
+ * Canonical entity: Stage.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCicdPipelineStageOrbitalParams {
+  /** Override the canonical entity name (default: 'Stage'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the StageOrbital orbital with consumer params. */
+export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Stage';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'StageOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'stages',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'buildId',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'running',
+            'success',
+            'failed',
+          ],
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'duration',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'output',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Build',
-        'collection': 'builds',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'StageAppLayout',
+        'linkedEntity': 'Stage',
+        'config': {
+          'contentTrait': '@trait.StageCatalog',
+          'searchEvent': 'STAGE_SEARCH',
+          'appName': 'CI/CD Pipeline',
+          'navItems': [
+            {
+              'label': 'Builds',
+              'icon': 'hammer',
+              'href': '/builds',
+            },
+            {
+              'label': 'Stages',
+              'href': '/stages',
+              'icon': 'layers',
+            },
+            {
+              'icon': 'rocket',
+              'label': 'Deploy',
+              'href': '/deploy',
+            },
+          ],
+          'notifications': [],
+          'notificationClickEvent': 'STAGE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'STAGE_SEARCH',
+          'NOTIFY_CLICK': 'STAGE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'StageCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'branch',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'commit',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'running',
-              'success',
-              'failed',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'duration',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'triggeredBy',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'day',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'startedAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'BuildAppLayout',
-          'config': {
-            'searchEvent': 'BUILD_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'BUILD_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.BuildCatalog',
-            'navItems': [
-              {
-                'icon': 'hammer',
-                'label': 'Builds',
-                'href': '/builds',
-              },
-              {
-                'icon': 'layers',
-                'label': 'Stages',
-                'href': '/stages',
-              },
-              {
-                'icon': 'rocket',
-                'label': 'Deploy',
-                'href': '/deploy',
-              },
-            ],
-            'appName': 'CI/CD Pipeline',
+        'listens': [
+          {
+            'event': 'STAGE_SEARCH',
+            'triggers': 'STAGE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageAppLayout',
+            },
           },
-          'events': {
-            'SEARCH': 'BUILD_SEARCH',
-            'NOTIFY_CLICK': 'BUILD_NOTIFICATIONS_OPEN',
+          {
+            'event': 'STAGE_NOTIFICATIONS_OPEN',
+            'triggers': 'STAGE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'BuildCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'STAGE_SEARCH',
+              'name': 'Stage Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'BUILD_SEARCH',
-              'triggers': 'BUILD_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildAppLayout',
-              },
+              'key': 'STAGE_NOTIFICATIONS_OPEN',
+              'name': 'Stage Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'event': 'BUILD_NOTIFICATIONS_OPEN',
-              'triggers': 'BUILD_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildAppLayout',
-              },
+              'key': 'CREATE',
+              'name': 'Create',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'BUILD_SEARCH',
-                'name': 'Build Search',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'value',
-                    'type': 'string',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'layers',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Stages',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Create Stage',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'type': 'button',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.StageBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
-              },
-              {
-                'key': 'BUILD_NOTIFICATIONS_OPEN',
-                'name': 'Build Notifications Open',
-                'payloadSchema': [
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'STAGE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'STAGE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'id',
-                    'type': 'string',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'label': 'Back to stages',
+                        'action': 'INIT',
+                        'type': 'button',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
                   },
                 ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'hammer',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Builds',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'label': 'Create Build',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            '@trait.BuildSearch',
-                            '@trait.BuildFilter',
-                          ],
-                        },
-                        '@trait.BuildStats',
-                        '@trait.BuildGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.BuildBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BUILD_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BUILD_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                        },
-                        {
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                          'color': 'muted',
-                          'variant': 'caption',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'type': 'button',
-                          'label': 'Back to builds',
-                          'action': 'INIT',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'className': 'py-8',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'BuildSearch',
-          'config': {
-            'placeholder': 'Search builds…',
-            'event': 'BUILD_SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'BuildFilter',
-          'config': {
-            'event': 'BUILD_FILTER',
-            'filters': [
-              {
-                'field': 'status',
-                'label': 'Status',
-                'options': [
-                  'running',
-                  'success',
-                  'failed',
-                ],
-                'filterType': 'select',
-              },
-              {
-                'filterType': 'text',
-                'label': 'Branch',
-                'field': 'branch',
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'BuildStats',
-          'config': {
-            'title': 'Build Health',
-            'metrics': [
-              {
-                'aggregation': 'count',
-                'format': 'number',
-                'icon': 'hammer',
-                'label': 'Total Today',
-                'variant': 'primary',
-              },
-              {
-                'aggregation': 'count',
-                'icon': 'check-circle',
-                'format': 'number',
-                'label': 'Success',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'success',
-                  ],
-                ],
-                'variant': 'success',
-              },
-              {
-                'variant': 'danger',
-                'aggregation': 'count',
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'failed',
-                  ],
-                ],
-                'label': 'Failed',
-                'icon': 'x-circle',
-              },
-              {
-                'icon': 'clock',
-                'aggregation': 'avg',
-                'label': 'Avg Duration',
-                'field': 'duration',
-                'variant': 'default',
-                'format': 'number',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildBrowseList',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'BuildGraphs',
-          'config': {
-            'subtitle': 'Volume across the past period',
-            'aggregation': 'count',
-            'height': 240,
-            'showLegend': false,
-            'categoryField': 'day',
-            'chartType': 'bar',
-            'title': 'Builds per day',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'StageBrowseList',
+        'linkedEntity': 'Stage',
+        'config': {
+          'fields': [
             {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildBrowseList',
-              },
+              'name': 'name',
+              'variant': 'h4',
+              'icon': 'layers',
+            },
+            {
+              'label': 'Build',
+              'variant': 'caption',
+              'name': 'buildId',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'variant': 'caption',
+              'name': 'duration',
+            },
+            {
+              'name': 'output',
+              'variant': 'body',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'BuildBrowseList',
-          'linkedEntity': 'Build',
-          'config': {
-            'cols': 1,
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'variant': 'ghost',
-                'label': 'View',
-              },
-              {
-                'label': 'Edit',
-                'variant': 'ghost',
-                'event': 'EDIT',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-            'fields': [
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'STAGE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StagePersistor',
+            },
+          },
+          {
+            'event': 'STAGE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StagePersistor',
+            },
+          },
+          {
+            'event': 'STAGE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StagePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'StageCreate',
+        'linkedEntity': 'Stage',
+        'config': {
+          'mode': 'create',
+          'title': 'Create Stage',
+          'fields': [
+            'name',
+            'buildId',
+            'status',
+            'duration',
+            'output',
+          ],
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'StageEdit',
+        'linkedEntity': 'Stage',
+        'config': {
+          'fields': [
+            'name',
+            'buildId',
+            'status',
+            'duration',
+            'output',
+          ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Stage',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'StageView',
+        'linkedEntity': 'Stage',
+        'config': {
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'buildId',
+            'status',
+            'duration',
+            'output',
+          ],
+          'title': 'View Stage',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'StageDelete',
+        'linkedEntity': 'Stage',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Stage',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'StagePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Stage',
+        'emits': [
+          {
+            'event': 'STAGE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
                 'name': 'id',
-                'variant': 'caption',
+                'type': 'string',
               },
-              {
-                'icon': 'git-branch',
-                'variant': 'h4',
-                'name': 'branch',
-              },
-              {
-                'name': 'commit',
-                'variant': 'body',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'caption',
-                'name': 'duration',
-              },
-              {
-                'name': 'startedAt',
-                'format': 'date',
-                'variant': 'caption',
-                'label': 'Started',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildFilter',
-              },
-            },
-            {
-              'event': 'BUILD_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildPersistor',
-              },
-            },
-            {
-              'event': 'BUILD_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildPersistor',
-              },
-            },
-            {
-              'event': 'BUILD_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BuildCreate',
-          'linkedEntity': 'Build',
-          'config': {
-            'icon': 'plus-circle',
-            'title': 'Create Build',
-            'fields': [
-              'branch',
-              'commit',
-              'status',
-              'duration',
-              'triggeredBy',
-            ],
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BuildEdit',
-          'linkedEntity': 'Build',
-          'config': {
-            'fields': [
-              'branch',
-              'commit',
-              'status',
-              'duration',
-              'triggeredBy',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Build',
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BuildView',
-          'linkedEntity': 'Build',
-          'config': {
-            'mode': 'edit',
-            'icon': 'eye',
-            'title': 'View Build',
-            'fields': [
-              'branch',
-              'commit',
-              'status',
-              'duration',
-              'triggeredBy',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'BuildDelete',
-          'linkedEntity': 'Build',
-          'config': {
-            'title': 'Delete Build',
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'BuildPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Build',
-          'emits': [
-            {
-              'event': 'BUILD_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BUILD_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BUILD_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BuildDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BUILD_CREATED',
-                'name': 'Build Created',
-              },
-              {
-                'key': 'BUILD_UPDATED',
-                'name': 'Build Updated',
-              },
-              {
-                'key': 'BUILD_DELETED',
-                'name': 'Build Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Build',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'BUILD_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Build',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'BUILD_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Build',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'BUILD_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'BuildsPage',
-          'path': '/builds',
-          'traits': [
-            {
-              'ref': 'BuildAppLayout',
-            },
-            {
-              'ref': 'BuildCatalog',
-            },
-            {
-              'ref': 'BuildSearch',
-            },
-            {
-              'ref': 'BuildFilter',
-            },
-            {
-              'ref': 'BuildStats',
-            },
-            {
-              'ref': 'BuildGraphs',
-            },
-            {
-              'ref': 'BuildBrowseList',
-            },
-            {
-              'ref': 'BuildCreate',
-            },
-            {
-              'ref': 'BuildEdit',
-            },
-            {
-              'ref': 'BuildView',
-            },
-            {
-              'ref': 'BuildDelete',
-            },
-            {
-              'ref': 'BuildPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'StageOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Stage',
-        'collection': 'stages',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'buildId',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'running',
-              'success',
-              'failed',
             ],
           },
           {
-            'name': 'duration',
-            'type': 'string',
-            'default': '',
+            'event': 'STAGE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'output',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'STAGE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'StageAppLayout',
-          'linkedEntity': 'Stage',
-          'config': {
-            'contentTrait': '@trait.StageCatalog',
-            'searchEvent': 'STAGE_SEARCH',
-            'appName': 'CI/CD Pipeline',
-            'navItems': [
-              {
-                'label': 'Builds',
-                'icon': 'hammer',
-                'href': '/builds',
-              },
-              {
-                'label': 'Stages',
-                'href': '/stages',
-                'icon': 'layers',
-              },
-              {
-                'icon': 'rocket',
-                'label': 'Deploy',
-                'href': '/deploy',
-              },
-            ],
-            'notifications': [],
-            'notificationClickEvent': 'STAGE_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'SEARCH': 'STAGE_SEARCH',
-            'NOTIFY_CLICK': 'STAGE_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'StageCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'STAGE_SEARCH',
-              'triggers': 'STAGE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageAppLayout',
-              },
-            },
-            {
-              'event': 'STAGE_NOTIFICATIONS_OPEN',
-              'triggers': 'STAGE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'STAGE_SEARCH',
-                'name': 'Stage Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'STAGE_NOTIFICATIONS_OPEN',
-                'name': 'Stage Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'layers',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Stages',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Create Stage',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                  'type': 'button',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.StageBrowseList',
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'STAGE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'STAGE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                          'type': 'typography',
-                        },
-                        {
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'label': 'Back to stages',
-                          'action': 'INIT',
-                          'type': 'button',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'StageBrowseList',
-          'linkedEntity': 'Stage',
-          'config': {
-            'fields': [
-              {
-                'name': 'name',
-                'variant': 'h4',
-                'icon': 'layers',
-              },
-              {
-                'label': 'Build',
-                'variant': 'caption',
-                'name': 'buildId',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'variant': 'caption',
-                'name': 'duration',
-              },
-              {
-                'name': 'output',
-                'variant': 'body',
-              },
-            ],
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'label': 'View',
-                'event': 'VIEW',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'DELETE',
-                'variant': 'danger',
-                'label': 'Delete',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
-          },
-          'listens': [
-            {
-              'event': 'STAGE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StagePersistor',
-              },
-            },
-            {
-              'event': 'STAGE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StagePersistor',
-              },
-            },
-            {
-              'event': 'STAGE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StagePersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'StageCreate',
-          'linkedEntity': 'Stage',
-          'config': {
-            'mode': 'create',
-            'title': 'Create Stage',
-            'fields': [
-              'name',
-              'buildId',
-              'status',
-              'duration',
-              'output',
-            ],
-            'icon': 'plus-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'StageEdit',
-          'linkedEntity': 'Stage',
-          'config': {
-            'fields': [
-              'name',
-              'buildId',
-              'status',
-              'duration',
-              'output',
-            ],
-            'icon': 'edit',
-            'mode': 'edit',
-            'title': 'Edit Stage',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'StageView',
-          'linkedEntity': 'Stage',
-          'config': {
-            'icon': 'eye',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'buildId',
-              'status',
-              'duration',
-              'output',
-            ],
-            'title': 'View Stage',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'StageDelete',
-          'linkedEntity': 'Stage',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Stage',
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'StagePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Stage',
-          'emits': [
-            {
-              'event': 'STAGE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'STAGE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'STAGE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StageDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'STAGE_CREATED',
-                'name': 'Stage Created',
-              },
-              {
-                'key': 'STAGE_UPDATED',
-                'name': 'Stage Updated',
-              },
-              {
-                'key': 'STAGE_DELETED',
-                'name': 'Stage Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Stage',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'STAGE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Stage',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'STAGE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Stage',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'STAGE_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Stages',
-          'path': '/stages',
-          'traits': [
-            {
-              'ref': 'StageAppLayout',
-            },
-            {
-              'ref': 'StageCatalog',
-            },
-            {
-              'ref': 'StageBrowseList',
-            },
-            {
-              'ref': 'StageCreate',
-            },
-            {
-              'ref': 'StageEdit',
-            },
-            {
-              'ref': 'StageView',
-            },
-            {
-              'ref': 'StageDelete',
-            },
-            {
-              'ref': 'StagePersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'DeploymentOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-service-github',
-          'as': 'GitHub',
-        },
-      ],
-      entity: {
-        'name': 'Deployment',
-        'collection': 'deployments',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageCreate',
+            },
           },
           {
-            'name': 'environment',
-            'type': 'string',
-            'required': true,
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageEdit',
+            },
           },
           {
-            'name': 'version',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'running',
-              'success',
-              'failed',
-            ],
-          },
-          {
-            'name': 'deployedAt',
-            'type': 'string',
-            'default': '',
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StageDelete',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'DeploymentAppLayout',
-          'linkedEntity': 'Deployment',
-          'config': {
-            'notifications': [],
-            'contentTrait': '@trait.DeploymentDisplay',
-            'appName': 'CI/CD Pipeline',
-            'navItems': [
-              {
-                'label': 'Builds',
-                'icon': 'hammer',
-                'href': '/builds',
-              },
-              {
-                'label': 'Stages',
-                'href': '/stages',
-                'icon': 'layers',
-              },
-              {
-                'label': 'Deploy',
-                'href': '/deploy',
-                'icon': 'rocket',
-              },
-            ],
-            'notificationClickEvent': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-            'searchEvent': 'DEPLOYMENT_SEARCH',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-            'SEARCH': 'DEPLOYMENT_SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'DeploymentBrowseList',
-          'linkedEntity': 'Deployment',
-          'config': {
-            'gap': 'sm',
-            'cols': 1,
-            'fields': [
-              {
-                'icon': 'rocket',
-                'name': 'environment',
-                'variant': 'h4',
-              },
-              {
-                'name': 'version',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'label': 'Deployed',
-                'name': 'deployedAt',
-                'variant': 'caption',
-                'format': 'date',
-              },
-            ],
-          },
-        }),
-        {
-          'name': 'DeploymentDisplay',
-          'category': 'interaction',
-          'listens': [
+        'stateMachine': {
+          'states': [
             {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'STAGE_CREATED',
+              'name': 'Stage Created',
+            },
+            {
+              'key': 'STAGE_UPDATED',
+              'name': 'Stage Updated',
+            },
+            {
+              'key': 'STAGE_DELETED',
+              'name': 'Stage Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Stage',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'STAGE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Stage',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'STAGE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Stage',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'STAGE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Stages',
+        'path': '/stages',
+        'traits': [
+          {
+            'ref': 'StageAppLayout',
+          },
+          {
+            'ref': 'StageCatalog',
+          },
+          {
+            'ref': 'StageBrowseList',
+          },
+          {
+            'ref': 'StageCreate',
+          },
+          {
+            'ref': 'StageEdit',
+          },
+          {
+            'ref': 'StageView',
+          },
+          {
+            'ref': 'StageDelete',
+          },
+          {
+            'ref': 'StagePersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the DeploymentOrbital orbital.
+ *
+ * Canonical entity: Deployment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCicdPipelineDeploymentOrbitalParams {
+  /** Override the canonical entity name (default: 'Deployment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the DeploymentOrbital orbital with consumer params. */
+export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeploymentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Deployment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'DeploymentOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-github',
+        'as': 'GitHub',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'deployments',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'environment',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'version',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'running',
+            'success',
+            'failed',
+          ],
+        },
+        {
+          'name': 'deployedAt',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DeploymentAppLayout',
+        'linkedEntity': 'Deployment',
+        'config': {
+          'notifications': [],
+          'contentTrait': '@trait.DeploymentDisplay',
+          'appName': 'CI/CD Pipeline',
+          'navItems': [
+            {
+              'label': 'Builds',
+              'icon': 'hammer',
+              'href': '/builds',
+            },
+            {
+              'label': 'Stages',
+              'href': '/stages',
+              'icon': 'layers',
+            },
+            {
+              'label': 'Deploy',
+              'href': '/deploy',
+              'icon': 'rocket',
+            },
+          ],
+          'notificationClickEvent': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+          'searchEvent': 'DEPLOYMENT_SEARCH',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'DEPLOYMENT_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'DeploymentBrowseList',
+        'linkedEntity': 'Deployment',
+        'config': {
+          'gap': 'sm',
+          'cols': 1,
+          'fields': [
+            {
+              'icon': 'rocket',
+              'name': 'environment',
+              'variant': 'h4',
+            },
+            {
+              'name': 'version',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'label': 'Deployed',
+              'name': 'deployedAt',
+              'variant': 'caption',
+              'format': 'date',
+            },
+          ],
+        },
+      }),
+      {
+        'name': 'DeploymentDisplay',
+        'category': 'interaction',
+        'listens': [
+          {
+            'event': 'DEPLOYMENT_SEARCH',
+            'triggers': 'DEPLOYMENT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeploymentAppLayout',
+            },
+          },
+          {
+            'event': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+            'triggers': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeploymentAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DEPLOYMENT_SEARCH',
+              'name': 'Deployment Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+              'name': 'Deployment Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'rocket',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Deployments',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DeploymentBrowseList',
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Recent Commits',
+                      },
+                      '@trait.DeploymentGitHub',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'DEPLOYMENT_SEARCH',
-              'triggers': 'DEPLOYMENT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeploymentAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-              'triggers': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeploymentAppLayout',
-              },
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to deploy',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-8',
+                    'gap': 'md',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DEPLOYMENT_SEARCH',
-                'name': 'Deployment Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-                'name': 'Deployment Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'rocket',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'Deployments',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.DeploymentBrowseList',
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Recent Commits',
-                        },
-                        '@trait.DeploymentGitHub',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'DEPLOYMENT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'type': 'button',
-                          'label': 'Back to deploy',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'type': 'stack',
-                      'className': 'py-8',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'DeploymentCommitsPanel',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'variant': 'info',
-                          'type': 'alert',
-                          'message': 'Loading recent commits from GitHub…',
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'GitHub.traits.ServiceGithubGithub',
-          'name': 'DeploymentGitHub',
-          'config': {
-            'owner': 'owner-placeholder',
-            'repo': 'repo-placeholder',
-            'uiTrait': '@trait.DeploymentCommitsPanel',
-            'ref': 'main',
-            'path': '',
-            'op': 'listCommits',
-          },
-        }),
-        {
-          'name': 'DeploymentAsync',
-          'category': 'interaction',
-          'linkedEntity': 'Deployment',
-          'emits': [
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'DeploymentCommitsPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
             {
-              'event': 'DeploymentLoaded',
-              'description': 'Fired when Deployment finishes loading',
-              'scope': 'internal',
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'info',
+                        'type': 'alert',
+                        'message': 'Loading recent commits from GitHub…',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'GitHub.traits.ServiceGithubGithub',
+        'name': 'DeploymentGitHub',
+        'config': {
+          'owner': 'owner-placeholder',
+          'repo': 'repo-placeholder',
+          'uiTrait': '@trait.DeploymentCommitsPanel',
+          'ref': 'main',
+          'path': '',
+          'op': 'listCommits',
+        },
+      }),
+      {
+        'name': 'DeploymentAsync',
+        'category': 'interaction',
+        'linkedEntity': 'Deployment',
+        'emits': [
+          {
+            'event': 'DeploymentLoaded',
+            'description': 'Fired when Deployment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Deployment]',
+              },
+            ],
+          },
+          {
+            'event': 'DeploymentLoadFailed',
+            'description': 'Fired when Deployment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DeploymentSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DeploymentSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'success',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'LOADED',
+              'name': 'Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'DeploymentLoaded',
+              'name': 'Deployment loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2239,9 +2183,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'DeploymentLoadFailed',
-              'description': 'Fired when Deployment fails to load',
-              'scope': 'internal',
+              'key': 'DeploymentLoadFailed',
+              'name': 'Deployment load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2254,8 +2197,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'DeploymentSaved',
-              'scope': 'internal',
+              'key': 'DeploymentSaved',
+              'name': 'Deployment saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -2264,8 +2207,8 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'DeploymentSaveFailed',
-              'scope': 'internal',
+              'key': 'DeploymentSaveFailed',
+              'name': 'Deployment save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2278,460 +2221,405 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalDefinitio
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'loading',
-              },
-              {
-                'name': 'success',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'LOADED',
-                'name': 'Loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Deployment',
                   {
-                    'name': 'data',
-                    'type': 'object',
+                    'emit': {
+                      'success': 'DeploymentLoaded',
+                      'failure': 'DeploymentLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'DeploymentLoaded',
-                'name': 'Deployment loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[Deployment]',
-                  },
-                ],
-              },
-              {
-                'key': 'DeploymentLoadFailed',
-                'name': 'Deployment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DeploymentSaved',
-                'name': 'Deployment saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DeploymentSaveFailed',
-                'name': 'Deployment save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Deployment',
-                    {
-                      'emit': {
-                        'success': 'DeploymentLoaded',
-                        'failure': 'DeploymentLoadFailed',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'upload-cloud',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Deployment',
+                            'variant': 'h2',
+                          },
+                        ],
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'upload-cloud',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Deployment',
-                              'variant': 'h2',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Ready to start deployment operation.',
-                          'variant': 'body',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'icon': 'play',
-                          'variant': 'primary',
-                          'label': 'Start',
-                          'type': 'button',
-                          'action': 'START',
-                        },
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'loading',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'title': 'Deploying...',
-                          'message': 'Processing deployment...',
-                          'type': 'loading-state',
-                        },
-                        {
-                          'type': 'skeleton',
-                          'variant': 'text',
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'success',
-                'event': 'LOADED',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Deployment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'DeploymentSaveFailed',
-                        'success': 'DeploymentSaved',
+                      {
+                        'type': 'divider',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'check-circle',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'success',
-                          'message': 'Deployment successful.',
-                        },
-                        {
-                          'children': [
-                            {
-                              'action': 'RESET',
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'label': 'Reset',
-                              'icon': 'rotate-ccw',
-                            },
-                          ],
-                          'type': 'stack',
-                          'justify': 'center',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+                      {
+                        'content': 'Ready to start deployment operation.',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'icon': 'play',
+                        'variant': 'primary',
+                        'label': 'Start',
+                        'type': 'button',
+                        'action': 'START',
+                      },
+                    ],
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'loading',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'message': 'Deployment failed.',
-                          'type': 'error-state',
-                          'title': 'Operation Failed',
-                          'onRetry': 'RETRY',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'justify': 'center',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'variant': 'primary',
-                              'icon': 'refresh-cw',
-                              'action': 'RETRY',
-                              'label': 'Retry',
-                            },
-                            {
-                              'label': 'Reset',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'action': 'RESET',
-                              'icon': 'rotate-ccw',
-                            },
-                          ],
-                        },
-                      ],
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'success',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'upload-cloud',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'Deployment',
-                              'type': 'typography',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Ready to start deployment operation.',
-                          'type': 'typography',
-                          'variant': 'body',
-                          'color': 'muted',
-                        },
-                        {
-                          'icon': 'play',
-                          'type': 'button',
-                          'label': 'Start',
-                          'variant': 'primary',
-                          'action': 'START',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'upload-cloud',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Deployment',
-                              'variant': 'h2',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Ready to start deployment operation.',
-                          'variant': 'body',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'action': 'START',
-                          'variant': 'primary',
-                          'label': 'Start',
-                          'type': 'button',
-                          'icon': 'play',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'loading',
-                'event': 'RETRY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Deploying...',
-                          'message': 'Processing deployment...',
-                        },
-                        {
-                          'variant': 'text',
-                          'type': 'skeleton',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Deploy',
-          'path': '/deploy',
-          'traits': [
-            {
-              'ref': 'DeploymentAppLayout',
+              ],
             },
             {
-              'ref': 'DeploymentDisplay',
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'title': 'Deploying...',
+                        'message': 'Processing deployment...',
+                        'type': 'loading-state',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'text',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'DeploymentBrowseList',
+              'from': 'loading',
+              'to': 'success',
+              'event': 'LOADED',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Deployment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'DeploymentSaveFailed',
+                      'success': 'DeploymentSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'success',
+                        'message': 'Deployment successful.',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'RESET',
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                        'type': 'stack',
+                        'justify': 'center',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'DeploymentCommitsPanel',
+              'from': 'loading',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'message': 'Deployment failed.',
+                        'type': 'error-state',
+                        'title': 'Operation Failed',
+                        'onRetry': 'RETRY',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'refresh-cw',
+                            'action': 'RETRY',
+                            'label': 'Retry',
+                          },
+                          {
+                            'label': 'Reset',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                      },
+                    ],
+                    'align': 'center',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'DeploymentGitHub',
+              'from': 'success',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'upload-cloud',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Deployment',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Ready to start deployment operation.',
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                      },
+                      {
+                        'icon': 'play',
+                        'type': 'button',
+                        'label': 'Start',
+                        'variant': 'primary',
+                        'action': 'START',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'DeploymentAsync',
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'upload-cloud',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Deployment',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Ready to start deployment operation.',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'action': 'START',
+                        'variant': 'primary',
+                        'label': 'Start',
+                        'type': 'button',
+                        'icon': 'play',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Deploying...',
+                        'message': 'Processing deployment...',
+                      },
+                      {
+                        'variant': 'text',
+                        'type': 'skeleton',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'align': 'center',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Deploy',
+        'path': '/deploy',
+        'traits': [
+          {
+            'ref': 'DeploymentAppLayout',
+          },
+          {
+            'ref': 'DeploymentDisplay',
+          },
+          {
+            'ref': 'DeploymentBrowseList',
+          },
+          {
+            'ref': 'DeploymentCommitsPanel',
+          },
+          {
+            'ref': 'DeploymentGitHub',
+          },
+          {
+            'ref': 'DeploymentAsync',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-cicd-pipeline — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdCicdPipelineParams {
+  Build?: StdCicdPipelineBuildOrbitalParams;
+  Stage?: StdCicdPipelineStageOrbitalParams;
+  Deployment?: StdCicdPipelineDeploymentOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdCicdPipeline(params: StdCicdPipelineParams = {}): OrbitalDefinition[] {
+  return [
+    stdCicdPipelineBuildOrbital(params.Build ?? {}),
+    stdCicdPipelineStageOrbital(params.Stage ?? {}),
+    stdCicdPipelineDeploymentOrbital(params.Deployment ?? {}),
+  ];
 }

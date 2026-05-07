@@ -97,197 +97,263 @@ export interface StdAgentReviewerReviewCompletionSaveFailedPayload {
 }
 
 /**
- * Params for the std-agent-reviewer descriptor helpers.
+ * Tunable params for the ReviewOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Review.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdAgentReviewerParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdAgentReviewerReviewOrbitalParams {
+  /** Override the canonical entity name (default: 'Review'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdAgentReviewerEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `AgentReviewer.traits.ReviewGenerator`. */
-export function stdAgentReviewerTrait(params: StdAgentReviewerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ReviewGenerator`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `AgentReviewer.pages.ReviewPage`. */
-export function stdAgentReviewerPage(params: StdAgentReviewerParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ReviewPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (6 orbitals). */
-export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Review';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the ReviewOrbital orbital with consumer params. */
+export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Review';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReviewOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-tabs',
+        'as': 'Tabs',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReviewOrbital',
-      uses: [
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-tabs',
-          'as': 'Tabs',
+          'name': 'target',
+          'type': 'string',
+          'default': '',
         },
+        {
+          'name': 'category',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'issues',
+          'type': 'string',
+          'default': '[]',
+        },
+        {
+          'name': 'suggestions',
+          'type': 'string',
+          'default': '[]',
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'reviewStatus',
+          'type': 'string',
+          'default': 'idle',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'activeTab',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'items',
+          'type': 'array',
+          'default': [],
+          'items': {
+            'type': 'object',
+          },
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Review',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      {
+        'name': 'ReviewGenerator',
+        'category': 'interaction',
+        'linkedEntity': 'Review',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'ReviewLoaded',
+            'description': 'Fired when Review finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Review]',
+              },
+            ],
           },
           {
-            'name': 'target',
-            'type': 'string',
-            'default': '',
+            'event': 'ReviewLoadFailed',
+            'description': 'Fired when Review fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
+            'event': 'ReviewRagSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'issues',
-            'type': 'string',
-            'default': '[]',
+            'event': 'ReviewRagSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'suggestions',
-            'type': 'string',
-            'default': '[]',
+            'event': 'AnalysisSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
+            'event': 'AnalysisSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'reviewStatus',
-            'type': 'string',
-            'default': 'idle',
+            'event': 'ReviewCompletionSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
+            'event': 'ReviewCompletionSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
+        ],
+        'listens': [
           {
-            'name': 'activeTab',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'items',
-            'type': 'array',
-            'default': [],
-            'items': {
-              'type': 'object',
+            'event': 'CLASSIFIED',
+            'triggers': 'SUBMIT_REVIEW',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'AnalysisOrbital',
+              'trait': 'InputClassifier',
             },
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'ReviewGenerator',
-          'category': 'interaction',
-          'linkedEntity': 'Review',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ReviewLoaded',
-              'description': 'Fired when Review finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'analyzing',
+            },
+            {
+              'name': 'reviewing',
+            },
+            {
+              'name': 'completed',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SUBMIT_REVIEW',
+              'name': 'Submit Review',
+              'payloadSchema': [
+                {
+                  'name': 'target',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PATTERNS_FOUND',
+              'name': 'Patterns Found',
+            },
+            {
+              'key': 'REVIEW_GENERATED',
+              'name': 'Review Generated',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'ReviewLoaded',
+              'name': 'Review loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -296,9 +362,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ReviewLoadFailed',
-              'description': 'Fired when Review fails to load',
-              'scope': 'internal',
+              'key': 'ReviewLoadFailed',
+              'name': 'Review load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -311,8 +376,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ReviewRagSaved',
-              'scope': 'internal',
+              'key': 'ReviewRagSaved',
+              'name': 'Review rag saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -321,8 +386,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ReviewRagSaveFailed',
-              'scope': 'internal',
+              'key': 'ReviewRagSaveFailed',
+              'name': 'Review rag save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -335,8 +400,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'AnalysisSaved',
-              'scope': 'internal',
+              'key': 'AnalysisSaved',
+              'name': 'Analysis saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -345,8 +410,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'AnalysisSaveFailed',
-              'scope': 'internal',
+              'key': 'AnalysisSaveFailed',
+              'name': 'Analysis save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -359,8 +424,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ReviewCompletionSaved',
-              'scope': 'internal',
+              'key': 'ReviewCompletionSaved',
+              'name': 'Review completion saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -369,8 +434,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ReviewCompletionSaveFailed',
-              'scope': 'internal',
+              'key': 'ReviewCompletionSaveFailed',
+              'name': 'Review completion save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -383,1575 +448,1546 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
-              'event': 'CLASSIFIED',
-              'triggers': 'SUBMIT_REVIEW',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'AnalysisOrbital',
-                'trait': 'InputClassifier',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'analyzing',
-              },
-              {
-                'name': 'reviewing',
-              },
-              {
-                'name': 'completed',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SUBMIT_REVIEW',
-                'name': 'Submit Review',
-                'payloadSchema': [
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Review',
                   {
-                    'name': 'target',
-                    'type': 'string',
+                    'emit': {
+                      'failure': 'ReviewLoadFailed',
+                      'success': 'ReviewLoaded',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'PATTERNS_FOUND',
-                'name': 'Patterns Found',
-              },
-              {
-                'key': 'REVIEW_GENERATED',
-                'name': 'Review Generated',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'ReviewLoaded',
-                'name': 'Review loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[Review]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewLoadFailed',
-                'name': 'Review load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagSaved',
-                'name': 'Review rag saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagSaveFailed',
-                'name': 'Review rag save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisSaved',
-                'name': 'Analysis saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisSaveFailed',
-                'name': 'Analysis save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionSaved',
-                'name': 'Review completion saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionSaveFailed',
-                'name': 'Review completion save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.category',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Review',
-                    {
-                      'emit': {
-                        'failure': 'ReviewLoadFailed',
-                        'success': 'ReviewLoaded',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'file-search',
-                                },
-                                {
-                                  'content': 'Code Review',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'direction': 'vertical',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'entity': '@entity',
-                                      'mode': 'edit',
-                                      'type': 'form-section',
-                                      'fields': [
-                                        'target',
-                                      ],
-                                      'submitEvent': 'SUBMIT_REVIEW',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                    },
-                  ],
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'file-search',
+                              },
+                              {
+                                'content': 'Code Review',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'direction': 'vertical',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'entity': '@entity',
+                                    'mode': 'edit',
+                                    'type': 'form-section',
+                                    'fields': [
+                                      'target',
+                                    ],
+                                    'submitEvent': 'SUBMIT_REVIEW',
+                                  },
+                                ],
+                                'type': 'stack',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'analyzing',
-                'event': 'SUBMIT_REVIEW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.target',
-                    '@payload.target',
-                  ],
-                  [
-                    'set',
-                    '@entity.reviewStatus',
-                    'analyzing',
-                  ],
-                  [
-                    'agent/recall',
-                    '@payload.target',
-                  ],
-                  [
-                    'agent/search-code',
-                    '@payload.target',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'name': 'search',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Analyzing input...',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'content': 'Classifying and searching for patterns',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'icon': 'file-search',
-                          'href': '/review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'analyzing',
-                'to': 'reviewing',
-                'event': 'PATTERNS_FOUND',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.reviewStatus',
-                    'reviewing',
-                  ],
-                  [
-                    'agent/generate',
-                    '@entity.target',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'cpu',
-                            },
-                            {
-                              'content': 'Generating review...',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'content': 'Category: @entity.category',
-                              'variant': 'caption',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'reviewing',
-                'to': 'completed',
-                'event': 'REVIEW_GENERATED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.reviewStatus',
-                    'completed',
-                  ],
-                  [
-                    'agent/memorize',
-                    '@entity.target',
-                    'review-pattern',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'gap': 'sm',
-                                  'align': 'center',
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'check-circle',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Review Complete',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'type': 'badge',
-                                  'label': '@entity.score',
-                                },
-                              ],
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'type': 'stack',
-                                      'gap': 'sm',
-                                      'children': [
-                                        {
-                                          'type': 'badge',
-                                          'label': '@entity.category',
-                                        },
-                                        {
-                                          'label': '@entity.reviewStatus',
-                                          'type': 'badge',
-                                        },
-                                      ],
-                                      'direction': 'horizontal',
-                                    },
-                                    {
-                                      'content': 'Issues',
-                                      'variant': 'h4',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@entity.issues',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'type': 'divider',
-                                    },
-                                    {
-                                      'content': 'Suggestions',
-                                      'variant': 'h4',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'content': '@entity.suggestions',
-                                      'variant': 'body',
-                                      'type': 'typography',
-                                    },
-                                  ],
-                                  'direction': 'vertical',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                            {
-                              'label': 'New Review',
-                              'action': 'RESET',
-                              'variant': 'ghost',
-                              'icon': 'rotate-ccw',
-                              'type': 'button',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'label': 'Review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                          'href': '/analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'completed',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.reviewStatus',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.target',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.issues',
-                    '[]',
-                  ],
-                  [
-                    'set',
-                    '@entity.suggestions',
-                    '[]',
-                  ],
-                  [
-                    'set',
-                    '@entity.score',
-                    0,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'file-search',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Code Review',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'card',
-                              'children': [
-                                {
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'variant': 'body',
-                                      'type': 'typography',
-                                      'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
-                                    },
-                                    {
-                                      'entity': '@entity',
-                                      'type': 'form-section',
-                                      'fields': [
-                                        'target',
-                                      ],
-                                      'submitEvent': 'SUBMIT_REVIEW',
-                                      'mode': 'edit',
-                                    },
-                                  ],
-                                  'direction': 'vertical',
-                                  'type': 'stack',
-                                },
-                              ],
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ReviewPage',
-          'path': '/review',
-          'traits': [
+              ],
+            },
             {
-              'ref': 'ReviewGenerator',
+              'from': 'idle',
+              'to': 'analyzing',
+              'event': 'SUBMIT_REVIEW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.target',
+                  '@payload.target',
+                ],
+                [
+                  'set',
+                  '@entity.reviewStatus',
+                  'analyzing',
+                ],
+                [
+                  'agent/recall',
+                  '@payload.target',
+                ],
+                [
+                  'agent/search-code',
+                  '@payload.target',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'name': 'search',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Analyzing input...',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'content': 'Classifying and searching for patterns',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'analyzing',
+              'to': 'reviewing',
+              'event': 'PATTERNS_FOUND',
+              'effects': [
+                [
+                  'set',
+                  '@entity.reviewStatus',
+                  'reviewing',
+                ],
+                [
+                  'agent/generate',
+                  '@entity.target',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'cpu',
+                          },
+                          {
+                            'content': 'Generating review...',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'content': 'Category: @entity.category',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'reviewing',
+              'to': 'completed',
+              'event': 'REVIEW_GENERATED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.reviewStatus',
+                  'completed',
+                ],
+                [
+                  'agent/memorize',
+                  '@entity.target',
+                  'review-pattern',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'gap': 'sm',
+                                'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'check-circle',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Review Complete',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                              },
+                              {
+                                'type': 'badge',
+                                'label': '@entity.score',
+                              },
+                            ],
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'stack',
+                                    'gap': 'sm',
+                                    'children': [
+                                      {
+                                        'type': 'badge',
+                                        'label': '@entity.category',
+                                      },
+                                      {
+                                        'label': '@entity.reviewStatus',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                  },
+                                  {
+                                    'content': 'Issues',
+                                    'variant': 'h4',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': '@entity.issues',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'type': 'divider',
+                                  },
+                                  {
+                                    'content': 'Suggestions',
+                                    'variant': 'h4',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'content': '@entity.suggestions',
+                                    'variant': 'body',
+                                    'type': 'typography',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                          {
+                            'label': 'New Review',
+                            'action': 'RESET',
+                            'variant': 'ghost',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'completed',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.reviewStatus',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.target',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.issues',
+                  '[]',
+                ],
+                [
+                  'set',
+                  '@entity.suggestions',
+                  '[]',
+                ],
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'file-search',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Code Review',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'card',
+                            'children': [
+                              {
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'variant': 'body',
+                                    'type': 'typography',
+                                    'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
+                                  },
+                                  {
+                                    'entity': '@entity',
+                                    'type': 'form-section',
+                                    'fields': [
+                                      'target',
+                                    ],
+                                    'submitEvent': 'SUBMIT_REVIEW',
+                                    'mode': 'edit',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'type': 'stack',
+                              },
+                            ],
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReviewRagOrbital',
-      uses: [],
-      entity: {
-        'name': 'ReviewRag',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ReviewPage',
+        'path': '/review',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'query',
-            'type': 'string',
-          },
-          {
-            'name': 'context',
-            'type': 'string',
-          },
-          {
-            'name': 'response',
-            'type': 'string',
-          },
-          {
-            'name': 'memoryHits',
-            'type': 'number',
-          },
-          {
-            'name': 'searchHits',
-            'type': 'number',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'content',
-            'type': 'string',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'scope',
-            'type': 'string',
-          },
-          {
-            'name': 'strength',
-            'type': 'number',
-          },
-          {
-            'name': 'pinned',
-            'type': 'boolean',
-          },
-          {
-            'name': 'language',
-            'type': 'string',
-          },
-          {
-            'name': 'resultCount',
-            'type': 'number',
-          },
-          {
-            'name': 'results',
-            'type': 'string',
-          },
-          {
-            'name': 'prompt',
-            'type': 'string',
-          },
-          {
-            'name': 'provider',
-            'type': 'string',
-          },
-          {
-            'name': 'model',
-            'type': 'string',
+            'ref': 'ReviewGenerator',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ReviewRagOrbital orbital.
+ *
+ * Canonical entity: ReviewRag.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdAgentReviewerReviewRagOrbitalParams {
+  /** Override the canonical entity name (default: 'ReviewRag'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ReviewRagOrbital orbital with consumer params. */
+export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewRagOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ReviewRag';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReviewRagOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'ReviewRagRag',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewRag',
-          'listens': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'query',
+          'type': 'string',
+        },
+        {
+          'name': 'context',
+          'type': 'string',
+        },
+        {
+          'name': 'response',
+          'type': 'string',
+        },
+        {
+          'name': 'memoryHits',
+          'type': 'number',
+        },
+        {
+          'name': 'searchHits',
+          'type': 'number',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'content',
+          'type': 'string',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'scope',
+          'type': 'string',
+        },
+        {
+          'name': 'strength',
+          'type': 'number',
+        },
+        {
+          'name': 'pinned',
+          'type': 'boolean',
+        },
+        {
+          'name': 'language',
+          'type': 'string',
+        },
+        {
+          'name': 'resultCount',
+          'type': 'number',
+        },
+        {
+          'name': 'results',
+          'type': 'string',
+        },
+        {
+          'name': 'prompt',
+          'type': 'string',
+        },
+        {
+          'name': 'provider',
+          'type': 'string',
+        },
+        {
+          'name': 'model',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'ReviewRagRag',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewRag',
+        'listens': [
+          {
+            'event': 'GENERATE',
+            'triggers': 'GENERATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RagCompletionFlow',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'GENERATE',
-              'triggers': 'GENERATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RagCompletionFlow',
-              },
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'retrieving',
+            },
+            {
+              'name': 'generating',
+            },
+            {
+              'name': 'completed',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'retrieving',
-              },
-              {
-                'name': 'generating',
-              },
-              {
-                'name': 'completed',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'GENERATE',
-                'name': 'Generate',
-              },
-              {
-                'key': 'RETRIEVAL_DONE',
-                'name': 'Retrieval Done',
-                'payloadSchema': [
-                  {
-                    'name': 'context',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'memoryHits',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'searchHits',
-                    'type': 'number',
-                  },
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'GENERATE',
+              'name': 'Generate',
+            },
+            {
+              'key': 'RETRIEVAL_DONE',
+              'name': 'Retrieval Done',
+              'payloadSchema': [
+                {
+                  'name': 'context',
+                  'type': 'string',
+                },
+                {
+                  'name': 'memoryHits',
+                  'type': 'number',
+                },
+                {
+                  'name': 'searchHits',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'GENERATION_DONE',
+              'name': 'Generation Done',
+              'payloadSchema': [
+                {
+                  'name': 'response',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.query',
+                  '',
                 ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'GENERATION_DONE',
-                'name': 'Generation Done',
-                'payloadSchema': [
-                  {
-                    'name': 'response',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.query',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'brain',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'RAG Pipeline',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'direction': 'vertical',
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Enter a query to retrieve context and generate a response',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'mode': 'edit',
-                                      'entity': '@entity',
-                                      'type': 'form-section',
-                                      'submitEvent': 'GENERATE',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                    },
-                                  ],
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'retrieving',
-                'event': 'GENERATE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'retrieving',
-                  ],
-                  [
-                    'agent/recall',
-                    '@entity.query',
-                    5,
-                  ],
-                  [
-                    'agent/search-code',
-                    '@entity.query',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'label': 'Review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'search',
-                            },
-                            {
-                              'content': 'Retrieving context...',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'label': 'Recalling memories',
-                                  'type': 'badge',
-                                },
-                                {
-                                  'label': 'Searching code',
-                                  'type': 'badge',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'justify': 'center',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'retrieving',
-                'to': 'generating',
-                'event': 'RETRIEVAL_DONE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.context',
-                    '@payload.context',
-                  ],
-                  [
-                    'set',
-                    '@entity.memoryHits',
-                    '@payload.memoryHits',
-                  ],
-                  [
-                    'set',
-                    '@entity.searchHits',
-                    '@payload.searchHits',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'generating',
-                  ],
-                  [
-                    'agent/generate',
-                    [
-                      'str/concat',
-                      'Context:\n',
-                      '@entity.context',
-                      '\n\nQuery: ',
-                      '@entity.query',
-                      '\n\nProvide a comprehensive answer based on the retrieved context.',
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
                     ],
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'label': 'Review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'cpu',
-                            },
-                            {
-                              'content': 'Generating response...',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'badge',
-                                  'label': '@entity.memoryHits',
-                                },
-                                {
-                                  'type': 'badge',
-                                  'label': '@entity.searchHits',
-                                },
-                              ],
-                              'justify': 'center',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'retrieving',
-                'to': 'idle',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'label': 'Review',
-                          'href': '/review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                          'href': '/analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'RAG Pipeline Error',
-                              'type': 'typography',
-                            },
-                            {
-                              'message': '@entity.error',
-                              'type': 'alert',
-                              'variant': 'error',
-                            },
-                            {
-                              'type': 'button',
-                              'icon': 'rotate-ccw',
-                              'label': 'Try Again',
-                              'action': 'RESET',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'generating',
-                'to': 'completed',
-                'event': 'GENERATION_DONE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.response',
-                    '@payload.response',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'completed',
-                  ],
-                  [
-                    'agent/memorize',
-                    [
-                      'str/concat',
-                      'RAG query: ',
-                      '@entity.query',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'brain',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'RAG Pipeline',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'direction': 'vertical',
+                                'gap': 'md',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Enter a query to retrieve context and generate a response',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'mode': 'edit',
+                                    'entity': '@entity',
+                                    'type': 'form-section',
+                                    'submitEvent': 'GENERATE',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                      },
                     ],
-                    'pattern-affinity',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'name': 'check-circle',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'content': 'RAG Complete',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                },
-                                {
-                                  'label': 'New Query',
-                                  'action': 'RESET',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'icon': 'rotate-ccw',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'cols': 2,
-                              'children': [
-                                {
-                                  'icon': 'brain',
-                                  'label': 'Memory Hits',
-                                  'type': 'stat-display',
-                                  'value': '@entity.memoryHits',
-                                },
-                                {
-                                  'type': 'stat-display',
-                                  'value': '@entity.searchHits',
-                                  'label': 'Code Hits',
-                                  'icon': 'code',
-                                },
-                              ],
-                              'type': 'simple-grid',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'variant': 'caption',
-                                      'type': 'typography',
-                                      'content': 'Query',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@entity.query',
-                                      'variant': 'body',
-                                    },
-                                    {
-                                      'type': 'divider',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Response',
-                                      'variant': 'caption',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@entity.response',
-                                      'variant': 'body',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'direction': 'vertical',
-                                  'gap': 'md',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'content': 'Retrieved Context',
-                                      'variant': 'caption',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@entity.context',
-                                      'variant': 'body',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'vertical',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                        },
-                      ],
-                    },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'generating',
-                'to': 'idle',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'href': '/review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'href': '/analysis',
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'RAG Pipeline Error',
-                              'type': 'typography',
-                              'variant': 'h2',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': 'error',
-                              'message': '@entity.error',
-                            },
-                            {
-                              'icon': 'rotate-ccw',
-                              'variant': 'primary',
-                              'type': 'button',
-                              'label': 'Try Again',
-                              'action': 'RESET',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'retrieving',
+              'event': 'GENERATE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'retrieving',
                 ],
-              },
-              {
-                'from': 'completed',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
+                [
+                  'agent/recall',
+                  '@entity.query',
+                  5,
+                ],
+                [
+                  'agent/search-code',
+                  '@entity.query',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'search',
+                          },
+                          {
+                            'content': 'Retrieving context...',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'children': [
+                              {
+                                'label': 'Recalling memories',
+                                'type': 'badge',
+                              },
+                              {
+                                'label': 'Searching code',
+                                'type': 'badge',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'center',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'retrieving',
+              'to': 'generating',
+              'event': 'RETRIEVAL_DONE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.context',
+                  '@payload.context',
+                ],
+                [
+                  'set',
+                  '@entity.memoryHits',
+                  '@payload.memoryHits',
+                ],
+                [
+                  'set',
+                  '@entity.searchHits',
+                  '@payload.searchHits',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'generating',
+                ],
+                [
+                  'agent/generate',
                   [
-                    'set',
-                    '@entity.status',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.response',
-                    '',
-                  ],
-                  [
-                    'set',
+                    'str/concat',
+                    'Context:\n',
                     '@entity.context',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.memoryHits',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.searchHits',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'brain',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'RAG Pipeline',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'variant': 'body',
-                                      'content': 'Enter a query to retrieve context and generate a response',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'type': 'form-section',
-                                      'entity': '@entity',
-                                      'submitEvent': 'GENERATE',
-                                      'fields': [
-                                        'query',
-                                      ],
-                                      'mode': 'edit',
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                  'direction': 'vertical',
-                                  'type': 'stack',
-                                },
-                              ],
-                              'type': 'card',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'href': '/review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
+                    '\n\nQuery: ',
+                    '@entity.query',
+                    '\n\nProvide a comprehensive answer based on the retrieved context.',
                   ],
                 ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'cpu',
+                          },
+                          {
+                            'content': 'Generating response...',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'badge',
+                                'label': '@entity.memoryHits',
+                              },
+                              {
+                                'type': 'badge',
+                                'label': '@entity.searchHits',
+                              },
+                            ],
+                            'justify': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'retrieving',
+              'to': 'idle',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'RAG Pipeline Error',
+                            'type': 'typography',
+                          },
+                          {
+                            'message': '@entity.error',
+                            'type': 'alert',
+                            'variant': 'error',
+                          },
+                          {
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'label': 'Try Again',
+                            'action': 'RESET',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'generating',
+              'to': 'completed',
+              'event': 'GENERATION_DONE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '@payload.response',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'completed',
+                ],
+                [
+                  'agent/memorize',
+                  [
+                    'str/concat',
+                    'RAG query: ',
+                    '@entity.query',
+                  ],
+                  'pattern-affinity',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'name': 'check-circle',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'RAG Complete',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'align': 'center',
+                              },
+                              {
+                                'label': 'New Query',
+                                'action': 'RESET',
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'cols': 2,
+                            'children': [
+                              {
+                                'icon': 'brain',
+                                'label': 'Memory Hits',
+                                'type': 'stat-display',
+                                'value': '@entity.memoryHits',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'value': '@entity.searchHits',
+                                'label': 'Code Hits',
+                                'icon': 'code',
+                              },
+                            ],
+                            'type': 'simple-grid',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'variant': 'caption',
+                                    'type': 'typography',
+                                    'content': 'Query',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': '@entity.query',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'type': 'divider',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Response',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': '@entity.response',
+                                    'variant': 'body',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'md',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': 'Retrieved Context',
+                                    'variant': 'caption',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': '@entity.context',
+                                    'variant': 'body',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'vertical',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'generating',
+              'to': 'idle',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'RAG Pipeline Error',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'error',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'icon': 'rotate-ccw',
+                            'variant': 'primary',
+                            'type': 'button',
+                            'label': 'Try Again',
+                            'action': 'RESET',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'completed',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.context',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.memoryHits',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.searchHits',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'brain',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'RAG Pipeline',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'variant': 'body',
+                                    'content': 'Enter a query to retrieve context and generate a response',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'type': 'form-section',
+                                    'entity': '@entity',
+                                    'submitEvent': 'GENERATE',
+                                    'fields': [
+                                      'query',
+                                    ],
+                                    'mode': 'edit',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'vertical',
+                                'type': 'stack',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RagTabs',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewRag',
+        'emits': [
+          {
+            'event': 'SELECT_TAB',
+            'payloadSchema': [
+              {
+                'name': 'tabId',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RagTabs',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewRag',
-          'emits': [
+          {
+            'event': 'ReviewRagLoaded',
+            'description': 'Fired when ReviewRag finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewRag]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewRagLoadFailed',
+            'description': 'Fired when ReviewRag fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'SELECT_TAB',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ReviewRagLoaded',
+              'name': 'ReviewRag loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewRag]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagLoadFailed',
+              'name': 'ReviewRag load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'SELECT_TAB',
+              'name': 'Select Tab',
               'payloadSchema': [
                 {
                   'name': 'tabId',
@@ -1959,3939 +1995,4109 @@ export function stdAgentReviewer(params: StdAgentReviewerParams): OrbitalDefinit
                 },
               ],
             },
-            {
-              'event': 'ReviewRagLoaded',
-              'description': 'Fired when ReviewRag finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewRag]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagLoadFailed',
-              'description': 'Fired when ReviewRag fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ReviewRagLoaded',
-                'name': 'ReviewRag loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewRag',
                   {
-                    'name': 'data',
-                    'type': '[ReviewRag]',
+                    'emit': {
+                      'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'ReviewRagLoadFailed',
-                'name': 'ReviewRag load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'SELECT_TAB',
-                'name': 'Select Tab',
-                'payloadSchema': [
-                  {
-                    'name': 'tabId',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'success': 'ReviewRagLoaded',
-                        'failure': 'ReviewRagLoadFailed',
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'spinner',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-12',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'Loading RAG pipeline…',
-                          'type': 'typography',
-                          'variant': 'caption',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ReviewRagLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'label': 'Review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'name': 'brain',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'RAG Pipeline',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'tabs',
-                              'defaultActiveTab': 'query',
-                              'tabs': [
-                                {
-                                  'label': 'Query',
-                                  'value': 'query',
-                                },
-                                {
-                                  'value': 'sources',
-                                  'label': 'Sources',
-                                },
-                                {
-                                  'label': 'Response',
-                                  'value': 'response',
-                                },
-                              ],
-                              'tabChangeEvent': 'SELECT_TAB',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'entity': '@payload.data',
-                              'type': 'data-grid',
-                              'fields': [],
-                              'renderItem': [
-                                'fn',
-                                'item',
-                                {
-                                  'direction': 'vertical',
-                                  'children': [
-                                    {
-                                      'variant': 'h4',
-                                      'content': '@item.query',
-                                      'type': 'typography',
-                                    },
-                                    {
-                                      'variant': 'caption',
-                                      'color': 'muted',
-                                      'type': 'typography',
-                                      'content': '@item.query',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                },
-                              ],
-                              'className': 'transition-shadow hover:shadow-md cursor-pointer',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ReviewRagLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Failed to load RAG pipeline',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': '@payload.error',
-                          'variant': 'body',
-                        },
-                        {
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'label': 'Retry',
-                          'action': 'INIT',
-                          'variant': 'primary',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'SELECT_TAB',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'success': 'ReviewRagLoaded',
-                        'failure': 'ReviewRagLoadFailed',
+                      {
+                        'color': 'muted',
+                        'content': 'Loading RAG pipeline…',
+                        'type': 'typography',
+                        'variant': 'caption',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RagMemoryLifecycle',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewRag',
-          'emits': [
-            {
-              'event': 'ReviewRagLoaded',
-              'description': 'Fired when ReviewRag finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewRag]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagLoadFailed',
-              'description': 'Fired when ReviewRag fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ReviewRagLoaded',
-                'name': 'ReviewRag loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[ReviewRag]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagLoadFailed',
-                'name': 'ReviewRag load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'success': 'ReviewRagLoaded',
-                        'failure': 'ReviewRagLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'Loading…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ReviewRagLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'brain',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'content': 'ReviewRag Manager',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'fields': [
-                                {
-                                  'name': 'content',
-                                  'label': 'Content',
-                                  'variant': 'h4',
-                                  'icon': 'brain',
-                                },
-                                {
-                                  'name': 'category',
-                                  'label': 'Category',
-                                  'colorMap': {
-                                    'scheduled': 'warning',
-                                    'disabled': 'neutral',
-                                    'done': 'success',
-                                    'failed': 'destructive',
-                                    'active': 'success',
-                                    'draft': 'warning',
-                                    'inactive': 'neutral',
-                                    'error': 'destructive',
-                                    'completed': 'success',
-                                    'cancelled': 'destructive',
-                                    'pending': 'warning',
-                                    'archived': 'neutral',
-                                  },
-                                  'variant': 'badge',
-                                },
-                                {
-                                  'label': 'Strength',
-                                  'name': 'strength',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'entity': '@payload.data',
-                              'type': 'data-grid',
-                            },
-                          ],
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'href': '/issues',
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ReviewRagLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'type': 'icon',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'content': 'Failed to load reviewrag',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'variant': 'body',
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': '@payload.error',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'INIT',
-                          'icon': 'rotate-ccw',
-                          'variant': 'primary',
-                          'label': 'Retry',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-12',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RagSearchLifecycle',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewRag',
-          'emits': [
-            {
-              'event': 'ReviewRagLoaded',
-              'description': 'Fired when ReviewRag finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewRag]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagLoadFailed',
-              'description': 'Fired when ReviewRag fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ReviewRagLoaded',
-                'name': 'ReviewRag loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[ReviewRag]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagLoadFailed',
-                'name': 'ReviewRag load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'failure': 'ReviewRagLoadFailed',
-                        'success': 'ReviewRagLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'content': 'Loading…',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                        },
-                      ],
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ReviewRagLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'justify': 'between',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'search',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'ReviewRag',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'fields': [
-                                {
-                                  'name': 'query',
-                                  'variant': 'h4',
-                                  'label': 'Query',
-                                  'icon': 'search',
-                                },
-                                {
-                                  'label': 'Language',
-                                  'name': 'language',
-                                  'variant': 'badge',
-                                  'colorMap': {
-                                    'active': 'success',
-                                    'pending': 'warning',
-                                    'scheduled': 'warning',
-                                    'error': 'destructive',
-                                    'inactive': 'neutral',
-                                    'done': 'success',
-                                    'draft': 'warning',
-                                    'disabled': 'neutral',
-                                    'completed': 'success',
-                                    'failed': 'destructive',
-                                    'archived': 'neutral',
-                                    'cancelled': 'destructive',
-                                  },
-                                },
-                                {
-                                  'name': 'resultCount',
-                                  'variant': 'caption',
-                                  'label': 'Result Count',
-                                },
-                              ],
-                              'type': 'data-grid',
-                              'entity': '@payload.data',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'label': 'Review',
-                          'href': '/review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                          'href': '/analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ReviewRagLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Failed to load reviewrag',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': '@payload.error',
-                          'variant': 'body',
-                          'type': 'typography',
-                        },
-                        {
-                          'action': 'INIT',
-                          'type': 'button',
-                          'label': 'Retry',
-                          'icon': 'rotate-ccw',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RagCompletionFlow',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewRag',
-          'emits': [
-            {
-              'event': 'SAVE',
-              'scope': 'internal',
-            },
-            {
-              'event': 'GENERATED',
-              'scope': 'internal',
-            },
-            {
-              'event': 'GENERATE',
-            },
-            {
-              'event': 'ReviewRagLoadFailed',
-              'description': 'Fired when ReviewRag fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagLoaded',
-              'description': 'Fired when ReviewRag finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewRag]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewRagSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'GENERATE',
-                'name': 'Generate',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'GENERATED',
-                'name': 'Generated',
-              },
-              {
-                'key': 'ReviewRagLoadFailed',
-                'name': 'ReviewRag load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagLoaded',
-                'name': 'ReviewRag loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[ReviewRag]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagSaveFailed',
-                'name': 'ReviewRag save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewRagSaved',
-                'name': 'ReviewRag saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.model',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.provider',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'failure': 'ReviewRagLoadFailed',
-                        'success': 'ReviewRagLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'href': '/review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'href': '/analysis',
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'sparkles',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'ReviewRag',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Open',
-                                  'variant': 'primary',
-                                  'icon': 'sparkles',
-                                  'action': 'GENERATE',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'icon': 'sparkles',
-                              'title': 'Nothing open',
-                              'type': 'empty-state',
-                              'description': 'Click Open to view details in a modal overlay.',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'GENERATE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'sparkles',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'ReviewRag',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'label': '@entity.provider',
-                              'type': 'badge',
-                            },
-                            {
-                              'label': '@entity.model',
-                              'type': 'badge',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                        },
-                        {
-                          'fields': [
-                            'prompt',
-                          ],
-                          'cancelEvent': 'CLOSE',
-                          'submitEvent': 'SAVE',
-                          'type': 'form-section',
-                          'mode': 'create',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'success': 'ReviewRagLoaded',
-                        'failure': 'ReviewRagLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'justify': 'between',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'name': 'sparkles',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'ReviewRag',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'label': 'Open',
-                                  'action': 'GENERATE',
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'icon': 'sparkles',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'icon': 'sparkles',
-                              'description': 'Click Open to view details in a modal overlay.',
-                              'type': 'empty-state',
-                              'title': 'Nothing open',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'ReviewRag',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ReviewRagSaved',
-                        'failure': 'ReviewRagSaveFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'emit',
-                    'GENERATED',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewRag',
-                    {
-                      'emit': {
-                        'failure': 'ReviewRagLoadFailed',
-                        'success': 'ReviewRagLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'sparkles',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'ReviewRag',
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'type': 'button',
-                                  'label': 'Open',
-                                  'action': 'GENERATE',
-                                  'variant': 'primary',
-                                  'icon': 'sparkles',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'description': 'Click Open to view details in a modal overlay.',
-                              'icon': 'sparkles',
-                              'type': 'empty-state',
-                              'title': 'Nothing open',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'label': 'Review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Rag',
-          'path': '/rag',
-          'traits': [
-            {
-              'ref': 'ReviewRagRag',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AnalysisOrbital',
-      uses: [],
-      entity: {
-        'name': 'Analysis',
-        'persistence': 'runtime',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'input',
-            'type': 'string',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'confidence',
-            'type': 'number',
-          },
-          {
-            'name': 'model',
-            'type': 'string',
-          },
-          {
-            'name': 'message',
-            'type': 'string',
-          },
-          {
-            'name': 'notificationType',
-            'type': 'string',
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'InputClassifier',
-          'category': 'interaction',
-          'linkedEntity': 'Analysis',
-          'emits': [
-            {
-              'event': 'CLASSIFIED',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'category',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CLASSIFIED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'category',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisLoadFailed',
-              'description': 'Fired when Analysis fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisLoaded',
-              'description': 'Fired when Analysis finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Analysis]',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CLASSIFY',
-                'name': 'Classify',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLASSIFIED',
-                'name': 'Classified',
-              },
-              {
-                'key': 'AnalysisLoadFailed',
-                'name': 'Analysis load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisLoaded',
-                'name': 'Analysis loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Analysis]',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisSaveFailed',
-                'name': 'Analysis save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisSaved',
-                'name': 'Analysis saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Analysis',
-                    {
-                      'emit': {
-                        'failure': 'AnalysisLoadFailed',
-                        'success': 'AnalysisLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'href': '/review',
-                          'label': 'Review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'href': '/issues',
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'tag',
-                                    },
-                                    {
-                                      'content': 'Analysis',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'label': 'Open',
-                                  'icon': 'tag',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'action': 'CLASSIFY',
-                                },
-                              ],
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'icon': 'tag',
-                              'description': 'Click Open to view details in a modal overlay.',
-                              'type': 'empty-state',
-                              'title': 'Nothing open',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CLASSIFY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'tag',
-                            },
-                            {
-                              'content': 'Analysis',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'content': 'Categories:',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'badge',
-                              'label': 'schema',
-                              'variant': 'secondary',
-                            },
-                            {
-                              'type': 'badge',
-                              'label': 'component',
-                              'variant': 'secondary',
-                            },
-                            {
-                              'variant': 'secondary',
-                              'type': 'badge',
-                              'label': 'trait',
-                            },
-                            {
-                              'variant': 'secondary',
-                              'type': 'badge',
-                              'label': 'page',
-                            },
-                            {
-                              'label': 'behavior',
-                              'type': 'badge',
-                              'variant': 'secondary',
-                            },
-                            {
-                              'variant': 'secondary',
-                              'label': 'style',
-                              'type': 'badge',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'mode': 'create',
-                          'fields': [
-                            'input',
-                          ],
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
-                          'submitEvent': 'SAVE',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                  [
-                    'fetch',
-                    'Analysis',
-                    {
-                      'emit': {
-                        'success': 'AnalysisLoaded',
-                        'failure': 'AnalysisLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'name': 'tag',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Analysis',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'variant': 'primary',
-                                  'icon': 'tag',
-                                  'type': 'button',
-                                  'action': 'CLASSIFY',
-                                  'label': 'Open',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'justify': 'between',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'icon': 'tag',
-                              'type': 'empty-state',
-                              'title': 'Nothing open',
-                              'description': 'Click Open to view details in a modal overlay.',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'href': '/review',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Analysis',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'AnalysisSaveFailed',
-                        'success': 'AnalysisSaved',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'emit',
-                    'CLASSIFIED',
-                  ],
-                  [
-                    'fetch',
-                    'Analysis',
-                    {
-                      'emit': {
-                        'success': 'AnalysisLoaded',
-                        'failure': 'AnalysisLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'name': 'tag',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Analysis',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'icon': 'tag',
-                                  'action': 'CLASSIFY',
-                                  'label': 'Open',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'empty-state',
-                              'icon': 'tag',
-                              'description': 'Click Open to view details in a modal overlay.',
-                              'title': 'Nothing open',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'icon': 'file-search',
-                          'href': '/review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'AnalysisNotification',
-          'category': 'interaction',
-          'linkedEntity': 'Analysis',
-          'emits': [
-            {
-              'event': 'AnalysisLoaded',
-              'description': 'Fired when Analysis finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Analysis]',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisLoadFailed',
-              'description': 'Fired when Analysis fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'hidden',
-                'isInitial': true,
-              },
-              {
-                'name': 'visible',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SHOW',
-                'name': 'Show',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'notificationType',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'HIDE',
-                'name': 'Hide',
-              },
-              {
-                'key': 'AnalysisLoaded',
-                'name': 'Analysis loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Analysis]',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisLoadFailed',
-                'name': 'Analysis load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'hidden',
-                'to': 'hidden',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Analysis',
-                    {
-                      'emit': {
-                        'success': 'AnalysisLoaded',
-                        'failure': 'AnalysisLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'hidden',
-                'to': 'visible',
-                'event': 'SHOW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '@payload.message',
-                  ],
-                  [
-                    'set',
-                    '@entity.notificationType',
-                    '@payload.notificationType',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'href': '/review',
-                          'label': 'Review',
-                        },
-                        {
-                          'href': '/analysis',
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'tag',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                      'content': 'Analysis Result',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'icon': 'x',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'action': 'HIDE',
-                                  'label': 'Dismiss',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'align': 'center',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': '@entity.notificationType',
-                              'message': '@entity.message',
-                            },
-                            {
-                              'type': 'toast-slot',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': 'warning',
-                              'message': '@entity.message',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'visible',
-                'to': 'visible',
-                'event': 'SHOW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '@payload.message',
-                  ],
-                  [
-                    'set',
-                    '@entity.notificationType',
-                    '@payload.notificationType',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'tag',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Analysis Result',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'type': 'button',
-                                  'icon': 'x',
-                                  'action': 'HIDE',
-                                  'variant': 'ghost',
-                                  'label': 'Dismiss',
-                                },
-                              ],
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'message': '@entity.message',
-                              'type': 'alert',
-                              'variant': '@entity.notificationType',
-                            },
-                            {
-                              'type': 'toast-slot',
-                            },
-                            {
-                              'variant': 'warning',
-                              'message': '@entity.message',
-                              'type': 'alert',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'icon': 'file-search',
-                          'href': '/review',
-                        },
-                        {
-                          'href': '/analysis',
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                          'href': '/issues',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'visible',
-                'to': 'hidden',
-                'event': 'HIDE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'AnalysisAgent',
-          'category': 'interaction',
-          'linkedEntity': 'Analysis',
-          'emits': [
-            {
-              'event': 'SHOW',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'notificationType',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisLoaded',
-              'description': 'Fired when Analysis finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Analysis]',
-                },
-              ],
-            },
-            {
-              'event': 'AnalysisLoadFailed',
-              'description': 'Fired when Analysis fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CLASSIFIED',
-              'triggers': 'CLASSIFIED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'InputClassifier',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'classifying',
-              },
-              {
-                'name': 'classified',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CLASSIFY',
-                'name': 'Do Classify',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLASSIFIED',
-                'name': 'Classified',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'SHOW',
-                'name': 'Show',
-              },
-              {
-                'key': 'AnalysisLoaded',
-                'name': 'Analysis loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Analysis]',
-                  },
-                ],
-              },
-              {
-                'key': 'AnalysisLoadFailed',
-                'name': 'Analysis load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Analysis',
-                    {
-                      'emit': {
-                        'failure': 'AnalysisLoadFailed',
-                        'success': 'AnalysisLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'title': 'Classifier',
-                          'description': 'Classifier is ready',
-                          'type': 'empty-state',
-                          'icon': 'tag',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'label': 'Review',
-                          'href': '/review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'classifying',
-                'event': 'DO_CLASSIFY',
-                'effects': [
-                  [
-                    'agent/generate',
-                    [
-                      'str/concat',
-                      'Classify the following text into one of these categories: ',
-                      'schema, component, trait, page, behavior, style',
-                      '. Text: ',
-                      '@entity.input',
-                      '. Respond with JSON: {"category": "...", "confidence": 0.0-1.0}',
                     ],
-                  ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'classifying',
-                'event': 'CLASSIFIED',
-                'effects': [
-                  [
-                    'agent/generate',
-                    [
-                      'str/concat',
-                      'Classify the following text into one of these categories: ',
-                      'schema, component, trait, page, behavior, style',
-                      '. Text: ',
-                      '@entity.input',
-                      '. Respond with JSON: {"category": "...", "confidence": 0.0-1.0}',
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ReviewRagLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
                     ],
-                  ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'brain',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'RAG Pipeline',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'tabs',
+                            'defaultActiveTab': 'query',
+                            'tabs': [
+                              {
+                                'label': 'Query',
+                                'value': 'query',
+                              },
+                              {
+                                'value': 'sources',
+                                'label': 'Sources',
+                              },
+                              {
+                                'label': 'Response',
+                                'value': 'response',
+                              },
+                            ],
+                            'tabChangeEvent': 'SELECT_TAB',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'fields': [],
+                            'renderItem': [
+                              'fn',
+                              'item',
+                              {
+                                'direction': 'vertical',
+                                'children': [
+                                  {
+                                    'variant': 'h4',
+                                    'content': '@item.query',
+                                    'type': 'typography',
+                                  },
+                                  {
+                                    'variant': 'caption',
+                                    'color': 'muted',
+                                    'type': 'typography',
+                                    'content': '@item.query',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                              },
+                            ],
+                            'className': 'transition-shadow hover:shadow-md cursor-pointer',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
                 ],
-              },
-              {
-                'from': 'classifying',
-                'to': 'classified',
-                'event': 'DO_CLASSIFY',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.category',
-                    '@payload.data.input',
-                  ],
-                  [
-                    'emit',
-                    'SHOW',
-                    {
-                      'message': 'Input classified',
-                      'notificationType': 'success',
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ReviewRagLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Failed to load RAG pipeline',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                        'variant': 'body',
+                      },
+                      {
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
+                        'variant': 'primary',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'SELECT_TAB',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewRag',
+                  {
+                    'emit': {
+                      'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'classified',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.input',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.category',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.confidence',
-                    0,
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Analysis',
-          'path': '/analysis',
-          'traits': [
-            {
-              'ref': 'InputClassifier',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReviewCompletionOrbital',
-      uses: [],
-      entity: {
-        'name': 'ReviewCompletion',
-        'persistence': 'runtime',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'prompt',
-            'type': 'string',
-          },
-          {
-            'name': 'response',
-            'type': 'string',
-          },
-          {
-            'name': 'provider',
-            'type': 'string',
-          },
-          {
-            'name': 'model',
-            'type': 'string',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'message',
-            'type': 'string',
-          },
-          {
-            'name': 'notificationType',
-            'type': 'string',
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'ReviewCompletionFlow',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewCompletion',
-          'emits': [
-            {
-              'event': 'GENERATED',
-            },
-            {
-              'event': 'ReviewCompletionLoadFailed',
-              'description': 'Fired when ReviewCompletion fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionLoaded',
-              'description': 'Fired when ReviewCompletion finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewCompletion]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RagMemoryLifecycle',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewRag',
+        'emits': [
+          {
+            'event': 'ReviewRagLoaded',
+            'description': 'Fired when ReviewRag finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'GENERATE',
-                'name': 'Generate',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'GENERATED',
-                'name': 'Generated',
-              },
-              {
-                'key': 'ReviewCompletionLoadFailed',
-                'name': 'ReviewCompletion load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionLoaded',
-                'name': 'ReviewCompletion loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[ReviewCompletion]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionSaveFailed',
-                'name': 'ReviewCompletion save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionSaved',
-                'name': 'ReviewCompletion saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.model',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.provider',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewCompletion',
-                    {
-                      'emit': {
-                        'success': 'ReviewCompletionLoaded',
-                        'failure': 'ReviewCompletionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'sparkles',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'ReviewCompletion',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                },
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Open',
-                                  'icon': 'sparkles',
-                                  'type': 'button',
-                                  'action': 'GENERATE',
-                                },
-                              ],
-                              'type': 'stack',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'empty-state',
-                              'title': 'Nothing open',
-                              'icon': 'sparkles',
-                              'description': 'Click Open to view details in a modal overlay.',
-                            },
-                          ],
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'icon': 'file-search',
-                          'href': '/review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'GENERATE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'sparkles',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'ReviewCompletion',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'badge',
-                              'label': '@entity.provider',
-                            },
-                            {
-                              'label': '@entity.model',
-                              'type': 'badge',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'prompt',
-                          ],
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewCompletion',
-                    {
-                      'emit': {
-                        'failure': 'ReviewCompletionLoadFailed',
-                        'success': 'ReviewCompletionLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'label': 'Review',
-                          'href': '/review',
-                          'icon': 'file-search',
-                        },
-                        {
-                          'icon': 'tag',
-                          'href': '/analysis',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'href': '/issues',
-                          'icon': 'alert-triangle',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'sparkles',
-                                    },
-                                    {
-                                      'content': 'ReviewCompletion',
-                                      'type': 'typography',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'action': 'GENERATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'sparkles',
-                                  'label': 'Open',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'empty-state',
-                              'description': 'Click Open to view details in a modal overlay.',
-                              'icon': 'sparkles',
-                              'title': 'Nothing open',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'ReviewCompletion',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ReviewCompletionSaved',
-                        'failure': 'ReviewCompletionSaveFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'emit',
-                    'GENERATED',
-                  ],
-                  [
-                    'fetch',
-                    'ReviewCompletion',
-                    {
-                      'emit': {
-                        'failure': 'ReviewCompletionLoadFailed',
-                        'success': 'ReviewCompletionLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'name': 'sparkles',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'ReviewCompletion',
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'type': 'button',
-                                  'action': 'GENERATE',
-                                  'icon': 'sparkles',
-                                  'variant': 'primary',
-                                  'label': 'Open',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'empty-state',
-                              'icon': 'sparkles',
-                              'title': 'Nothing open',
-                              'description': 'Click Open to view details in a modal overlay.',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
+                'name': 'data',
+                'type': '[ReviewRag]',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ReviewCompletionNotification',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewCompletion',
-          'emits': [
-            {
-              'event': 'ReviewCompletionLoaded',
-              'description': 'Fired when ReviewCompletion finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewCompletion]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionLoadFailed',
-              'description': 'Fired when ReviewCompletion fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'hidden',
-                'isInitial': true,
-              },
-              {
-                'name': 'visible',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SHOW',
-                'name': 'Show',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'notificationType',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'HIDE',
-                'name': 'Hide',
-              },
-              {
-                'key': 'ReviewCompletionLoaded',
-                'name': 'ReviewCompletion loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[ReviewCompletion]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionLoadFailed',
-                'name': 'ReviewCompletion load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'hidden',
-                'to': 'hidden',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewCompletion',
-                    {
-                      'emit': {
-                        'success': 'ReviewCompletionLoaded',
-                        'failure': 'ReviewCompletionLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'hidden',
-                'to': 'visible',
-                'event': 'SHOW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '@payload.message',
-                  ],
-                  [
-                    'set',
-                    '@entity.notificationType',
-                    '@payload.notificationType',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                        },
-                        {
-                          'label': 'Issues',
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'sparkles',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'ReviewCompletion Status',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'direction': 'horizontal',
-                                },
-                                {
-                                  'type': 'button',
-                                  'action': 'HIDE',
-                                  'icon': 'x',
-                                  'label': 'Dismiss',
-                                  'variant': 'ghost',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'align': 'center',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': '@entity.notificationType',
-                              'message': '@entity.message',
-                            },
-                            {
-                              'type': 'toast-slot',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': 'warning',
-                              'message': '@entity.message',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'visible',
-                'to': 'visible',
-                'event': 'SHOW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '@payload.message',
-                  ],
-                  [
-                    'set',
-                    '@entity.notificationType',
-                    '@payload.notificationType',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'icon': 'file-search',
-                          'href': '/review',
-                          'label': 'Review',
-                        },
-                        {
-                          'label': 'Analysis',
-                          'href': '/analysis',
-                          'icon': 'tag',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                          'label': 'Issues',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'align': 'center',
-                              'justify': 'between',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'sparkles',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'ReviewCompletion Status',
-                                    },
-                                  ],
-                                  'align': 'center',
-                                },
-                                {
-                                  'action': 'HIDE',
-                                  'label': 'Dismiss',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'icon': 'x',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'variant': '@entity.notificationType',
-                              'message': '@entity.message',
-                              'type': 'alert',
-                            },
-                            {
-                              'type': 'toast-slot',
-                            },
-                            {
-                              'variant': 'warning',
-                              'type': 'alert',
-                              'message': '@entity.message',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'visible',
-                'to': 'hidden',
-                'event': 'HIDE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.message',
-                    '',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ReviewCompletionAgent',
-          'category': 'interaction',
-          'linkedEntity': 'ReviewCompletion',
-          'emits': [
-            {
-              'event': 'SHOW',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'notificationType',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionLoaded',
-              'description': 'Fired when ReviewCompletion finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[ReviewCompletion]',
-                },
-              ],
-            },
-            {
-              'event': 'ReviewCompletionLoadFailed',
-              'description': 'Fired when ReviewCompletion fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'GENERATED',
-              'triggers': 'GENERATED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ReviewCompletionFlow',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'generating',
-              },
-              {
-                'name': 'completed',
-              },
+          {
+            'event': 'ReviewRagLoadFailed',
+            'description': 'Fired when ReviewRag fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
               {
                 'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
               },
             ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_GENERATE',
-                'name': 'Do Generate',
-                'payloadSchema': [
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ReviewRagLoaded',
+              'name': 'ReviewRag loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewRag]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagLoadFailed',
+              'name': 'ReviewRag load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewRag',
                   {
-                    'name': 'data',
-                    'type': 'string',
+                    'emit': {
+                      'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'GENERATED',
-                'name': 'Generated',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'SHOW',
-                'name': 'Show',
-              },
-              {
-                'key': 'ReviewCompletionLoaded',
-                'name': 'ReviewCompletion loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[ReviewCompletion]',
-                  },
-                ],
-              },
-              {
-                'key': 'ReviewCompletionLoadFailed',
-                'name': 'ReviewCompletion load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ReviewCompletion',
-                    {
-                      'emit': {
-                        'success': 'ReviewCompletionLoaded',
-                        'failure': 'ReviewCompletionLoadFailed',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
                       },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'Loading…',
+                        'color': 'muted',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReviewRagLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'brain',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'ReviewRag Manager',
+                                  },
+                                ],
+                              },
+                            ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'fields': [
+                              {
+                                'name': 'content',
+                                'label': 'Content',
+                                'variant': 'h4',
+                                'icon': 'brain',
+                              },
+                              {
+                                'name': 'category',
+                                'label': 'Category',
+                                'colorMap': {
+                                  'scheduled': 'warning',
+                                  'disabled': 'neutral',
+                                  'done': 'success',
+                                  'failed': 'destructive',
+                                  'active': 'success',
+                                  'draft': 'warning',
+                                  'inactive': 'neutral',
+                                  'error': 'destructive',
+                                  'completed': 'success',
+                                  'cancelled': 'destructive',
+                                  'pending': 'warning',
+                                  'archived': 'neutral',
+                                },
+                                'variant': 'badge',
+                              },
+                              {
+                                'label': 'Strength',
+                                'name': 'strength',
+                                'variant': 'caption',
+                              },
+                            ],
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                          },
+                        ],
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReviewRagLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'type': 'icon',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'content': 'Failed to load reviewrag',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'body',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'INIT',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                        'label': 'Retry',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RagSearchLifecycle',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewRag',
+        'emits': [
+          {
+            'event': 'ReviewRagLoaded',
+            'description': 'Fired when ReviewRag finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewRag]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewRagLoadFailed',
+            'description': 'Fired when ReviewRag fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ReviewRagLoaded',
+              'name': 'ReviewRag loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewRag]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagLoadFailed',
+              'name': 'ReviewRag load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewRag',
+                  {
+                    'emit': {
+                      'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
                     },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'description': 'Completion is ready',
-                          'title': 'Completion',
-                          'type': 'empty-state',
-                          'icon': 'sparkles',
-                        },
-                      ],
-                      'appName': 'Code Reviewer',
-                      'navItems': [
-                        {
-                          'href': '/review',
-                          'icon': 'file-search',
-                          'label': 'Review',
-                        },
-                        {
-                          'href': '/analysis',
-                          'icon': 'tag',
-                          'label': 'Analysis',
-                        },
-                        {
-                          'icon': 'alert-triangle',
-                          'href': '/issues',
-                          'label': 'Issues',
-                        },
-                      ],
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'content': 'Loading…',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                      },
+                    ],
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReviewRagLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'justify': 'between',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'search',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'ReviewRag',
+                                  },
+                                ],
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'fields': [
+                              {
+                                'name': 'query',
+                                'variant': 'h4',
+                                'label': 'Query',
+                                'icon': 'search',
+                              },
+                              {
+                                'label': 'Language',
+                                'name': 'language',
+                                'variant': 'badge',
+                                'colorMap': {
+                                  'active': 'success',
+                                  'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'error': 'destructive',
+                                  'inactive': 'neutral',
+                                  'done': 'success',
+                                  'draft': 'warning',
+                                  'disabled': 'neutral',
+                                  'completed': 'success',
+                                  'failed': 'destructive',
+                                  'archived': 'neutral',
+                                  'cancelled': 'destructive',
+                                },
+                              },
+                              {
+                                'name': 'resultCount',
+                                'variant': 'caption',
+                                'label': 'Result Count',
+                              },
+                            ],
+                            'type': 'data-grid',
+                            'entity': '@payload.data',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ReviewRagLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Failed to load reviewrag',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
+                      },
+                      {
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RagCompletionFlow',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewRag',
+        'emits': [
+          {
+            'event': 'SAVE',
+            'scope': 'internal',
+          },
+          {
+            'event': 'GENERATED',
+            'scope': 'internal',
+          },
+          {
+            'event': 'GENERATE',
+          },
+          {
+            'event': 'ReviewRagLoadFailed',
+            'description': 'Fired when ReviewRag fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewRagLoaded',
+            'description': 'Fired when ReviewRag finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewRag]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewRagSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewRagSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'GENERATE',
+              'name': 'Generate',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'GENERATED',
+              'name': 'Generated',
+            },
+            {
+              'key': 'ReviewRagLoadFailed',
+              'name': 'ReviewRag load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagLoaded',
+              'name': 'ReviewRag loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewRag]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagSaveFailed',
+              'name': 'ReviewRag save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewRagSaved',
+              'name': 'ReviewRag saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.model',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.provider',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'ReviewRag',
+                  {
+                    'emit': {
+                      'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'generating',
-                'event': 'DO_GENERATE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'generating',
-                  ],
-                  [
-                    'agent/generate',
-                    '@entity.prompt',
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'sparkles',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'ReviewRag',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'md',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Open',
+                                'variant': 'primary',
+                                'icon': 'sparkles',
+                                'action': 'GENERATE',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'icon': 'sparkles',
+                            'title': 'Nothing open',
+                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'generating',
-                'event': 'GENERATED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'generating',
-                  ],
-                  [
-                    'agent/generate',
-                    '@entity.prompt',
-                  ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'GENERATE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'sparkles',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'ReviewRag',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'label': '@entity.provider',
+                            'type': 'badge',
+                          },
+                          {
+                            'label': '@entity.model',
+                            'type': 'badge',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                      },
+                      {
+                        'fields': [
+                          'prompt',
+                        ],
+                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
+                        'mode': 'create',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
                 ],
-              },
-              {
-                'from': 'generating',
-                'to': 'completed',
-                'event': 'DO_GENERATE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.response',
-                    '@payload.data.prompt',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'completed',
-                  ],
-                  [
-                    'emit',
-                    'SHOW',
-                    {
-                      'notificationType': 'success',
-                      'message': 'Review complete',
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+                [
+                  'fetch',
+                  'ReviewRag',
+                  {
+                    'emit': {
+                      'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
                     },
-                  ],
+                  },
                 ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'justify': 'between',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'name': 'sparkles',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'ReviewRag',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'label': 'Open',
+                                'action': 'GENERATE',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'icon': 'sparkles',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'icon': 'sparkles',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'ReviewRag',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ReviewRagSaved',
+                      'failure': 'ReviewRagSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'emit',
+                  'GENERATED',
+                ],
+                [
+                  'fetch',
+                  'ReviewRag',
+                  {
+                    'emit': {
+                      'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'ReviewRag',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Open',
+                                'action': 'GENERATE',
+                                'variant': 'primary',
+                                'icon': 'sparkles',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'icon': 'sparkles',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Rag',
+        'path': '/rag',
+        'traits': [
+          {
+            'ref': 'ReviewRagRag',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the AnalysisOrbital orbital.
+ *
+ * Canonical entity: Analysis.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdAgentReviewerAnalysisOrbitalParams {
+  /** Override the canonical entity name (default: 'Analysis'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AnalysisOrbital orbital with consumer params. */
+export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysisOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Analysis';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AnalysisOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'input',
+          'type': 'string',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'confidence',
+          'type': 'number',
+        },
+        {
+          'name': 'model',
+          'type': 'string',
+        },
+        {
+          'name': 'message',
+          'type': 'string',
+        },
+        {
+          'name': 'notificationType',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'InputClassifier',
+        'category': 'interaction',
+        'linkedEntity': 'Analysis',
+        'emits': [
+          {
+            'event': 'CLASSIFIED',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'category',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CLASSIFIED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'category',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisLoadFailed',
+            'description': 'Fired when Analysis fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
               },
               {
-                'from': 'generating',
-                'to': 'error',
-                'event': 'RESET',
-                'guard': [
-                  '=',
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisLoaded',
+            'description': 'Fired when Analysis finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Analysis]',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CLASSIFY',
+              'name': 'Classify',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLASSIFIED',
+              'name': 'Classified',
+            },
+            {
+              'key': 'AnalysisLoadFailed',
+              'name': 'Analysis load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AnalysisLoaded',
+              'name': 'Analysis loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Analysis]',
+                },
+              ],
+            },
+            {
+              'key': 'AnalysisSaveFailed',
+              'name': 'Analysis save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AnalysisSaved',
+              'name': 'Analysis saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Analysis',
+                  {
+                    'emit': {
+                      'failure': 'AnalysisLoadFailed',
+                      'success': 'AnalysisLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'gap': 'md',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'tag',
+                                  },
+                                  {
+                                    'content': 'Analysis',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'label': 'Open',
+                                'icon': 'tag',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'action': 'CLASSIFY',
+                              },
+                            ],
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'icon': 'tag',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CLASSIFY',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'tag',
+                          },
+                          {
+                            'content': 'Analysis',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'content': 'Categories:',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'badge',
+                            'label': 'schema',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'type': 'badge',
+                            'label': 'component',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'type': 'badge',
+                            'label': 'trait',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'type': 'badge',
+                            'label': 'page',
+                          },
+                          {
+                            'label': 'behavior',
+                            'type': 'badge',
+                            'variant': 'secondary',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'label': 'style',
+                            'type': 'badge',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'mode': 'create',
+                        'fields': [
+                          'input',
+                        ],
+                        'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+                [
+                  'fetch',
+                  'Analysis',
+                  {
+                    'emit': {
+                      'success': 'AnalysisLoaded',
+                      'failure': 'AnalysisLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'name': 'tag',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Analysis',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                              },
+                              {
+                                'variant': 'primary',
+                                'icon': 'tag',
+                                'type': 'button',
+                                'action': 'CLASSIFY',
+                                'label': 'Open',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'icon': 'tag',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Analysis',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'AnalysisSaveFailed',
+                      'success': 'AnalysisSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'emit',
+                  'CLASSIFIED',
+                ],
+                [
+                  'fetch',
+                  'Analysis',
+                  {
+                    'emit': {
+                      'success': 'AnalysisLoaded',
+                      'failure': 'AnalysisLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'gap': 'md',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'name': 'tag',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Analysis',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'icon': 'tag',
+                                'action': 'CLASSIFY',
+                                'label': 'Open',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'empty-state',
+                            'icon': 'tag',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'AnalysisNotification',
+        'category': 'interaction',
+        'linkedEntity': 'Analysis',
+        'emits': [
+          {
+            'event': 'AnalysisLoaded',
+            'description': 'Fired when Analysis finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Analysis]',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisLoadFailed',
+            'description': 'Fired when Analysis fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'hidden',
+              'isInitial': true,
+            },
+            {
+              'name': 'visible',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SHOW',
+              'name': 'Show',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+                {
+                  'name': 'notificationType',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'HIDE',
+              'name': 'Hide',
+            },
+            {
+              'key': 'AnalysisLoaded',
+              'name': 'Analysis loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Analysis]',
+                },
+              ],
+            },
+            {
+              'key': 'AnalysisLoadFailed',
+              'name': 'Analysis load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'hidden',
+              'to': 'hidden',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Analysis',
+                  {
+                    'emit': {
+                      'success': 'AnalysisLoaded',
+                      'failure': 'AnalysisLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'hidden',
+              'to': 'visible',
+              'event': 'SHOW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '@payload.message',
+                ],
+                [
+                  'set',
+                  '@entity.notificationType',
+                  '@payload.notificationType',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'tag',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'Analysis Result',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                              },
+                              {
+                                'icon': 'x',
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'action': 'HIDE',
+                                'label': 'Dismiss',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'align': 'center',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
+                            'message': '@entity.message',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'warning',
+                            'message': '@entity.message',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'visible',
+              'to': 'visible',
+              'event': 'SHOW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '@payload.message',
+                ],
+                [
+                  'set',
+                  '@entity.notificationType',
+                  '@payload.notificationType',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'tag',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Analysis Result',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                              },
+                              {
+                                'type': 'button',
+                                'icon': 'x',
+                                'action': 'HIDE',
+                                'variant': 'ghost',
+                                'label': 'Dismiss',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'message': '@entity.message',
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'variant': 'warning',
+                            'message': '@entity.message',
+                            'type': 'alert',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'visible',
+              'to': 'hidden',
+              'event': 'HIDE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'AnalysisAgent',
+        'category': 'interaction',
+        'linkedEntity': 'Analysis',
+        'emits': [
+          {
+            'event': 'SHOW',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'notificationType',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisLoaded',
+            'description': 'Fired when Analysis finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Analysis]',
+              },
+            ],
+          },
+          {
+            'event': 'AnalysisLoadFailed',
+            'description': 'Fired when Analysis fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CLASSIFIED',
+            'triggers': 'CLASSIFIED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InputClassifier',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'classifying',
+            },
+            {
+              'name': 'classified',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CLASSIFY',
+              'name': 'Do Classify',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLASSIFIED',
+              'name': 'Classified',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'SHOW',
+              'name': 'Show',
+            },
+            {
+              'key': 'AnalysisLoaded',
+              'name': 'Analysis loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Analysis]',
+                },
+              ],
+            },
+            {
+              'key': 'AnalysisLoadFailed',
+              'name': 'Analysis load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Analysis',
+                  {
+                    'emit': {
+                      'failure': 'AnalysisLoadFailed',
+                      'success': 'AnalysisLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'title': 'Classifier',
+                        'description': 'Classifier is ready',
+                        'type': 'empty-state',
+                        'icon': 'tag',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'classifying',
+              'event': 'DO_CLASSIFY',
+              'effects': [
+                [
+                  'agent/generate',
+                  [
+                    'str/concat',
+                    'Classify the following text into one of these categories: ',
+                    'schema, component, trait, page, behavior, style',
+                    '. Text: ',
+                    '@entity.input',
+                    '. Respond with JSON: {"category": "...", "confidence": 0.0-1.0}',
+                  ],
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'classifying',
+              'event': 'CLASSIFIED',
+              'effects': [
+                [
+                  'agent/generate',
+                  [
+                    'str/concat',
+                    'Classify the following text into one of these categories: ',
+                    'schema, component, trait, page, behavior, style',
+                    '. Text: ',
+                    '@entity.input',
+                    '. Respond with JSON: {"category": "...", "confidence": 0.0-1.0}',
+                  ],
+                ],
+              ],
+            },
+            {
+              'from': 'classifying',
+              'to': 'classified',
+              'event': 'DO_CLASSIFY',
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '@payload.data.input',
+                ],
+                [
+                  'emit',
+                  'SHOW',
+                  {
+                    'message': 'Input classified',
+                    'notificationType': 'success',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'classified',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.input',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.confidence',
+                  0,
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Analysis',
+        'path': '/analysis',
+        'traits': [
+          {
+            'ref': 'InputClassifier',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ReviewCompletionOrbital orbital.
+ *
+ * Canonical entity: ReviewCompletion.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdAgentReviewerReviewCompletionOrbitalParams {
+  /** Override the canonical entity name (default: 'ReviewCompletion'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ReviewCompletionOrbital orbital with consumer params. */
+export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewerReviewCompletionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ReviewCompletion';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReviewCompletionOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'prompt',
+          'type': 'string',
+        },
+        {
+          'name': 'response',
+          'type': 'string',
+        },
+        {
+          'name': 'provider',
+          'type': 'string',
+        },
+        {
+          'name': 'model',
+          'type': 'string',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'message',
+          'type': 'string',
+        },
+        {
+          'name': 'notificationType',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'ReviewCompletionFlow',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewCompletion',
+        'emits': [
+          {
+            'event': 'GENERATED',
+          },
+          {
+            'event': 'ReviewCompletionLoadFailed',
+            'description': 'Fired when ReviewCompletion fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionLoaded',
+            'description': 'Fired when ReviewCompletion finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewCompletion]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'GENERATE',
+              'name': 'Generate',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'GENERATED',
+              'name': 'Generated',
+            },
+            {
+              'key': 'ReviewCompletionLoadFailed',
+              'name': 'ReviewCompletion load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewCompletionLoaded',
+              'name': 'ReviewCompletion loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewCompletion]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewCompletionSaveFailed',
+              'name': 'ReviewCompletion save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewCompletionSaved',
+              'name': 'ReviewCompletion saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.model',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.provider',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'ReviewCompletion',
+                  {
+                    'emit': {
+                      'success': 'ReviewCompletionLoaded',
+                      'failure': 'ReviewCompletionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'ReviewCompletion',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'gap': 'md',
+                              },
+                              {
+                                'variant': 'primary',
+                                'label': 'Open',
+                                'icon': 'sparkles',
+                                'type': 'button',
+                                'action': 'GENERATE',
+                              },
+                            ],
+                            'type': 'stack',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'GENERATE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'sparkles',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'ReviewCompletion',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'badge',
+                            'label': '@entity.provider',
+                          },
+                          {
+                            'label': '@entity.model',
+                            'type': 'badge',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'prompt',
+                        ],
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+                [
+                  'fetch',
+                  'ReviewCompletion',
+                  {
+                    'emit': {
+                      'failure': 'ReviewCompletionLoadFailed',
+                      'success': 'ReviewCompletionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'icon': 'tag',
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'content': 'ReviewCompletion',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'action': 'GENERATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'sparkles',
+                                'label': 'Open',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'icon': 'sparkles',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'ReviewCompletion',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ReviewCompletionSaved',
+                      'failure': 'ReviewCompletionSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'emit',
+                  'GENERATED',
+                ],
+                [
+                  'fetch',
+                  'ReviewCompletion',
+                  {
+                    'emit': {
+                      'failure': 'ReviewCompletionLoadFailed',
+                      'success': 'ReviewCompletionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'sparkles',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'ReviewCompletion',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'md',
+                              },
+                              {
+                                'type': 'button',
+                                'action': 'GENERATE',
+                                'icon': 'sparkles',
+                                'variant': 'primary',
+                                'label': 'Open',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'empty-state',
+                            'icon': 'sparkles',
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ReviewCompletionNotification',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewCompletion',
+        'emits': [
+          {
+            'event': 'ReviewCompletionLoaded',
+            'description': 'Fired when ReviewCompletion finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewCompletion]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionLoadFailed',
+            'description': 'Fired when ReviewCompletion fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'hidden',
+              'isInitial': true,
+            },
+            {
+              'name': 'visible',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SHOW',
+              'name': 'Show',
+              'payloadSchema': [
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+                {
+                  'name': 'notificationType',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'HIDE',
+              'name': 'Hide',
+            },
+            {
+              'key': 'ReviewCompletionLoaded',
+              'name': 'ReviewCompletion loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewCompletion]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewCompletionLoadFailed',
+              'name': 'ReviewCompletion load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'hidden',
+              'to': 'hidden',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewCompletion',
+                  {
+                    'emit': {
+                      'success': 'ReviewCompletionLoaded',
+                      'failure': 'ReviewCompletionLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'hidden',
+              'to': 'visible',
+              'event': 'SHOW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '@payload.message',
+                ],
+                [
+                  'set',
+                  '@entity.notificationType',
+                  '@payload.notificationType',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'ReviewCompletion Status',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'type': 'button',
+                                'action': 'HIDE',
+                                'icon': 'x',
+                                'label': 'Dismiss',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'align': 'center',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
+                            'message': '@entity.message',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'warning',
+                            'message': '@entity.message',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'visible',
+              'to': 'visible',
+              'event': 'SHOW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '@payload.message',
+                ],
+                [
+                  'set',
+                  '@entity.notificationType',
+                  '@payload.notificationType',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                        'label': 'Issues',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'align': 'center',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'ReviewCompletion Status',
+                                  },
+                                ],
+                                'align': 'center',
+                              },
+                              {
+                                'action': 'HIDE',
+                                'label': 'Dismiss',
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'icon': 'x',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'variant': '@entity.notificationType',
+                            'message': '@entity.message',
+                            'type': 'alert',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'variant': 'warning',
+                            'type': 'alert',
+                            'message': '@entity.message',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'visible',
+              'to': 'hidden',
+              'event': 'HIDE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.message',
+                  '',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ReviewCompletionAgent',
+        'category': 'interaction',
+        'linkedEntity': 'ReviewCompletion',
+        'emits': [
+          {
+            'event': 'SHOW',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'notificationType',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionLoaded',
+            'description': 'Fired when ReviewCompletion finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ReviewCompletion]',
+              },
+            ],
+          },
+          {
+            'event': 'ReviewCompletionLoadFailed',
+            'description': 'Fired when ReviewCompletion fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'GENERATED',
+            'triggers': 'GENERATED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ReviewCompletionFlow',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'generating',
+            },
+            {
+              'name': 'completed',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_GENERATE',
+              'name': 'Do Generate',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'GENERATED',
+              'name': 'Generated',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'SHOW',
+              'name': 'Show',
+            },
+            {
+              'key': 'ReviewCompletionLoaded',
+              'name': 'ReviewCompletion loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[ReviewCompletion]',
+                },
+              ],
+            },
+            {
+              'key': 'ReviewCompletionLoadFailed',
+              'name': 'ReviewCompletion load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ReviewCompletion',
+                  {
+                    'emit': {
+                      'success': 'ReviewCompletionLoaded',
+                      'failure': 'ReviewCompletionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'description': 'Completion is ready',
+                        'title': 'Completion',
+                        'type': 'empty-state',
+                        'icon': 'sparkles',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                        'label': 'Issues',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'generating',
+              'event': 'DO_GENERATE',
+              'effects': [
+                [
+                  'set',
                   '@entity.status',
                   'generating',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'error',
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    'Generation was cancelled',
-                  ],
+                [
+                  'agent/generate',
+                  '@entity.prompt',
                 ],
-              },
-              {
-                'from': 'completed',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.response',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.prompt',
-                    '',
-                  ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'generating',
+              'event': 'GENERATED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'generating',
                 ],
-              },
-              {
-                'from': 'error',
-                'to': 'generating',
-                'event': 'RETRY',
-                'guard': [
-                  '=',
+                [
+                  'agent/generate',
+                  '@entity.prompt',
+                ],
+              ],
+            },
+            {
+              'from': 'generating',
+              'to': 'completed',
+              'event': 'DO_GENERATE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.response',
+                  '@payload.data.prompt',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'completed',
+                ],
+                [
+                  'emit',
+                  'SHOW',
+                  {
+                    'notificationType': 'success',
+                    'message': 'Review complete',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'generating',
+              'to': 'error',
+              'event': 'RESET',
+              'guard': [
+                '=',
+                '@entity.status',
+                'generating',
+              ],
+              'effects': [
+                [
+                  'set',
                   '@entity.status',
                   'error',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'generating',
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    '',
-                  ],
-                  [
-                    'agent/generate',
-                    '@entity.prompt',
-                  ],
+                [
+                  'set',
+                  '@entity.error',
+                  'Generation was cancelled',
                 ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'idle',
-                  ],
-                  [
-                    'set',
-                    '@entity.error',
-                    '',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Completion',
-          'path': '/completion',
-          'traits': [
+              ],
+            },
             {
-              'ref': 'ReviewCompletionFlow',
+              'from': 'completed',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.response',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.prompt',
+                  '',
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'generating',
+              'event': 'RETRY',
+              'guard': [
+                '=',
+                '@entity.status',
+                'error',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'generating',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+                [
+                  'agent/generate',
+                  '@entity.prompt',
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'idle',
+                ],
+                [
+                  'set',
+                  '@entity.error',
+                  '',
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReviewNavOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-tabs',
-          'as': 'Tabs',
         },
-      ],
-      entity: {
-        'name': 'ReviewNav',
-        'persistence': 'runtime',
-        'fields': [
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Completion',
+        'path': '/completion',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'target',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'issues',
-            'type': 'string',
-            'default': '[]',
-          },
-          {
-            'name': 'suggestions',
-            'type': 'string',
-            'default': '[]',
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'reviewStatus',
-            'type': 'string',
-            'default': 'idle',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
-            'default': '',
+            'ref': 'ReviewCompletionFlow',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'Tabs.traits.TabsItemTabs',
-          'name': 'ReviewerTabs',
-          'linkedEntity': 'Review',
-        }),
-      ],
-      pages: [
-        {
-          'name': 'ReviewerNav',
-          'path': '/reviewer/nav',
-          'traits': [
-            {
-              'ref': 'ReviewerTabs',
-            },
-          ],
-        } as never,
-      ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ReviewIssueOrbital',
-      uses: [
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ReviewNavOrbital orbital.
+ *
+ * Canonical entity: ReviewNav.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdAgentReviewerReviewNavOrbitalParams {
+  /** Override the canonical entity name (default: 'ReviewNav'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ReviewNavOrbital orbital with consumer params. */
+export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewNavOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ReviewNav';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReviewNavOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-tabs',
+        'as': 'Tabs',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'target',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'issues',
+          'type': 'string',
+          'default': '[]',
+        },
+        {
+          'name': 'suggestions',
+          'type': 'string',
+          'default': '[]',
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'reviewStatus',
+          'type': 'string',
+          'default': 'idle',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'ReviewIssue',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'Tabs.traits.TabsItemTabs',
+        'name': 'ReviewerTabs',
+        'linkedEntity': 'Review',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ReviewerNav',
+        'path': '/reviewer/nav',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-          },
-          {
-            'name': 'severity',
-            'type': 'string',
-          },
-          {
-            'name': 'line',
-            'type': 'number',
+            'ref': 'ReviewerTabs',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'IssuesBrowse',
-          'linkedEntity': 'ReviewIssue',
-        }),
-      ],
-      pages: [
-        {
-          'name': 'Issues',
-          'path': '/issues',
-          'traits': [
-            {
-              'ref': 'IssuesBrowse',
-            },
-          ],
-        } as never,
-      ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ReviewIssueOrbital orbital.
+ *
+ * Canonical entity: ReviewIssue.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdAgentReviewerReviewIssueOrbitalParams {
+  /** Override the canonical entity name (default: 'ReviewIssue'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ReviewIssueOrbital orbital with consumer params. */
+export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerReviewIssueOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ReviewIssue';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ReviewIssueOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'severity',
+          'type': 'string',
+        },
+        {
+          'name': 'line',
+          'type': 'number',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'IssuesBrowse',
+        'linkedEntity': 'ReviewIssue',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'Issues',
+        'path': '/issues',
+        'traits': [
+          {
+            'ref': 'IssuesBrowse',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-agent-reviewer — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdAgentReviewerParams {
+  Review?: StdAgentReviewerReviewOrbitalParams;
+  ReviewRag?: StdAgentReviewerReviewRagOrbitalParams;
+  Analysis?: StdAgentReviewerAnalysisOrbitalParams;
+  ReviewCompletion?: StdAgentReviewerReviewCompletionOrbitalParams;
+  ReviewNav?: StdAgentReviewerReviewNavOrbitalParams;
+  ReviewIssue?: StdAgentReviewerReviewIssueOrbitalParams;
+}
+
+/** Whole-organism descriptor (6 orbitals). Composes per-orbital factories. */
+export function stdAgentReviewer(params: StdAgentReviewerParams = {}): OrbitalDefinition[] {
+  return [
+    stdAgentReviewerReviewOrbital(params.Review ?? {}),
+    stdAgentReviewerReviewRagOrbital(params.ReviewRag ?? {}),
+    stdAgentReviewerAnalysisOrbital(params.Analysis ?? {}),
+    stdAgentReviewerReviewCompletionOrbital(params.ReviewCompletion ?? {}),
+    stdAgentReviewerReviewNavOrbital(params.ReviewNav ?? {}),
+    stdAgentReviewerReviewIssueOrbital(params.ReviewIssue ?? {}),
+  ];
 }

@@ -34,2183 +34,2071 @@ export interface StdApiGatewayConfig {
 }
 
 /**
- * Params for the std-api-gateway descriptor helpers.
+ * Tunable params for the RouteOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Route.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdApiGatewayParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdApiGatewayRouteOrbitalParams {
+  /** Override the canonical entity name (default: 'Route'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdApiGatewayConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `ApiGateway.traits.RouteAppLayout`. */
-export function stdApiGatewayRouteAppLayoutTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the RouteOrbital orbital with consumer params. */
+export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Route';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'RouteOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'routes',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'path',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'method',
+          'type': 'string',
+          'default': 'GET',
+          'values': [
+            'GET',
+            'POST',
+            'PUT',
+            'DELETE',
+          ],
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'active',
+          'values': [
+            'active',
+            'disabled',
+          ],
+        },
+        {
+          'name': 'target',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'hits',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'rateLimit',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'RouteAppLayout',
+        'config': {
+          'contentTrait': '@trait.RouteCatalog',
+          'appName': 'API Gateway',
+          'notifications': [],
+          'navItems': [
+            {
+              'label': 'Routes',
+              'icon': 'git-branch',
+              'href': '/routes',
+            },
+            {
+              'label': 'Backends',
+              'icon': 'server',
+              'href': '/backends',
+            },
+            {
+              'label': 'Analytics',
+              'href': '/analytics',
+              'icon': 'bar-chart-2',
+            },
+          ],
+          'searchEvent': 'ROUTE_SEARCH',
+          'notificationClickEvent': 'ROUTE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'ROUTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ROUTE_SEARCH',
+        },
+      }),
+      {
+        'name': 'RouteCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ROUTE_SEARCH',
+            'triggers': 'ROUTE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteAppLayout',
+            },
+          },
+          {
+            'event': 'ROUTE_NOTIFICATIONS_OPEN',
+            'triggers': 'ROUTE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ROUTE_SEARCH',
+              'name': 'Route Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ROUTE_NOTIFICATIONS_OPEN',
+              'name': 'Route Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'git-branch',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Routes',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'label': 'Create Route',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          '@trait.RouteSearch',
+                          '@trait.RouteFilter',
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      '@trait.RouteStats',
+                      '@trait.RouteGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.RouteBrowseList',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ROUTE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ROUTE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'label': 'Back to routes',
+                        'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'RouteSearch',
+        'config': {
+          'event': 'ROUTE_SEARCH',
+          'placeholder': 'Search routes…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'RouteFilter',
+        'config': {
+          'event': 'ROUTE_FILTER',
+          'filters': [
+            {
+              'label': 'Method',
+              'field': 'method',
+              'options': [
+                'GET',
+                'POST',
+                'PUT',
+                'DELETE',
+              ],
+              'filterType': 'select',
+            },
+            {
+              'options': [
+                'active',
+                'disabled',
+              ],
+              'field': 'status',
+              'label': 'Status',
+              'filterType': 'select',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'RouteStats',
+        'config': {
+          'title': 'Routes',
+          'metrics': [
+            {
+              'label': 'Total',
+              'icon': 'git-branch',
+              'variant': 'primary',
+              'format': 'number',
+              'aggregation': 'count',
+            },
+            {
+              'aggregation': 'count',
+              'label': 'Active',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'variant': 'success',
+              'icon': 'check-circle',
+            },
+            {
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'disabled',
+                ],
+              ],
+              'label': 'Disabled',
+              'format': 'number',
+              'variant': 'warning',
+              'icon': 'x-circle',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'RouteGraphs',
+        'config': {
+          'subtitle': 'Distribution across HTTP methods',
+          'categoryField': 'method',
+          'aggregation': 'count',
+          'title': 'Routes by Method',
+          'chartType': 'pie',
+          'height': 240,
+          'showLegend': true,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'RouteBrowseList',
+        'linkedEntity': 'Route',
+        'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
+          'fields': [
+            {
+              'name': 'path',
+              'variant': 'h3',
+              'icon': 'git-branch',
+            },
+            {
+              'name': 'method',
+              'variant': 'badge',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'body',
+              'name': 'target',
+            },
+            {
+              'name': 'hits',
+              'variant': 'caption',
+              'format': 'number',
+              'label': 'Hits',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteFilter',
+            },
+          },
+          {
+            'event': 'ROUTE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RoutePersistor',
+            },
+          },
+          {
+            'event': 'ROUTE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RoutePersistor',
+            },
+          },
+          {
+            'event': 'ROUTE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RoutePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'RouteCreate',
+        'linkedEntity': 'Route',
+        'config': {
+          'icon': 'plus-circle',
+          'title': 'New Route',
+          'mode': 'create',
+          'fields': [
+            'path',
+            'method',
+            'status',
+            'target',
+            'rateLimit',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'RouteEdit',
+        'linkedEntity': 'Route',
+        'config': {
+          'mode': 'edit',
+          'title': 'Edit Route',
+          'icon': 'edit',
+          'fields': [
+            'path',
+            'method',
+            'status',
+            'target',
+            'rateLimit',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'RouteView',
+        'linkedEntity': 'Route',
+        'config': {
+          'icon': 'eye',
+          'title': 'View Route',
+          'mode': 'edit',
+          'fields': [
+            'path',
+            'method',
+            'status',
+            'target',
+            'rateLimit',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'RouteDelete',
+        'linkedEntity': 'Route',
+        'config': {
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Route',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'RoutePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Route',
+        'emits': [
+          {
+            'event': 'ROUTE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ROUTE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ROUTE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RouteDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ROUTE_CREATED',
+              'name': 'Route Created',
+            },
+            {
+              'key': 'ROUTE_UPDATED',
+              'name': 'Route Updated',
+            },
+            {
+              'key': 'ROUTE_DELETED',
+              'name': 'Route Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Route',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ROUTE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Route',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ROUTE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Route',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'ROUTE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'RoutesPage',
+        'path': '/routes',
+        'traits': [
+          {
+            'ref': 'RouteAppLayout',
+          },
+          {
+            'ref': 'RouteCatalog',
+          },
+          {
+            'ref': 'RouteSearch',
+          },
+          {
+            'ref': 'RouteFilter',
+          },
+          {
+            'ref': 'RouteStats',
+          },
+          {
+            'ref': 'RouteGraphs',
+          },
+          {
+            'ref': 'RouteBrowseList',
+          },
+          {
+            'ref': 'RouteCreate',
+          },
+          {
+            'ref': 'RouteEdit',
+          },
+          {
+            'ref': 'RouteView',
+          },
+          {
+            'ref': 'RouteDelete',
+          },
+          {
+            'ref': 'RoutePersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteCatalog`. */
-export function stdApiGatewayRouteCatalogTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteSearch`. */
-export function stdApiGatewayRouteSearchTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteFilter`. */
-export function stdApiGatewayRouteFilterTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteStats`. */
-export function stdApiGatewayRouteStatsTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteGraphs`. */
-export function stdApiGatewayRouteGraphsTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteBrowseList`. */
-export function stdApiGatewayRouteBrowseListTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteCreate`. */
-export function stdApiGatewayRouteCreateTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteEdit`. */
-export function stdApiGatewayRouteEditTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteView`. */
-export function stdApiGatewayRouteViewTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RouteDelete`. */
-export function stdApiGatewayRouteDeleteTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RouteDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ApiGateway.traits.RoutePersistor`. */
-export function stdApiGatewayRoutePersistorTrait(params: StdApiGatewayParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.RoutePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `ApiGateway.pages.RoutesPage`. */
-export function stdApiGatewayPage(params: StdApiGatewayParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.RoutesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdApiGateway(params: StdApiGatewayParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Route';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'RouteOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Route',
-        'collection': 'routes',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'path',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'method',
-            'type': 'string',
-            'default': 'GET',
-            'values': [
-              'GET',
-              'POST',
-              'PUT',
-              'DELETE',
-            ],
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'active',
-            'values': [
-              'active',
-              'disabled',
-            ],
-          },
-          {
-            'name': 'target',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'hits',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'rateLimit',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'RouteAppLayout',
-          'config': {
-            'contentTrait': '@trait.RouteCatalog',
-            'appName': 'API Gateway',
-            'notifications': [],
-            'navItems': [
-              {
-                'label': 'Routes',
-                'icon': 'git-branch',
-                'href': '/routes',
-              },
-              {
-                'label': 'Backends',
-                'icon': 'server',
-                'href': '/backends',
-              },
-              {
-                'label': 'Analytics',
-                'href': '/analytics',
-                'icon': 'bar-chart-2',
-              },
-            ],
-            'searchEvent': 'ROUTE_SEARCH',
-            'notificationClickEvent': 'ROUTE_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'ROUTE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'ROUTE_SEARCH',
-          },
-        }),
-        {
-          'name': 'RouteCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ROUTE_SEARCH',
-              'triggers': 'ROUTE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteAppLayout',
-              },
-            },
-            {
-              'event': 'ROUTE_NOTIFICATIONS_OPEN',
-              'triggers': 'ROUTE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ROUTE_SEARCH',
-                'name': 'Route Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ROUTE_NOTIFICATIONS_OPEN',
-                'name': 'Route Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'git-branch',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Routes',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'label': 'Create Route',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            '@trait.RouteSearch',
-                            '@trait.RouteFilter',
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                        '@trait.RouteStats',
-                        '@trait.RouteGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.RouteBrowseList',
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ROUTE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ROUTE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'label': 'Back to routes',
-                          'type': 'button',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'align': 'center',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'className': 'py-8',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'RouteSearch',
-          'config': {
-            'event': 'ROUTE_SEARCH',
-            'placeholder': 'Search routes…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'RouteFilter',
-          'config': {
-            'event': 'ROUTE_FILTER',
-            'filters': [
-              {
-                'label': 'Method',
-                'field': 'method',
-                'options': [
-                  'GET',
-                  'POST',
-                  'PUT',
-                  'DELETE',
-                ],
-                'filterType': 'select',
-              },
-              {
-                'options': [
-                  'active',
-                  'disabled',
-                ],
-                'field': 'status',
-                'label': 'Status',
-                'filterType': 'select',
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'RouteStats',
-          'config': {
-            'title': 'Routes',
-            'metrics': [
-              {
-                'label': 'Total',
-                'icon': 'git-branch',
-                'variant': 'primary',
-                'format': 'number',
-                'aggregation': 'count',
-              },
-              {
-                'aggregation': 'count',
-                'label': 'Active',
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'active',
-                  ],
-                ],
-                'variant': 'success',
-                'icon': 'check-circle',
-              },
-              {
-                'aggregation': 'count',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'disabled',
-                  ],
-                ],
-                'label': 'Disabled',
-                'format': 'number',
-                'variant': 'warning',
-                'icon': 'x-circle',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'RouteGraphs',
-          'config': {
-            'subtitle': 'Distribution across HTTP methods',
-            'categoryField': 'method',
-            'aggregation': 'count',
-            'title': 'Routes by Method',
-            'chartType': 'pie',
-            'height': 240,
-            'showLegend': true,
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'RouteBrowseList',
-          'linkedEntity': 'Route',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'variant': 'ghost',
-                'event': 'VIEW',
-              },
-              {
-                'label': 'Edit',
-                'variant': 'ghost',
-                'event': 'EDIT',
-              },
-              {
-                'label': 'Delete',
-                'variant': 'danger',
-                'event': 'DELETE',
-              },
-            ],
-            'fields': [
-              {
-                'name': 'path',
-                'variant': 'h3',
-                'icon': 'git-branch',
-              },
-              {
-                'name': 'method',
-                'variant': 'badge',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'body',
-                'name': 'target',
-              },
-              {
-                'name': 'hits',
-                'variant': 'caption',
-                'format': 'number',
-                'label': 'Hits',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteFilter',
-              },
-            },
-            {
-              'event': 'ROUTE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RoutePersistor',
-              },
-            },
-            {
-              'event': 'ROUTE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RoutePersistor',
-              },
-            },
-            {
-              'event': 'ROUTE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RoutePersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'RouteCreate',
-          'linkedEntity': 'Route',
-          'config': {
-            'icon': 'plus-circle',
-            'title': 'New Route',
-            'mode': 'create',
-            'fields': [
-              'path',
-              'method',
-              'status',
-              'target',
-              'rateLimit',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'RouteEdit',
-          'linkedEntity': 'Route',
-          'config': {
-            'mode': 'edit',
-            'title': 'Edit Route',
-            'icon': 'edit',
-            'fields': [
-              'path',
-              'method',
-              'status',
-              'target',
-              'rateLimit',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'RouteView',
-          'linkedEntity': 'Route',
-          'config': {
-            'icon': 'eye',
-            'title': 'View Route',
-            'mode': 'edit',
-            'fields': [
-              'path',
-              'method',
-              'status',
-              'target',
-              'rateLimit',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'RouteDelete',
-          'linkedEntity': 'Route',
-          'config': {
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Route',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'RoutePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Route',
-          'emits': [
-            {
-              'event': 'ROUTE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ROUTE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ROUTE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RouteDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ROUTE_CREATED',
-                'name': 'Route Created',
-              },
-              {
-                'key': 'ROUTE_UPDATED',
-                'name': 'Route Updated',
-              },
-              {
-                'key': 'ROUTE_DELETED',
-                'name': 'Route Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Route',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ROUTE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Route',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ROUTE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Route',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'ROUTE_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'RoutesPage',
-          'path': '/routes',
-          'traits': [
-            {
-              'ref': 'RouteAppLayout',
-            },
-            {
-              'ref': 'RouteCatalog',
-            },
-            {
-              'ref': 'RouteSearch',
-            },
-            {
-              'ref': 'RouteFilter',
-            },
-            {
-              'ref': 'RouteStats',
-            },
-            {
-              'ref': 'RouteGraphs',
-            },
-            {
-              'ref': 'RouteBrowseList',
-            },
-            {
-              'ref': 'RouteCreate',
-            },
-            {
-              'ref': 'RouteEdit',
-            },
-            {
-              'ref': 'RouteView',
-            },
-            {
-              'ref': 'RouteDelete',
-            },
-            {
-              'ref': 'RoutePersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BackendOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the BackendOrbital orbital.
+ *
+ * Canonical entity: Backend.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdApiGatewayBackendOrbitalParams {
+  /** Override the canonical entity name (default: 'Backend'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the BackendOrbital orbital with consumer params. */
+export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Backend';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BackendOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-circuit-breaker',
+        'as': 'CircuitBreaker',
+      },
+      {
+        'from': 'std/behaviors/std-rate-limiter',
+        'as': 'RateLimiter',
+      },
+      {
+        'from': 'std/behaviors/std-cache-aside',
+        'as': 'CacheAside',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'backends',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'url',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'status',
+          'type': 'string',
+          'default': 'active',
+          'values': [
+            'active',
+            'disabled',
+          ],
         },
         {
-          'from': 'std/behaviors/std-circuit-breaker',
-          'as': 'CircuitBreaker',
+          'name': 'latency',
+          'type': 'number',
+          'default': 0,
         },
         {
-          'from': 'std/behaviors/std-rate-limiter',
-          'as': 'RateLimiter',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-cache-aside',
-          'as': 'CacheAside',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Backend',
-        'collection': 'backends',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BackendAppLayout',
+        'linkedEntity': 'Backend',
+        'config': {
+          'searchEvent': 'BACKEND_SEARCH',
+          'contentTrait': '@trait.BackendCatalog',
+          'notificationClickEvent': 'BACKEND_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'API Gateway',
+          'navItems': [
+            {
+              'icon': 'git-branch',
+              'href': '/routes',
+              'label': 'Routes',
+            },
+            {
+              'label': 'Backends',
+              'href': '/backends',
+              'icon': 'server',
+            },
+            {
+              'label': 'Analytics',
+              'icon': 'bar-chart-2',
+              'href': '/analytics',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'BACKEND_SEARCH',
+          'NOTIFY_CLICK': 'BACKEND_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'BackendCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'url',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'active',
-            'values': [
-              'active',
-              'disabled',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'latency',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'BackendAppLayout',
-          'linkedEntity': 'Backend',
-          'config': {
-            'searchEvent': 'BACKEND_SEARCH',
-            'contentTrait': '@trait.BackendCatalog',
-            'notificationClickEvent': 'BACKEND_NOTIFICATIONS_OPEN',
-            'notifications': [],
-            'appName': 'API Gateway',
-            'navItems': [
-              {
-                'icon': 'git-branch',
-                'href': '/routes',
-                'label': 'Routes',
-              },
-              {
-                'label': 'Backends',
-                'href': '/backends',
-                'icon': 'server',
-              },
-              {
-                'label': 'Analytics',
-                'icon': 'bar-chart-2',
-                'href': '/analytics',
-              },
-            ],
+        'listens': [
+          {
+            'event': 'BACKEND_SEARCH',
+            'triggers': 'BACKEND_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendAppLayout',
+            },
           },
-          'events': {
-            'SEARCH': 'BACKEND_SEARCH',
-            'NOTIFY_CLICK': 'BACKEND_NOTIFICATIONS_OPEN',
+          {
+            'event': 'BACKEND_NOTIFICATIONS_OPEN',
+            'triggers': 'BACKEND_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'BackendCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'BACKEND_SEARCH',
+              'name': 'Backend Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'BACKEND_NOTIFICATIONS_OPEN',
+              'name': 'Backend Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'server',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Backends',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'Create Backend',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.BackendBrowseList',
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Service Health',
+                        'type': 'typography',
+                      },
+                      '@trait.BackendCircuitBreaker',
+                      '@trait.BackendRateLimiter',
+                      '@trait.BackendCache',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'BACKEND_SEARCH',
-              'triggers': 'BACKEND_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'BACKEND_NOTIFICATIONS_OPEN',
-              'triggers': 'BACKEND_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'BACKEND_SEARCH',
-                'name': 'Backend Search',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'value',
-                    'type': 'string',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'label': 'Back to backends',
+                      },
+                    ],
+                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
-              },
-              {
-                'key': 'BACKEND_NOTIFICATIONS_OPEN',
-                'name': 'Backend Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'server',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Backends',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'label': 'Create Backend',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.BackendBrowseList',
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Service Health',
-                          'type': 'typography',
-                        },
-                        '@trait.BackendCircuitBreaker',
-                        '@trait.BackendRateLimiter',
-                        '@trait.BackendCache',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BACKEND_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BACKEND_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'type': 'typography',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                          'variant': 'caption',
-                        },
-                        {
-                          'type': 'button',
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'label': 'Back to backends',
-                        },
-                      ],
-                      'align': 'center',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'BackendBrowseList',
-          'linkedEntity': 'Backend',
-          'config': {
-            'fields': [
-              {
-                'variant': 'h3',
-                'name': 'name',
-                'icon': 'server',
-              },
-              {
-                'name': 'url',
-                'variant': 'body',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'name': 'latency',
-                'label': 'Latency',
-                'variant': 'caption',
-                'format': 'number',
-              },
-            ],
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'event': 'VIEW',
-                'label': 'View',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
-          },
-          'listens': [
-            {
-              'event': 'BACKEND_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendPersistor',
-              },
-            },
-            {
-              'event': 'BACKEND_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendPersistor',
-              },
-            },
-            {
-              'event': 'BACKEND_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendPersistor',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'CircuitBreaker.traits.ServiceNodeCircuitBreaker',
-          'name': 'BackendCircuitBreaker',
-        }),
-        makeTraitRef({
-          'ref': 'RateLimiter.traits.RateBucketRateLimiter',
-          'name': 'BackendRateLimiter',
-        }),
-        makeTraitRef({
-          'ref': 'CacheAside.traits.CacheEntryCacheManager',
-          'name': 'BackendCache',
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BackendCreate',
-          'linkedEntity': 'Backend',
-          'config': {
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'fields': [
-              'name',
-              'url',
-              'status',
-              'latency',
-            ],
-            'title': 'New Backend',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'BackendBrowseList',
+        'linkedEntity': 'Backend',
+        'config': {
+          'fields': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendCatalog',
-              },
+              'variant': 'h3',
+              'name': 'name',
+              'icon': 'server',
+            },
+            {
+              'name': 'url',
+              'variant': 'body',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'name': 'latency',
+              'label': 'Latency',
+              'variant': 'caption',
+              'format': 'number',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BackendEdit',
-          'linkedEntity': 'Backend',
-          'config': {
-            'title': 'Edit Backend',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'url',
-              'status',
-              'latency',
-            ],
-            'icon': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
+          'itemActions': [
             {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'BackendView',
-          'linkedEntity': 'Backend',
-          'config': {
-            'title': 'View Backend',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'url',
-              'status',
-              'latency',
-            ],
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'variant': 'ghost',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendBrowseList',
-              },
+              'label': 'View',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'BackendDelete',
-          'linkedEntity': 'Backend',
-          'config': {
-            'confirmLabel': 'Delete',
-            'title': 'Delete Backend',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
             {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'BackendPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Backend',
-          'emits': [
-            {
-              'event': 'BACKEND_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BACKEND_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BACKEND_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BackendDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BACKEND_CREATED',
-                'name': 'Backend Created',
-              },
-              {
-                'key': 'BACKEND_UPDATED',
-                'name': 'Backend Updated',
-              },
-              {
-                'key': 'BACKEND_DELETED',
-                'name': 'Backend Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Backend',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'BACKEND_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Backend',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'BACKEND_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Backend',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'BACKEND_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'BackendsPage',
-          'path': '/backends',
-          'traits': [
-            {
-              'ref': 'BackendAppLayout',
-            },
-            {
-              'ref': 'BackendCatalog',
-            },
-            {
-              'ref': 'BackendBrowseList',
-            },
-            {
-              'ref': 'BackendCircuitBreaker',
-            },
-            {
-              'ref': 'BackendRateLimiter',
-            },
-            {
-              'ref': 'BackendCache',
-            },
-            {
-              'ref': 'BackendCreate',
-            },
-            {
-              'ref': 'BackendEdit',
-            },
-            {
-              'ref': 'BackendView',
-            },
-            {
-              'ref': 'BackendDelete',
-            },
-            {
-              'ref': 'BackendPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AnalyticsOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'gap': 'sm',
+          'cols': 1,
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'AnalyticsRecord',
-        'collection': 'analyticsrecords',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'BACKEND_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendPersistor',
+            },
           },
           {
-            'name': 'routePath',
-            'type': 'string',
-            'required': true,
+            'event': 'BACKEND_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendPersistor',
+            },
           },
           {
-            'name': 'method',
-            'type': 'string',
-          },
-          {
-            'name': 'statusCode',
-            'type': 'number',
-            'default': 200,
-          },
-          {
-            'name': 'latencyMs',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'timestamp',
-            'type': 'string',
-            'default': '',
+            'event': 'BACKEND_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'AnalyticsAppLayout',
-          'linkedEntity': 'AnalyticsRecord',
-          'config': {
-            'contentTrait': '@trait.AnalyticsDisplay',
-            'searchEvent': 'ANALYTICS_SEARCH',
-            'navItems': [
-              {
-                'href': '/routes',
-                'label': 'Routes',
-                'icon': 'git-branch',
-              },
-              {
-                'label': 'Backends',
-                'href': '/backends',
-                'icon': 'server',
-              },
-              {
-                'href': '/analytics',
-                'label': 'Analytics',
-                'icon': 'bar-chart-2',
-              },
-            ],
-            'appName': 'API Gateway',
-            'notificationClickEvent': 'ANALYTICS_NOTIFICATIONS_OPEN',
-            'notifications': [],
-          },
-          'events': {
-            'NOTIFY_CLICK': 'ANALYTICS_NOTIFICATIONS_OPEN',
-            'SEARCH': 'ANALYTICS_SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'AnalyticsBrowseList',
-          'linkedEntity': 'AnalyticsRecord',
-          'config': {
-            'pageSize': 100,
-            'displayPageSize': 10,
-            'cols': 1,
-            'fields': [
-              {
-                'label': 'Route',
-                'variant': 'h4',
-                'name': 'routePath',
-                'icon': 'bar-chart-2',
-              },
-              {
-                'variant': 'badge',
-                'label': 'Method',
-                'name': 'method',
-              },
-              {
-                'label': 'Status',
-                'variant': 'badge',
-                'name': 'statusCode',
-              },
-              {
-                'label': 'Latency',
-                'name': 'latencyMs',
-                'variant': 'caption',
-                'format': 'number',
-              },
-              {
-                'name': 'timestamp',
-                'variant': 'caption',
-                'label': 'Time',
-                'format': 'date',
-              },
-            ],
-            'gap': 'sm',
-          },
-        }),
-        {
-          'name': 'AnalyticsDisplay',
-          'category': 'interaction',
-          'listens': [
-            {
-              'event': 'ANALYTICS_SEARCH',
-              'triggers': 'ANALYTICS_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AnalyticsAppLayout',
-              },
+      }),
+      makeTraitRef({
+        'ref': 'CircuitBreaker.traits.ServiceNodeCircuitBreaker',
+        'name': 'BackendCircuitBreaker',
+      }),
+      makeTraitRef({
+        'ref': 'RateLimiter.traits.RateBucketRateLimiter',
+        'name': 'BackendRateLimiter',
+      }),
+      makeTraitRef({
+        'ref': 'CacheAside.traits.CacheEntryCacheManager',
+        'name': 'BackendCache',
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BackendCreate',
+        'linkedEntity': 'Backend',
+        'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'fields': [
+            'name',
+            'url',
+            'status',
+            'latency',
+          ],
+          'title': 'New Backend',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendCatalog',
             },
-            {
-              'event': 'ANALYTICS_NOTIFICATIONS_OPEN',
-              'triggers': 'ANALYTICS_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AnalyticsAppLayout',
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BackendEdit',
+        'linkedEntity': 'Backend',
+        'config': {
+          'title': 'Edit Backend',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'url',
+            'status',
+            'latency',
+          ],
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'BackendView',
+        'linkedEntity': 'Backend',
+        'config': {
+          'title': 'View Backend',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'url',
+            'status',
+            'latency',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'BackendDelete',
+        'linkedEntity': 'Backend',
+        'config': {
+          'confirmLabel': 'Delete',
+          'title': 'Delete Backend',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'BackendPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Backend',
+        'emits': [
+          {
+            'event': 'BACKEND_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
               },
+            ],
+          },
+          {
+            'event': 'BACKEND_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BACKEND_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BackendDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ANALYTICS_SEARCH',
-                'name': 'Analytics Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ANALYTICS_NOTIFICATIONS_OPEN',
-                'name': 'Analytics Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'name': 'bar-chart-2',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Analytics',
-                            },
-                          ],
-                          'align': 'center',
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Recent requests',
-                          'variant': 'h3',
-                        },
-                        '@trait.AnalyticsBrowseList',
-                      ],
-                      'gap': 'lg',
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ANALYTICS_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'ANALYTICS_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                          'label': 'Back to analytics',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-8',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Analytics',
-          'path': '/analytics',
-          'traits': [
+          'events': [
             {
-              'ref': 'AnalyticsAppLayout',
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
-              'ref': 'AnalyticsDisplay',
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
             },
             {
-              'ref': 'AnalyticsBrowseList',
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'BACKEND_CREATED',
+              'name': 'Backend Created',
+            },
+            {
+              'key': 'BACKEND_UPDATED',
+              'name': 'Backend Updated',
+            },
+            {
+              'key': 'BACKEND_DELETED',
+              'name': 'Backend Deleted',
             },
           ],
-        } as never,
-      ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Backend',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'BACKEND_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Backend',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'BACKEND_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Backend',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'BACKEND_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'BackendsPage',
+        'path': '/backends',
+        'traits': [
+          {
+            'ref': 'BackendAppLayout',
+          },
+          {
+            'ref': 'BackendCatalog',
+          },
+          {
+            'ref': 'BackendBrowseList',
+          },
+          {
+            'ref': 'BackendCircuitBreaker',
+          },
+          {
+            'ref': 'BackendRateLimiter',
+          },
+          {
+            'ref': 'BackendCache',
+          },
+          {
+            'ref': 'BackendCreate',
+          },
+          {
+            'ref': 'BackendEdit',
+          },
+          {
+            'ref': 'BackendView',
+          },
+          {
+            'ref': 'BackendDelete',
+          },
+          {
+            'ref': 'BackendPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the AnalyticsOrbital orbital.
+ *
+ * Canonical entity: AnalyticsRecord.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdApiGatewayAnalyticsOrbitalParams {
+  /** Override the canonical entity name (default: 'AnalyticsRecord'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AnalyticsOrbital orbital with consumer params. */
+export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'AnalyticsRecord';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AnalyticsOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'analyticsrecords',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'routePath',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'method',
+          'type': 'string',
+        },
+        {
+          'name': 'statusCode',
+          'type': 'number',
+          'default': 200,
+        },
+        {
+          'name': 'latencyMs',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'timestamp',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AnalyticsAppLayout',
+        'linkedEntity': 'AnalyticsRecord',
+        'config': {
+          'contentTrait': '@trait.AnalyticsDisplay',
+          'searchEvent': 'ANALYTICS_SEARCH',
+          'navItems': [
+            {
+              'href': '/routes',
+              'label': 'Routes',
+              'icon': 'git-branch',
+            },
+            {
+              'label': 'Backends',
+              'href': '/backends',
+              'icon': 'server',
+            },
+            {
+              'href': '/analytics',
+              'label': 'Analytics',
+              'icon': 'bar-chart-2',
+            },
+          ],
+          'appName': 'API Gateway',
+          'notificationClickEvent': 'ANALYTICS_NOTIFICATIONS_OPEN',
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'ANALYTICS_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ANALYTICS_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'AnalyticsBrowseList',
+        'linkedEntity': 'AnalyticsRecord',
+        'config': {
+          'pageSize': 100,
+          'displayPageSize': 10,
+          'cols': 1,
+          'fields': [
+            {
+              'label': 'Route',
+              'variant': 'h4',
+              'name': 'routePath',
+              'icon': 'bar-chart-2',
+            },
+            {
+              'variant': 'badge',
+              'label': 'Method',
+              'name': 'method',
+            },
+            {
+              'label': 'Status',
+              'variant': 'badge',
+              'name': 'statusCode',
+            },
+            {
+              'label': 'Latency',
+              'name': 'latencyMs',
+              'variant': 'caption',
+              'format': 'number',
+            },
+            {
+              'name': 'timestamp',
+              'variant': 'caption',
+              'label': 'Time',
+              'format': 'date',
+            },
+          ],
+          'gap': 'sm',
+        },
+      }),
+      {
+        'name': 'AnalyticsDisplay',
+        'category': 'interaction',
+        'listens': [
+          {
+            'event': 'ANALYTICS_SEARCH',
+            'triggers': 'ANALYTICS_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AnalyticsAppLayout',
+            },
+          },
+          {
+            'event': 'ANALYTICS_NOTIFICATIONS_OPEN',
+            'triggers': 'ANALYTICS_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AnalyticsAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ANALYTICS_SEARCH',
+              'name': 'Analytics Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ANALYTICS_NOTIFICATIONS_OPEN',
+              'name': 'Analytics Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'name': 'bar-chart-2',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Analytics',
+                          },
+                        ],
+                        'align': 'center',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Recent requests',
+                        'variant': 'h3',
+                      },
+                      '@trait.AnalyticsBrowseList',
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ANALYTICS_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'ANALYTICS_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'label': 'Back to analytics',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Analytics',
+        'path': '/analytics',
+        'traits': [
+          {
+            'ref': 'AnalyticsAppLayout',
+          },
+          {
+            'ref': 'AnalyticsDisplay',
+          },
+          {
+            'ref': 'AnalyticsBrowseList',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-api-gateway — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdApiGatewayParams {
+  Route?: StdApiGatewayRouteOrbitalParams;
+  Backend?: StdApiGatewayBackendOrbitalParams;
+  Analytics?: StdApiGatewayAnalyticsOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdApiGateway(params: StdApiGatewayParams = {}): OrbitalDefinition[] {
+  return [
+    stdApiGatewayRouteOrbital(params.Route ?? {}),
+    stdApiGatewayBackendOrbital(params.Backend ?? {}),
+    stdApiGatewayAnalyticsOrbital(params.Analytics ?? {}),
+  ];
 }

@@ -34,1981 +34,1869 @@ export interface StdProjectManagerConfig {
 }
 
 /**
- * Params for the std-project-manager descriptor helpers.
+ * Tunable params for the TaskOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Task.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdProjectManagerParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdProjectManagerTaskOrbitalParams {
+  /** Override the canonical entity name (default: 'Task'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdProjectManagerConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `ProjectManager.traits.TaskAppLayout`. */
-export function stdProjectManagerTaskAppLayoutTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the TaskOrbital orbital with consumer params. */
+export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Task';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TaskOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-calendar',
+        'as': 'Calendar',
+      },
+      {
+        'from': 'std/behaviors/std-selection',
+        'as': 'Selection',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'tasks',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'assignee',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'priority',
+          'type': 'string',
+          'default': 'medium',
+          'values': [
+            'low',
+            'medium',
+            'high',
+            'critical',
+          ],
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'todo',
+          'values': [
+            'todo',
+            'in-progress',
+            'review',
+            'done',
+          ],
+        },
+        {
+          'name': 'sprint',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'storyPoints',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'dueDate',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TaskAppLayout',
+        'config': {
+          'notifications': [],
+          'navItems': [
+            {
+              'href': '/tasks',
+              'label': 'Tasks',
+              'icon': 'list-todo',
+            },
+            {
+              'icon': 'zap',
+              'label': 'Sprints',
+              'href': '/sprints',
+            },
+            {
+              'label': 'Burndown',
+              'href': '/burndown',
+              'icon': 'trending-down',
+            },
+          ],
+          'appName': 'ProjectManagerApp',
+          'contentTrait': '@trait.TaskCatalog',
+          'searchEvent': 'TASK_SEARCH',
+          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TASK_SEARCH',
+        },
+      }),
+      {
+        'name': 'TaskCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'TASK_SEARCH',
+            'triggers': 'TASK_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskAppLayout',
+            },
+          },
+          {
+            'event': 'TASK_NOTIFICATIONS_OPEN',
+            'triggers': 'TASK_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'TASK_SEARCH',
+              'name': 'Task Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TASK_NOTIFICATIONS_OPEN',
+              'name': 'Task Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'list-todo',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Tasks',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'label': 'New Task',
+                                'type': 'button',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                        ],
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          '@trait.TaskSearch',
+                          '@trait.TaskFilter',
+                        ],
+                      },
+                      '@trait.TaskStats',
+                      '@trait.TaskGraphs',
+                      '@trait.TaskCalendar',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TaskBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TASK_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'TASK_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'action': 'INIT',
+                        'label': 'Back to tasks',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'TaskSearch',
+        'config': {
+          'event': 'TASK_SEARCH',
+          'placeholder': 'Search tasks…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'TaskFilter',
+        'config': {
+          'filters': [
+            {
+              'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'todo',
+                'in-progress',
+                'review',
+                'done',
+              ],
+            },
+            {
+              'filterType': 'text',
+              'field': 'assignee',
+              'label': 'Assignee',
+            },
+            {
+              'field': 'priority',
+              'filterType': 'select',
+              'label': 'Priority',
+              'options': [
+                'low',
+                'medium',
+                'high',
+                'critical',
+              ],
+            },
+            {
+              'label': 'Sprint',
+              'filterType': 'text',
+              'field': 'sprint',
+            },
+          ],
+          'event': 'TASK_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'TaskStats',
+        'config': {
+          'title': 'Tasks',
+          'metrics': [
+            {
+              'label': 'Total',
+              'icon': 'list-todo',
+              'aggregation': 'count',
+              'format': 'number',
+              'variant': 'primary',
+            },
+            {
+              'variant': 'muted',
+              'label': 'Todo',
+              'aggregation': 'count',
+              'icon': 'circle',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'todo',
+                ],
+              ],
+              'format': 'number',
+            },
+            {
+              'label': 'In Progress',
+              'icon': 'loader',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'in-progress',
+                ],
+              ],
+              'aggregation': 'count',
+              'variant': 'warning',
+              'format': 'number',
+            },
+            {
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'done',
+                ],
+              ],
+              'icon': 'check-circle',
+              'aggregation': 'count',
+              'variant': 'success',
+              'label': 'Done',
+            },
+            {
+              'aggregation': 'count',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.priority',
+                  'critical',
+                ],
+              ],
+              'icon': 'alert-octagon',
+              'variant': 'danger',
+              'label': 'Critical',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'TaskGraphs',
+        'config': {
+          'categoryField': 'status',
+          'height': 240,
+          'title': 'Tasks by Status',
+          'subtitle': 'Workload distribution across status buckets',
+          'chartType': 'bar',
+          'showLegend': false,
+          'aggregation': 'count',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Calendar.traits.CalendarEventCalendar',
+        'name': 'TaskCalendar',
+        'linkedEntity': 'Task',
+        'config': {
+          'titleField': 'title',
+          'colorField': 'priority',
+          'dateField': 'dueDate',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'TaskBrowseList',
+        'linkedEntity': 'Task',
+        'config': {
+          'cols': 1,
+          'fields': [
+            {
+              'name': 'title',
+              'icon': 'list-todo',
+              'variant': 'h3',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'assignee',
+              'variant': 'body',
+            },
+            {
+              'name': 'priority',
+              'variant': 'badge',
+            },
+            {
+              'format': 'date',
+              'label': 'Due',
+              'name': 'dueDate',
+              'variant': 'caption',
+            },
+          ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskFilter',
+            },
+          },
+          {
+            'event': 'TASK_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskPersistor',
+            },
+          },
+          {
+            'event': 'TASK_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskPersistor',
+            },
+          },
+          {
+            'event': 'TASK_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TaskCreate',
+        'linkedEntity': 'Task',
+        'config': {
+          'fields': [
+            'title',
+            'description',
+            'assignee',
+            'priority',
+            'status',
+            'sprint',
+            'storyPoints',
+            'dueDate',
+          ],
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'New Task',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TaskEdit',
+        'linkedEntity': 'Task',
+        'config': {
+          'icon': 'edit',
+          'title': 'Edit Task',
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'description',
+            'assignee',
+            'priority',
+            'status',
+            'sprint',
+            'storyPoints',
+            'dueDate',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TaskView',
+        'linkedEntity': 'Task',
+        'config': {
+          'fields': [
+            'title',
+            'description',
+            'assignee',
+            'priority',
+            'status',
+            'sprint',
+            'storyPoints',
+            'dueDate',
+          ],
+          'mode': 'edit',
+          'title': 'View Task',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'TaskDelete',
+        'linkedEntity': 'Task',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Task',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TaskPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Task',
+        'emits': [
+          {
+            'event': 'TASK_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TASK_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'TASK_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TaskDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TASK_CREATED',
+              'name': 'Task Created',
+            },
+            {
+              'key': 'TASK_UPDATED',
+              'name': 'Task Updated',
+            },
+            {
+              'key': 'TASK_DELETED',
+              'name': 'Task Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Task',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TASK_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Task',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TASK_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Task',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'TASK_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'TasksPage',
+        'path': '/tasks',
+        'traits': [
+          {
+            'ref': 'TaskAppLayout',
+          },
+          {
+            'ref': 'TaskCatalog',
+          },
+          {
+            'ref': 'TaskSearch',
+          },
+          {
+            'ref': 'TaskFilter',
+          },
+          {
+            'ref': 'TaskStats',
+          },
+          {
+            'ref': 'TaskGraphs',
+          },
+          {
+            'ref': 'TaskCalendar',
+          },
+          {
+            'ref': 'TaskBrowseList',
+          },
+          {
+            'ref': 'TaskCreate',
+          },
+          {
+            'ref': 'TaskEdit',
+          },
+          {
+            'ref': 'TaskView',
+          },
+          {
+            'ref': 'TaskDelete',
+          },
+          {
+            'ref': 'TaskPersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskCatalog`. */
-export function stdProjectManagerTaskCatalogTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskSearch`. */
-export function stdProjectManagerTaskSearchTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskFilter`. */
-export function stdProjectManagerTaskFilterTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskStats`. */
-export function stdProjectManagerTaskStatsTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskGraphs`. */
-export function stdProjectManagerTaskGraphsTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskCalendar`. */
-export function stdProjectManagerTaskCalendarTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskCalendar`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskBrowseList`. */
-export function stdProjectManagerTaskBrowseListTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskCreate`. */
-export function stdProjectManagerTaskCreateTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskEdit`. */
-export function stdProjectManagerTaskEditTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskView`. */
-export function stdProjectManagerTaskViewTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskDelete`. */
-export function stdProjectManagerTaskDeleteTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ProjectManager.traits.TaskPersistor`. */
-export function stdProjectManagerTaskPersistorTrait(params: StdProjectManagerParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.TaskPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `ProjectManager.pages.TasksPage`. */
-export function stdProjectManagerPage(params: StdProjectManagerParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.TasksPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Task';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TaskOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-calendar',
-          'as': 'Calendar',
-        },
-        {
-          'from': 'std/behaviors/std-selection',
-          'as': 'Selection',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Task',
-        'collection': 'tasks',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'assignee',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'priority',
-            'type': 'string',
-            'default': 'medium',
-            'values': [
-              'low',
-              'medium',
-              'high',
-              'critical',
-            ],
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'todo',
-            'values': [
-              'todo',
-              'in-progress',
-              'review',
-              'done',
-            ],
-          },
-          {
-            'name': 'sprint',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'storyPoints',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'dueDate',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TaskAppLayout',
-          'config': {
-            'notifications': [],
-            'navItems': [
-              {
-                'href': '/tasks',
-                'label': 'Tasks',
-                'icon': 'list-todo',
-              },
-              {
-                'icon': 'zap',
-                'label': 'Sprints',
-                'href': '/sprints',
-              },
-              {
-                'label': 'Burndown',
-                'href': '/burndown',
-                'icon': 'trending-down',
-              },
-            ],
-            'appName': 'ProjectManagerApp',
-            'contentTrait': '@trait.TaskCatalog',
-            'searchEvent': 'TASK_SEARCH',
-            'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
-            'SEARCH': 'TASK_SEARCH',
-          },
-        }),
-        {
-          'name': 'TaskCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'TASK_SEARCH',
-              'triggers': 'TASK_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskAppLayout',
-              },
-            },
-            {
-              'event': 'TASK_NOTIFICATIONS_OPEN',
-              'triggers': 'TASK_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'TASK_SEARCH',
-                'name': 'Task Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TASK_NOTIFICATIONS_OPEN',
-                'name': 'Task Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'list-todo',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Tasks',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                  'label': 'New Task',
-                                  'type': 'button',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                          ],
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            '@trait.TaskSearch',
-                            '@trait.TaskFilter',
-                          ],
-                        },
-                        '@trait.TaskStats',
-                        '@trait.TaskGraphs',
-                        '@trait.TaskCalendar',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TaskBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TASK_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'TASK_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                          'color': 'muted',
-                        },
-                        {
-                          'action': 'INIT',
-                          'label': 'Back to tasks',
-                          'type': 'button',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'gap': 'md',
-                      'className': 'py-8',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'TaskSearch',
-          'config': {
-            'event': 'TASK_SEARCH',
-            'placeholder': 'Search tasks…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'TaskFilter',
-          'config': {
-            'filters': [
-              {
-                'filterType': 'select',
-                'field': 'status',
-                'label': 'Status',
-                'options': [
-                  'todo',
-                  'in-progress',
-                  'review',
-                  'done',
-                ],
-              },
-              {
-                'filterType': 'text',
-                'field': 'assignee',
-                'label': 'Assignee',
-              },
-              {
-                'field': 'priority',
-                'filterType': 'select',
-                'label': 'Priority',
-                'options': [
-                  'low',
-                  'medium',
-                  'high',
-                  'critical',
-                ],
-              },
-              {
-                'label': 'Sprint',
-                'filterType': 'text',
-                'field': 'sprint',
-              },
-            ],
-            'event': 'TASK_FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'TaskStats',
-          'config': {
-            'title': 'Tasks',
-            'metrics': [
-              {
-                'label': 'Total',
-                'icon': 'list-todo',
-                'aggregation': 'count',
-                'format': 'number',
-                'variant': 'primary',
-              },
-              {
-                'variant': 'muted',
-                'label': 'Todo',
-                'aggregation': 'count',
-                'icon': 'circle',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'todo',
-                  ],
-                ],
-                'format': 'number',
-              },
-              {
-                'label': 'In Progress',
-                'icon': 'loader',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'in-progress',
-                  ],
-                ],
-                'aggregation': 'count',
-                'variant': 'warning',
-                'format': 'number',
-              },
-              {
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'done',
-                  ],
-                ],
-                'icon': 'check-circle',
-                'aggregation': 'count',
-                'variant': 'success',
-                'label': 'Done',
-              },
-              {
-                'aggregation': 'count',
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.priority',
-                    'critical',
-                  ],
-                ],
-                'icon': 'alert-octagon',
-                'variant': 'danger',
-                'label': 'Critical',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'TaskGraphs',
-          'config': {
-            'categoryField': 'status',
-            'height': 240,
-            'title': 'Tasks by Status',
-            'subtitle': 'Workload distribution across status buckets',
-            'chartType': 'bar',
-            'showLegend': false,
-            'aggregation': 'count',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Calendar.traits.CalendarEventCalendar',
-          'name': 'TaskCalendar',
-          'linkedEntity': 'Task',
-          'config': {
-            'titleField': 'title',
-            'colorField': 'priority',
-            'dateField': 'dueDate',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'TaskBrowseList',
-          'linkedEntity': 'Task',
-          'config': {
-            'cols': 1,
-            'fields': [
-              {
-                'name': 'title',
-                'icon': 'list-todo',
-                'variant': 'h3',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'assignee',
-                'variant': 'body',
-              },
-              {
-                'name': 'priority',
-                'variant': 'badge',
-              },
-              {
-                'format': 'date',
-                'label': 'Due',
-                'name': 'dueDate',
-                'variant': 'caption',
-              },
-            ],
-            'gap': 'sm',
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'variant': 'ghost',
-                'label': 'View',
-              },
-              {
-                'label': 'Edit',
-                'variant': 'ghost',
-                'event': 'EDIT',
-              },
-              {
-                'variant': 'danger',
-                'event': 'DELETE',
-                'label': 'Delete',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskFilter',
-              },
-            },
-            {
-              'event': 'TASK_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskPersistor',
-              },
-            },
-            {
-              'event': 'TASK_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskPersistor',
-              },
-            },
-            {
-              'event': 'TASK_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TaskCreate',
-          'linkedEntity': 'Task',
-          'config': {
-            'fields': [
-              'title',
-              'description',
-              'assignee',
-              'priority',
-              'status',
-              'sprint',
-              'storyPoints',
-              'dueDate',
-            ],
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'title': 'New Task',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TaskEdit',
-          'linkedEntity': 'Task',
-          'config': {
-            'icon': 'edit',
-            'title': 'Edit Task',
-            'mode': 'edit',
-            'fields': [
-              'title',
-              'description',
-              'assignee',
-              'priority',
-              'status',
-              'sprint',
-              'storyPoints',
-              'dueDate',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TaskView',
-          'linkedEntity': 'Task',
-          'config': {
-            'fields': [
-              'title',
-              'description',
-              'assignee',
-              'priority',
-              'status',
-              'sprint',
-              'storyPoints',
-              'dueDate',
-            ],
-            'mode': 'edit',
-            'title': 'View Task',
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'TaskDelete',
-          'linkedEntity': 'Task',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-            'title': 'Delete Task',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'TaskPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Task',
-          'emits': [
-            {
-              'event': 'TASK_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TASK_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TASK_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TaskDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TASK_CREATED',
-                'name': 'Task Created',
-              },
-              {
-                'key': 'TASK_UPDATED',
-                'name': 'Task Updated',
-              },
-              {
-                'key': 'TASK_DELETED',
-                'name': 'Task Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Task',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TASK_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Task',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TASK_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Task',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'TASK_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'TasksPage',
-          'path': '/tasks',
-          'traits': [
-            {
-              'ref': 'TaskAppLayout',
-            },
-            {
-              'ref': 'TaskCatalog',
-            },
-            {
-              'ref': 'TaskSearch',
-            },
-            {
-              'ref': 'TaskFilter',
-            },
-            {
-              'ref': 'TaskStats',
-            },
-            {
-              'ref': 'TaskGraphs',
-            },
-            {
-              'ref': 'TaskCalendar',
-            },
-            {
-              'ref': 'TaskBrowseList',
-            },
-            {
-              'ref': 'TaskCreate',
-            },
-            {
-              'ref': 'TaskEdit',
-            },
-            {
-              'ref': 'TaskView',
-            },
-            {
-              'ref': 'TaskDelete',
-            },
-            {
-              'ref': 'TaskPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'SprintOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the SprintOrbital orbital.
+ *
+ * Canonical entity: Sprint.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdProjectManagerSprintOrbitalParams {
+  /** Override the canonical entity name (default: 'Sprint'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the SprintOrbital orbital with consumer params. */
+export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Sprint';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'SprintOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'sprints',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'startDate',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'endDate',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'goal',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'planning',
+          'values': [
+            'planning',
+            'active',
+            'completed',
+          ],
+        },
+        {
+          'name': 'taskCount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Sprint',
-        'collection': 'sprints',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'SprintAppLayout',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'searchEvent': 'SPRINT_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.SprintCatalog',
+          'notificationClickEvent': 'SPRINT_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/tasks',
+              'icon': 'list-todo',
+              'label': 'Tasks',
+            },
+            {
+              'icon': 'zap',
+              'href': '/sprints',
+              'label': 'Sprints',
+            },
+            {
+              'href': '/burndown',
+              'icon': 'trending-down',
+              'label': 'Burndown',
+            },
+          ],
+          'appName': 'ProjectManagerApp',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'SPRINT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'SPRINT_SEARCH',
+        },
+      }),
+      {
+        'name': 'SprintCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'startDate',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'endDate',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'goal',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'planning',
-            'values': [
-              'planning',
-              'active',
-              'completed',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'taskCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'SprintAppLayout',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'searchEvent': 'SPRINT_SEARCH',
-            'notifications': [],
-            'contentTrait': '@trait.SprintCatalog',
-            'notificationClickEvent': 'SPRINT_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'href': '/tasks',
-                'icon': 'list-todo',
-                'label': 'Tasks',
-              },
-              {
-                'icon': 'zap',
-                'href': '/sprints',
-                'label': 'Sprints',
-              },
-              {
-                'href': '/burndown',
-                'icon': 'trending-down',
-                'label': 'Burndown',
-              },
-            ],
-            'appName': 'ProjectManagerApp',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'SPRINT_NOTIFICATIONS_OPEN',
-            'SEARCH': 'SPRINT_SEARCH',
-          },
-        }),
-        {
-          'name': 'SprintCatalog',
-          'category': 'interaction',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'zap',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Sprints',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'type': 'button',
+                                'label': 'New Sprint',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                              },
+                            ],
+                          },
+                        ],
+                        'justify': 'between',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.SprintBrowseList',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'zap',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Sprints',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'icon': 'plus',
-                                  'type': 'button',
-                                  'label': 'New Sprint',
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                },
-                              ],
-                            },
-                          ],
-                          'justify': 'between',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.SprintBrowseList',
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'SprintBrowseList',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'cols': 1,
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'label': 'View',
-                'event': 'VIEW',
-              },
-              {
-                'variant': 'ghost',
-                'event': 'EDIT',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'variant': 'danger',
-                'event': 'DELETE',
-              },
-            ],
-            'fields': [
-              {
-                'variant': 'h3',
-                'icon': 'zap',
-                'name': 'name',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'goal',
-                'variant': 'body',
-              },
-              {
-                'format': 'date',
-                'label': 'Start',
-                'name': 'startDate',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'caption',
-                'format': 'date',
-                'label': 'End',
-                'name': 'endDate',
-              },
-              {
-                'name': 'taskCount',
-                'variant': 'body',
-                'format': 'number',
-                'label': 'Tasks',
-              },
-            ],
-            'gap': 'sm',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'SprintBrowseList',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'cols': 1,
+          'itemActions': [
             {
-              'event': 'SPRINT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintPersistor',
-              },
-            },
-            {
-              'event': 'SPRINT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintPersistor',
-              },
-            },
-            {
-              'event': 'SPRINT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'SprintCreate',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'fields': [
-              'name',
-              'startDate',
-              'endDate',
-              'goal',
-              'status',
-              'taskCount',
-            ],
-            'icon': 'plus-circle',
-            'title': 'New Sprint',
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'SprintEdit',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'mode': 'edit',
-            'icon': 'edit',
-            'fields': [
-              'name',
-              'startDate',
-              'endDate',
-              'goal',
-              'status',
-              'taskCount',
-            ],
-            'title': 'Edit Sprint',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'SprintView',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'fields': [
-              'name',
-              'startDate',
-              'endDate',
-              'goal',
-              'status',
-              'taskCount',
-            ],
-            'title': 'View Sprint',
-            'mode': 'edit',
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'variant': 'ghost',
+              'label': 'View',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintBrowseList',
-              },
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'SprintDelete',
-          'linkedEntity': 'Sprint',
-          'config': {
-            'title': 'Delete Sprint',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
             {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintBrowseList',
-              },
             },
           ],
-        }),
-        {
-          'name': 'SprintPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Sprint',
-          'emits': [
+          'fields': [
             {
-              'event': 'SPRINT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'h3',
+              'icon': 'zap',
+              'name': 'name',
             },
             {
-              'event': 'SPRINT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'status',
+              'variant': 'badge',
             },
             {
-              'event': 'SPRINT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'goal',
+              'variant': 'body',
+            },
+            {
+              'format': 'date',
+              'label': 'Start',
+              'name': 'startDate',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'label': 'End',
+              'name': 'endDate',
+            },
+            {
+              'name': 'taskCount',
+              'variant': 'body',
+              'format': 'number',
+              'label': 'Tasks',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SprintDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'SPRINT_CREATED',
-                'name': 'Sprint Created',
-              },
-              {
-                'key': 'SPRINT_UPDATED',
-                'name': 'Sprint Updated',
-              },
-              {
-                'key': 'SPRINT_DELETED',
-                'name': 'Sprint Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Sprint',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'SPRINT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Sprint',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'SPRINT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Sprint',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'SPRINT_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Sprints',
-          'path': '/sprints',
-          'traits': [
-            {
-              'ref': 'SprintAppLayout',
-            },
-            {
-              'ref': 'SprintCatalog',
-            },
-            {
-              'ref': 'SprintBrowseList',
-            },
-            {
-              'ref': 'SprintCreate',
-            },
-            {
-              'ref': 'SprintEdit',
-            },
-            {
-              'ref': 'SprintView',
-            },
-            {
-              'ref': 'SprintDelete',
-            },
-            {
-              'ref': 'SprintPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BurndownOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'gap': 'sm',
         },
-      ],
-      entity: {
-        'name': 'Burndown',
-        'persistence': 'singleton',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'SPRINT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintPersistor',
+            },
           },
           {
-            'name': 'totalPoints',
-            'type': 'number',
-            'default': 0,
+            'event': 'SPRINT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintPersistor',
+            },
           },
           {
-            'name': 'completedPoints',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'remainingPoints',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'velocity',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'daysRemaining',
-            'type': 'number',
-            'default': 0,
+            'event': 'SPRINT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'BurndownAppLayout',
-          'linkedEntity': 'Burndown',
-          'config': {
-            'navItems': [
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'SprintCreate',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'fields': [
+            'name',
+            'startDate',
+            'endDate',
+            'goal',
+            'status',
+            'taskCount',
+          ],
+          'icon': 'plus-circle',
+          'title': 'New Sprint',
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'SprintEdit',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'mode': 'edit',
+          'icon': 'edit',
+          'fields': [
+            'name',
+            'startDate',
+            'endDate',
+            'goal',
+            'status',
+            'taskCount',
+          ],
+          'title': 'Edit Sprint',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'SprintView',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'fields': [
+            'name',
+            'startDate',
+            'endDate',
+            'goal',
+            'status',
+            'taskCount',
+          ],
+          'title': 'View Sprint',
+          'mode': 'edit',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'SprintDelete',
+        'linkedEntity': 'Sprint',
+        'config': {
+          'title': 'Delete Sprint',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'SprintPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Sprint',
+        'emits': [
+          {
+            'event': 'SPRINT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'list-todo',
-                'href': '/tasks',
-                'label': 'Tasks',
-              },
-              {
-                'href': '/sprints',
-                'icon': 'zap',
-                'label': 'Sprints',
-              },
-              {
-                'label': 'Burndown',
-                'href': '/burndown',
-                'icon': 'trending-down',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'appName': 'ProjectManagerApp',
-            'searchEvent': 'BURNDOWN_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'BURNDOWN_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.BurndownDisplay',
           },
-          'events': {
-            'SEARCH': 'BURNDOWN_SEARCH',
-            'NOTIFY_CLICK': 'BURNDOWN_NOTIFICATIONS_OPEN',
+          {
+            'event': 'SPRINT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'BurndownDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'Burndown',
-          'emits': [
+          {
+            'event': 'SPRINT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SprintDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'BurndownLoaded',
-              'description': 'Fired when Burndown finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'SPRINT_CREATED',
+              'name': 'Sprint Created',
+            },
+            {
+              'key': 'SPRINT_UPDATED',
+              'name': 'Sprint Updated',
+            },
+            {
+              'key': 'SPRINT_DELETED',
+              'name': 'Sprint Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Sprint',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'SPRINT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Sprint',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'SPRINT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Sprint',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'SPRINT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Sprints',
+        'path': '/sprints',
+        'traits': [
+          {
+            'ref': 'SprintAppLayout',
+          },
+          {
+            'ref': 'SprintCatalog',
+          },
+          {
+            'ref': 'SprintBrowseList',
+          },
+          {
+            'ref': 'SprintCreate',
+          },
+          {
+            'ref': 'SprintEdit',
+          },
+          {
+            'ref': 'SprintView',
+          },
+          {
+            'ref': 'SprintDelete',
+          },
+          {
+            'ref': 'SprintPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the BurndownOrbital orbital.
+ *
+ * Canonical entity: Burndown.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdProjectManagerBurndownOrbitalParams {
+  /** Override the canonical entity name (default: 'Burndown'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the BurndownOrbital orbital with consumer params. */
+export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndownOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Burndown';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BurndownOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'singleton',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'totalPoints',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completedPoints',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'remainingPoints',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'velocity',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'daysRemaining',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BurndownAppLayout',
+        'linkedEntity': 'Burndown',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'list-todo',
+              'href': '/tasks',
+              'label': 'Tasks',
+            },
+            {
+              'href': '/sprints',
+              'icon': 'zap',
+              'label': 'Sprints',
+            },
+            {
+              'label': 'Burndown',
+              'href': '/burndown',
+              'icon': 'trending-down',
+            },
+          ],
+          'appName': 'ProjectManagerApp',
+          'searchEvent': 'BURNDOWN_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'BURNDOWN_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.BurndownDisplay',
+        },
+        'events': {
+          'SEARCH': 'BURNDOWN_SEARCH',
+          'NOTIFY_CLICK': 'BURNDOWN_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'BurndownDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'Burndown',
+        'emits': [
+          {
+            'event': 'BurndownLoaded',
+            'description': 'Fired when Burndown finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Burndown]',
+              },
+            ],
+          },
+          {
+            'event': 'BurndownLoadFailed',
+            'description': 'Fired when Burndown fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SPRINT_UPDATED',
+            'triggers': 'REFRESH',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'SprintOrbital',
+              'trait': 'SprintPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'displaying',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'BurndownLoaded',
+              'name': 'Burndown loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2017,9 +1905,8 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
               ],
             },
             {
-              'event': 'BurndownLoadFailed',
-              'description': 'Fired when Burndown fails to load',
-              'scope': 'internal',
+              'key': 'BurndownLoadFailed',
+              'name': 'Burndown load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2032,283 +1919,269 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalDefin
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
-              'event': 'SPRINT_UPDATED',
-              'triggers': 'REFRESH',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'SprintOrbital',
-                'trait': 'SprintPersistor',
-              },
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.totalPoints',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.completedPoints',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.remainingPoints',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.velocity',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.daysRemaining',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'Burndown',
+                  {
+                    'emit': {
+                      'failure': 'BurndownLoadFailed',
+                      'success': 'BurndownLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'trending-down',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Burndown',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 5,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'icon': 'target',
+                            'label': 'Total Points',
+                            'value': '@entity.totalPoints',
+                          },
+                          {
+                            'label': 'Completed',
+                            'type': 'stat-display',
+                            'value': '@entity.completedPoints',
+                            'icon': 'check-circle',
+                          },
+                          {
+                            'value': '@entity.remainingPoints',
+                            'label': 'Remaining',
+                            'type': 'stat-display',
+                            'icon': 'circle',
+                          },
+                          {
+                            'value': '@entity.velocity',
+                            'type': 'stat-display',
+                            'label': 'Velocity',
+                            'icon': 'zap',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Days Remaining',
+                            'icon': 'calendar',
+                            'value': '@entity.daysRemaining',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'line-chart',
+                        'data': [
+                          {
+                            'value': 100,
+                            'date': 'Day 1',
+                          },
+                          {
+                            'value': 92,
+                            'date': 'Day 2',
+                          },
+                          {
+                            'value': 85,
+                            'date': 'Day 3',
+                          },
+                          {
+                            'value': 70,
+                            'date': 'Day 4',
+                          },
+                          {
+                            'value': 60,
+                            'date': 'Day 5',
+                          },
+                          {
+                            'value': 45,
+                            'date': 'Day 6',
+                          },
+                          {
+                            'value': 30,
+                            'date': 'Day 7',
+                          },
+                          {
+                            'date': 'Day 8',
+                            'value': 15,
+                          },
+                        ],
+                      },
+                      {
+                        'items': [
+                          {
+                            'color': 'primary',
+                            'label': 'Remaining points',
+                          },
+                          {
+                            'label': 'Ideal burndown',
+                            'color': 'muted',
+                          },
+                        ],
+                        'type': 'chart-legend',
+                      },
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
+                            'action': 'REFRESH',
+                            'icon': 'refresh-cw',
+                          },
+                        ],
+                        'justify': 'end',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'displaying',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'Burndown',
+                  {
+                    'emit': {
+                      'failure': 'BurndownLoadFailed',
+                      'success': 'BurndownLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'displaying',
+              'event': 'BurndownLoaded',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'displaying',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'BurndownLoaded',
-                'name': 'Burndown loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Burndown]',
-                  },
-                ],
-              },
-              {
-                'key': 'BurndownLoadFailed',
-                'name': 'Burndown load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.totalPoints',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.completedPoints',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.remainingPoints',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.velocity',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.daysRemaining',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'Burndown',
-                    {
-                      'emit': {
-                        'failure': 'BurndownLoadFailed',
-                        'success': 'BurndownLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'className': 'max-w-6xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'trending-down',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'Burndown',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'cols': 5,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'icon': 'target',
-                              'label': 'Total Points',
-                              'value': '@entity.totalPoints',
-                            },
-                            {
-                              'label': 'Completed',
-                              'type': 'stat-display',
-                              'value': '@entity.completedPoints',
-                              'icon': 'check-circle',
-                            },
-                            {
-                              'value': '@entity.remainingPoints',
-                              'label': 'Remaining',
-                              'type': 'stat-display',
-                              'icon': 'circle',
-                            },
-                            {
-                              'value': '@entity.velocity',
-                              'type': 'stat-display',
-                              'label': 'Velocity',
-                              'icon': 'zap',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Days Remaining',
-                              'icon': 'calendar',
-                              'value': '@entity.daysRemaining',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'line-chart',
-                          'data': [
-                            {
-                              'value': 100,
-                              'date': 'Day 1',
-                            },
-                            {
-                              'value': 92,
-                              'date': 'Day 2',
-                            },
-                            {
-                              'value': 85,
-                              'date': 'Day 3',
-                            },
-                            {
-                              'value': 70,
-                              'date': 'Day 4',
-                            },
-                            {
-                              'value': 60,
-                              'date': 'Day 5',
-                            },
-                            {
-                              'value': 45,
-                              'date': 'Day 6',
-                            },
-                            {
-                              'value': 30,
-                              'date': 'Day 7',
-                            },
-                            {
-                              'date': 'Day 8',
-                              'value': 15,
-                            },
-                          ],
-                        },
-                        {
-                          'items': [
-                            {
-                              'color': 'primary',
-                              'label': 'Remaining points',
-                            },
-                            {
-                              'label': 'Ideal burndown',
-                              'color': 'muted',
-                            },
-                          ],
-                          'type': 'chart-legend',
-                        },
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'label': 'Refresh',
-                              'variant': 'secondary',
-                              'action': 'REFRESH',
-                              'icon': 'refresh-cw',
-                            },
-                          ],
-                          'justify': 'end',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'displaying',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'Burndown',
-                    {
-                      'emit': {
-                        'failure': 'BurndownLoadFailed',
-                        'success': 'BurndownLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'displaying',
-                'event': 'BurndownLoaded',
-              },
-            ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Burndown',
+        'path': '/burndown',
+        'traits': [
+          {
+            'ref': 'BurndownAppLayout',
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Burndown',
-          'path': '/burndown',
-          'traits': [
-            {
-              'ref': 'BurndownAppLayout',
-            },
-            {
-              'ref': 'BurndownDisplay',
-            },
-          ],
-        } as never,
-      ],
+          {
+            'ref': 'BurndownDisplay',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-project-manager — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdProjectManagerParams {
+  Task?: StdProjectManagerTaskOrbitalParams;
+  Sprint?: StdProjectManagerSprintOrbitalParams;
+  Burndown?: StdProjectManagerBurndownOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdProjectManager(params: StdProjectManagerParams = {}): OrbitalDefinition[] {
+  return [
+    stdProjectManagerTaskOrbital(params.Task ?? {}),
+    stdProjectManagerSprintOrbital(params.Sprint ?? {}),
+    stdProjectManagerBurndownOrbital(params.Burndown ?? {}),
+  ];
 }

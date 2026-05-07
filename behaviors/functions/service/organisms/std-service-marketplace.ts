@@ -251,2649 +251,2696 @@ export interface StdServiceMarketplaceOrderDeleteFailedPayload {
 }
 
 /**
- * Params for the std-service-marketplace descriptor helpers.
+ * Tunable params for the ProductOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Product.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdServiceMarketplaceParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdServiceMarketplaceProductOrbitalParams {
+  /** Override the canonical entity name (default: 'Product'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdServiceMarketplaceEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `ServiceMarketplace.traits.ProductBrowse`. */
-export function stdServiceMarketplaceProductBrowseTrait(params: StdServiceMarketplaceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductBrowse`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the ProductOrbital orbital with consumer params. */
+export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplaceProductOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Product';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ProductOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      collection: 'products',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'price',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+        },
+        {
+          'name': 'inStock',
+          'type': 'boolean',
+          'default': true,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'ProductBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'CHECKOUT',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.price',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.inStock',
+                'type': 'boolean',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CREATE',
+          },
+          {
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.price',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.inStock',
+                'type': 'boolean',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.price',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.inStock',
+                'type': 'boolean',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.price',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.inStock',
+                'type': 'boolean',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductOauthCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ProductOauthFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductStripeCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ProductStripeFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductEmailCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ProductEmailFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PRODUCT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductCreate',
+            },
+          },
+          {
+            'event': 'PRODUCT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductEdit',
+            },
+          },
+          {
+            'event': 'PRODUCT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CHECKOUT',
+              'name': 'Checkout',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Product',
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Product',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Product',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaved',
+              'name': 'Product saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaveFailed',
+              'name': 'Product save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdated',
+              'name': 'Product updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdateFailed',
+              'name': 'Product update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductDeleted',
+              'name': 'Product deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductDeleteFailed',
+              'name': 'Product delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductOauthCompleted',
+              'name': 'Product oauth completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ProductOauthFailed',
+              'name': 'Product oauth failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductStripeCompleted',
+              'name': 'Product stripe completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ProductStripeFailed',
+              'name': 'Product stripe failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductEmailCompleted',
+              'name': 'Product email completed',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'ProductEmailFailed',
+              'name': 'Product email failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderSaved',
+              'name': 'Order saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderSaveFailed',
+              'name': 'Order save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderUpdated',
+              'name': 'Order updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderUpdateFailed',
+              'name': 'Order update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderDeleted',
+              'name': 'Order deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderDeleteFailed',
+              'name': 'Order delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'Loading…',
+                        'color': 'muted',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ProductLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'href': '/login',
+                        'label': 'Login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'shopping-bag',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Products',
+                                  },
+                                ],
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'align': 'center',
+                              },
+                              {
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'button',
+                                    'variant': 'primary',
+                                    'icon': 'plus',
+                                    'label': 'Create Product',
+                                    'action': 'CREATE',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                              },
+                            ],
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'itemActions': [
+                              {
+                                'label': 'View',
+                                'event': 'VIEW',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'label': 'Edit',
+                                'event': 'EDIT',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'label': 'Checkout',
+                                'variant': 'primary',
+                                'event': 'CHECKOUT',
+                              },
+                              {
+                                'label': 'Delete',
+                                'variant': 'danger',
+                                'event': 'DELETE',
+                              },
+                            ],
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'fields': [
+                              {
+                                'name': 'name',
+                                'label': 'Name',
+                                'variant': 'h4',
+                                'icon': 'shopping-bag',
+                              },
+                              {
+                                'colorMap': {
+                                  'done': 'success',
+                                  'cancelled': 'destructive',
+                                  'inactive': 'neutral',
+                                  'archived': 'neutral',
+                                  'error': 'destructive',
+                                  'scheduled': 'warning',
+                                  'completed': 'success',
+                                  'pending': 'warning',
+                                  'active': 'success',
+                                  'disabled': 'neutral',
+                                  'failed': 'destructive',
+                                  'draft': 'warning',
+                                },
+                                'label': 'Description',
+                                'name': 'description',
+                                'variant': 'badge',
+                              },
+                              {
+                                'name': 'price',
+                                'variant': 'caption',
+                                'label': 'Price',
+                              },
+                            ],
+                          },
+                        ],
+                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ProductLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load product',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'content': '@payload.error',
+                        'color': 'muted',
+                      },
+                      {
+                        'variant': 'primary',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'action': 'INIT',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductCreate',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PRODUCT_CREATED',
+              'name': 'Product Created',
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaveFailed',
+              'name': 'Product save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaved',
+              'name': 'Product saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Create Product',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'form-section',
+                        'fields': [
+                          'name',
+                          'description',
+                          'price',
+                          'category',
+                          'inStock',
+                        ],
+                        'mode': 'create',
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Product',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'ProductSaveFailed',
+                      'success': 'ProductSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductEdit',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Product',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PRODUCT_UPDATED',
+              'name': 'Product Updated',
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdateFailed',
+              'name': 'Product update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdated',
+              'name': 'Product updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'edit',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'type': 'typography',
+                            'content': 'Edit Product',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'edit',
+                        'entity': '@payload.row',
+                        'fields': [
+                          'name',
+                          'description',
+                          'price',
+                          'category',
+                          'inStock',
+                        ],
+                        'type': 'form-section',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Product',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'ProductUpdateFailed',
+                      'success': 'ProductUpdated',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductView',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.inStock',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.name',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.price',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'eye',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': '@entity.name',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Name',
+                            'type': 'typography',
+                          },
+                          {
+                            'content': '@entity.name',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Description',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.description',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Price',
+                          },
+                          {
+                            'content': '@entity.price',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'content': 'Category',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.category',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'In Stock',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.inStock',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'icon': 'edit',
+                            'action': 'EDIT',
+                            'type': 'button',
+                            'label': 'Edit',
+                            'variant': 'primary',
+                          },
+                          {
+                            'label': 'Close',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'CLOSE',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductDelete',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'PRODUCT_DELETED',
+              'name': 'Product Deleted',
+            },
+            {
+              'key': 'ProductDeleteFailed',
+              'name': 'Product delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductDeleted',
+              'name': 'Product deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Delete Product',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'message': 'This action cannot be undone.',
+                        'type': 'alert',
+                        'variant': 'error',
+                      },
+                      {
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'variant': 'ghost',
+                            'action': 'CANCEL',
+                            'label': 'Cancel',
+                            'type': 'button',
+                          },
+                          {
+                            'variant': 'danger',
+                            'label': 'Delete',
+                            'action': 'CONFIRM_DELETE',
+                            'icon': 'check',
+                            'type': 'button',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Product',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'failure': 'ProductDeleteFailed',
+                      'success': 'ProductDeleted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ProductsPage',
+        'path': '/products',
+        'traits': [
+          {
+            'ref': 'ProductBrowse',
+          },
+          {
+            'ref': 'ProductCreate',
+          },
+          {
+            'ref': 'ProductEdit',
+          },
+          {
+            'ref': 'ProductView',
+          },
+          {
+            'ref': 'ProductDelete',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `ServiceMarketplace.traits.ProductCreate`. */
-export function stdServiceMarketplaceProductCreateTrait(params: StdServiceMarketplaceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ServiceMarketplace.traits.ProductEdit`. */
-export function stdServiceMarketplaceProductEditTrait(params: StdServiceMarketplaceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ServiceMarketplace.traits.ProductView`. */
-export function stdServiceMarketplaceProductViewTrait(params: StdServiceMarketplaceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ServiceMarketplace.traits.ProductDelete`. */
-export function stdServiceMarketplaceProductDeleteTrait(params: StdServiceMarketplaceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `ServiceMarketplace.pages.ProductsPage`. */
-export function stdServiceMarketplacePage(params: StdServiceMarketplaceParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ProductsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdServiceMarketplace(params: StdServiceMarketplaceParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Product';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ProductOrbital',
-      uses: [],
-      entity: {
-        'name': 'Product',
-        'collection': 'products',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-          },
-          {
-            'name': 'price',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-          },
-          {
-            'name': 'inStock',
-            'type': 'boolean',
-            'default': true,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'ProductBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'CHECKOUT',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.price',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.inStock',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CREATE',
-            },
-            {
-              'event': 'VIEW',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.price',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.inStock',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.price',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.inStock',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DELETE',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.price',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.inStock',
-                  'type': 'boolean',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductOauthCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ProductOauthFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductStripeCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ProductStripeFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductEmailCompleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                },
-              ],
-            },
-            {
-              'event': 'ProductEmailFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'PRODUCT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductCreate',
-              },
-            },
-            {
-              'event': 'PRODUCT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductEdit',
-              },
-            },
-            {
-              'event': 'PRODUCT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CHECKOUT',
-                'name': 'Checkout',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Product',
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Product',
-                  },
-                ],
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Product',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaved',
-                'name': 'Product saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaveFailed',
-                'name': 'Product save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdated',
-                'name': 'Product updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdateFailed',
-                'name': 'Product update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductDeleted',
-                'name': 'Product deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductDeleteFailed',
-                'name': 'Product delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductOauthCompleted',
-                'name': 'Product oauth completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductOauthFailed',
-                'name': 'Product oauth failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductStripeCompleted',
-                'name': 'Product stripe completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductStripeFailed',
-                'name': 'Product stripe failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductEmailCompleted',
-                'name': 'Product email completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductEmailFailed',
-                'name': 'Product email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderSaved',
-                'name': 'Order saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderSaveFailed',
-                'name': 'Order save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderUpdated',
-                'name': 'Order updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderUpdateFailed',
-                'name': 'Order update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderDeleted',
-                'name': 'Order deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderDeleteFailed',
-                'name': 'Order delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'Loading…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'className': 'py-12',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ProductLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'label': 'Products',
-                          'icon': 'package',
-                        },
-                        {
-                          'href': '/login',
-                          'label': 'Login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'shopping-bag',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Products',
-                                    },
-                                  ],
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'align': 'center',
-                                },
-                                {
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'button',
-                                      'variant': 'primary',
-                                      'icon': 'plus',
-                                      'label': 'Create Product',
-                                      'action': 'CREATE',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                              ],
-                              'align': 'center',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'itemActions': [
-                                {
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'label': 'Checkout',
-                                  'variant': 'primary',
-                                  'event': 'CHECKOUT',
-                                },
-                                {
-                                  'label': 'Delete',
-                                  'variant': 'danger',
-                                  'event': 'DELETE',
-                                },
-                              ],
-                              'entity': '@payload.data',
-                              'type': 'data-grid',
-                              'fields': [
-                                {
-                                  'name': 'name',
-                                  'label': 'Name',
-                                  'variant': 'h4',
-                                  'icon': 'shopping-bag',
-                                },
-                                {
-                                  'colorMap': {
-                                    'done': 'success',
-                                    'cancelled': 'destructive',
-                                    'inactive': 'neutral',
-                                    'archived': 'neutral',
-                                    'error': 'destructive',
-                                    'scheduled': 'warning',
-                                    'completed': 'success',
-                                    'pending': 'warning',
-                                    'active': 'success',
-                                    'disabled': 'neutral',
-                                    'failed': 'destructive',
-                                    'draft': 'warning',
-                                  },
-                                  'label': 'Description',
-                                  'name': 'description',
-                                  'variant': 'badge',
-                                },
-                                {
-                                  'name': 'price',
-                                  'variant': 'caption',
-                                  'label': 'Price',
-                                },
-                              ],
-                            },
-                          ],
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ProductLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'alert-triangle',
-                          'color': 'destructive',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': 'Failed to load product',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'body',
-                          'content': '@payload.error',
-                          'color': 'muted',
-                        },
-                        {
-                          'variant': 'primary',
-                          'type': 'button',
-                          'icon': 'rotate-ccw',
-                          'label': 'Retry',
-                          'action': 'INIT',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductCreate',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PRODUCT_CREATED',
-                'name': 'Product Created',
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaveFailed',
-                'name': 'Product save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaved',
-                'name': 'Product saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'plus-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Create Product',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'form-section',
-                          'fields': [
-                            'name',
-                            'description',
-                            'price',
-                            'category',
-                            'inStock',
-                          ],
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Product',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'ProductSaveFailed',
-                        'success': 'ProductSaved',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_CREATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductEdit',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductView',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Product',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PRODUCT_UPDATED',
-                'name': 'Product Updated',
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdateFailed',
-                'name': 'Product update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdated',
-                'name': 'Product updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'edit',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'type': 'typography',
-                              'content': 'Edit Product',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                          'mode': 'edit',
-                          'entity': '@payload.row',
-                          'fields': [
-                            'name',
-                            'description',
-                            'price',
-                            'category',
-                            'inStock',
-                          ],
-                          'type': 'form-section',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Product',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'ProductUpdateFailed',
-                        'success': 'ProductUpdated',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_UPDATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductView',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.category',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.description',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.inStock',
-                    true,
-                  ],
-                  [
-                    'set',
-                    '@entity.name',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.price',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'eye',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': '@entity.name',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Name',
-                              'type': 'typography',
-                            },
-                            {
-                              'content': '@entity.name',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Description',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.description',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Price',
-                            },
-                            {
-                              'content': '@entity.price',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'content': 'Category',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.category',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'In Stock',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.inStock',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'icon': 'edit',
-                              'action': 'EDIT',
-                              'type': 'button',
-                              'label': 'Edit',
-                              'variant': 'primary',
-                            },
-                            {
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'action': 'CLOSE',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductDelete',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'PRODUCT_DELETED',
-                'name': 'Product Deleted',
-              },
-              {
-                'key': 'ProductDeleteFailed',
-                'name': 'Product delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductDeleted',
-                'name': 'Product deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Delete Product',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'message': 'This action cannot be undone.',
-                          'type': 'alert',
-                          'variant': 'error',
-                        },
-                        {
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'variant': 'ghost',
-                              'action': 'CANCEL',
-                              'label': 'Cancel',
-                              'type': 'button',
-                            },
-                            {
-                              'variant': 'danger',
-                              'label': 'Delete',
-                              'action': 'CONFIRM_DELETE',
-                              'icon': 'check',
-                              'type': 'button',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Product',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'failure': 'ProductDeleteFailed',
-                        'success': 'ProductDeleted',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ProductsPage',
-          'path': '/products',
-          'traits': [
-            {
-              'ref': 'ProductBrowse',
-            },
-            {
-              'ref': 'ProductCreate',
-            },
-            {
-              'ref': 'ProductEdit',
-            },
-            {
-              'ref': 'ProductView',
-            },
-            {
-              'ref': 'ProductDelete',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AuthSessionOrbital',
-      uses: [],
-      entity: {
-        'name': 'AuthSession',
-        'persistence': 'runtime',
-        'fields': [
+  return built;
+}
+
+/**
+ * Tunable params for the AuthSessionOrbital orbital.
+ *
+ * Canonical entity: AuthSession.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceMarketplaceAuthSessionOrbitalParams {
+  /** Override the canonical entity name (default: 'AuthSession'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AuthSessionOrbital orbital with consumer params. */
+export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarketplaceAuthSessionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'AuthSession';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AuthSessionOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'provider',
+          'type': 'string',
+        },
+        {
+          'name': 'authUrl',
+          'type': 'string',
+        },
+        {
+          'name': 'accessToken',
+          'type': 'string',
+        },
+        {
+          'name': 'refreshToken',
+          'type': 'string',
+        },
+        {
+          'name': 'authStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'AuthSessionOauth',
+        'category': 'interaction',
+        'linkedEntity': 'AuthSession',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'AuthSessionLoadFailed',
+            'description': 'Fired when AuthSession fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'provider',
-            'type': 'string',
+            'event': 'AuthSessionLoaded',
+            'description': 'Fired when AuthSession finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[AuthSession]',
+              },
+            ],
           },
           {
-            'name': 'authUrl',
-            'type': 'string',
+            'event': 'ProductOauthCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
           },
           {
-            'name': 'accessToken',
-            'type': 'string',
-          },
-          {
-            'name': 'refreshToken',
-            'type': 'string',
-          },
-          {
-            'name': 'authStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
+            'event': 'ProductOauthFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'AuthSessionOauth',
-          'category': 'interaction',
-          'linkedEntity': 'AuthSession',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'AuthSessionLoadFailed',
-              'description': 'Fired when AuthSession fails to load',
-              'scope': 'internal',
+              'name': 'unauthenticated',
+              'isInitial': true,
+            },
+            {
+              'name': 'authorizing',
+            },
+            {
+              'name': 'authenticated',
+            },
+            {
+              'name': 'refreshing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'LOGIN',
+              'name': 'Login',
+            },
+            {
+              'key': 'AUTH_URL_RECEIVED',
+              'name': 'Auth Url Received',
+              'payloadSchema': [
+                {
+                  'name': 'authUrl',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CALLBACK',
+              'name': 'Callback',
+              'payloadSchema': [
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TOKEN_RECEIVED',
+              'name': 'Token Received',
+              'payloadSchema': [
+                {
+                  'name': 'accessToken',
+                  'type': 'string',
+                },
+                {
+                  'name': 'refreshToken',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'LOGOUT',
+              'name': 'Logout',
+            },
+            {
+              'key': 'TOKEN_REFRESHED',
+              'name': 'Token Refreshed',
+              'payloadSchema': [
+                {
+                  'name': 'accessToken',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'AuthSessionLoadFailed',
+              'name': 'AuthSession load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2906,9 +2953,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'AuthSessionLoaded',
-              'description': 'Fired when AuthSession finishes loading',
-              'scope': 'internal',
+              'key': 'AuthSessionLoaded',
+              'name': 'AuthSession loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2917,8 +2963,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'ProductOauthCompleted',
-              'scope': 'internal',
+              'key': 'ProductOauthCompleted',
+              'name': 'Product oauth completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2927,8 +2973,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'ProductOauthFailed',
-              'scope': 'internal',
+              'key': 'ProductOauthFailed',
+              'name': 'Product oauth failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2941,1126 +2987,1161 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'unauthenticated',
-                'isInitial': true,
-              },
-              {
-                'name': 'authorizing',
-              },
-              {
-                'name': 'authenticated',
-              },
-              {
-                'name': 'refreshing',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'LOGIN',
-                'name': 'Login',
-              },
-              {
-                'key': 'AUTH_URL_RECEIVED',
-                'name': 'Auth Url Received',
-                'payloadSchema': [
-                  {
-                    'name': 'authUrl',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CALLBACK',
-                'name': 'Callback',
-                'payloadSchema': [
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TOKEN_RECEIVED',
-                'name': 'Token Received',
-                'payloadSchema': [
-                  {
-                    'name': 'accessToken',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'refreshToken',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'LOGOUT',
-                'name': 'Logout',
-              },
-              {
-                'key': 'TOKEN_REFRESHED',
-                'name': 'Token Refreshed',
-                'payloadSchema': [
-                  {
-                    'name': 'accessToken',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'AuthSessionLoadFailed',
-                'name': 'AuthSession load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AuthSessionLoaded',
-                'name': 'AuthSession loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[AuthSession]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductOauthCompleted',
-                'name': 'Product oauth completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductOauthFailed',
-                'name': 'Product oauth failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'unauthenticated',
-                'to': 'unauthenticated',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.provider',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'AuthSession',
-                    {
-                      'emit': {
-                        'success': 'AuthSessionLoaded',
-                        'failure': 'AuthSessionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'lock',
-                                },
-                                {
-                                  'content': 'Sign In',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'label': 'Google',
-                                  'value': 'google',
-                                },
-                                {
-                                  'label': 'GitHub',
-                                  'value': 'github',
-                                },
-                                {
-                                  'value': 'microsoft',
-                                  'label': 'Microsoft',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'variant': 'primary',
-                              'type': 'button',
-                              'icon': 'log-in',
-                              'action': 'LOGIN',
-                              'label': 'Login',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'gap': 'lg',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'unauthenticated',
-                'to': 'authorizing',
-                'event': 'LOGIN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Authorizing...',
-                          'message': 'Redirecting to provider for authorization.',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'label': 'Products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'oauth',
-                    'authorize',
-                    {
-                      'provider': '@entity.provider',
-                      'scopes': [
-                        'openid',
-                        'email',
-                      ],
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductOauthCompleted',
-                        'failure': 'ProductOauthFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authorizing',
-                'to': 'authorizing',
-                'event': 'AUTH_URL_RECEIVED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.authUrl',
-                    '@payload.authUrl',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ServiceMarketplace',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'external-link',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Authorization Required',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.authUrl',
-                              'color': 'muted',
-                            },
-                            {
-                              'placeholder': 'Paste authorization code here',
-                              'type': 'input',
-                            },
-                            {
-                              'action': 'CALLBACK',
-                              'icon': 'check',
-                              'label': 'Submit',
-                              'type': 'button',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authorizing',
-                'to': 'authenticated',
-                'event': 'CALLBACK',
-                'effects': [
-                  [
-                    'call-service',
-                    'oauth',
-                    'token',
-                    {
-                      'code': '@payload.code',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductOauthCompleted',
-                        'failure': 'ProductOauthFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'check-circle',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': 'Authenticated successfully',
-                              'variant': 'success',
-                            },
-                            {
-                              'type': 'stack',
-                              'justify': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'label': 'Refresh Token',
-                                  'action': 'REFRESH',
-                                  'icon': 'refresh-cw',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'action': 'LOGOUT',
-                                  'variant': 'ghost',
-                                  'icon': 'log-out',
-                                  'label': 'Logout',
-                                  'type': 'button',
-                                },
-                              ],
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authorizing',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'label': 'Products',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Login',
-                          'icon': 'layout-list',
-                          'href': '/login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'title': 'Authentication Failed',
-                              'type': 'error-state',
-                              'message': '@entity.error',
-                              'onRetry': 'RETRY',
-                            },
-                            {
-                              'action': 'RETRY',
-                              'variant': 'primary',
-                              'icon': 'rotate-ccw',
-                              'type': 'button',
-                              'label': 'Try Again',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authenticated',
-                'to': 'authenticated',
-                'event': 'TOKEN_RECEIVED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.accessToken',
-                    '@payload.accessToken',
-                  ],
-                  [
-                    'set',
-                    '@entity.refreshToken',
-                    '@payload.refreshToken',
-                  ],
-                  [
-                    'set',
-                    '@entity.authStatus',
-                    'authenticated',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/login',
-                          'label': 'Login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'align': 'center',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'check-circle',
-                            },
-                            {
-                              'message': 'Authenticated successfully',
-                              'type': 'alert',
-                              'variant': 'success',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'justify': 'center',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'label': 'Refresh Token',
-                                  'action': 'REFRESH',
-                                  'icon': 'refresh-cw',
-                                },
-                                {
-                                  'action': 'LOGOUT',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                  'label': 'Logout',
-                                  'icon': 'log-out',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authenticated',
-                'to': 'refreshing',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'label': 'Products',
-                          'href': '/products',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'message': 'Obtaining a new access token.',
-                          'title': 'Refreshing token...',
-                        },
-                      ],
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'oauth',
-                    'refresh',
-                    {
-                      'refreshToken': '@entity.refreshToken',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductOauthCompleted',
-                        'failure': 'ProductOauthFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'authenticated',
-                'to': 'unauthenticated',
-                'event': 'LOGOUT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.authStatus',
-                    'unauthenticated',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'lock',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Sign In',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'md',
-                              'align': 'center',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'label': 'Google',
-                                  'value': 'google',
-                                },
-                                {
-                                  'label': 'GitHub',
-                                  'value': 'github',
-                                },
-                                {
-                                  'value': 'microsoft',
-                                  'label': 'Microsoft',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'icon': 'log-in',
-                              'label': 'Login',
-                              'type': 'button',
-                              'action': 'LOGIN',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'label': 'Products',
-                          'href': '/products',
-                        },
-                        {
-                          'href': '/login',
-                          'label': 'Login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'refreshing',
-                'to': 'authenticated',
-                'event': 'TOKEN_REFRESHED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.accessToken',
-                    '@payload.accessToken',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'href': '/products',
-                          'label': 'Products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'alert',
-                              'variant': 'success',
-                              'message': 'Authenticated successfully',
-                            },
-                            {
-                              'type': 'stack',
-                              'justify': 'center',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'variant': 'ghost',
-                                  'icon': 'refresh-cw',
-                                  'type': 'button',
-                                  'label': 'Refresh Token',
-                                  'action': 'REFRESH',
-                                },
-                                {
-                                  'action': 'LOGOUT',
-                                  'variant': 'ghost',
-                                  'icon': 'log-out',
-                                  'type': 'button',
-                                  'label': 'Logout',
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'refreshing',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'title': 'Authentication Failed',
-                              'type': 'error-state',
-                              'onRetry': 'RETRY',
-                              'message': '@entity.error',
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Try Again',
-                              'icon': 'rotate-ccw',
-                              'action': 'RETRY',
-                              'type': 'button',
-                            },
-                          ],
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'unauthenticated',
-                'event': 'RETRY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'lock',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Sign In',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'options': [
-                                {
-                                  'value': 'google',
-                                  'label': 'Google',
-                                },
-                                {
-                                  'value': 'github',
-                                  'label': 'GitHub',
-                                },
-                                {
-                                  'value': 'microsoft',
-                                  'label': 'Microsoft',
-                                },
-                              ],
-                              'type': 'select',
-                            },
-                            {
-                              'type': 'button',
-                              'action': 'LOGIN',
-                              'icon': 'log-in',
-                              'label': 'Login',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'type': 'stack',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Login',
-          'path': '/login',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'AuthSessionOauth',
+              'from': 'unauthenticated',
+              'to': 'unauthenticated',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.provider',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'AuthSession',
+                  {
+                    'emit': {
+                      'success': 'AuthSessionLoaded',
+                      'failure': 'AuthSessionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'href': '/login',
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'lock',
+                              },
+                              {
+                                'content': 'Sign In',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'options': [
+                              {
+                                'label': 'Google',
+                                'value': 'google',
+                              },
+                              {
+                                'label': 'GitHub',
+                                'value': 'github',
+                              },
+                              {
+                                'value': 'microsoft',
+                                'label': 'Microsoft',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'variant': 'primary',
+                            'type': 'button',
+                            'icon': 'log-in',
+                            'action': 'LOGIN',
+                            'label': 'Login',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'lg',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'unauthenticated',
+              'to': 'authorizing',
+              'event': 'LOGIN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Authorizing...',
+                        'message': 'Redirecting to provider for authorization.',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                        'href': '/login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'oauth',
+                  'authorize',
+                  {
+                    'provider': '@entity.provider',
+                    'scopes': [
+                      'openid',
+                      'email',
+                    ],
+                  },
+                  {
+                    'emit': {
+                      'success': 'ProductOauthCompleted',
+                      'failure': 'ProductOauthFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authorizing',
+              'to': 'authorizing',
+              'event': 'AUTH_URL_RECEIVED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.authUrl',
+                  '@payload.authUrl',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                        'href': '/login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'external-link',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Authorization Required',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.authUrl',
+                            'color': 'muted',
+                          },
+                          {
+                            'placeholder': 'Paste authorization code here',
+                            'type': 'input',
+                          },
+                          {
+                            'action': 'CALLBACK',
+                            'icon': 'check',
+                            'label': 'Submit',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authorizing',
+              'to': 'authenticated',
+              'event': 'CALLBACK',
+              'effects': [
+                [
+                  'call-service',
+                  'oauth',
+                  'token',
+                  {
+                    'code': '@payload.code',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ProductOauthCompleted',
+                      'failure': 'ProductOauthFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'type': 'alert',
+                            'message': 'Authenticated successfully',
+                            'variant': 'success',
+                          },
+                          {
+                            'type': 'stack',
+                            'justify': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'label': 'Refresh Token',
+                                'action': 'REFRESH',
+                                'icon': 'refresh-cw',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'action': 'LOGOUT',
+                                'variant': 'ghost',
+                                'icon': 'log-out',
+                                'label': 'Logout',
+                                'type': 'button',
+                              },
+                            ],
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authorizing',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'icon': 'layout-list',
+                        'href': '/login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'title': 'Authentication Failed',
+                            'type': 'error-state',
+                            'message': '@entity.error',
+                            'onRetry': 'RETRY',
+                          },
+                          {
+                            'action': 'RETRY',
+                            'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'label': 'Try Again',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authenticated',
+              'to': 'authenticated',
+              'event': 'TOKEN_RECEIVED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.accessToken',
+                  '@payload.accessToken',
+                ],
+                [
+                  'set',
+                  '@entity.refreshToken',
+                  '@payload.refreshToken',
+                ],
+                [
+                  'set',
+                  '@entity.authStatus',
+                  'authenticated',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'href': '/login',
+                        'label': 'Login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'align': 'center',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'message': 'Authenticated successfully',
+                            'type': 'alert',
+                            'variant': 'success',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'justify': 'center',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'label': 'Refresh Token',
+                                'action': 'REFRESH',
+                                'icon': 'refresh-cw',
+                              },
+                              {
+                                'action': 'LOGOUT',
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'label': 'Logout',
+                                'icon': 'log-out',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authenticated',
+              'to': 'refreshing',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'href': '/login',
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'message': 'Obtaining a new access token.',
+                        'title': 'Refreshing token...',
+                      },
+                    ],
+                  },
+                ],
+                [
+                  'call-service',
+                  'oauth',
+                  'refresh',
+                  {
+                    'refreshToken': '@entity.refreshToken',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ProductOauthCompleted',
+                      'failure': 'ProductOauthFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'authenticated',
+              'to': 'unauthenticated',
+              'event': 'LOGOUT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.authStatus',
+                  'unauthenticated',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'lock',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Sign In',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'options': [
+                              {
+                                'label': 'Google',
+                                'value': 'google',
+                              },
+                              {
+                                'label': 'GitHub',
+                                'value': 'github',
+                              },
+                              {
+                                'value': 'microsoft',
+                                'label': 'Microsoft',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'icon': 'log-in',
+                            'label': 'Login',
+                            'type': 'button',
+                            'action': 'LOGIN',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'href': '/login',
+                        'label': 'Login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'refreshing',
+              'to': 'authenticated',
+              'event': 'TOKEN_REFRESHED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.accessToken',
+                  '@payload.accessToken',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'href': '/products',
+                        'label': 'Products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'check-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'success',
+                            'message': 'Authenticated successfully',
+                          },
+                          {
+                            'type': 'stack',
+                            'justify': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'ghost',
+                                'icon': 'refresh-cw',
+                                'type': 'button',
+                                'label': 'Refresh Token',
+                                'action': 'REFRESH',
+                              },
+                              {
+                                'action': 'LOGOUT',
+                                'variant': 'ghost',
+                                'icon': 'log-out',
+                                'type': 'button',
+                                'label': 'Logout',
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'refreshing',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'title': 'Authentication Failed',
+                            'type': 'error-state',
+                            'onRetry': 'RETRY',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'variant': 'primary',
+                            'label': 'Try Again',
+                            'icon': 'rotate-ccw',
+                            'action': 'RETRY',
+                            'type': 'button',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'unauthenticated',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'lock',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Sign In',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'options': [
+                              {
+                                'value': 'google',
+                                'label': 'Google',
+                              },
+                              {
+                                'value': 'github',
+                                'label': 'GitHub',
+                              },
+                              {
+                                'value': 'microsoft',
+                                'label': 'Microsoft',
+                              },
+                            ],
+                            'type': 'select',
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'LOGIN',
+                            'icon': 'log-in',
+                            'label': 'Login',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                        'href': '/login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OrderPaymentOrbital',
-      uses: [],
-      entity: {
-        'name': 'OrderPayment',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Login',
+        'path': '/login',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'amount',
-            'type': 'number',
-          },
-          {
-            'name': 'currency',
-            'type': 'string',
-          },
-          {
-            'name': 'paymentIntentId',
-            'type': 'string',
-          },
-          {
-            'name': 'clientSecret',
-            'type': 'string',
-          },
-          {
-            'name': 'paymentStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'to',
-            'type': 'string',
-          },
-          {
-            'name': 'subject',
-            'type': 'string',
-          },
-          {
-            'name': 'body',
-            'type': 'string',
-          },
-          {
-            'name': 'sendStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'error',
-            'type': 'string',
+            'ref': 'AuthSessionOauth',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the OrderPaymentOrbital orbital.
+ *
+ * Canonical entity: OrderPayment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceMarketplaceOrderPaymentOrbitalParams {
+  /** Override the canonical entity name (default: 'OrderPayment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OrderPaymentOrbital orbital with consumer params. */
+export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarketplaceOrderPaymentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'OrderPayment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OrderPaymentOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'OrderPaymentPayment',
-          'category': 'interaction',
-          'linkedEntity': 'OrderPayment',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'amount',
+          'type': 'number',
+        },
+        {
+          'name': 'currency',
+          'type': 'string',
+        },
+        {
+          'name': 'paymentIntentId',
+          'type': 'string',
+        },
+        {
+          'name': 'clientSecret',
+          'type': 'string',
+        },
+        {
+          'name': 'paymentStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'to',
+          'type': 'string',
+        },
+        {
+          'name': 'subject',
+          'type': 'string',
+        },
+        {
+          'name': 'body',
+          'type': 'string',
+        },
+        {
+          'name': 'sendStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'error',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'OrderPaymentPayment',
+        'category': 'interaction',
+        'linkedEntity': 'OrderPayment',
+        'emits': [
+          {
+            'event': 'SEND_RECEIPT',
+          },
+          {
+            'event': 'OrderPaymentLoadFailed',
+            'description': 'Fired when OrderPayment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderPaymentLoaded',
+            'description': 'Fired when OrderPayment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderPayment]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductStripeCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': 'object',
+              },
+            ],
+          },
+          {
+            'event': 'ProductStripeFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CHECKOUT',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'ProductOrbital',
+              'trait': 'ProductBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'SEND_RECEIPT',
+              'name': 'idle',
+              'isInitial': true,
             },
             {
-              'event': 'OrderPaymentLoadFailed',
-              'description': 'Fired when OrderPayment fails to load',
-              'scope': 'internal',
+              'name': 'creating',
+            },
+            {
+              'name': 'confirming',
+            },
+            {
+              'name': 'succeeded',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE_PAYMENT',
+              'name': 'Create Payment',
+            },
+            {
+              'key': 'PAYMENT_CREATED',
+              'name': 'Payment Created',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'clientSecret',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PAYMENT_CONFIRMED',
+              'name': 'Payment Confirmed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'SEND_RECEIPT',
+              'name': 'Send Receipt',
+            },
+            {
+              'key': 'OrderPaymentLoadFailed',
+              'name': 'OrderPayment load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -4073,9 +4154,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'OrderPaymentLoaded',
-              'description': 'Fired when OrderPayment finishes loading',
-              'scope': 'internal',
+              'key': 'OrderPaymentLoaded',
+              'name': 'OrderPayment loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -4084,8 +4164,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'ProductStripeCompleted',
-              'scope': 'internal',
+              'key': 'ProductStripeCompleted',
+              'name': 'Product stripe completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -4094,8 +4174,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'ProductStripeFailed',
-              'scope': 'internal',
+              'key': 'ProductStripeFailed',
+              'name': 'Product stripe failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -4108,884 +4188,828 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
-              'event': 'CHECKOUT',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'ProductOrbital',
-                'trait': 'ProductBrowse',
-              },
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.amount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.currency',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'OrderPayment',
+                  {
+                    'emit': {
+                      'success': 'OrderPaymentLoaded',
+                      'failure': 'OrderPaymentLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'credit-card',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Payment',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'placeholder': '0.00',
+                                'type': 'input',
+                                'inputType': 'number',
+                              },
+                              {
+                                'options': [
+                                  {
+                                    'value': 'usd',
+                                    'label': 'USD',
+                                  },
+                                  {
+                                    'label': 'EUR',
+                                    'value': 'eur',
+                                  },
+                                  {
+                                    'label': 'GBP',
+                                    'value': 'gbp',
+                                  },
+                                ],
+                                'type': 'select',
+                              },
+                            ],
+                            'direction': 'vertical',
+                          },
+                          {
+                            'action': 'CREATE_PAYMENT',
+                            'variant': 'primary',
+                            'icon': 'credit-card',
+                            'type': 'button',
+                            'label': 'Pay',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'creating',
+              'event': 'CREATE_PAYMENT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                        'href': '/login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Creating payment...',
+                        'message': 'Setting up your payment intent.',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+                [
+                  'call-service',
+                  'stripe',
+                  'createPaymentIntent',
+                  {
+                    'amount': '@entity.amount',
+                    'currency': '@entity.currency',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ProductStripeFailed',
+                      'success': 'ProductStripeCompleted',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'creating',
+              'to': 'confirming',
+              'event': 'PAYMENT_CREATED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.paymentIntentId',
+                  '@payload.id',
+                ],
+                [
+                  'set',
+                  '@entity.clientSecret',
+                  '@payload.clientSecret',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'message': 'Processing your payment.',
+                        'title': 'Confirming payment...',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+                [
+                  'call-service',
+                  'stripe',
+                  'confirmPayment',
+                  {
+                    'paymentIntentId': '@entity.paymentIntentId',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ProductStripeCompleted',
+                      'failure': 'ProductStripeFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'creating',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'href': '/products',
+                        'label': 'Products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'error-state',
+                        'onRetry': 'RETRY',
+                        'title': 'Payment Failed',
+                        'message': '@entity.error',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'succeeded',
+              'event': 'PAYMENT_CONFIRMED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.paymentStatus',
+                  'succeeded',
+                ],
+                [
+                  'emit',
+                  'SEND_RECEIPT',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'check-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'alert',
+                            'message': 'Payment successful! Sending receipt...',
+                            'variant': 'success',
+                          },
+                          {
+                            'content': '@entity.paymentIntentId',
+                            'color': 'muted',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                          {
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
+                            'label': 'New Payment',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                        ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'href': '/login',
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.error',
+                  '@payload.error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'href': '/login',
+                        'label': 'Login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'onRetry': 'RETRY',
+                        'title': 'Payment Failed',
+                        'type': 'error-state',
+                        'message': '@entity.error',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'succeeded',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'credit-card',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Payment',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'direction': 'vertical',
+                            'children': [
+                              {
+                                'type': 'input',
+                                'inputType': 'number',
+                                'placeholder': '0.00',
+                              },
+                              {
+                                'options': [
+                                  {
+                                    'label': 'USD',
+                                    'value': 'usd',
+                                  },
+                                  {
+                                    'value': 'eur',
+                                    'label': 'EUR',
+                                  },
+                                  {
+                                    'value': 'gbp',
+                                    'label': 'GBP',
+                                  },
+                                ],
+                                'type': 'select',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'variant': 'primary',
+                            'label': 'Pay',
+                            'icon': 'credit-card',
+                            'type': 'button',
+                            'action': 'CREATE_PAYMENT',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'credit-card',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Payment',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'input',
+                                'inputType': 'number',
+                                'placeholder': '0.00',
+                              },
+                              {
+                                'type': 'select',
+                                'options': [
+                                  {
+                                    'label': 'USD',
+                                    'value': 'usd',
+                                  },
+                                  {
+                                    'value': 'eur',
+                                    'label': 'EUR',
+                                  },
+                                  {
+                                    'label': 'GBP',
+                                    'value': 'gbp',
+                                  },
+                                ],
+                              },
+                            ],
+                            'direction': 'vertical',
+                          },
+                          {
+                            'variant': 'primary',
+                            'label': 'Pay',
+                            'action': 'CREATE_PAYMENT',
+                            'icon': 'credit-card',
+                            'type': 'button',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'credit-card',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Payment',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'inputType': 'number',
+                                'type': 'input',
+                                'placeholder': '0.00',
+                              },
+                              {
+                                'options': [
+                                  {
+                                    'value': 'usd',
+                                    'label': 'USD',
+                                  },
+                                  {
+                                    'label': 'EUR',
+                                    'value': 'eur',
+                                  },
+                                  {
+                                    'label': 'GBP',
+                                    'value': 'gbp',
+                                  },
+                                ],
+                                'type': 'select',
+                              },
+                            ],
+                          },
+                          {
+                            'variant': 'primary',
+                            'label': 'Pay',
+                            'icon': 'credit-card',
+                            'type': 'button',
+                            'action': 'CREATE_PAYMENT',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderPaymentReceipt',
+        'category': 'interaction',
+        'linkedEntity': 'OrderPayment',
+        'emits': [
+          {
+            'event': 'ProductEmailCompleted',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
+                'name': 'data',
+                'type': 'object',
               },
-              {
-                'name': 'creating',
-              },
-              {
-                'name': 'confirming',
-              },
-              {
-                'name': 'succeeded',
-              },
+            ],
+          },
+          {
+            'event': 'ProductEmailFailed',
+            'scope': 'internal',
+            'payloadSchema': [
               {
                 'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
+                'type': 'string',
               },
               {
-                'key': 'CREATE_PAYMENT',
-                'name': 'Create Payment',
-              },
-              {
-                'key': 'PAYMENT_CREATED',
-                'name': 'Payment Created',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'clientSecret',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PAYMENT_CONFIRMED',
-                'name': 'Payment Confirmed',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'SEND_RECEIPT',
-                'name': 'Send Receipt',
-              },
-              {
-                'key': 'OrderPaymentLoadFailed',
-                'name': 'OrderPayment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderPaymentLoaded',
-                'name': 'OrderPayment loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderPayment]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductStripeCompleted',
-                'name': 'Product stripe completed',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductStripeFailed',
-                'name': 'Product stripe failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.amount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.currency',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'OrderPayment',
-                    {
-                      'emit': {
-                        'success': 'OrderPaymentLoaded',
-                        'failure': 'OrderPaymentLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'credit-card',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Payment',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'placeholder': '0.00',
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                },
-                                {
-                                  'options': [
-                                    {
-                                      'value': 'usd',
-                                      'label': 'USD',
-                                    },
-                                    {
-                                      'label': 'EUR',
-                                      'value': 'eur',
-                                    },
-                                    {
-                                      'label': 'GBP',
-                                      'value': 'gbp',
-                                    },
-                                  ],
-                                  'type': 'select',
-                                },
-                              ],
-                              'direction': 'vertical',
-                            },
-                            {
-                              'action': 'CREATE_PAYMENT',
-                              'variant': 'primary',
-                              'icon': 'credit-card',
-                              'type': 'button',
-                              'label': 'Pay',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'creating',
-                'event': 'CREATE_PAYMENT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                          'href': '/login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'title': 'Creating payment...',
-                          'message': 'Setting up your payment intent.',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'stripe',
-                    'createPaymentIntent',
-                    {
-                      'amount': '@entity.amount',
-                      'currency': '@entity.currency',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ProductStripeFailed',
-                        'success': 'ProductStripeCompleted',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'creating',
-                'to': 'confirming',
-                'event': 'PAYMENT_CREATED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.paymentIntentId',
-                    '@payload.id',
-                  ],
-                  [
-                    'set',
-                    '@entity.clientSecret',
-                    '@payload.clientSecret',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'loading-state',
-                          'message': 'Processing your payment.',
-                          'title': 'Confirming payment...',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'stripe',
-                    'confirmPayment',
-                    {
-                      'paymentIntentId': '@entity.paymentIntentId',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductStripeCompleted',
-                        'failure': 'ProductStripeFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'creating',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'href': '/products',
-                          'label': 'Products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'error-state',
-                          'onRetry': 'RETRY',
-                          'title': 'Payment Failed',
-                          'message': '@entity.error',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'succeeded',
-                'event': 'PAYMENT_CONFIRMED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.paymentStatus',
-                    'succeeded',
-                  ],
-                  [
-                    'emit',
-                    'SEND_RECEIPT',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': 'Payment successful! Sending receipt...',
-                              'variant': 'success',
-                            },
-                            {
-                              'content': '@entity.paymentIntentId',
-                              'color': 'muted',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                            {
-                              'icon': 'rotate-ccw',
-                              'action': 'RESET',
-                              'label': 'New Payment',
-                              'type': 'button',
-                              'variant': 'ghost',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'icon': 'package',
-                          'label': 'Products',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.error',
-                    '@payload.error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/login',
-                          'label': 'Login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'onRetry': 'RETRY',
-                          'title': 'Payment Failed',
-                          'type': 'error-state',
-                          'message': '@entity.error',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'succeeded',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'label': 'Products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'name': 'credit-card',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Payment',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'direction': 'vertical',
-                              'children': [
-                                {
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                  'placeholder': '0.00',
-                                },
-                                {
-                                  'options': [
-                                    {
-                                      'label': 'USD',
-                                      'value': 'usd',
-                                    },
-                                    {
-                                      'value': 'eur',
-                                      'label': 'EUR',
-                                    },
-                                    {
-                                      'value': 'gbp',
-                                      'label': 'GBP',
-                                    },
-                                  ],
-                                  'type': 'select',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Pay',
-                              'icon': 'credit-card',
-                              'type': 'button',
-                              'action': 'CREATE_PAYMENT',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RETRY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'credit-card',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Payment',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'input',
-                                  'inputType': 'number',
-                                  'placeholder': '0.00',
-                                },
-                                {
-                                  'type': 'select',
-                                  'options': [
-                                    {
-                                      'label': 'USD',
-                                      'value': 'usd',
-                                    },
-                                    {
-                                      'value': 'eur',
-                                      'label': 'EUR',
-                                    },
-                                    {
-                                      'label': 'GBP',
-                                      'value': 'gbp',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'direction': 'vertical',
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Pay',
-                              'action': 'CREATE_PAYMENT',
-                              'icon': 'credit-card',
-                              'type': 'button',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'credit-card',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Payment',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'inputType': 'number',
-                                  'type': 'input',
-                                  'placeholder': '0.00',
-                                },
-                                {
-                                  'options': [
-                                    {
-                                      'value': 'usd',
-                                      'label': 'USD',
-                                    },
-                                    {
-                                      'label': 'EUR',
-                                      'value': 'eur',
-                                    },
-                                    {
-                                      'label': 'GBP',
-                                      'value': 'gbp',
-                                    },
-                                  ],
-                                  'type': 'select',
-                                },
-                              ],
-                            },
-                            {
-                              'variant': 'primary',
-                              'label': 'Pay',
-                              'icon': 'credit-card',
-                              'type': 'button',
-                              'action': 'CREATE_PAYMENT',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                ],
+                'name': 'code',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderPaymentReceipt',
-          'category': 'interaction',
-          'linkedEntity': 'OrderPayment',
-          'emits': [
+        ],
+        'listens': [
+          {
+            'event': 'SEND_RECEIPT',
+            'triggers': 'SEND_RECEIPT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderPaymentPayment',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ProductEmailCompleted',
-              'scope': 'internal',
+              'name': 'waiting',
+              'isInitial': true,
+            },
+            {
+              'name': 'sending',
+            },
+            {
+              'name': 'sent',
+            },
+            {
+              'name': 'receiptError',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SEND_RECEIPT',
+              'name': 'Send Receipt',
+            },
+            {
+              'key': 'SENT',
+              'name': 'Sent',
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+            },
+            {
+              'key': 'RETRY_RECEIPT',
+              'name': 'Retry Receipt',
+            },
+            {
+              'key': 'ProductEmailCompleted',
+              'name': 'Product email completed',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -4994,8 +5018,8 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
             {
-              'event': 'ProductEmailFailed',
-              'scope': 'internal',
+              'key': 'ProductEmailFailed',
+              'name': 'Product email failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -5008,2284 +5032,2304 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams): Orbi
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
+              'from': 'waiting',
+              'to': 'waiting',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.body',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.subject',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.to',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'href': '/login',
+                        'label': 'Login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'mail',
+                          },
+                          {
+                            'color': 'muted',
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': 'Receipt will be sent after payment.',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'waiting',
+              'to': 'sending',
               'event': 'SEND_RECEIPT',
-              'triggers': 'SEND_RECEIPT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderPaymentPayment',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'waiting',
-                'isInitial': true,
-              },
-              {
-                'name': 'sending',
-              },
-              {
-                'name': 'sent',
-              },
-              {
-                'name': 'receiptError',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SEND_RECEIPT',
-                'name': 'Send Receipt',
-              },
-              {
-                'key': 'SENT',
-                'name': 'Sent',
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-              },
-              {
-                'key': 'RETRY_RECEIPT',
-                'name': 'Retry Receipt',
-              },
-              {
-                'key': 'ProductEmailCompleted',
-                'name': 'Product email completed',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': 'object',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'title': 'Sending receipt...',
+                        'message': 'Delivering your payment receipt.',
+                        'type': 'loading-state',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
-              },
-              {
-                'key': 'ProductEmailFailed',
-                'name': 'Product email failed',
-                'payloadSchema': [
+                [
+                  'call-service',
+                  'email',
+                  'send',
                   {
-                    'name': 'error',
-                    'type': 'string',
+                    'to': '@entity.to',
+                    'subject': '@entity.subject',
+                    'body': '@entity.body',
                   },
                   {
-                    'name': 'code',
-                    'type': 'string',
+                    'emit': {
+                      'success': 'ProductEmailCompleted',
+                      'failure': 'ProductEmailFailed',
+                    },
                   },
                 ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'waiting',
-                'to': 'waiting',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.body',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.subject',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.to',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'appName': 'ServiceMarketplace',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'icon': 'layout-list',
-                          'href': '/login',
-                          'label': 'Login',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'md',
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'mail',
-                            },
-                            {
-                              'color': 'muted',
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': 'Receipt will be sent after payment.',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'waiting',
-                'to': 'sending',
-                'event': 'SEND_RECEIPT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'title': 'Sending receipt...',
-                          'message': 'Delivering your payment receipt.',
-                          'type': 'loading-state',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'to': '@entity.to',
-                      'subject': '@entity.subject',
-                      'body': '@entity.body',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductEmailCompleted',
-                        'failure': 'ProductEmailFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'sending',
-                'to': 'sent',
-                'event': 'SENT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.sendStatus',
-                    'sent',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'check-circle',
-                            },
-                            {
-                              'message': 'Receipt sent successfully',
-                              'variant': 'success',
-                              'type': 'alert',
-                            },
-                          ],
-                          'align': 'center',
-                          'gap': 'md',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'icon': 'package',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'sending',
-                'to': 'receiptError',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.sendStatus',
-                    'error',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'error-state',
-                              'title': 'Receipt Failed',
-                              'message': 'Could not send receipt email.',
-                              'onRetry': 'RETRY_RECEIPT',
-                            },
-                            {
-                              'label': 'Retry',
-                              'action': 'RETRY_RECEIPT',
-                              'type': 'button',
-                              'variant': 'primary',
-                              'icon': 'refresh-cw',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'sent',
-                'to': 'sending',
-                'event': 'SEND_RECEIPT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'title': 'Resending receipt...',
-                      'type': 'loading-state',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'body': '@entity.body',
-                      'to': '@entity.to',
-                      'subject': '@entity.subject',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ProductEmailCompleted',
-                        'failure': 'ProductEmailFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'receiptError',
-                'to': 'sending',
-                'event': 'RETRY_RECEIPT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'title': 'Sending receipt...',
-                          'type': 'loading-state',
-                          'message': 'Delivering your payment receipt.',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'label': 'Products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Login',
-                          'href': '/login',
-                          'icon': 'layout-list',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                        },
-                      ],
-                      'appName': 'ServiceMarketplace',
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'to': '@entity.to',
-                      'subject': '@entity.subject',
-                      'body': '@entity.body',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ProductEmailFailed',
-                        'success': 'ProductEmailCompleted',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Checkout',
-          'path': '/checkout',
-          'traits': [
-            {
-              'ref': 'OrderPaymentPayment',
+              ],
             },
             {
-              'ref': 'OrderPaymentReceipt',
+              'from': 'sending',
+              'to': 'sent',
+              'event': 'SENT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.sendStatus',
+                  'sent',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'message': 'Receipt sent successfully',
+                            'variant': 'success',
+                            'type': 'alert',
+                          },
+                        ],
+                        'align': 'center',
+                        'gap': 'md',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'sending',
+              'to': 'receiptError',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'set',
+                  '@entity.sendStatus',
+                  'error',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'error-state',
+                            'title': 'Receipt Failed',
+                            'message': 'Could not send receipt email.',
+                            'onRetry': 'RETRY_RECEIPT',
+                          },
+                          {
+                            'label': 'Retry',
+                            'action': 'RETRY_RECEIPT',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'refresh-cw',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'sent',
+              'to': 'sending',
+              'event': 'SEND_RECEIPT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'title': 'Resending receipt...',
+                    'type': 'loading-state',
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'body': '@entity.body',
+                    'to': '@entity.to',
+                    'subject': '@entity.subject',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ProductEmailCompleted',
+                      'failure': 'ProductEmailFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'receiptError',
+              'to': 'sending',
+              'event': 'RETRY_RECEIPT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'title': 'Sending receipt...',
+                        'type': 'loading-state',
+                        'message': 'Delivering your payment receipt.',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'to': '@entity.to',
+                    'subject': '@entity.subject',
+                    'body': '@entity.body',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ProductEmailFailed',
+                      'success': 'ProductEmailCompleted',
+                    },
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OrderOrbital',
-      uses: [],
-      entity: {
-        'name': 'Order',
-        'collection': 'orders',
-        'persistence': 'persistent',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Checkout',
+        'path': '/checkout',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'OrderPaymentPayment',
           },
           {
-            'name': 'productName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'amount',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'paymentStatus',
-            'type': 'string',
-          },
-          {
-            'name': 'orderDate',
-            'type': 'string',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'OrderPaymentReceipt',
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'OrderBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'Order',
-          'emits': [
-            {
-              'event': 'CREATE',
-            },
-            {
-              'event': 'VIEW',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.productName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.amount',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentStatus',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.orderDate',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.productName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.amount',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentStatus',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.orderDate',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DELETE',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.productName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.amount',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentStatus',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.orderDate',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoaded',
-              'description': 'Fired when Order finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Order]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoadFailed',
-              'description': 'Fired when Order fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ORDER_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderCreate',
-              },
-            },
-            {
-              'event': 'ORDER_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderEdit',
-              },
-            },
-            {
-              'event': 'ORDER_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'OrderLoaded',
-                'name': 'Order loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Order]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoadFailed',
-                'name': 'Order load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'Loading…',
-                          'variant': 'caption',
-                          'type': 'typography',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'OrderLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'ServiceMarketplace',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'list',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': 'Orders',
-                                      'variant': 'h2',
-                                    },
-                                  ],
-                                  'gap': 'sm',
-                                },
-                                {
-                                  'direction': 'horizontal',
-                                  'children': [
-                                    {
-                                      'label': 'Create Order',
-                                      'type': 'button',
-                                      'action': 'CREATE',
-                                      'variant': 'primary',
-                                      'icon': 'plus',
-                                    },
-                                  ],
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'fields': [
-                                {
-                                  'label': 'Product Name',
-                                  'name': 'productName',
-                                  'variant': 'h4',
-                                  'icon': 'list',
-                                },
-                                {
-                                  'name': 'amount',
-                                  'colorMap': {
-                                    'completed': 'success',
-                                    'pending': 'warning',
-                                    'cancelled': 'destructive',
-                                    'failed': 'destructive',
-                                    'error': 'destructive',
-                                    'scheduled': 'warning',
-                                    'disabled': 'neutral',
-                                    'done': 'success',
-                                    'active': 'success',
-                                    'draft': 'warning',
-                                    'archived': 'neutral',
-                                    'inactive': 'neutral',
-                                  },
-                                  'variant': 'badge',
-                                  'label': 'Amount',
-                                },
-                                {
-                                  'label': 'Payment Status',
-                                  'name': 'paymentStatus',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'type': 'data-grid',
-                              'entity': '@payload.data',
-                              'itemActions': [
-                                {
-                                  'variant': 'ghost',
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                },
-                                {
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'variant': 'danger',
-                                  'label': 'Delete',
-                                  'event': 'DELETE',
-                                },
-                              ],
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'className': 'max-w-5xl mx-auto w-full',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'href': '/login',
-                          'icon': 'layout-list',
-                          'label': 'Login',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'label': 'Orders',
-                          'href': '/orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'OrderLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'type': 'icon',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'content': 'Failed to load order',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': '@payload.error',
-                          'color': 'muted',
-                          'variant': 'body',
-                        },
-                        {
-                          'action': 'INIT',
-                          'icon': 'rotate-ccw',
-                          'variant': 'primary',
-                          'type': 'button',
-                          'label': 'Retry',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderCreate',
-          'category': 'interaction',
-          'linkedEntity': 'Order',
-          'emits': [
-            {
-              'event': 'ORDER_CREATED',
-            },
-            {
-              'event': 'OrderLoadFailed',
-              'description': 'Fired when Order fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoaded',
-              'description': 'Fired when Order finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Order]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ORDER_CREATED',
-                'name': 'Order Created',
-              },
-              {
-                'key': 'OrderLoadFailed',
-                'name': 'Order load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoaded',
-                'name': 'Order loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Order]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderSaveFailed',
-                'name': 'Order save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderSaved',
-                'name': 'Order saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'plus-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Create Order',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'form-section',
-                          'fields': [
-                            'productName',
-                            'amount',
-                            'paymentStatus',
-                            'orderDate',
-                          ],
-                          'cancelEvent': 'CLOSE',
-                          'mode': 'create',
-                          'submitEvent': 'SAVE',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Order',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'OrderSaveFailed',
-                        'success': 'OrderSaved',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_CREATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderEdit',
-          'category': 'interaction',
-          'linkedEntity': 'Order',
-          'emits': [
-            {
-              'event': 'ORDER_UPDATED',
-            },
-            {
-              'event': 'OrderLoadFailed',
-              'description': 'Fired when Order fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoaded',
-              'description': 'Fired when Order finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Order]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderView',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Order',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ORDER_UPDATED',
-                'name': 'Order Updated',
-              },
-              {
-                'key': 'OrderLoadFailed',
-                'name': 'Order load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoaded',
-                'name': 'Order loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Order]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderUpdateFailed',
-                'name': 'Order update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderUpdated',
-                'name': 'Order updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'edit',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Edit Order',
-                              'variant': 'h3',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
-                          'mode': 'edit',
-                          'submitEvent': 'SAVE',
-                          'fields': [
-                            'productName',
-                            'amount',
-                            'paymentStatus',
-                            'orderDate',
-                          ],
-                          'entity': '@payload.row',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Order',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'OrderUpdated',
-                        'failure': 'OrderUpdateFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_UPDATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderView',
-          'category': 'interaction',
-          'linkedEntity': 'Order',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoaded',
-              'description': 'Fired when Order finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Order]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoadFailed',
-              'description': 'Fired when Order fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'OrderLoaded',
-                'name': 'Order loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Order]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoadFailed',
-                'name': 'Order load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.amount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.orderDate',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.paymentStatus',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.productName',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'OrderLoadFailed',
-                        'success': 'OrderLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'eye',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': '@entity.productName',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'content': 'Product Name',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'content': '@entity.productName',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Amount',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.amount',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'content': 'Payment Status',
-                              'variant': 'caption',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.paymentStatus',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Order Date',
-                              'type': 'typography',
-                            },
-                            {
-                              'content': '@entity.orderDate',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'icon': 'edit',
-                              'label': 'Edit',
-                              'variant': 'primary',
-                              'action': 'EDIT',
-                              'type': 'button',
-                            },
-                            {
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'action': 'CLOSE',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderDelete',
-          'category': 'interaction',
-          'linkedEntity': 'Order',
-          'emits': [
-            {
-              'event': 'ORDER_DELETED',
-            },
-            {
-              'event': 'OrderDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoadFailed',
-              'description': 'Fired when Order fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderLoaded',
-              'description': 'Fired when Order finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Order]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'ORDER_DELETED',
-                'name': 'Order Deleted',
-              },
-              {
-                'key': 'OrderDeleteFailed',
-                'name': 'Order delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderDeleted',
-                'name': 'Order deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoadFailed',
-                'name': 'Order load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderLoaded',
-                'name': 'Order loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Order]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'OrderLoadFailed',
-                        'success': 'OrderLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Delete Order',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'error',
-                          'message': 'This action cannot be undone.',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'button',
-                              'label': 'Cancel',
-                              'action': 'CANCEL',
-                              'variant': 'ghost',
-                            },
-                            {
-                              'variant': 'danger',
-                              'type': 'button',
-                              'label': 'Delete',
-                              'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
-                            },
-                          ],
-                          'type': 'stack',
-                          'justify': 'end',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Order',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'success': 'OrderDeleted',
-                        'failure': 'OrderDeleteFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'success': 'OrderLoaded',
-                        'failure': 'OrderLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'failure': 'OrderLoadFailed',
-                        'success': 'OrderLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Order',
-                    {
-                      'emit': {
-                        'failure': 'OrderLoadFailed',
-                        'success': 'OrderLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Orders',
-          'path': '/orders',
-          'traits': [
-            {
-              'ref': 'OrderBrowse',
-            },
-            {
-              'ref': 'OrderCreate',
-            },
-            {
-              'ref': 'OrderEdit',
-            },
-            {
-              'ref': 'OrderView',
-            },
-            {
-              'ref': 'OrderDelete',
-            },
-          ],
-        } as never,
-      ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the OrderOrbital orbital.
+ *
+ * Canonical entity: Order.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdServiceMarketplaceOrderOrbitalParams {
+  /** Override the canonical entity name (default: 'Order'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OrderOrbital orbital with consumer params. */
+export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceOrderOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Order';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OrderOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      collection: 'orders',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'productName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'amount',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'paymentStatus',
+          'type': 'string',
+        },
+        {
+          'name': 'orderDate',
+          'type': 'string',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'OrderBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'Order',
+        'emits': [
+          {
+            'event': 'CREATE',
+          },
+          {
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.productName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.amount',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentStatus',
+                'type': 'string',
+              },
+              {
+                'name': 'row.orderDate',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.productName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.amount',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentStatus',
+                'type': 'string',
+              },
+              {
+                'name': 'row.orderDate',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.productName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.amount',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentStatus',
+                'type': 'string',
+              },
+              {
+                'name': 'row.orderDate',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoaded',
+            'description': 'Fired when Order finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Order]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoadFailed',
+            'description': 'Fired when Order fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ORDER_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderCreate',
+            },
+          },
+          {
+            'event': 'ORDER_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderEdit',
+            },
+          },
+          {
+            'event': 'ORDER_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OrderLoaded',
+              'name': 'Order loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Order]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoadFailed',
+              'name': 'Order load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'variant': 'caption',
+                        'type': 'typography',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OrderLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'list',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Orders',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'gap': 'sm',
+                              },
+                              {
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'label': 'Create Order',
+                                    'type': 'button',
+                                    'action': 'CREATE',
+                                    'variant': 'primary',
+                                    'icon': 'plus',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'fields': [
+                              {
+                                'label': 'Product Name',
+                                'name': 'productName',
+                                'variant': 'h4',
+                                'icon': 'list',
+                              },
+                              {
+                                'name': 'amount',
+                                'colorMap': {
+                                  'completed': 'success',
+                                  'pending': 'warning',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
+                                  'error': 'destructive',
+                                  'scheduled': 'warning',
+                                  'disabled': 'neutral',
+                                  'done': 'success',
+                                  'active': 'success',
+                                  'draft': 'warning',
+                                  'archived': 'neutral',
+                                  'inactive': 'neutral',
+                                },
+                                'variant': 'badge',
+                                'label': 'Amount',
+                              },
+                              {
+                                'label': 'Payment Status',
+                                'name': 'paymentStatus',
+                                'variant': 'caption',
+                              },
+                            ],
+                            'type': 'data-grid',
+                            'entity': '@payload.data',
+                            'itemActions': [
+                              {
+                                'variant': 'ghost',
+                                'label': 'View',
+                                'event': 'VIEW',
+                              },
+                              {
+                                'label': 'Edit',
+                                'event': 'EDIT',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'variant': 'danger',
+                                'label': 'Delete',
+                                'event': 'DELETE',
+                              },
+                            ],
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'href': '/login',
+                        'icon': 'layout-list',
+                        'label': 'Login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OrderLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'type': 'icon',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'content': 'Failed to load order',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': '@payload.error',
+                        'color': 'muted',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'INIT',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                        'type': 'button',
+                        'label': 'Retry',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderCreate',
+        'category': 'interaction',
+        'linkedEntity': 'Order',
+        'emits': [
+          {
+            'event': 'ORDER_CREATED',
+          },
+          {
+            'event': 'OrderLoadFailed',
+            'description': 'Fired when Order fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoaded',
+            'description': 'Fired when Order finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Order]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ORDER_CREATED',
+              'name': 'Order Created',
+            },
+            {
+              'key': 'OrderLoadFailed',
+              'name': 'Order load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoaded',
+              'name': 'Order loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Order]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderSaveFailed',
+              'name': 'Order save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderSaved',
+              'name': 'Order saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Create Order',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'form-section',
+                        'fields': [
+                          'productName',
+                          'amount',
+                          'paymentStatus',
+                          'orderDate',
+                        ],
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'create',
+                        'submitEvent': 'SAVE',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Order',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'OrderSaveFailed',
+                      'success': 'OrderSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderEdit',
+        'category': 'interaction',
+        'linkedEntity': 'Order',
+        'emits': [
+          {
+            'event': 'ORDER_UPDATED',
+          },
+          {
+            'event': 'OrderLoadFailed',
+            'description': 'Fired when Order fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoaded',
+            'description': 'Fired when Order finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Order]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'Order',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ORDER_UPDATED',
+              'name': 'Order Updated',
+            },
+            {
+              'key': 'OrderLoadFailed',
+              'name': 'Order load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoaded',
+              'name': 'Order loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Order]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderUpdateFailed',
+              'name': 'Order update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderUpdated',
+              'name': 'Order updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'edit',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Edit Order',
+                            'variant': 'h3',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
+                        'mode': 'edit',
+                        'submitEvent': 'SAVE',
+                        'fields': [
+                          'productName',
+                          'amount',
+                          'paymentStatus',
+                          'orderDate',
+                        ],
+                        'entity': '@payload.row',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Order',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'OrderUpdated',
+                      'failure': 'OrderUpdateFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderView',
+        'category': 'interaction',
+        'linkedEntity': 'Order',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoaded',
+            'description': 'Fired when Order finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Order]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoadFailed',
+            'description': 'Fired when Order fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'OrderLoaded',
+              'name': 'Order loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Order]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoadFailed',
+              'name': 'Order load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.amount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.orderDate',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.paymentStatus',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.productName',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'eye',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': '@entity.productName',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'content': 'Product Name',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.productName',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                      },
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Amount',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.amount',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'content': 'Payment Status',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': '@entity.paymentStatus',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Order Date',
+                            'type': 'typography',
+                          },
+                          {
+                            'content': '@entity.orderDate',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'icon': 'edit',
+                            'label': 'Edit',
+                            'variant': 'primary',
+                            'action': 'EDIT',
+                            'type': 'button',
+                          },
+                          {
+                            'label': 'Close',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'CLOSE',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderDelete',
+        'category': 'interaction',
+        'linkedEntity': 'Order',
+        'emits': [
+          {
+            'event': 'ORDER_DELETED',
+          },
+          {
+            'event': 'OrderDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoadFailed',
+            'description': 'Fired when Order fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderLoaded',
+            'description': 'Fired when Order finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Order]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'ORDER_DELETED',
+              'name': 'Order Deleted',
+            },
+            {
+              'key': 'OrderDeleteFailed',
+              'name': 'Order delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderDeleted',
+              'name': 'Order deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoadFailed',
+              'name': 'Order load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderLoaded',
+              'name': 'Order loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Order]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Delete Order',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'error',
+                        'message': 'This action cannot be undone.',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'button',
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'variant': 'danger',
+                            'type': 'button',
+                            'label': 'Delete',
+                            'icon': 'check',
+                            'action': 'CONFIRM_DELETE',
+                          },
+                        ],
+                        'type': 'stack',
+                        'justify': 'end',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Order',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'success': 'OrderDeleted',
+                      'failure': 'OrderDeleteFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Order',
+                  {
+                    'emit': {
+                      'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Orders',
+        'path': '/orders',
+        'traits': [
+          {
+            'ref': 'OrderBrowse',
+          },
+          {
+            'ref': 'OrderCreate',
+          },
+          {
+            'ref': 'OrderEdit',
+          },
+          {
+            'ref': 'OrderView',
+          },
+          {
+            'ref': 'OrderDelete',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-service-marketplace — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdServiceMarketplaceParams {
+  Product?: StdServiceMarketplaceProductOrbitalParams;
+  AuthSession?: StdServiceMarketplaceAuthSessionOrbitalParams;
+  OrderPayment?: StdServiceMarketplaceOrderPaymentOrbitalParams;
+  Order?: StdServiceMarketplaceOrderOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdServiceMarketplace(params: StdServiceMarketplaceParams = {}): OrbitalDefinition[] {
+  return [
+    stdServiceMarketplaceProductOrbital(params.Product ?? {}),
+    stdServiceMarketplaceAuthSessionOrbital(params.AuthSession ?? {}),
+    stdServiceMarketplaceOrderPaymentOrbital(params.OrderPayment ?? {}),
+    stdServiceMarketplaceOrderOrbital(params.Order ?? {}),
+  ];
 }

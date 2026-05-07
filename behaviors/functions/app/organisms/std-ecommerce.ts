@@ -35,3508 +35,2026 @@ export interface StdEcommerceConfig {
 }
 
 /**
- * Params for the std-ecommerce descriptor helpers.
+ * Tunable params for the ProductOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Product.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdEcommerceParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdEcommerceProductOrbitalParams {
+  /** Override the canonical entity name (default: 'Product'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdEcommerceConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Ecommerce.traits.ProductAppLayout`. */
-export function stdEcommerceProductAppLayoutTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the ProductOrbital orbital with consumer params. */
+export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Product';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ProductOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'products',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'imageUrl',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'price',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'category',
+          'type': 'string',
+        },
+        {
+          'name': 'sku',
+          'type': 'string',
+        },
+        {
+          'name': 'inStock',
+          'type': 'boolean',
+          'default': true,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ProductAppLayout',
+        'config': {
+          'notifications': [],
+          'notificationClickEvent': 'PRODUCT_NOTIFICATIONS_OPEN',
+          'topBarActions': [
+            {
+              'icon': 'shopping-cart',
+              'event': 'CART_OPEN',
+              'label': 'Cart',
+            },
+          ],
+          'contentTrait': '@trait.ProductCatalog',
+          'appName': 'EcommerceApp',
+          'navItems': [
+            {
+              'label': 'Products',
+              'icon': 'package',
+              'href': '/products',
+            },
+            {
+              'href': '/cart',
+              'label': 'Cart',
+              'icon': 'shopping-cart',
+            },
+            {
+              'href': '/checkout',
+              'label': 'Checkout',
+              'icon': 'credit-card',
+            },
+            {
+              'label': 'Orders',
+              'icon': 'clipboard-list',
+              'href': '/orders',
+            },
+          ],
+          'searchEvent': 'PRODUCT_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'PRODUCT_SEARCH',
+          'NOTIFY_CLICK': 'PRODUCT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'ProductCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PRODUCT_SEARCH',
+            'triggers': 'PRODUCT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductAppLayout',
+            },
+          },
+          {
+            'event': 'PRODUCT_NOTIFICATIONS_OPEN',
+            'triggers': 'PRODUCT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PRODUCT_SEARCH',
+              'name': 'Product Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PRODUCT_NOTIFICATIONS_OPEN',
+              'name': 'Product Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'package',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Products',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Create Product',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'type': 'button',
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProductBrowseList',
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PRODUCT_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PRODUCT_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'label': 'Back to products',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ProductBrowseList',
+        'linkedEntity': 'Product',
+        'config': {
+          'fields': [
+            {
+              'variant': 'h3',
+              'name': 'name',
+              'icon': 'package',
+            },
+            {
+              'variant': 'badge',
+              'name': 'category',
+            },
+            {
+              'name': 'price',
+              'variant': 'h4',
+              'format': 'currency',
+            },
+            {
+              'name': 'sku',
+              'variant': 'caption',
+            },
+            {
+              'label': 'In Stock',
+              'variant': 'body',
+              'name': 'inStock',
+              'format': 'boolean',
+            },
+          ],
+          'imageField': 'imageUrl',
+          'gap': 'md',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
+          'cols': 3,
+        },
+        'listens': [
+          {
+            'event': 'PRODUCT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductCreate',
+            },
+          },
+          {
+            'event': 'PRODUCT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductEdit',
+            },
+          },
+          {
+            'event': 'PRODUCT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductDelete',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ProductCreate',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductCatalog',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PRODUCT_CREATED',
+              'name': 'Product Created',
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaveFailed',
+              'name': 'Product save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductSaved',
+              'name': 'Product saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'type': 'typography',
+                            'content': 'Create Product',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'name',
+                          'description',
+                          'price',
+                          'category',
+                          'sku',
+                          'inStock',
+                        ],
+                        'mode': 'create',
+                        'type': 'form-section',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Product',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ProductSaved',
+                      'failure': 'ProductSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductEdit',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Product',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PRODUCT_UPDATED',
+              'name': 'Product Updated',
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdateFailed',
+              'name': 'Product update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductUpdated',
+              'name': 'Product updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'name': 'edit',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Edit Product',
+                            'variant': 'h3',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'name',
+                          'description',
+                          'price',
+                          'category',
+                          'sku',
+                          'inStock',
+                        ],
+                        'type': 'form-section',
+                        'entity': '@payload.row',
+                        'mode': 'edit',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Product',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'ProductUpdateFailed',
+                      'success': 'ProductUpdated',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductView',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.category',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.inStock',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.name',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.price',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.sku',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'eye',
+                          },
+                          {
+                            'variant': 'h3',
+                            'type': 'typography',
+                            'content': '@entity.name',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'content': 'Name',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.name',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Description',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Price',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.price',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Category',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': '@entity.category',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Sku',
+                            'type': 'typography',
+                          },
+                          {
+                            'content': '@entity.sku',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'In Stock',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.inStock',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'justify': 'end',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'icon': 'edit',
+                            'action': 'EDIT',
+                            'variant': 'primary',
+                            'label': 'Edit',
+                          },
+                          {
+                            'action': 'CLOSE',
+                            'label': 'Close',
+                            'variant': 'ghost',
+                            'type': 'button',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProductDelete',
+        'category': 'interaction',
+        'linkedEntity': 'Product',
+        'emits': [
+          {
+            'event': 'PRODUCT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoadFailed',
+            'description': 'Fired when Product fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProductLoaded',
+            'description': 'Fired when Product finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Product]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProductBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'PRODUCT_DELETED',
+              'name': 'Product Deleted',
+            },
+            {
+              'key': 'ProductDeleteFailed',
+              'name': 'Product delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductDeleted',
+              'name': 'Product deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoadFailed',
+              'name': 'Product load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProductLoaded',
+              'name': 'Product loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Product]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Delete Product',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'error',
+                        'message': 'This action cannot be undone.',
+                        'type': 'alert',
+                      },
+                      {
+                        'justify': 'end',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'label': 'Cancel',
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'action': 'CANCEL',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Delete',
+                            'variant': 'danger',
+                            'action': 'CONFIRM_DELETE',
+                            'icon': 'check',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Product',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'success': 'ProductDeleted',
+                      'failure': 'ProductDeleteFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'PRODUCT_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Product',
+                  {
+                    'emit': {
+                      'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ProductsPage',
+        'path': '/products',
+        'traits': [
+          {
+            'ref': 'ProductAppLayout',
+          },
+          {
+            'ref': 'ProductCatalog',
+          },
+          {
+            'ref': 'ProductBrowseList',
+          },
+          {
+            'ref': 'ProductCreate',
+          },
+          {
+            'ref': 'ProductEdit',
+          },
+          {
+            'ref': 'ProductView',
+          },
+          {
+            'ref': 'ProductDelete',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductCatalog`. */
-export function stdEcommerceProductCatalogTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductBrowseList`. */
-export function stdEcommerceProductBrowseListTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductCreate`. */
-export function stdEcommerceProductCreateTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductEdit`. */
-export function stdEcommerceProductEditTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductView`. */
-export function stdEcommerceProductViewTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Ecommerce.traits.ProductDelete`. */
-export function stdEcommerceProductDeleteTrait(params: StdEcommerceParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProductDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Ecommerce.pages.ProductsPage`. */
-export function stdEcommercePage(params: StdEcommerceParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ProductsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdEcommerce(params: StdEcommerceParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Product';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ProductOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Product',
-        'collection': 'products',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-          },
-          {
-            'name': 'imageUrl',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'price',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-          },
-          {
-            'name': 'sku',
-            'type': 'string',
-          },
-          {
-            'name': 'inStock',
-            'type': 'boolean',
-            'default': true,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ProductAppLayout',
-          'config': {
-            'notifications': [],
-            'notificationClickEvent': 'PRODUCT_NOTIFICATIONS_OPEN',
-            'topBarActions': [
-              {
-                'icon': 'shopping-cart',
-                'event': 'CART_OPEN',
-                'label': 'Cart',
-              },
-            ],
-            'contentTrait': '@trait.ProductCatalog',
-            'appName': 'EcommerceApp',
-            'navItems': [
-              {
-                'label': 'Products',
-                'icon': 'package',
-                'href': '/products',
-              },
-              {
-                'href': '/cart',
-                'label': 'Cart',
-                'icon': 'shopping-cart',
-              },
-              {
-                'href': '/checkout',
-                'label': 'Checkout',
-                'icon': 'credit-card',
-              },
-              {
-                'label': 'Orders',
-                'icon': 'clipboard-list',
-                'href': '/orders',
-              },
-            ],
-            'searchEvent': 'PRODUCT_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'PRODUCT_SEARCH',
-            'NOTIFY_CLICK': 'PRODUCT_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'ProductCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'PRODUCT_SEARCH',
-              'triggers': 'PRODUCT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductAppLayout',
-              },
-            },
-            {
-              'event': 'PRODUCT_NOTIFICATIONS_OPEN',
-              'triggers': 'PRODUCT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'PRODUCT_SEARCH',
-                'name': 'Product Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PRODUCT_NOTIFICATIONS_OPEN',
-                'name': 'Product Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'package',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Products',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Create Product',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                  'type': 'button',
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ProductBrowseList',
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PRODUCT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PRODUCT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'className': 'py-8',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                          'type': 'typography',
-                        },
-                        {
-                          'content': 'You\'re all caught up.',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'button',
-                          'variant': 'ghost',
-                          'label': 'Back to products',
-                          'action': 'INIT',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ProductBrowseList',
-          'linkedEntity': 'Product',
-          'config': {
-            'fields': [
-              {
-                'variant': 'h3',
-                'name': 'name',
-                'icon': 'package',
-              },
-              {
-                'variant': 'badge',
-                'name': 'category',
-              },
-              {
-                'name': 'price',
-                'variant': 'h4',
-                'format': 'currency',
-              },
-              {
-                'name': 'sku',
-                'variant': 'caption',
-              },
-              {
-                'label': 'In Stock',
-                'variant': 'body',
-                'name': 'inStock',
-                'format': 'boolean',
-              },
-            ],
-            'imageField': 'imageUrl',
-            'gap': 'md',
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'variant': 'ghost',
-                'label': 'View',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'variant': 'danger',
-                'label': 'Delete',
-                'event': 'DELETE',
-              },
-            ],
-            'cols': 3,
-          },
-          'listens': [
-            {
-              'event': 'PRODUCT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductCreate',
-              },
-            },
-            {
-              'event': 'PRODUCT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductEdit',
-              },
-            },
-            {
-              'event': 'PRODUCT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductDelete',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'ProductCreate',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductCatalog',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PRODUCT_CREATED',
-                'name': 'Product Created',
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaveFailed',
-                'name': 'Product save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductSaved',
-                'name': 'Product saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'plus-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'type': 'typography',
-                              'content': 'Create Product',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'name',
-                            'description',
-                            'price',
-                            'category',
-                            'sku',
-                            'inStock',
-                          ],
-                          'mode': 'create',
-                          'type': 'form-section',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Product',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ProductSaved',
-                        'failure': 'ProductSaveFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_CREATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductEdit',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductView',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Product',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PRODUCT_UPDATED',
-                'name': 'Product Updated',
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdateFailed',
-                'name': 'Product update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductUpdated',
-                'name': 'Product updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'name': 'edit',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Edit Product',
-                              'variant': 'h3',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'name',
-                            'description',
-                            'price',
-                            'category',
-                            'sku',
-                            'inStock',
-                          ],
-                          'type': 'form-section',
-                          'entity': '@payload.row',
-                          'mode': 'edit',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Product',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'ProductUpdateFailed',
-                        'success': 'ProductUpdated',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_UPDATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductView',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.category',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.description',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.inStock',
-                    true,
-                  ],
-                  [
-                    'set',
-                    '@entity.name',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.price',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.sku',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'eye',
-                            },
-                            {
-                              'variant': 'h3',
-                              'type': 'typography',
-                              'content': '@entity.name',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'content': 'Name',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.name',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Description',
-                            },
-                            {
-                              'content': '@entity.description',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Price',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.price',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Category',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.category',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Sku',
-                              'type': 'typography',
-                            },
-                            {
-                              'content': '@entity.sku',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'In Stock',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.inStock',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'justify': 'end',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'icon': 'edit',
-                              'action': 'EDIT',
-                              'variant': 'primary',
-                              'label': 'Edit',
-                            },
-                            {
-                              'action': 'CLOSE',
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'type': 'button',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProductDelete',
-          'category': 'interaction',
-          'linkedEntity': 'Product',
-          'emits': [
-            {
-              'event': 'PRODUCT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoadFailed',
-              'description': 'Fired when Product fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProductLoaded',
-              'description': 'Fired when Product finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Product]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProductBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'PRODUCT_DELETED',
-                'name': 'Product Deleted',
-              },
-              {
-                'key': 'ProductDeleteFailed',
-                'name': 'Product delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductDeleted',
-                'name': 'Product deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoadFailed',
-                'name': 'Product load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProductLoaded',
-                'name': 'Product loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Product]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Delete Product',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'error',
-                          'message': 'This action cannot be undone.',
-                          'type': 'alert',
-                        },
-                        {
-                          'justify': 'end',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'label': 'Cancel',
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'action': 'CANCEL',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Delete',
-                              'variant': 'danger',
-                              'action': 'CONFIRM_DELETE',
-                              'icon': 'check',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Product',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'success': 'ProductDeleted',
-                        'failure': 'ProductDeleteFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PRODUCT_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'success': 'ProductLoaded',
-                        'failure': 'ProductLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Product',
-                    {
-                      'emit': {
-                        'failure': 'ProductLoadFailed',
-                        'success': 'ProductLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ProductsPage',
-          'path': '/products',
-          'traits': [
-            {
-              'ref': 'ProductAppLayout',
-            },
-            {
-              'ref': 'ProductCatalog',
-            },
-            {
-              'ref': 'ProductBrowseList',
-            },
-            {
-              'ref': 'ProductCreate',
-            },
-            {
-              'ref': 'ProductEdit',
-            },
-            {
-              'ref': 'ProductView',
-            },
-            {
-              'ref': 'ProductDelete',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CartItemOrbital',
-      uses: [],
-      entity: {
-        'name': 'CartItem',
-        'collection': 'cartitems',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'productName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'quantity',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'unitPrice',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'totalPrice',
-            'type': 'number',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
+  return built;
+}
+
+/**
+ * Tunable params for the CartItemOrbital orbital.
+ *
+ * Canonical entity: CartItem.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdEcommerceCartItemOrbitalParams {
+  /** Override the canonical entity name (default: 'CartItem'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CartItemOrbital orbital with consumer params. */
+export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'CartItem';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CartItemOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      collection: 'cartitems',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'CartItemCartBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'CartItem',
-          'emits': [
-            {
-              'event': 'CHECKOUT_STARTED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ADD_ITEM',
-            },
-            {
-              'event': 'REQUEST_REMOVE',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.productName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.quantity',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.unitPrice',
-                  'type': 'number',
-                  'required': true,
-                },
-                {
-                  'name': 'row.totalPrice',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemLoaded',
-              'description': 'Fired when CartItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[CartItem]',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemLoadFailed',
-              'description': 'Fired when CartItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-              {
-                'name': 'checkout',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CartItemLoaded',
-                'name': 'CartItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[CartItem]',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemLoadFailed',
-                'name': 'CartItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PROCEED_CHECKOUT',
-                'name': 'Proceed Checkout',
-              },
-              {
-                'key': 'BACK_TO_CART',
-                'name': 'Back To Cart',
-              },
-              {
-                'key': 'CONFIRM_ORDER',
-                'name': 'Confirm Order',
-              },
-              {
-                'key': 'CHECKOUT_STARTED',
-                'name': 'Checkout Started',
-              },
-              {
-                'key': 'ADD_ITEM',
-                'name': 'Add Item',
-              },
-              {
-                'key': 'REQUEST_REMOVE',
-                'name': 'Request Remove',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'failure': 'CartItemLoadFailed',
-                        'success': 'CartItemLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'color': 'muted',
-                          'content': 'Loading…',
-                          'variant': 'caption',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'CartItemLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'EcommerceApp',
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'href': '/products',
-                          'label': 'Products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Cart',
-                          'icon': 'shopping-cart',
-                          'href': '/cart',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'gap': 'md',
-                                  'children': [
-                                    {
-                                      'name': 'shopping-cart',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Shopping Cart',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'action': 'ADD_ITEM',
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'label': 'Add Item',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'simple-grid',
-                              'cols': 3,
-                              'children': [
-                                {
-                                  'type': 'stat-display',
-                                  'label': 'Items',
-                                  'value': '@payload.data.length',
-                                  'icon': 'package',
-                                },
-                                {
-                                  'icon': 'dollar-sign',
-                                  'label': 'Subtotal',
-                                  'type': 'stat-display',
-                                  'value': '@payload.data.length',
-                                },
-                                {
-                                  'label': 'Total',
-                                  'type': 'stat-display',
-                                  'value': '@payload.data.length',
-                                  'icon': 'receipt',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'itemActions': [
-                                {
-                                  'label': 'Remove',
-                                  'event': 'REQUEST_REMOVE',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'entity': '@payload.data',
-                              'type': 'data-grid',
-                              'fields': [
-                                {
-                                  'name': 'productName',
-                                  'label': 'Product Name',
-                                  'icon': 'shopping-cart',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'format': 'currency',
-                                  'name': 'quantity',
-                                  'variant': 'caption',
-                                  'label': 'Quantity',
-                                },
-                                {
-                                  'name': 'unitPrice',
-                                  'label': 'Unit Price',
-                                  'variant': 'badge',
-                                },
-                              ],
-                            },
-                            {
-                              'variant': 'primary',
-                              'action': 'PROCEED_CHECKOUT',
-                              'icon': 'arrow-right',
-                              'label': 'Proceed to Checkout',
-                              'type': 'button',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'CartItemLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'content': 'Failed to load cartitem',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'content': '@payload.error',
-                          'variant': 'body',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'type': 'button',
-                          'label': 'Retry',
-                          'action': 'INIT',
-                          'icon': 'rotate-ccw',
-                          'variant': 'primary',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'checkout',
-                'event': 'PROCEED_CHECKOUT',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'content': 'Preparing checkout…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'checkout',
-                'to': 'checkout',
-                'event': 'CartItemLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'label': 'Products',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Cart',
-                          'href': '/cart',
-                          'icon': 'shopping-cart',
-                        },
-                        {
-                          'label': 'Checkout',
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'href': '/orders',
-                          'label': 'Orders',
-                        },
-                      ],
-                      'appName': 'EcommerceApp',
-                      'children': [
-                        {
-                          'gap': 'lg',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'clipboard',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Checkout',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'entity': '@payload.data',
-                              'itemActions': [
-                                {
-                                  'event': 'REQUEST_REMOVE',
-                                  'label': 'Remove',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'type': 'data-grid',
-                              'fields': [
-                                {
-                                  'label': 'Product Name',
-                                  'name': 'productName',
-                                  'icon': 'shopping-cart',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'variant': 'caption',
-                                  'name': 'quantity',
-                                  'format': 'currency',
-                                  'label': 'Quantity',
-                                },
-                                {
-                                  'name': 'unitPrice',
-                                  'label': 'Unit Price',
-                                  'variant': 'badge',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'icon': 'arrow-left',
-                                  'action': 'BACK_TO_CART',
-                                  'label': 'Back to Cart',
-                                  'type': 'button',
-                                  'variant': 'ghost',
-                                },
-                                {
-                                  'type': 'button',
-                                  'action': 'CONFIRM_ORDER',
-                                  'label': 'Confirm Order',
-                                  'variant': 'primary',
-                                  'icon': 'check',
-                                },
-                              ],
-                              'justify': 'end',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'checkout',
-                'to': 'browsing',
-                'event': 'BACK_TO_CART',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'failure': 'CartItemLoadFailed',
-                        'success': 'CartItemLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'checkout',
-                'to': 'browsing',
-                'event': 'CONFIRM_ORDER',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'dashboard-layout',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'check-circle',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Order Confirmed',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': 'Your order has been placed successfully.',
-                            },
-                            {
-                              'action': 'INIT',
-                              'label': 'Continue Shopping',
-                              'type': 'button',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'navItems': [
-                        {
-                          'label': 'Products',
-                          'href': '/products',
-                          'icon': 'package',
-                        },
-                        {
-                          'label': 'Cart',
-                          'href': '/cart',
-                          'icon': 'shopping-cart',
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'href': '/checkout',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'href': '/orders',
-                          'label': 'Orders',
-                          'icon': 'clipboard-list',
-                        },
-                      ],
-                      'appName': 'EcommerceApp',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'CartItemAddItem',
-          'category': 'interaction',
-          'linkedEntity': 'CartItem',
-          'emits': [
-            {
-              'event': 'CartItemLoadFailed',
-              'description': 'Fired when CartItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemLoaded',
-              'description': 'Fired when CartItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[CartItem]',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ADD_ITEM',
-              'triggers': 'ADD_ITEM',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CartItemCartBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ADD_ITEM',
-                'name': 'Add Item',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemLoadFailed',
-                'name': 'CartItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemLoaded',
-                'name': 'CartItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[CartItem]',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemSaveFailed',
-                'name': 'CartItem save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemSaved',
-                'name': 'CartItem saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'ADD_ITEM',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'plus-circle',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Add Item',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'productName',
-                            'quantity',
-                            'unitPrice',
-                            'totalPrice',
-                          ],
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'CartItem',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'CartItemSaveFailed',
-                        'success': 'CartItemSaved',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'CartItemRemoveConfirm',
-          'category': 'interaction',
-          'linkedEntity': 'CartItem',
-          'emits': [
-            {
-              'event': 'CartItemDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemLoadFailed',
-              'description': 'Fired when CartItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CartItemLoaded',
-              'description': 'Fired when CartItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[CartItem]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'REQUEST_REMOVE',
-              'triggers': 'REQUEST_REMOVE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CartItemCartBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'REQUEST_REMOVE',
-                'name': 'Request Remove',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_REMOVE',
-                'name': 'Confirm Remove',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'CartItemDeleteFailed',
-                'name': 'CartItem delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemDeleted',
-                'name': 'CartItem deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemLoadFailed',
-                'name': 'CartItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CartItemLoaded',
-                'name': 'CartItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[CartItem]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'failure': 'CartItemLoadFailed',
-                        'success': 'CartItemLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'REQUEST_REMOVE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'CartItemLoadFailed',
-                        'success': 'CartItemLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'alert-triangle',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Remove Item',
-                              'type': 'typography',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'error',
-                          'message': 'Are you sure you want to remove this item from your cart?',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'label': 'Cancel',
-                              'action': 'CANCEL',
-                              'variant': 'ghost',
-                              'type': 'button',
-                            },
-                            {
-                              'action': 'CONFIRM_REMOVE',
-                              'label': 'Remove',
-                              'variant': 'danger',
-                              'type': 'button',
-                              'icon': 'check',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'justify': 'end',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_REMOVE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'CartItem',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'success': 'CartItemDeleted',
-                        'failure': 'CartItemDeleteFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'success': 'CartItemLoaded',
-                        'failure': 'CartItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'CartItem',
-                    {
-                      'emit': {
-                        'failure': 'CartItemLoadFailed',
-                        'success': 'CartItemLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Cart',
-          'path': '/cart',
-          'traits': [
-            {
-              'ref': 'CartItemCartBrowse',
-            },
-            {
-              'ref': 'CartItemAddItem',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CheckoutOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-service-stripe',
-          'as': 'Stripe',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'productName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'quantity',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'unitPrice',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'totalPrice',
+          'type': 'number',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Checkout',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      {
+        'name': 'CartItemCartBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'CartItem',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'CHECKOUT_STARTED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'customerName',
-            'type': 'string',
-            'required': true,
+            'event': 'ADD_ITEM',
           },
           {
-            'name': 'email',
-            'type': 'string',
-            'required': true,
+            'event': 'REQUEST_REMOVE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.productName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.quantity',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.unitPrice',
+                'type': 'number',
+                'required': true,
+              },
+              {
+                'name': 'row.totalPrice',
+                'type': 'number',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'shippingAddress',
-            'type': 'string',
-            'required': true,
+            'event': 'CartItemLoaded',
+            'description': 'Fired when CartItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CartItem]',
+              },
+            ],
           },
           {
-            'name': 'orderTotal',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'draft',
+            'event': 'CartItemLoadFailed',
+            'description': 'Fired when CartItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'Stripe.traits.ServiceStripeStripe',
-          'name': 'CheckoutPayment',
-          'config': {
-            'currency': 'usd',
-            'metadata': {},
-            'uiTrait': '@trait.CheckoutPaymentForm',
-            'amount': 0,
-          },
-          'listens': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE_PAYMENT',
-              'triggers': 'CREATE_PAYMENT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CheckoutPaymentForm',
-              },
+              'name': 'browsing',
+              'isInitial': true,
+            },
+            {
+              'name': 'checkout',
             },
           ],
-        }),
-        {
-          'name': 'CheckoutPaymentForm',
-          'category': 'interaction',
-          'emits': [
+          'events': [
             {
-              'event': 'CREATE_PAYMENT',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+              'key': 'INIT',
+              'name': 'Initialize',
             },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE_PAYMENT',
-                'name': 'Create Payment',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'variant': 'info',
-                          'message': 'Enter card details to complete your order.',
-                          'type': 'alert',
-                        },
-                        {
-                          'placeholder': 'Card number',
-                          'inputType': 'text',
-                          'type': 'input',
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'placeholder': 'MM/YY',
-                              'type': 'input',
-                              'inputType': 'text',
-                            },
-                            {
-                              'placeholder': 'CVC',
-                              'type': 'input',
-                              'inputType': 'text',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                        {
-                          'action': 'CREATE_PAYMENT',
-                          'label': 'Pay now',
-                          'type': 'button',
-                          'variant': 'primary',
-                          'icon': 'credit-card',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'CheckoutWizard',
-          'category': 'interaction',
-          'linkedEntity': 'Checkout',
-          'emits': [
             {
-              'event': 'ORDER_PLACED',
-              'scope': 'external',
+              'key': 'CartItemLoaded',
+              'name': 'CartItem loaded',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
+                  'name': 'data',
+                  'type': '[CartItem]',
                 },
               ],
             },
             {
-              'event': 'CheckoutSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'CheckoutSaveFailed',
-              'scope': 'internal',
+              'key': 'CartItemLoadFailed',
+              'name': 'CartItem load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3548,2834 +2066,4330 @@ export function stdEcommerce(params: StdEcommerceParams): OrbitalDefinition[] {
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'CHECKOUT_STARTED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'CartItemOrbital',
-                'trait': 'CartItemCartBrowse',
-              },
+              'key': 'PROCEED_CHECKOUT',
+              'name': 'Proceed Checkout',
             },
             {
-              'event': 'ServiceStripeStripeCompleted',
-              'triggers': 'PAYMENT_DONE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CheckoutPayment',
-              },
+              'key': 'BACK_TO_CART',
+              'name': 'Back To Cart',
             },
             {
-              'event': 'ServiceStripeStripeFailed',
-              'triggers': 'PAYMENT_FAILED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CheckoutPayment',
-              },
+              'key': 'CONFIRM_ORDER',
+              'name': 'Confirm Order',
             },
             {
-              'event': 'ServiceStripeLoaded',
-              'triggers': 'NOOP',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CheckoutPayment',
-              },
+              'key': 'CHECKOUT_STARTED',
+              'name': 'Checkout Started',
             },
             {
-              'event': 'ServiceStripeLoadFailed',
-              'triggers': 'NOOP',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CheckoutPayment',
-              },
+              'key': 'ADD_ITEM',
+              'name': 'Add Item',
+            },
+            {
+              'key': 'REQUEST_REMOVE',
+              'name': 'Request Remove',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'step1',
-                'isInitial': true,
-              },
-              {
-                'name': 'step2',
-              },
-              {
-                'name': 'step3',
-              },
-              {
-                'name': 'review',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'NEXT',
-                'name': 'Next',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
                   {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PREV',
-                'name': 'Prev',
-              },
-              {
-                'key': 'PAYMENT_DONE',
-                'name': 'Payment Done',
-                'payloadSchema': [
-                  {
-                    'name': 'result',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'ORDER_PLACED',
-                'name': 'Order Placed',
-              },
-              {
-                'key': 'CheckoutSaved',
-                'name': 'Checkout saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CheckoutSaveFailed',
-                'name': 'Checkout save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PAYMENT_FAILED',
-                'name': 'Payment Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'NOOP',
-                'name': 'Noop',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'step1',
-                'to': 'step1',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.orderTotal',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.shippingAddress',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'draft',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Checkout',
-                          'type': 'typography',
-                        },
-                        {
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Customer Info',
-                          'variant': 'h3',
-                        },
-                        {
-                          'showCancel': false,
-                          'fields': [
-                            {
-                              'required': true,
-                              'min': 2,
-                              'name': 'customerName',
-                            },
-                            {
-                              'type': 'email',
-                              'required': true,
-                              'name': 'email',
-                            },
-                          ],
-                          'submitLabel': 'Continue',
-                          'mode': 'create',
-                          'submitEvent': 'NEXT',
-                          'type': 'form-section',
-                        },
-                      ],
+                    'emit': {
+                      'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
                     },
-                  ],
+                  },
                 ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'variant': 'caption',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'CartItemLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'EcommerceApp',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Cart',
+                        'icon': 'shopping-cart',
+                        'href': '/cart',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'name': 'shopping-cart',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Shopping Cart',
+                                  },
+                                ],
+                              },
+                              {
+                                'action': 'ADD_ITEM',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'Add Item',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'simple-grid',
+                            'cols': 3,
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'label': 'Items',
+                                'value': '@payload.data.length',
+                                'icon': 'package',
+                              },
+                              {
+                                'icon': 'dollar-sign',
+                                'label': 'Subtotal',
+                                'type': 'stat-display',
+                                'value': '@payload.data.length',
+                              },
+                              {
+                                'label': 'Total',
+                                'type': 'stat-display',
+                                'value': '@payload.data.length',
+                                'icon': 'receipt',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'itemActions': [
+                              {
+                                'label': 'Remove',
+                                'event': 'REQUEST_REMOVE',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'fields': [
+                              {
+                                'name': 'productName',
+                                'label': 'Product Name',
+                                'icon': 'shopping-cart',
+                                'variant': 'h4',
+                              },
+                              {
+                                'format': 'currency',
+                                'name': 'quantity',
+                                'variant': 'caption',
+                                'label': 'Quantity',
+                              },
+                              {
+                                'name': 'unitPrice',
+                                'label': 'Unit Price',
+                                'variant': 'badge',
+                              },
+                            ],
+                          },
+                          {
+                            'variant': 'primary',
+                            'action': 'PROCEED_CHECKOUT',
+                            'icon': 'arrow-right',
+                            'label': 'Proceed to Checkout',
+                            'type': 'button',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'CartItemLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'content': 'Failed to load cartitem',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'checkout',
+              'event': 'PROCEED_CHECKOUT',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'Preparing checkout…',
+                        'color': 'muted',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'checkout',
+              'to': 'checkout',
+              'event': 'CartItemLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Cart',
+                        'href': '/cart',
+                        'icon': 'shopping-cart',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/orders',
+                        'label': 'Orders',
+                      },
+                    ],
+                    'appName': 'EcommerceApp',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'clipboard',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Checkout',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'entity': '@payload.data',
+                            'itemActions': [
+                              {
+                                'event': 'REQUEST_REMOVE',
+                                'label': 'Remove',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'type': 'data-grid',
+                            'fields': [
+                              {
+                                'label': 'Product Name',
+                                'name': 'productName',
+                                'icon': 'shopping-cart',
+                                'variant': 'h4',
+                              },
+                              {
+                                'variant': 'caption',
+                                'name': 'quantity',
+                                'format': 'currency',
+                                'label': 'Quantity',
+                              },
+                              {
+                                'name': 'unitPrice',
+                                'label': 'Unit Price',
+                                'variant': 'badge',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'arrow-left',
+                                'action': 'BACK_TO_CART',
+                                'label': 'Back to Cart',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'type': 'button',
+                                'action': 'CONFIRM_ORDER',
+                                'label': 'Confirm Order',
+                                'variant': 'primary',
+                                'icon': 'check',
+                              },
+                            ],
+                            'justify': 'end',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'checkout',
+              'to': 'browsing',
+              'event': 'BACK_TO_CART',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'checkout',
+              'to': 'browsing',
+              'event': 'CONFIRM_ORDER',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Order Confirmed',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': 'Your order has been placed successfully.',
+                          },
+                          {
+                            'action': 'INIT',
+                            'label': 'Continue Shopping',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Cart',
+                        'href': '/cart',
+                        'icon': 'shopping-cart',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
+                    'appName': 'EcommerceApp',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'CartItemAddItem',
+        'category': 'interaction',
+        'linkedEntity': 'CartItem',
+        'emits': [
+          {
+            'event': 'CartItemLoadFailed',
+            'description': 'Fired when CartItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
               },
               {
-                'from': 'step1',
-                'to': 'step2',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemLoaded',
+            'description': 'Fired when CartItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CartItem]',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ADD_ITEM',
+            'triggers': 'ADD_ITEM',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CartItemCartBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ADD_ITEM',
+              'name': 'Add Item',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemLoadFailed',
+              'name': 'CartItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemLoaded',
+              'name': 'CartItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CartItem]',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemSaveFailed',
+              'name': 'CartItem save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemSaved',
+              'name': 'CartItem saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'ADD_ITEM',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'plus-circle',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Add Item',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'productName',
+                          'quantity',
+                          'unitPrice',
+                          'totalPrice',
+                        ],
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'CartItem',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'CartItemSaveFailed',
+                      'success': 'CartItemSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'CartItemRemoveConfirm',
+        'category': 'interaction',
+        'linkedEntity': 'CartItem',
+        'emits': [
+          {
+            'event': 'CartItemDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemLoadFailed',
+            'description': 'Fired when CartItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CartItemLoaded',
+            'description': 'Fired when CartItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[CartItem]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'REQUEST_REMOVE',
+            'triggers': 'REQUEST_REMOVE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CartItemCartBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REQUEST_REMOVE',
+              'name': 'Request Remove',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_REMOVE',
+              'name': 'Confirm Remove',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'CartItemDeleteFailed',
+              'name': 'CartItem delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemDeleted',
+              'name': 'CartItem deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemLoadFailed',
+              'name': 'CartItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CartItemLoaded',
+              'name': 'CartItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[CartItem]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'REQUEST_REMOVE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'alert-triangle',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Remove Item',
+                            'type': 'typography',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'error',
+                        'message': 'Are you sure you want to remove this item from your cart?',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
+                            'variant': 'ghost',
+                            'type': 'button',
+                          },
+                          {
+                            'action': 'CONFIRM_REMOVE',
+                            'label': 'Remove',
+                            'variant': 'danger',
+                            'type': 'button',
+                            'icon': 'check',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'justify': 'end',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_REMOVE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'CartItem',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'success': 'CartItemDeleted',
+                      'failure': 'CartItemDeleteFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'CartItem',
+                  {
+                    'emit': {
+                      'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Cart',
+        'path': '/cart',
+        'traits': [
+          {
+            'ref': 'CartItemCartBrowse',
+          },
+          {
+            'ref': 'CartItemAddItem',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the CheckoutOrbital orbital.
+ *
+ * Canonical entity: Checkout.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdEcommerceCheckoutOrbitalParams {
+  /** Override the canonical entity name (default: 'Checkout'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the CheckoutOrbital orbital with consumer params. */
+export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Checkout';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CheckoutOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-service-stripe',
+        'as': 'Stripe',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'customerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'email',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'shippingAddress',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'orderTotal',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'draft',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'Stripe.traits.ServiceStripeStripe',
+        'name': 'CheckoutPayment',
+        'config': {
+          'currency': 'usd',
+          'metadata': {},
+          'uiTrait': '@trait.CheckoutPaymentForm',
+          'amount': 0,
+        },
+        'listens': [
+          {
+            'event': 'CREATE_PAYMENT',
+            'triggers': 'CREATE_PAYMENT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CheckoutPaymentForm',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CheckoutPaymentForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE_PAYMENT',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE_PAYMENT',
+              'name': 'Create Payment',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'variant': 'info',
+                        'message': 'Enter card details to complete your order.',
+                        'type': 'alert',
+                      },
+                      {
+                        'placeholder': 'Card number',
+                        'inputType': 'text',
+                        'type': 'input',
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'placeholder': 'MM/YY',
+                            'type': 'input',
+                            'inputType': 'text',
+                          },
+                          {
+                            'placeholder': 'CVC',
+                            'type': 'input',
+                            'inputType': 'text',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                      {
+                        'action': 'CREATE_PAYMENT',
+                        'label': 'Pay now',
+                        'type': 'button',
+                        'variant': 'primary',
+                        'icon': 'credit-card',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'CheckoutWizard',
+        'category': 'interaction',
+        'linkedEntity': 'Checkout',
+        'emits': [
+          {
+            'event': 'ORDER_PLACED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CheckoutSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CheckoutSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CHECKOUT_STARTED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'CartItemOrbital',
+              'trait': 'CartItemCartBrowse',
+            },
+          },
+          {
+            'event': 'ServiceStripeStripeCompleted',
+            'triggers': 'PAYMENT_DONE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CheckoutPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeStripeFailed',
+            'triggers': 'PAYMENT_FAILED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CheckoutPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeLoaded',
+            'triggers': 'NOOP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CheckoutPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeLoadFailed',
+            'triggers': 'NOOP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CheckoutPayment',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'step1',
+              'isInitial': true,
+            },
+            {
+              'name': 'step2',
+            },
+            {
+              'name': 'step3',
+            },
+            {
+              'name': 'review',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NEXT',
+              'name': 'Next',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PREV',
+              'name': 'Prev',
+            },
+            {
+              'key': 'PAYMENT_DONE',
+              'name': 'Payment Done',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'ORDER_PLACED',
+              'name': 'Order Placed',
+            },
+            {
+              'key': 'CheckoutSaved',
+              'name': 'Checkout saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CheckoutSaveFailed',
+              'name': 'Checkout save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PAYMENT_FAILED',
+              'name': 'Payment Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'NOOP',
+              'name': 'Noop',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'step1',
+              'to': 'step1',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.orderTotal',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.shippingAddress',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'draft',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Checkout',
+                        'type': 'typography',
+                      },
+                      {
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Customer Info',
+                        'variant': 'h3',
+                      },
+                      {
+                        'showCancel': false,
+                        'fields': [
+                          {
+                            'required': true,
+                            'min': 2,
+                            'name': 'customerName',
+                          },
+                          {
+                            'type': 'email',
+                            'required': true,
+                            'name': 'email',
+                          },
+                        ],
+                        'submitLabel': 'Continue',
+                        'mode': 'create',
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step1',
+              'to': 'step2',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@payload.data.customerName',
+                '@payload.data.email',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
                   '@payload.data.customerName',
+                ],
+                [
+                  'set',
+                  '@entity.email',
                   '@payload.data.email',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '@payload.data.customerName',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '@payload.data.email',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Checkout',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                          'currentStep': 1,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Shipping Address',
-                        },
-                        {
-                          'type': 'form-section',
-                          'submitLabel': 'Continue',
-                          'cancelLabel': 'Back',
-                          'cancelEvent': 'PREV',
-                          'submitEvent': 'NEXT',
-                          'fields': [
-                            {
-                              'min': 5,
-                              'required': true,
-                              'name': 'shippingAddress',
-                            },
-                          ],
-                          'entity': '@entity',
-                          'mode': 'edit',
-                        },
-                      ],
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Checkout',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                        'currentStep': 1,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Shipping Address',
+                      },
+                      {
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                        'fields': [
+                          {
+                            'min': 5,
+                            'required': true,
+                            'name': 'shippingAddress',
+                          },
+                        ],
+                        'entity': '@entity',
+                        'mode': 'edit',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step3',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.customerName',
-                  '@entity.email',
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step3',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.customerName',
+                '@entity.email',
+                '@payload.data.shippingAddress',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.shippingAddress',
                   '@payload.data.shippingAddress',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.shippingAddress',
-                    '@payload.data.shippingAddress',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Checkout',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 2,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Payment',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        '@trait.CheckoutPayment',
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'icon': 'arrow-left',
-                              'label': 'Back',
-                              'action': 'PREV',
-                            },
-                          ],
-                          'justify': 'start',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step1',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Checkout',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                          'currentStep': 0,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Customer Info',
-                          'variant': 'h3',
-                        },
-                        {
-                          'mode': 'edit',
-                          'submitLabel': 'Continue',
-                          'showCancel': false,
-                          'fields': [
-                            {
-                              'name': 'customerName',
-                              'required': true,
-                              'min': 2,
-                            },
-                            {
-                              'name': 'email',
-                              'required': true,
-                              'type': 'email',
-                            },
-                          ],
-                          'type': 'form-section',
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step3',
-                'to': 'review',
-                'event': 'PAYMENT_DONE',
-                'guard': [
-                  'and',
-                  '@entity.customerName',
-                  '@entity.email',
-                  '@entity.shippingAddress',
-                ],
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Review your order',
-                          'type': 'typography',
-                        },
-                        {
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                          'currentStep': 3,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Customer',
-                                },
-                                {
-                                  'content': '@entity.customerName',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'content': 'Email',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@entity.email',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'content': 'Shipping',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': '@entity.shippingAddress',
-                                  'variant': 'body',
-                                },
-                              ],
-                              'type': 'stack',
-                              'justify': 'between',
-                              'gap': 'md',
-                            },
-                            {
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                  'content': 'Order total',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.orderTotal',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'label': 'Back',
-                              'type': 'button',
-                              'icon': 'arrow-left',
-                              'variant': 'ghost',
-                              'action': 'PREV',
-                            },
-                            {
-                              'action': 'COMPLETE',
-                              'type': 'button',
-                              'label': 'Place order',
-                              'icon': 'check',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step3',
-                'to': 'step2',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'content': 'Checkout',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'currentStep': 1,
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Shipping Address',
-                          'type': 'typography',
-                        },
-                        {
-                          'cancelLabel': 'Back',
-                          'cancelEvent': 'PREV',
-                          'submitLabel': 'Continue',
-                          'type': 'form-section',
-                          'entity': '@entity',
-                          'mode': 'edit',
-                          'fields': [
-                            {
-                              'min': 5,
-                              'required': true,
-                              'name': 'shippingAddress',
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'guard': [
-                  'and',
-                  '@entity.customerName',
-                  '@entity.email',
-                  '@entity.shippingAddress',
-                ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'placed',
-                  ],
-                  [
-                    'persist',
-                    'create',
-                    'Checkout',
-                    '@entity',
-                    {
-                      'emit': {
-                        'success': 'CheckoutSaved',
-                        'failure': 'CheckoutSaveFailed',
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Checkout',
+                        'variant': 'h2',
                       },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_PLACED',
-                    {
-                      'id': '@entity.id',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'success',
-                    'Order placed successfully',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full py-12',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'check-circle',
-                        },
-                        {
-                          'content': 'Order placed',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'Your order is confirmed and on its way.',
-                          'type': 'typography',
-                          'variant': 'body',
-                        },
-                        {
-                          'action': 'RESTART',
-                          'label': 'Start new order',
-                          'variant': 'ghost',
-                          'type': 'button',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
+                      {
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Payment',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      '@trait.CheckoutPayment',
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
+                            'action': 'PREV',
+                          },
+                        ],
+                        'justify': 'start',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'review',
-                'to': 'step3',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'content': 'Checkout',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'currentStep': 2,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Payment',
-                        },
-                        '@trait.CheckoutPayment',
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'justify': 'start',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'label': 'Back',
-                              'action': 'PREV',
-                              'icon': 'arrow-left',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'step1',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.orderTotal',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.shippingAddress',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'draft',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Checkout',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 0,
-                          'steps': [
-                            'Customer Info',
-                            'Shipping',
-                            'Payment',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Customer Info',
-                        },
-                        {
-                          'type': 'form-section',
-                          'showCancel': false,
-                          'mode': 'create',
-                          'fields': [
-                            {
-                              'name': 'customerName',
-                              'required': true,
-                              'min': 2,
-                            },
-                            {
-                              'type': 'email',
-                              'name': 'email',
-                              'required': true,
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Checkout',
-          'path': '/checkout',
-          'traits': [
-            {
-              'ref': 'CheckoutWizard',
+              ],
             },
             {
-              'ref': 'CheckoutPayment',
+              'from': 'step2',
+              'to': 'step1',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Checkout',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                        'currentStep': 0,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Customer Info',
+                        'variant': 'h3',
+                      },
+                      {
+                        'mode': 'edit',
+                        'submitLabel': 'Continue',
+                        'showCancel': false,
+                        'fields': [
+                          {
+                            'name': 'customerName',
+                            'required': true,
+                            'min': 2,
+                          },
+                          {
+                            'name': 'email',
+                            'required': true,
+                            'type': 'email',
+                          },
+                        ],
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'CheckoutPaymentForm',
+              'from': 'step3',
+              'to': 'review',
+              'event': 'PAYMENT_DONE',
+              'guard': [
+                'and',
+                '@entity.customerName',
+                '@entity.email',
+                '@entity.shippingAddress',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Review your order',
+                        'type': 'typography',
+                      },
+                      {
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                        'currentStep': 3,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Customer',
+                              },
+                              {
+                                'content': '@entity.customerName',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'content': 'Email',
+                                'variant': 'caption',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.email',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'content': 'Shipping',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': '@entity.shippingAddress',
+                                'variant': 'body',
+                              },
+                            ],
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
+                          },
+                          {
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'Order total',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.orderTotal',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'label': 'Back',
+                            'type': 'button',
+                            'icon': 'arrow-left',
+                            'variant': 'ghost',
+                            'action': 'PREV',
+                          },
+                          {
+                            'action': 'COMPLETE',
+                            'type': 'button',
+                            'label': 'Place order',
+                            'icon': 'check',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'step2',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Checkout',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'currentStep': 1,
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Shipping Address',
+                        'type': 'typography',
+                      },
+                      {
+                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'fields': [
+                          {
+                            'min': 5,
+                            'required': true,
+                            'name': 'shippingAddress',
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'guard': [
+                'and',
+                '@entity.customerName',
+                '@entity.email',
+                '@entity.shippingAddress',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'placed',
+                ],
+                [
+                  'persist',
+                  'create',
+                  'Checkout',
+                  '@entity',
+                  {
+                    'emit': {
+                      'success': 'CheckoutSaved',
+                      'failure': 'CheckoutSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_PLACED',
+                  {
+                    'id': '@entity.id',
+                  },
+                ],
+                [
+                  'notify',
+                  'success',
+                  'Order placed successfully',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'check-circle',
+                      },
+                      {
+                        'content': 'Order placed',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Your order is confirmed and on its way.',
+                        'type': 'typography',
+                        'variant': 'body',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'label': 'Start new order',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'step3',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Checkout',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Payment',
+                      },
+                      '@trait.CheckoutPayment',
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'justify': 'start',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'label': 'Back',
+                            'action': 'PREV',
+                            'icon': 'arrow-left',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'step1',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.orderTotal',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.shippingAddress',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'draft',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Checkout',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 0,
+                        'steps': [
+                          'Customer Info',
+                          'Shipping',
+                          'Payment',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Customer Info',
+                      },
+                      {
+                        'type': 'form-section',
+                        'showCancel': false,
+                        'mode': 'create',
+                        'fields': [
+                          {
+                            'name': 'customerName',
+                            'required': true,
+                            'min': 2,
+                          },
+                          {
+                            'type': 'email',
+                            'name': 'email',
+                            'required': true,
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OrderRecordOrbital',
-      uses: [],
-      entity: {
-        'name': 'OrderRecord',
-        'collection': 'orderrecords',
-        'persistence': 'persistent',
-        'fields': [
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Checkout',
+        'path': '/checkout',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'CheckoutWizard',
           },
           {
-            'name': 'customerName',
-            'type': 'string',
-            'required': true,
+            'ref': 'CheckoutPayment',
           },
           {
-            'name': 'email',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'shippingAddress',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'paymentMethod',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'orderTotal',
-            'type': 'number',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'CheckoutPaymentForm',
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'OrderRecordBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'OrderRecord',
-          'emits': [
-            {
-              'event': 'CREATE',
-            },
-            {
-              'event': 'VIEW',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.customerName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.email',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.shippingAddress',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentMethod',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.orderTotal',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.status',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.customerName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.email',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.shippingAddress',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentMethod',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.orderTotal',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.status',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DELETE',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.customerName',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.email',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.shippingAddress',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.paymentMethod',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.orderTotal',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.status',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoaded',
-              'description': 'Fired when OrderRecord finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[OrderRecord]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoadFailed',
-              'description': 'Fired when OrderRecord fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ORDER_RECORD_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordCreate',
-              },
-            },
-            {
-              'event': 'ORDER_RECORD_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordEdit',
-              },
-            },
-            {
-              'event': 'ORDER_RECORD_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordDelete',
-              },
-            },
-            {
-              'event': 'ORDER_PLACED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'CheckoutOrbital',
-                'trait': 'CheckoutWizard',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'OrderRecordLoaded',
-                'name': 'OrderRecord loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderRecord]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoadFailed',
-                'name': 'OrderRecord load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordLoadFailed',
-                        'success': 'OrderRecordLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'content': 'Loading…',
-                          'color': 'muted',
-                          'type': 'typography',
-                        },
-                      ],
-                      'gap': 'md',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'OrderRecordLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'navItems': [
-                        {
-                          'icon': 'package',
-                          'label': 'Products',
-                          'href': '/products',
-                        },
-                        {
-                          'label': 'Cart',
-                          'icon': 'shopping-cart',
-                          'href': '/cart',
-                        },
-                        {
-                          'href': '/checkout',
-                          'icon': 'credit-card',
-                          'label': 'Checkout',
-                        },
-                        {
-                          'icon': 'clipboard-list',
-                          'label': 'Orders',
-                          'href': '/orders',
-                        },
-                      ],
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'align': 'center',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'clipboard-list',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'content': 'Order History',
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                    },
-                                  ],
-                                },
-                                {
-                                  'gap': 'sm',
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'button',
-                                      'action': 'CREATE',
-                                      'label': 'Create OrderRecord',
-                                      'variant': 'primary',
-                                      'icon': 'plus',
-                                    },
-                                  ],
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'fields': [
-                                {
-                                  'icon': 'clipboard-list',
-                                  'label': 'Customer',
-                                  'variant': 'h3',
-                                  'name': 'customerName',
-                                },
-                                {
-                                  'variant': 'badge',
-                                  'name': 'status',
-                                },
-                                {
-                                  'label': 'Total',
-                                  'variant': 'h4',
-                                  'format': 'currency',
-                                  'name': 'orderTotal',
-                                },
-                                {
-                                  'variant': 'caption',
-                                  'name': 'email',
-                                },
-                                {
-                                  'name': 'shippingAddress',
-                                  'label': 'Address',
-                                  'variant': 'caption',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'data-list',
-                              'variant': 'card',
-                              'entity': '@payload.data',
-                              'itemActions': [
-                                {
-                                  'variant': 'ghost',
-                                  'label': 'View',
-                                  'event': 'VIEW',
-                                },
-                                {
-                                  'variant': 'ghost',
-                                  'label': 'Edit',
-                                  'event': 'EDIT',
-                                },
-                                {
-                                  'label': 'Delete',
-                                  'event': 'DELETE',
-                                  'variant': 'danger',
-                                },
-                              ],
-                            },
-                          ],
-                          'gap': 'lg',
-                          'direction': 'vertical',
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'dashboard-layout',
-                      'appName': 'EcommerceApp',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'OrderRecordLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'type': 'icon',
-                          'name': 'alert-triangle',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Failed to load orderrecord',
-                        },
-                        {
-                          'content': '@payload.error',
-                          'color': 'muted',
-                          'variant': 'body',
-                          'type': 'typography',
-                        },
-                        {
-                          'action': 'INIT',
-                          'type': 'button',
-                          'label': 'Retry',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderRecordCreate',
-          'category': 'interaction',
-          'linkedEntity': 'OrderRecord',
-          'emits': [
-            {
-              'event': 'ORDER_RECORD_CREATED',
-            },
-            {
-              'event': 'OrderRecordLoadFailed',
-              'description': 'Fired when OrderRecord fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoaded',
-              'description': 'Fired when OrderRecord finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[OrderRecord]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ORDER_RECORD_CREATED',
-                'name': 'Order Record Created',
-              },
-              {
-                'key': 'OrderRecordLoadFailed',
-                'name': 'OrderRecord load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoaded',
-                'name': 'OrderRecord loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderRecord]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordSaveFailed',
-                'name': 'OrderRecord save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordSaved',
-                'name': 'OrderRecord saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordLoadFailed',
-                        'success': 'OrderRecordLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordLoadFailed',
-                        'success': 'OrderRecordLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'plus-circle',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Create OrderRecord',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'fields': [
-                            'customerName',
-                            'email',
-                            'shippingAddress',
-                            'paymentMethod',
-                            'orderTotal',
-                            'status',
-                          ],
-                          'type': 'form-section',
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'OrderRecord',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordSaveFailed',
-                        'success': 'OrderRecordSaved',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_RECORD_CREATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderRecordEdit',
-          'category': 'interaction',
-          'linkedEntity': 'OrderRecord',
-          'emits': [
-            {
-              'event': 'ORDER_RECORD_UPDATED',
-            },
-            {
-              'event': 'OrderRecordLoadFailed',
-              'description': 'Fired when OrderRecord fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoaded',
-              'description': 'Fired when OrderRecord finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[OrderRecord]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordView',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'OrderRecord',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ORDER_RECORD_UPDATED',
-                'name': 'Order Record Updated',
-              },
-              {
-                'key': 'OrderRecordLoadFailed',
-                'name': 'OrderRecord load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoaded',
-                'name': 'OrderRecord loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderRecord]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordUpdateFailed',
-                'name': 'OrderRecord update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordUpdated',
-                'name': 'OrderRecord updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordLoadFailed',
-                        'success': 'OrderRecordLoaded',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'edit',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Edit OrderRecord',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'mode': 'edit',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'customerName',
-                            'email',
-                            'shippingAddress',
-                            'paymentMethod',
-                            'orderTotal',
-                            'status',
-                          ],
-                          'entity': '@payload.row',
-                          'type': 'form-section',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'OrderRecord',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordUpdateFailed',
-                        'success': 'OrderRecordUpdated',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_RECORD_UPDATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderRecordView',
-          'category': 'interaction',
-          'linkedEntity': 'OrderRecord',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoaded',
-              'description': 'Fired when OrderRecord finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[OrderRecord]',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoadFailed',
-              'description': 'Fired when OrderRecord fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'OrderRecordLoaded',
-                'name': 'OrderRecord loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderRecord]',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoadFailed',
-                'name': 'OrderRecord load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.orderTotal',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.paymentMethod',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.shippingAddress',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'eye',
-                            },
-                            {
-                              'content': '@entity.customerName',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'content': 'Customer Name',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.customerName',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                        },
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Email',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.email',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Shipping Address',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.shippingAddress',
-                              'variant': 'body',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'content': 'Payment Method',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.paymentMethod',
-                              'variant': 'body',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'children': [
-                            {
-                              'content': 'Order Total',
-                              'variant': 'caption',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.orderTotal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Status',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.status',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'variant': 'primary',
-                              'action': 'EDIT',
-                              'label': 'Edit',
-                              'icon': 'edit',
-                              'type': 'button',
-                            },
-                            {
-                              'label': 'Close',
-                              'action': 'CLOSE',
-                              'variant': 'ghost',
-                              'type': 'button',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'justify': 'end',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'OrderRecordDelete',
-          'category': 'interaction',
-          'linkedEntity': 'OrderRecord',
-          'emits': [
-            {
-              'event': 'ORDER_RECORD_DELETED',
-            },
-            {
-              'event': 'OrderRecordDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoadFailed',
-              'description': 'Fired when OrderRecord fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'OrderRecordLoaded',
-              'description': 'Fired when OrderRecord finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[OrderRecord]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'OrderRecordBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'ORDER_RECORD_DELETED',
-                'name': 'Order Record Deleted',
-              },
-              {
-                'key': 'OrderRecordDeleteFailed',
-                'name': 'OrderRecord delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordDeleted',
-                'name': 'OrderRecord deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoadFailed',
-                'name': 'OrderRecord load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'OrderRecordLoaded',
-                'name': 'OrderRecord loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OrderRecord]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': 'Delete OrderRecord',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'error',
-                          'type': 'alert',
-                          'message': 'This action cannot be undone.',
-                        },
-                        {
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'action': 'CANCEL',
-                              'label': 'Cancel',
-                              'type': 'button',
-                              'variant': 'ghost',
-                            },
-                            {
-                              'icon': 'check',
-                              'action': 'CONFIRM_DELETE',
-                              'label': 'Delete',
-                              'variant': 'danger',
-                              'type': 'button',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'OrderRecord',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordDeleteFailed',
-                        'success': 'OrderRecordDeleted',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ORDER_RECORD_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'failure': 'OrderRecordLoadFailed',
-                        'success': 'OrderRecordLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'OrderRecord',
-                    {
-                      'emit': {
-                        'success': 'OrderRecordLoaded',
-                        'failure': 'OrderRecordLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Orders',
-          'path': '/orders',
-          'traits': [
-            {
-              'ref': 'OrderRecordBrowse',
-            },
-            {
-              'ref': 'OrderRecordCreate',
-            },
-            {
-              'ref': 'OrderRecordEdit',
-            },
-            {
-              'ref': 'OrderRecordView',
-            },
-            {
-              'ref': 'OrderRecordDelete',
-            },
-          ],
-        } as never,
-      ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the OrderRecordOrbital orbital.
+ *
+ * Canonical entity: OrderRecord.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdEcommerceOrderRecordOrbitalParams {
+  /** Override the canonical entity name (default: 'OrderRecord'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OrderRecordOrbital orbital with consumer params. */
+export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'OrderRecord';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OrderRecordOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      collection: 'orderrecords',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'customerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'email',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'shippingAddress',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'paymentMethod',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'orderTotal',
+          'type': 'number',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'OrderRecordBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'OrderRecord',
+        'emits': [
+          {
+            'event': 'CREATE',
+          },
+          {
+            'event': 'VIEW',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.customerName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.email',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.shippingAddress',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentMethod',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.orderTotal',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.customerName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.email',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.shippingAddress',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentMethod',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.orderTotal',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.customerName',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.email',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.shippingAddress',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.paymentMethod',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.orderTotal',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoaded',
+            'description': 'Fired when OrderRecord finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoadFailed',
+            'description': 'Fired when OrderRecord fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ORDER_RECORD_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordCreate',
+            },
+          },
+          {
+            'event': 'ORDER_RECORD_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordEdit',
+            },
+          },
+          {
+            'event': 'ORDER_RECORD_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordDelete',
+            },
+          },
+          {
+            'event': 'ORDER_PLACED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'CheckoutOrbital',
+              'trait': 'CheckoutWizard',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OrderRecordLoaded',
+              'name': 'OrderRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoadFailed',
+              'name': 'OrderRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'content': 'Loading…',
+                        'color': 'muted',
+                        'type': 'typography',
+                      },
+                    ],
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OrderRecordLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Cart',
+                        'icon': 'shopping-cart',
+                        'href': '/cart',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'align': 'center',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': 'clipboard-list',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'Order History',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                              },
+                              {
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'button',
+                                    'action': 'CREATE',
+                                    'label': 'Create OrderRecord',
+                                    'variant': 'primary',
+                                    'icon': 'plus',
+                                  },
+                                ],
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'fields': [
+                              {
+                                'icon': 'clipboard-list',
+                                'label': 'Customer',
+                                'variant': 'h3',
+                                'name': 'customerName',
+                              },
+                              {
+                                'variant': 'badge',
+                                'name': 'status',
+                              },
+                              {
+                                'label': 'Total',
+                                'variant': 'h4',
+                                'format': 'currency',
+                                'name': 'orderTotal',
+                              },
+                              {
+                                'variant': 'caption',
+                                'name': 'email',
+                              },
+                              {
+                                'name': 'shippingAddress',
+                                'label': 'Address',
+                                'variant': 'caption',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'data-list',
+                            'variant': 'card',
+                            'entity': '@payload.data',
+                            'itemActions': [
+                              {
+                                'variant': 'ghost',
+                                'label': 'View',
+                                'event': 'VIEW',
+                              },
+                              {
+                                'variant': 'ghost',
+                                'label': 'Edit',
+                                'event': 'EDIT',
+                              },
+                              {
+                                'label': 'Delete',
+                                'event': 'DELETE',
+                                'variant': 'danger',
+                              },
+                            ],
+                          },
+                        ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'EcommerceApp',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'OrderRecordLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'type': 'icon',
+                        'name': 'alert-triangle',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Failed to load orderrecord',
+                      },
+                      {
+                        'content': '@payload.error',
+                        'color': 'muted',
+                        'variant': 'body',
+                        'type': 'typography',
+                      },
+                      {
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderRecordCreate',
+        'category': 'interaction',
+        'linkedEntity': 'OrderRecord',
+        'emits': [
+          {
+            'event': 'ORDER_RECORD_CREATED',
+          },
+          {
+            'event': 'OrderRecordLoadFailed',
+            'description': 'Fired when OrderRecord fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoaded',
+            'description': 'Fired when OrderRecord finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ORDER_RECORD_CREATED',
+              'name': 'Order Record Created',
+            },
+            {
+              'key': 'OrderRecordLoadFailed',
+              'name': 'OrderRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoaded',
+              'name': 'OrderRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordSaveFailed',
+              'name': 'OrderRecord save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordSaved',
+              'name': 'OrderRecord saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'plus-circle',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Create OrderRecord',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'fields': [
+                          'customerName',
+                          'email',
+                          'shippingAddress',
+                          'paymentMethod',
+                          'orderTotal',
+                          'status',
+                        ],
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'OrderRecord',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordSaveFailed',
+                      'success': 'OrderRecordSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_RECORD_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderRecordEdit',
+        'category': 'interaction',
+        'linkedEntity': 'OrderRecord',
+        'emits': [
+          {
+            'event': 'ORDER_RECORD_UPDATED',
+          },
+          {
+            'event': 'OrderRecordLoadFailed',
+            'description': 'Fired when OrderRecord fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoaded',
+            'description': 'Fired when OrderRecord finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'OrderRecord',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ORDER_RECORD_UPDATED',
+              'name': 'Order Record Updated',
+            },
+            {
+              'key': 'OrderRecordLoadFailed',
+              'name': 'OrderRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoaded',
+              'name': 'OrderRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordUpdateFailed',
+              'name': 'OrderRecord update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordUpdated',
+              'name': 'OrderRecord updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'edit',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Edit OrderRecord',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'mode': 'edit',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'customerName',
+                          'email',
+                          'shippingAddress',
+                          'paymentMethod',
+                          'orderTotal',
+                          'status',
+                        ],
+                        'entity': '@payload.row',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'OrderRecord',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordUpdateFailed',
+                      'success': 'OrderRecordUpdated',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_RECORD_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderRecordView',
+        'category': 'interaction',
+        'linkedEntity': 'OrderRecord',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoaded',
+            'description': 'Fired when OrderRecord finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderRecord]',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoadFailed',
+            'description': 'Fired when OrderRecord fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'OrderRecordLoaded',
+              'name': 'OrderRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoadFailed',
+              'name': 'OrderRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.orderTotal',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.paymentMethod',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.shippingAddress',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'eye',
+                          },
+                          {
+                            'content': '@entity.customerName',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Customer Name',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.customerName',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Email',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': '@entity.email',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Shipping Address',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.shippingAddress',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'content': 'Payment Method',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.paymentMethod',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Order Total',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.orderTotal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Status',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.status',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'variant': 'primary',
+                            'action': 'EDIT',
+                            'label': 'Edit',
+                            'icon': 'edit',
+                            'type': 'button',
+                          },
+                          {
+                            'label': 'Close',
+                            'action': 'CLOSE',
+                            'variant': 'ghost',
+                            'type': 'button',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'justify': 'end',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'OrderRecordDelete',
+        'category': 'interaction',
+        'linkedEntity': 'OrderRecord',
+        'emits': [
+          {
+            'event': 'ORDER_RECORD_DELETED',
+          },
+          {
+            'event': 'OrderRecordDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoadFailed',
+            'description': 'Fired when OrderRecord fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'OrderRecordLoaded',
+            'description': 'Fired when OrderRecord finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OrderRecord]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'OrderRecordBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'ORDER_RECORD_DELETED',
+              'name': 'Order Record Deleted',
+            },
+            {
+              'key': 'OrderRecordDeleteFailed',
+              'name': 'OrderRecord delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordDeleted',
+              'name': 'OrderRecord deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoadFailed',
+              'name': 'OrderRecord load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'OrderRecordLoaded',
+              'name': 'OrderRecord loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[OrderRecord]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': 'Delete OrderRecord',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'error',
+                        'type': 'alert',
+                        'message': 'This action cannot be undone.',
+                      },
+                      {
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'action': 'CANCEL',
+                            'label': 'Cancel',
+                            'type': 'button',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'icon': 'check',
+                            'action': 'CONFIRM_DELETE',
+                            'label': 'Delete',
+                            'variant': 'danger',
+                            'type': 'button',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'OrderRecord',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordDeleteFailed',
+                      'success': 'OrderRecordDeleted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ORDER_RECORD_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'OrderRecord',
+                  {
+                    'emit': {
+                      'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Orders',
+        'path': '/orders',
+        'traits': [
+          {
+            'ref': 'OrderRecordBrowse',
+          },
+          {
+            'ref': 'OrderRecordCreate',
+          },
+          {
+            'ref': 'OrderRecordEdit',
+          },
+          {
+            'ref': 'OrderRecordView',
+          },
+          {
+            'ref': 'OrderRecordDelete',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-ecommerce — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdEcommerceParams {
+  Product?: StdEcommerceProductOrbitalParams;
+  CartItem?: StdEcommerceCartItemOrbitalParams;
+  Checkout?: StdEcommerceCheckoutOrbitalParams;
+  OrderRecord?: StdEcommerceOrderRecordOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdEcommerce(params: StdEcommerceParams = {}): OrbitalDefinition[] {
+  return [
+    stdEcommerceProductOrbital(params.Product ?? {}),
+    stdEcommerceCartItemOrbital(params.CartItem ?? {}),
+    stdEcommerceCheckoutOrbital(params.Checkout ?? {}),
+    stdEcommerceOrderRecordOrbital(params.OrderRecord ?? {}),
+  ];
 }

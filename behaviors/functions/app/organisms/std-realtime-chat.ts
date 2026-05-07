@@ -34,649 +34,488 @@ export interface StdRealtimeChatConfig {
 }
 
 /**
- * Params for the std-realtime-chat descriptor helpers.
+ * Tunable params for the ChatMessageOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: ChatMessage.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdRealtimeChatParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdRealtimeChatChatMessageOrbitalParams {
+  /** Override the canonical entity name (default: 'ChatMessage'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdRealtimeChatConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `RealtimeChat.traits.ChatAppLayout`. */
-export function stdRealtimeChatChatAppLayoutTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatRoom`. */
-export function stdRealtimeChatChatRoomTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatRoom`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatSearch`. */
-export function stdRealtimeChatChatSearchTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatStats`. */
-export function stdRealtimeChatChatStatsTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatMessageBrowse`. */
-export function stdRealtimeChatChatMessageBrowseTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatMessageBrowse`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatMessageCompose`. */
-export function stdRealtimeChatChatMessageComposeTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatMessageCompose`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatMessageView`. */
-export function stdRealtimeChatChatMessageViewTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatMessageView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatMessagePersistor`. */
-export function stdRealtimeChatChatMessagePersistorTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatMessagePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatMessageAttachment`. */
-export function stdRealtimeChatChatMessageAttachmentTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatMessageAttachment`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `RealtimeChat.traits.ChatSmsNotify`. */
-export function stdRealtimeChatChatSmsNotifyTrait(params: StdRealtimeChatParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ChatSmsNotify`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `RealtimeChat.pages.ChatPage`. */
-export function stdRealtimeChatPage(params: StdRealtimeChatParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ChatPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'ChatMessage';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the ChatMessageOrbital orbital with consumer params. */
+export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMessageOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ChatMessage';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ChatMessageOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+      {
+        'from': 'std/behaviors/std-service-twilio',
+        'as': 'Twilio',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ChatMessageOrbital',
-      uses: [
+      collection: 'chatmessages',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'sender',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'content',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'channel',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'timestamp',
+          'type': 'datetime',
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
-        },
-        {
-          'from': 'std/behaviors/std-service-twilio',
-          'as': 'Twilio',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'ChatMessage',
-        'collection': 'chatmessages',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ChatAppLayout',
+        'config': {
+          'contentTrait': '@trait.ChatRoom',
+          'notifications': [],
+          'notificationClickEvent': 'CHAT_NOTIFICATIONS_OPEN',
+          'appName': 'Realtime Chat',
+          'navItems': [
+            {
+              'label': 'Chat',
+              'href': '/chat',
+              'icon': 'message-circle',
+            },
+            {
+              'href': '/channels',
+              'icon': 'hash',
+              'label': 'Channels',
+            },
+            {
+              'icon': 'users',
+              'label': 'Online',
+              'href': '/online',
+            },
+          ],
+          'searchEvent': 'CHAT_SEARCH',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'CHAT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CHAT_SEARCH',
+        },
+      }),
+      {
+        'name': 'ChatRoom',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'sender',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'content',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'channel',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'timestamp',
-            'type': 'datetime',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'CREATE_CHANNEL',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ChatAppLayout',
-          'config': {
-            'contentTrait': '@trait.ChatRoom',
-            'notifications': [],
-            'notificationClickEvent': 'CHAT_NOTIFICATIONS_OPEN',
-            'appName': 'Realtime Chat',
-            'navItems': [
-              {
-                'label': 'Chat',
-                'href': '/chat',
-                'icon': 'message-circle',
-              },
-              {
-                'href': '/channels',
-                'icon': 'hash',
-                'label': 'Channels',
-              },
-              {
-                'icon': 'users',
-                'label': 'Online',
-                'href': '/online',
-              },
-            ],
-            'searchEvent': 'CHAT_SEARCH',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'CHAT_NOTIFICATIONS_OPEN',
-            'SEARCH': 'CHAT_SEARCH',
-          },
-        }),
-        {
-          'name': 'ChatRoom',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE_CHANNEL',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CHAT_SEARCH',
-              'triggers': 'CHAT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatAppLayout',
-              },
-            },
-            {
-              'event': 'CHAT_NOTIFICATIONS_OPEN',
-              'triggers': 'CHAT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CHAT_SEARCH',
-                'name': 'Chat Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CHAT_NOTIFICATIONS_OPEN',
-                'name': 'Chat Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE_CHANNEL',
-                'name': 'Create Channel',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'message-circle',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Chat',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'action': 'CREATE_CHANNEL',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'label': 'New Channel',
-                                  'type': 'button',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ChatSearch',
-                        '@trait.ChatStats',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ChatMessageBrowse',
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'CHAT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'CHAT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                        },
-                        {
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'type': 'button',
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'label': 'Back to chat',
-                        },
-                      ],
-                      'className': 'py-8',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'ChatSearch',
-          'config': {
-            'placeholder': 'Search messages…',
+        'listens': [
+          {
             'event': 'CHAT_SEARCH',
+            'triggers': 'CHAT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatAppLayout',
+            },
           },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'ChatStats',
-          'config': {
-            'title': 'Chat Activity',
-            'metrics': [
-              {
-                'variant': 'primary',
-                'icon': 'message-circle',
-                'label': 'Messages',
-                'format': 'number',
-                'aggregation': 'count',
-              },
-              {
-                'format': 'number',
-                'label': 'Active Channels',
-                'aggregation': 'count',
-                'variant': 'info',
-                'icon': 'hash',
-              },
-              {
-                'icon': 'user',
-                'variant': 'success',
-                'label': 'Top Author',
-                'format': 'number',
-                'aggregation': 'count',
-              },
-            ],
+          {
+            'event': 'CHAT_NOTIFICATIONS_OPEN',
+            'triggers': 'CHAT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatAppLayout',
+            },
           },
-          'listens': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ChatMessageLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatMessageBrowse',
-              },
+              'name': 'composing',
+              'isInitial': true,
             },
           ],
-        }),
-        {
-          'name': 'ChatMessageBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'ChatMessage',
-          'emits': [
+          'events': [
             {
-              'event': 'COMPOSE',
-              'scope': 'external',
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CHAT_SEARCH',
+              'name': 'Chat Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
             {
-              'event': 'VIEW',
-              'scope': 'external',
+              'key': 'CHAT_NOTIFICATIONS_OPEN',
+              'name': 'Chat Notifications Open',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.sender',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.content',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.channel',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.timestamp',
-                  'type': 'datetime',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
                 },
               ],
             },
             {
-              'event': 'ChatMessageLoaded',
-              'description': 'Fired when ChatMessage finishes loading',
-              'scope': 'internal',
+              'key': 'CREATE_CHANNEL',
+              'name': 'Create Channel',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'message-circle',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Chat',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'action': 'CREATE_CHANNEL',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'New Channel',
+                                'type': 'button',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ChatSearch',
+                      '@trait.ChatStats',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ChatMessageBrowse',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CHAT_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CHAT_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'label': 'Back to chat',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ChatSearch',
+        'config': {
+          'placeholder': 'Search messages…',
+          'event': 'CHAT_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ChatStats',
+        'config': {
+          'title': 'Chat Activity',
+          'metrics': [
+            {
+              'variant': 'primary',
+              'icon': 'message-circle',
+              'label': 'Messages',
+              'format': 'number',
+              'aggregation': 'count',
+            },
+            {
+              'format': 'number',
+              'label': 'Active Channels',
+              'aggregation': 'count',
+              'variant': 'info',
+              'icon': 'hash',
+            },
+            {
+              'icon': 'user',
+              'variant': 'success',
+              'label': 'Top Author',
+              'format': 'number',
+              'aggregation': 'count',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'ChatMessageLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatMessageBrowse',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ChatMessageBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'ChatMessage',
+        'emits': [
+          {
+            'event': 'COMPOSE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'VIEW',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.sender',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.content',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.channel',
+                'type': 'string',
+              },
+              {
+                'name': 'row.timestamp',
+                'type': 'datetime',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ChatMessageLoaded',
+            'description': 'Fired when ChatMessage finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ChatMessage]',
+              },
+            ],
+          },
+          {
+            'event': 'ChatMessageLoadFailed',
+            'description': 'Fired when ChatMessage fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'CHAT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatSearch',
+            },
+          },
+          {
+            'event': 'MESSAGE_SAVED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatMessagePersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CHAT_SEARCH',
+              'name': 'Chat Search',
+            },
+            {
+              'key': 'ChatMessageLoaded',
+              'name': 'ChatMessage loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -685,9 +524,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'ChatMessageLoadFailed',
-              'description': 'Fired when ChatMessage fails to load',
-              'scope': 'internal',
+              'key': 'ChatMessageLoadFailed',
+              'name': 'ChatMessage load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -699,387 +537,382 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'SEARCH',
-              'triggers': 'CHAT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatSearch',
-              },
+              'key': 'COMPOSE',
+              'name': 'Compose',
             },
             {
-              'event': 'MESSAGE_SAVED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatMessagePersistor',
-              },
+              'key': 'VIEW',
+              'name': 'View',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CHAT_SEARCH',
-                'name': 'Chat Search',
-              },
-              {
-                'key': 'ChatMessageLoaded',
-                'name': 'ChatMessage loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'ChatMessage',
                   {
-                    'name': 'data',
-                    'type': '[ChatMessage]',
+                    'emit': {
+                      'success': 'ChatMessageLoaded',
+                      'failure': 'ChatMessageLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'ChatMessageLoadFailed',
-                'name': 'ChatMessage load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'COMPOSE',
-                'name': 'Compose',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'ChatMessage',
-                    {
-                      'emit': {
-                        'success': 'ChatMessageLoaded',
-                        'failure': 'ChatMessageLoadFailed',
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'align': 'center',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'color': 'muted',
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Loading…',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'CHAT_SEARCH',
-                'effects': [
-                  [
-                    'fetch',
-                    'ChatMessage',
-                    {
-                      'emit': {
-                        'success': 'ChatMessageLoaded',
-                        'failure': 'ChatMessageLoadFailed',
+                      {
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Loading…',
                       },
-                    },
-                  ],
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ChatMessageLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'entity': '@payload.data',
-                          'gap': 'sm',
-                          'itemActions': [
-                            {
-                              'label': 'View',
-                              'variant': 'ghost',
-                              'event': 'VIEW',
-                            },
-                          ],
-                          'type': 'data-list',
-                          'fields': [
-                            {
-                              'variant': 'h4',
-                              'name': 'sender',
-                            },
-                            {
-                              'variant': 'body',
-                              'name': 'content',
-                            },
-                            {
-                              'name': 'timestamp',
-                              'variant': 'caption',
-                              'format': 'date',
-                            },
-                          ],
-                          'variant': 'message',
-                          'senderField': 'sender',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'variant': 'primary',
-                              'label': 'Compose',
-                              'icon': 'edit',
-                              'type': 'button',
-                              'action': 'COMPOSE',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'ChatMessageLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'name': 'alert-triangle',
-                          'color': 'destructive',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': 'Failed to load messages',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'color': 'muted',
-                          'variant': 'body',
-                          'content': '@payload.error',
-                        },
-                        {
-                          'type': 'button',
-                          'label': 'Retry',
-                          'action': 'INIT',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ChatMessageCompose',
-          'linkedEntity': 'ChatMessage',
-          'config': {
-            'mode': 'create',
-            'icon': 'edit',
-            'fields': [
-              'sender',
-              'content',
-              'channel',
-              'timestamp',
-            ],
-            'title': 'New Message',
-          },
-          'events': {
-            'OPEN': 'COMPOSE',
-          },
-          'listens': [
+              ],
+            },
             {
-              'event': 'COMPOSE',
-              'triggers': 'COMPOSE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatMessageBrowse',
-              },
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'CHAT_SEARCH',
+              'effects': [
+                [
+                  'fetch',
+                  'ChatMessage',
+                  {
+                    'emit': {
+                      'success': 'ChatMessageLoaded',
+                      'failure': 'ChatMessageLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ChatMessageLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'entity': '@payload.data',
+                        'gap': 'sm',
+                        'itemActions': [
+                          {
+                            'label': 'View',
+                            'variant': 'ghost',
+                            'event': 'VIEW',
+                          },
+                        ],
+                        'type': 'data-list',
+                        'fields': [
+                          {
+                            'variant': 'h4',
+                            'name': 'sender',
+                          },
+                          {
+                            'variant': 'body',
+                            'name': 'content',
+                          },
+                          {
+                            'name': 'timestamp',
+                            'variant': 'caption',
+                            'format': 'date',
+                          },
+                        ],
+                        'variant': 'message',
+                        'senderField': 'sender',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'variant': 'primary',
+                            'label': 'Compose',
+                            'icon': 'edit',
+                            'type': 'button',
+                            'action': 'COMPOSE',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'ChatMessageLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load messages',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'body',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ChatMessageView',
-          'linkedEntity': 'ChatMessage',
-          'config': {
-            'title': 'View Message',
-            'fields': [
-              'sender',
-              'content',
-              'channel',
-              'timestamp',
-            ],
-            'icon': 'eye',
-            'mode': 'edit',
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ChatMessageCompose',
+        'linkedEntity': 'ChatMessage',
+        'config': {
+          'mode': 'create',
+          'icon': 'edit',
+          'fields': [
+            'sender',
+            'content',
+            'channel',
+            'timestamp',
+          ],
+          'title': 'New Message',
+        },
+        'events': {
+          'OPEN': 'COMPOSE',
+        },
+        'listens': [
+          {
+            'event': 'COMPOSE',
+            'triggers': 'COMPOSE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatMessageBrowse',
+            },
           },
-          'events': {
-            'OPEN': 'VIEW',
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ChatMessageView',
+        'linkedEntity': 'ChatMessage',
+        'config': {
+          'title': 'View Message',
+          'fields': [
+            'sender',
+            'content',
+            'channel',
+            'timestamp',
+          ],
+          'icon': 'eye',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatMessageBrowse',
+            },
           },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatMessageBrowse',
+        ],
+      }),
+      {
+        'name': 'ChatMessagePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'ChatMessage',
+        'emits': [
+          {
+            'event': 'MESSAGE_SAVED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
               },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChatMessageCompose',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        }),
-        {
-          'name': 'ChatMessagePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'ChatMessage',
-          'emits': [
+          'events': [
             {
-              'event': 'MESSAGE_SAVED',
-              'scope': 'external',
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
               'payloadSchema': [
                 {
-                  'name': 'id',
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'MESSAGE_SAVED',
+              'name': 'Message Saved',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'ChatMessage',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'MESSAGE_SAVED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ChatMessageAttachment',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'AttachmentUploaded',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'url',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AttachmentUploadFailed',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'uploading',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+              'payloadSchema': [
+                {
+                  'name': 'source',
+                  'type': 'string',
+                },
+                {
+                  'name': 'file',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChatMessageCompose',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'MESSAGE_SAVED',
-                'name': 'Message Saved',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'ChatMessage',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'MESSAGE_SAVED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ChatMessageAttachment',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'AttachmentUploaded',
-              'scope': 'external',
+              'key': 'AttachmentUploaded',
+              'name': 'Attachment uploaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1092,8 +925,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'AttachmentUploadFailed',
-              'scope': 'external',
+              'key': 'AttachmentUploadFailed',
+              'name': 'Attachment upload failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1102,188 +935,186 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-              {
-                'name': 'uploading',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'source',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'file',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AttachmentUploaded',
-                'name': 'Attachment uploaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'url',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AttachmentUploadFailed',
-                'name': 'Attachment upload failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'paperclip',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Attach File',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
-                          'type': 'stack',
-                        },
-                        {
-                          'inputType': 'text',
-                          'placeholder': 'Choose file…',
-                          'type': 'input',
-                        },
-                        {
-                          'label': 'Upload',
-                          'type': 'button',
-                          'icon': 'upload',
-                          'action': 'UPLOAD',
-                          'variant': 'primary',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'uploading',
-                'event': 'UPLOAD',
-                'effects': [
-                  [
-                    'call-service',
-                    'storage',
-                    'upload',
-                    {
-                      'bucket': 'chat-attachments',
-                      'maxSize': 10485760,
-                      'file': '@payload.file',
-                      'acl': 'private',
-                    },
-                    {
-                      'emit': {
-                        'success': 'AttachmentUploaded',
-                        'failure': 'AttachmentUploadFailed',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'paperclip',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Attach File',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
                       },
+                      {
+                        'inputType': 'text',
+                        'placeholder': 'Choose file…',
+                        'type': 'input',
+                      },
+                      {
+                        'label': 'Upload',
+                        'type': 'button',
+                        'icon': 'upload',
+                        'action': 'UPLOAD',
+                        'variant': 'primary',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'uploading',
+              'event': 'UPLOAD',
+              'effects': [
+                [
+                  'call-service',
+                  'storage',
+                  'upload',
+                  {
+                    'bucket': 'chat-attachments',
+                    'maxSize': 10485760,
+                    'file': '@payload.file',
+                    'acl': 'private',
+                  },
+                  {
+                    'emit': {
+                      'success': 'AttachmentUploaded',
+                      'failure': 'AttachmentUploadFailed',
                     },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Uploading…',
-                          'color': 'muted',
-                        },
-                      ],
-                    },
-                  ],
+                  },
                 ],
-              },
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Uploading…',
+                        'color': 'muted',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'uploading',
+              'to': 'ready',
+              'event': 'AttachmentUploaded',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Attachment uploaded',
+                ],
+              ],
+            },
+            {
+              'from': 'uploading',
+              'to': 'ready',
+              'event': 'AttachmentUploadFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Upload failed',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ChatSmsNotify',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'ChatSmsSent',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'from': 'uploading',
-                'to': 'ready',
-                'event': 'AttachmentUploaded',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Attachment uploaded',
-                  ],
-                ],
-              },
-              {
-                'from': 'uploading',
-                'to': 'ready',
-                'event': 'AttachmentUploadFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Upload failed',
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ChatSmsNotify',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'ChatSmsFailed',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ChatSmsSent',
-              'scope': 'external',
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'sending',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SMS_NOTIFY',
+              'name': 'Sms Notify',
+              'payloadSchema': [
+                {
+                  'name': 'recipient',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'body',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'ChatSmsSent',
+              'name': 'Chat sms sent',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1292,8 +1123,8 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'ChatSmsFailed',
-              'scope': 'external',
+              'key': 'ChatSmsFailed',
+              'name': 'Chat sms failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1302,911 +1133,998 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-              {
-                'name': 'sending',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SMS_NOTIFY',
-                'name': 'Sms Notify',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'recipient',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'body',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'ChatSmsSent',
-                'name': 'Chat sms sent',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ChatSmsFailed',
-                'name': 'Chat sms failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'bell',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Send SMS Notify',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'SMS_NOTIFY',
-                          'variant': 'primary',
-                          'icon': 'send',
-                          'label': 'Send Notification',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'sending',
-                'event': 'SMS_NOTIFY',
-                'effects': [
-                  [
-                    'call-service',
-                    'twilio',
-                    'sendSMS',
-                    {
-                      'sender': '+15551234567',
-                      'recipient': '@payload.recipient',
-                      'body': '@payload.body',
-                    },
-                    {
-                      'emit': {
-                        'failure': 'ChatSmsFailed',
-                        'success': 'ChatSmsSent',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'bell',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Send SMS Notify',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'direction': 'horizontal',
                       },
+                      {
+                        'type': 'button',
+                        'action': 'SMS_NOTIFY',
+                        'variant': 'primary',
+                        'icon': 'send',
+                        'label': 'Send Notification',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'sending',
+              'event': 'SMS_NOTIFY',
+              'effects': [
+                [
+                  'call-service',
+                  'twilio',
+                  'sendSMS',
+                  {
+                    'sender': '+15551234567',
+                    'recipient': '@payload.recipient',
+                    'body': '@payload.body',
+                  },
+                  {
+                    'emit': {
+                      'failure': 'ChatSmsFailed',
+                      'success': 'ChatSmsSent',
                     },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Sending notification…',
-                          'color': 'muted',
-                        },
-                      ],
-                    },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'sending',
-                'to': 'ready',
-                'event': 'ChatSmsSent',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Notification sent',
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Sending notification…',
+                        'color': 'muted',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'sending',
-                'to': 'ready',
-                'event': 'ChatSmsFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Notification failed',
-                  ],
+              ],
+            },
+            {
+              'from': 'sending',
+              'to': 'ready',
+              'event': 'ChatSmsSent',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Notification sent',
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ChatPage',
-          'path': '/chat',
-          'traits': [
-            {
-              'ref': 'ChatAppLayout',
+              ],
             },
             {
-              'ref': 'ChatRoom',
-            },
-            {
-              'ref': 'ChatSearch',
-            },
-            {
-              'ref': 'ChatStats',
-            },
-            {
-              'ref': 'ChatMessageBrowse',
-            },
-            {
-              'ref': 'ChatMessageCompose',
-            },
-            {
-              'ref': 'ChatMessageView',
-            },
-            {
-              'ref': 'ChatMessagePersistor',
-            },
-            {
-              'ref': 'ChatMessageAttachment',
-            },
-            {
-              'ref': 'ChatSmsNotify',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ChannelOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Channel',
-        'collection': 'channels',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'memberCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'isPrivate',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ChannelAppLayout',
-          'linkedEntity': 'Channel',
-          'config': {
-            'searchEvent': 'CHANNEL_SEARCH',
-            'notifications': [],
-            'navItems': [
-              {
-                'href': '/chat',
-                'label': 'Chat',
-                'icon': 'message-circle',
-              },
-              {
-                'icon': 'hash',
-                'label': 'Channels',
-                'href': '/channels',
-              },
-              {
-                'href': '/online',
-                'label': 'Online',
-                'icon': 'users',
-              },
-            ],
-            'appName': 'Realtime Chat',
-            'notificationClickEvent': 'CHANNEL_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.ChannelCatalog',
-          },
-          'events': {
-            'SEARCH': 'CHANNEL_SEARCH',
-            'NOTIFY_CLICK': 'CHANNEL_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'ChannelCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'from': 'sending',
+              'to': 'ready',
+              'event': 'ChatSmsFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Notification failed',
+                ],
               ],
             },
           ],
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ChatPage',
+        'path': '/chat',
+        'traits': [
+          {
+            'ref': 'ChatAppLayout',
+          },
+          {
+            'ref': 'ChatRoom',
+          },
+          {
+            'ref': 'ChatSearch',
+          },
+          {
+            'ref': 'ChatStats',
+          },
+          {
+            'ref': 'ChatMessageBrowse',
+          },
+          {
+            'ref': 'ChatMessageCompose',
+          },
+          {
+            'ref': 'ChatMessageView',
+          },
+          {
+            'ref': 'ChatMessagePersistor',
+          },
+          {
+            'ref': 'ChatMessageAttachment',
+          },
+          {
+            'ref': 'ChatSmsNotify',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ChannelOrbital orbital.
+ *
+ * Canonical entity: Channel.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdRealtimeChatChannelOrbitalParams {
+  /** Override the canonical entity name (default: 'Channel'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ChannelOrbital orbital with consumer params. */
+export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Channel';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ChannelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'channels',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'memberCount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'isPrivate',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ChannelAppLayout',
+        'linkedEntity': 'Channel',
+        'config': {
+          'searchEvent': 'CHANNEL_SEARCH',
+          'notifications': [],
+          'navItems': [
             {
-              'event': 'CREATE_CHANNEL',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'ChatMessageOrbital',
-                'trait': 'ChatRoom',
-              },
+              'href': '/chat',
+              'label': 'Chat',
+              'icon': 'message-circle',
+            },
+            {
+              'icon': 'hash',
+              'label': 'Channels',
+              'href': '/channels',
+            },
+            {
+              'href': '/online',
+              'label': 'Online',
+              'icon': 'users',
             },
           ],
-          'stateMachine': {
-            'states': [
+          'appName': 'Realtime Chat',
+          'notificationClickEvent': 'CHANNEL_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ChannelCatalog',
+        },
+        'events': {
+          'SEARCH': 'CHANNEL_SEARCH',
+          'NOTIFY_CLICK': 'CHANNEL_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'ChannelCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'hash',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Channels',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                  'label': 'Create Channel',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ChannelBrowseList',
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE_CHANNEL',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'ChatMessageOrbital',
+              'trait': 'ChatRoom',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'hash',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Channels',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'label': 'Create Channel',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ChannelBrowseList',
+                    ],
+                    'gap': 'lg',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ChannelBrowseList',
-          'linkedEntity': 'Channel',
-          'config': {
-            'gap': 'sm',
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'variant': 'ghost',
-                'event': 'EDIT',
-                'label': 'Edit',
-              },
-              {
-                'event': 'DELETE',
-                'label': 'Delete',
-                'variant': 'danger',
-              },
-            ],
-            'cols': 1,
-            'fields': [
-              {
-                'icon': 'hash',
-                'variant': 'h3',
-                'name': 'name',
-              },
-              {
-                'format': 'number',
-                'variant': 'badge',
-                'name': 'memberCount',
-                'label': 'Members',
-              },
-              {
-                'name': 'description',
-                'variant': 'body',
-              },
-              {
-                'variant': 'body',
-                'name': 'isPrivate',
-                'format': 'boolean',
-                'label': 'Private',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'CHANNEL_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelPersistor',
-              },
-            },
-            {
-              'event': 'CHANNEL_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelPersistor',
-              },
-            },
-            {
-              'event': 'CHANNEL_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelPersistor',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ChannelCreate',
-          'linkedEntity': 'Channel',
-          'config': {
-            'mode': 'create',
-            'fields': [
-              'name',
-              'description',
-              'memberCount',
-              'isPrivate',
-            ],
-            'icon': 'plus-circle',
-            'title': 'Create Channel',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ChannelBrowseList',
+        'linkedEntity': 'Channel',
+        'config': {
+          'gap': 'sm',
+          'itemActions': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ChannelEdit',
-          'linkedEntity': 'Channel',
-          'config': {
-            'icon': 'edit',
-            'title': 'Edit Channel',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'description',
-              'memberCount',
-              'isPrivate',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ChannelView',
-          'linkedEntity': 'Channel',
-          'config': {
-            'title': 'View Channel',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'description',
-              'memberCount',
-              'isPrivate',
-            ],
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'label': 'View',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelBrowseList',
-              },
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'ChannelDelete',
-          'linkedEntity': 'Channel',
-          'config': {
-            'title': 'Delete Channel',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelBrowseList',
-              },
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'ChannelPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Channel',
-          'emits': [
+          'cols': 1,
+          'fields': [
             {
-              'event': 'CHANNEL_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'icon': 'hash',
+              'variant': 'h3',
+              'name': 'name',
             },
             {
-              'event': 'CHANNEL_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'format': 'number',
+              'variant': 'badge',
+              'name': 'memberCount',
+              'label': 'Members',
             },
             {
-              'event': 'CHANNEL_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'description',
+              'variant': 'body',
+            },
+            {
+              'variant': 'body',
+              'name': 'isPrivate',
+              'format': 'boolean',
+              'label': 'Private',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ChannelDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CHANNEL_CREATED',
-                'name': 'Channel Created',
-              },
-              {
-                'key': 'CHANNEL_UPDATED',
-                'name': 'Channel Updated',
-              },
-              {
-                'key': 'CHANNEL_DELETED',
-                'name': 'Channel Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Channel',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CHANNEL_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Channel',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'CHANNEL_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Channel',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'CHANNEL_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Channels',
-          'path': '/channels',
-          'traits': [
-            {
-              'ref': 'ChannelAppLayout',
-            },
-            {
-              'ref': 'ChannelCatalog',
-            },
-            {
-              'ref': 'ChannelBrowseList',
-            },
-            {
-              'ref': 'ChannelCreate',
-            },
-            {
-              'ref': 'ChannelEdit',
-            },
-            {
-              'ref': 'ChannelView',
-            },
-            {
-              'ref': 'ChannelDelete',
-            },
-            {
-              'ref': 'ChannelPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'OnlineUserOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-      ],
-      entity: {
-        'name': 'OnlineUser',
-        'persistence': 'runtime',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'CHANNEL_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelPersistor',
+            },
           },
           {
-            'name': 'username',
-            'type': 'string',
-            'required': true,
+            'event': 'CHANNEL_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelPersistor',
+            },
           },
           {
-            'name': 'status',
-            'type': 'string',
-            'default': 'offline',
-            'values': [
-              'online',
-              'away',
-              'offline',
-            ],
-          },
-          {
-            'name': 'lastActive',
-            'type': 'datetime',
-          },
-          {
-            'name': 'avatar',
-            'type': 'string',
-            'default': '',
+            'event': 'CHANNEL_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'OnlineUserAppLayout',
-          'linkedEntity': 'OnlineUser',
-          'config': {
-            'navItems': [
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ChannelCreate',
+        'linkedEntity': 'Channel',
+        'config': {
+          'mode': 'create',
+          'fields': [
+            'name',
+            'description',
+            'memberCount',
+            'isPrivate',
+          ],
+          'icon': 'plus-circle',
+          'title': 'Create Channel',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ChannelEdit',
+        'linkedEntity': 'Channel',
+        'config': {
+          'icon': 'edit',
+          'title': 'Edit Channel',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'description',
+            'memberCount',
+            'isPrivate',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ChannelView',
+        'linkedEntity': 'Channel',
+        'config': {
+          'title': 'View Channel',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'description',
+            'memberCount',
+            'isPrivate',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'ChannelDelete',
+        'linkedEntity': 'Channel',
+        'config': {
+          'title': 'Delete Channel',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ChannelPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Channel',
+        'emits': [
+          {
+            'event': 'CHANNEL_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'href': '/chat',
-                'icon': 'message-circle',
-                'label': 'Chat',
-              },
-              {
-                'label': 'Channels',
-                'href': '/channels',
-                'icon': 'hash',
-              },
-              {
-                'icon': 'users',
-                'label': 'Online',
-                'href': '/online',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'contentTrait': '@trait.OnlineUserDisplay',
-            'notifications': [],
-            'notificationClickEvent': 'ONLINE_USER_NOTIFICATIONS_OPEN',
-            'appName': 'Realtime Chat',
-            'searchEvent': 'ONLINE_USER_SEARCH',
           },
-          'events': {
-            'SEARCH': 'ONLINE_USER_SEARCH',
-            'NOTIFY_CLICK': 'ONLINE_USER_NOTIFICATIONS_OPEN',
+          {
+            'event': 'CHANNEL_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'OnlineUserDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'OnlineUser',
-          'emits': [
+          {
+            'event': 'CHANNEL_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ChannelDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'OnlineUserLoaded',
-              'description': 'Fired when OnlineUser finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CHANNEL_CREATED',
+              'name': 'Channel Created',
+            },
+            {
+              'key': 'CHANNEL_UPDATED',
+              'name': 'Channel Updated',
+            },
+            {
+              'key': 'CHANNEL_DELETED',
+              'name': 'Channel Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Channel',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CHANNEL_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Channel',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CHANNEL_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Channel',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'CHANNEL_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Channels',
+        'path': '/channels',
+        'traits': [
+          {
+            'ref': 'ChannelAppLayout',
+          },
+          {
+            'ref': 'ChannelCatalog',
+          },
+          {
+            'ref': 'ChannelBrowseList',
+          },
+          {
+            'ref': 'ChannelCreate',
+          },
+          {
+            'ref': 'ChannelEdit',
+          },
+          {
+            'ref': 'ChannelView',
+          },
+          {
+            'ref': 'ChannelDelete',
+          },
+          {
+            'ref': 'ChannelPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the OnlineUserOrbital orbital.
+ *
+ * Canonical entity: OnlineUser.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdRealtimeChatOnlineUserOrbitalParams {
+  /** Override the canonical entity name (default: 'OnlineUser'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the OnlineUserOrbital orbital with consumer params. */
+export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUserOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'OnlineUser';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'OnlineUserOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'username',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'offline',
+          'values': [
+            'online',
+            'away',
+            'offline',
+          ],
+        },
+        {
+          'name': 'lastActive',
+          'type': 'datetime',
+        },
+        {
+          'name': 'avatar',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'OnlineUserAppLayout',
+        'linkedEntity': 'OnlineUser',
+        'config': {
+          'navItems': [
+            {
+              'href': '/chat',
+              'icon': 'message-circle',
+              'label': 'Chat',
+            },
+            {
+              'label': 'Channels',
+              'href': '/channels',
+              'icon': 'hash',
+            },
+            {
+              'icon': 'users',
+              'label': 'Online',
+              'href': '/online',
+            },
+          ],
+          'contentTrait': '@trait.OnlineUserDisplay',
+          'notifications': [],
+          'notificationClickEvent': 'ONLINE_USER_NOTIFICATIONS_OPEN',
+          'appName': 'Realtime Chat',
+          'searchEvent': 'ONLINE_USER_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'ONLINE_USER_SEARCH',
+          'NOTIFY_CLICK': 'ONLINE_USER_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'OnlineUserDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'OnlineUser',
+        'emits': [
+          {
+            'event': 'OnlineUserLoaded',
+            'description': 'Fired when OnlineUser finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[OnlineUser]',
+              },
+            ],
+          },
+          {
+            'event': 'OnlineUserLoadFailed',
+            'description': 'Fired when OnlineUser fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'displaying',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'OnlineUserLoaded',
+              'name': 'OnlineUser loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2215,9 +2133,12 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'OnlineUserLoadFailed',
-              'description': 'Fired when OnlineUser fails to load',
-              'scope': 'internal',
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'OnlineUserLoadFailed',
+              'name': 'OnlineUser load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2230,313 +2151,310 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalDefinitio
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'displaying',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'OnlineUserLoaded',
-                'name': 'OnlineUser loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[OnlineUser]',
-                  },
-                ],
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'OnlineUserLoadFailed',
-                'name': 'OnlineUser load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'OnlineUser',
-                    {
-                      'emit': {
-                        'success': 'OnlineUserLoaded',
-                        'failure': 'OnlineUserLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'users',
-                                },
-                                {
-                                  'content': 'Online Users',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'variant': 'secondary',
-                              'icon': 'refresh-cw',
-                              'type': 'button',
-                              'label': 'Refresh',
-                              'action': 'REFRESH',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'className': 'py-12',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'spinner',
-                            },
-                            {
-                              'type': 'typography',
-                              'color': 'muted',
-                              'content': 'Loading presence…',
-                              'variant': 'caption',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'displaying',
-                'event': 'OnlineUserLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'className': 'max-w-5xl mx-auto w-full',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'users',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Online Users',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'icon': 'refresh-cw',
-                              'type': 'button',
-                              'variant': 'secondary',
-                              'label': 'Refresh',
-                              'action': 'REFRESH',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'fields': [
-                            {
-                              'name': 'username',
-                              'variant': 'h4',
-                            },
-                            {
-                              'name': 'status',
-                              'variant': 'badge',
-                            },
-                            {
-                              'variant': 'caption',
-                              'format': 'date',
-                              'name': 'lastActive',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'entity': '@payload.data',
-                          'type': 'data-list',
-                          'variant': 'card',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'loading',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'OnlineUser',
-                    {
-                      'emit': {
-                        'failure': 'OnlineUserLoadFailed',
-                        'success': 'OnlineUserLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'content': 'Refreshing…',
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                      ],
-                      'type': 'stack',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'displaying',
-                'event': 'OnlineUserLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': 'Failed to load presence',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'body',
-                          'color': 'muted',
-                          'content': '@payload.error',
-                        },
-                        {
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'label': 'Retry',
-                          'action': 'REFRESH',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Online',
-          'path': '/online',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'OnlineUserAppLayout',
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'OnlineUser',
+                  {
+                    'emit': {
+                      'success': 'OnlineUserLoaded',
+                      'failure': 'OnlineUserLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'users',
+                              },
+                              {
+                                'content': 'Online Users',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'icon': 'refresh-cw',
+                            'type': 'button',
+                            'label': 'Refresh',
+                            'action': 'REFRESH',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'className': 'py-12',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'spinner',
+                          },
+                          {
+                            'type': 'typography',
+                            'color': 'muted',
+                            'content': 'Loading presence…',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'OnlineUserDisplay',
+              'from': 'displaying',
+              'to': 'displaying',
+              'event': 'OnlineUserLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'users',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Online Users',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'icon': 'refresh-cw',
+                            'type': 'button',
+                            'variant': 'secondary',
+                            'label': 'Refresh',
+                            'action': 'REFRESH',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'fields': [
+                          {
+                            'name': 'username',
+                            'variant': 'h4',
+                          },
+                          {
+                            'name': 'status',
+                            'variant': 'badge',
+                          },
+                          {
+                            'variant': 'caption',
+                            'format': 'date',
+                            'name': 'lastActive',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'entity': '@payload.data',
+                        'type': 'data-list',
+                        'variant': 'card',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'loading',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'OnlineUser',
+                  {
+                    'emit': {
+                      'failure': 'OnlineUserLoadFailed',
+                      'success': 'OnlineUserLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'content': 'Refreshing…',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                    ],
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'displaying',
+              'event': 'OnlineUserLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to load presence',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'REFRESH',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Online',
+        'path': '/online',
+        'traits': [
+          {
+            'ref': 'OnlineUserAppLayout',
+          },
+          {
+            'ref': 'OnlineUserDisplay',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-realtime-chat — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdRealtimeChatParams {
+  ChatMessage?: StdRealtimeChatChatMessageOrbitalParams;
+  Channel?: StdRealtimeChatChannelOrbitalParams;
+  OnlineUser?: StdRealtimeChatOnlineUserOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdRealtimeChat(params: StdRealtimeChatParams = {}): OrbitalDefinition[] {
+  return [
+    stdRealtimeChatChatMessageOrbital(params.ChatMessage ?? {}),
+    stdRealtimeChatChannelOrbital(params.Channel ?? {}),
+    stdRealtimeChatOnlineUserOrbital(params.OnlineUser ?? {}),
+  ];
 }

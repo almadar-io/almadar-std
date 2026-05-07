@@ -34,2468 +34,2471 @@ export interface StdBookingSystemConfig {
 }
 
 /**
- * Params for the std-booking-system descriptor helpers.
+ * Tunable params for the ProviderOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Provider.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdBookingSystemParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdBookingSystemProviderOrbitalParams {
+  /** Override the canonical entity name (default: 'Provider'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdBookingSystemConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `BookingSystem.traits.BookingProviderAppLayout`. */
-export function stdBookingSystemBookingProviderAppLayoutTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BookingProviderAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the ProviderOrbital orbital with consumer params. */
+export function stdBookingSystemProviderOrbital(params: StdBookingSystemProviderOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Provider';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ProviderOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'providers',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'specialty',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'location',
+          'type': 'string',
+        },
+        {
+          'name': 'phone',
+          'type': 'string',
+        },
+        {
+          'name': 'rating',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'hourlyRate',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'available',
+          'type': 'boolean',
+          'default': true,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BookingProviderAppLayout',
+        'config': {
+          'searchEvent': 'BOOKING_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.ProviderCatalog',
+          'appName': 'BookingSystemApp',
+          'navItems': [
+            {
+              'label': 'Providers',
+              'icon': 'user-check',
+              'href': '/providers',
+            },
+            {
+              'href': '/book',
+              'label': 'Book',
+              'icon': 'calendar-plus',
+            },
+            {
+              'href': '/appointments',
+              'icon': 'calendar',
+              'label': 'Appointments',
+            },
+            {
+              'label': 'Schedule',
+              'icon': 'clock',
+              'href': '/schedule',
+            },
+          ],
+          'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BOOKING_SEARCH',
+        },
+      }),
+      {
+        'name': 'ProviderCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'BOOKING_SEARCH',
+            'triggers': 'BOOKING_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingProviderAppLayout',
+            },
+          },
+          {
+            'event': 'BOOKING_NOTIFICATIONS_OPEN',
+            'triggers': 'BOOKING_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingProviderAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'BOOKING_SEARCH',
+              'name': 'Booking Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'BOOKING_NOTIFICATIONS_OPEN',
+              'name': 'Booking Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'user',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Providers',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'label': 'Add Provider',
+                              },
+                            ],
+                          },
+                        ],
+                        'justify': 'between',
+                        'gap': 'md',
+                      },
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.ProviderSearch',
+                          '@trait.ProviderFilter',
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProviderStats',
+                      '@trait.ProviderGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProviderBrowseList',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'BOOKING_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'BOOKING_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-8',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to providers',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ProviderSearch',
+        'config': {
+          'placeholder': 'Search providers…',
+          'event': 'SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'ProviderFilter',
+        'config': {
+          'event': 'FILTER',
+          'filters': [
+            {
+              'filterType': 'select',
+              'options': [
+                'general',
+                'dental',
+                'dermatology',
+                'cardiology',
+                'psychiatry',
+              ],
+              'label': 'Specialty',
+              'field': 'specialty',
+            },
+            {
+              'label': 'Rating',
+              'field': 'rating',
+              'max': 5,
+              'filterType': 'range',
+              'min': 0,
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ProviderStats',
+        'config': {
+          'metrics': [
+            {
+              'label': 'Total Providers',
+              'icon': 'users',
+              'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
+            },
+            {
+              'label': 'Active',
+              'aggregation': 'count',
+              'icon': 'check-circle',
+              'format': 'number',
+              'filter': {
+                'available': true,
+              },
+              'variant': 'success',
+            },
+            {
+              'label': 'Avg Rating',
+              'aggregation': 'avg',
+              'format': 'number',
+              'field': 'rating',
+              'variant': 'info',
+              'icon': 'star',
+            },
+            {
+              'aggregation': 'avg',
+              'format': 'currency',
+              'field': 'hourlyRate',
+              'label': 'Avg Hourly Rate',
+              'variant': 'info',
+              'icon': 'dollar-sign',
+            },
+          ],
+          'title': 'Provider Overview',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'ProviderGraphs',
+        'config': {
+          'chartType': 'pie',
+          'categoryField': 'specialty',
+          'aggregation': 'count',
+          'title': 'Providers by Specialty',
+          'subtitle': 'Distribution across specialties',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ProviderBrowseList',
+        'linkedEntity': 'Provider',
+        'config': {
+          'gap': 'md',
+          'fields': [
+            {
+              'variant': 'h3',
+              'icon': 'user',
+              'name': 'name',
+            },
+            {
+              'name': 'specialty',
+              'variant': 'badge',
+            },
+            {
+              'name': 'rating',
+              'variant': 'body',
+              'format': 'number',
+            },
+            {
+              'variant': 'h4',
+              'name': 'hourlyRate',
+              'label': 'Hourly Rate',
+              'format': 'currency',
+            },
+            {
+              'variant': 'body',
+              'name': 'available',
+              'label': 'Availability',
+              'format': 'boolean',
+            },
+          ],
+          'cols': 2,
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'PROVIDER_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderCreate',
+            },
+          },
+          {
+            'event': 'PROVIDER_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderEdit',
+            },
+          },
+          {
+            'event': 'PROVIDER_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderDelete',
+            },
+          },
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderFilter',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ProviderCreate',
+        'category': 'interaction',
+        'linkedEntity': 'Provider',
+        'emits': [
+          {
+            'event': 'PROVIDER_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoadFailed',
+            'description': 'Fired when Provider fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoaded',
+            'description': 'Fired when Provider finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Provider]',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderCatalog',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PROVIDER_CREATED',
+              'name': 'Provider Created',
+            },
+            {
+              'key': 'ProviderLoadFailed',
+              'name': 'Provider load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderLoaded',
+              'name': 'Provider loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Provider]',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderSaveFailed',
+              'name': 'Provider save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderSaved',
+              'name': 'Provider saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': 'Add Provider',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'fields': [
+                          'name',
+                          'specialty',
+                          'location',
+                          'phone',
+                          'rating',
+                          'hourlyRate',
+                          'available',
+                        ],
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
+                        'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
+                      },
+                    ],
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Provider',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ProviderSaved',
+                      'failure': 'ProviderSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PROVIDER_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProviderEdit',
+        'category': 'interaction',
+        'linkedEntity': 'Provider',
+        'emits': [
+          {
+            'event': 'PROVIDER_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoadFailed',
+            'description': 'Fired when Provider fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoaded',
+            'description': 'Fired when Provider finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Provider]',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Provider',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PROVIDER_UPDATED',
+              'name': 'Provider Updated',
+            },
+            {
+              'key': 'ProviderLoadFailed',
+              'name': 'Provider load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderLoaded',
+              'name': 'Provider loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Provider]',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderUpdateFailed',
+              'name': 'Provider update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderUpdated',
+              'name': 'Provider updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'edit',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'type': 'typography',
+                            'content': 'Edit Provider',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'entity': '@payload.row',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'name',
+                          'specialty',
+                          'location',
+                          'phone',
+                          'rating',
+                          'hourlyRate',
+                          'available',
+                        ],
+                        'mode': 'edit',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Provider',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'ProviderUpdateFailed',
+                      'success': 'ProviderUpdated',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'PROVIDER_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProviderView',
+        'category': 'interaction',
+        'linkedEntity': 'Provider',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoaded',
+            'description': 'Fired when Provider finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Provider]',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoadFailed',
+            'description': 'Fired when Provider fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'ProviderLoaded',
+              'name': 'Provider loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Provider]',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderLoadFailed',
+              'name': 'Provider load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.available',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.hourlyRate',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.location',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.name',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.phone',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.rating',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.specialty',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'eye',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': '@entity.name',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Name',
+                          },
+                          {
+                            'content': '@entity.name',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Specialty',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.specialty',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Location',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.location',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Phone',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.phone',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Rating',
+                          },
+                          {
+                            'content': '@entity.rating',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Hourly Rate',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.hourlyRate',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Available',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.available',
+                            'variant': 'body',
+                          },
+                        ],
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'icon': 'edit',
+                            'label': 'Edit',
+                            'action': 'EDIT',
+                            'type': 'button',
+                            'variant': 'primary',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Close',
+                            'variant': 'ghost',
+                            'action': 'CLOSE',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProviderDelete',
+        'category': 'interaction',
+        'linkedEntity': 'Provider',
+        'emits': [
+          {
+            'event': 'PROVIDER_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoadFailed',
+            'description': 'Fired when Provider fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ProviderLoaded',
+            'description': 'Fired when Provider finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Provider]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'PROVIDER_DELETED',
+              'name': 'Provider Deleted',
+            },
+            {
+              'key': 'ProviderDeleteFailed',
+              'name': 'Provider delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderDeleted',
+              'name': 'Provider deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderLoadFailed',
+              'name': 'Provider load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ProviderLoaded',
+              'name': 'Provider loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Provider]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Delete Provider',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'error',
+                        'type': 'alert',
+                        'message': 'This action cannot be undone.',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'label': 'Cancel',
+                            'variant': 'ghost',
+                            'action': 'CANCEL',
+                          },
+                          {
+                            'label': 'Delete',
+                            'icon': 'check',
+                            'type': 'button',
+                            'action': 'CONFIRM_DELETE',
+                            'variant': 'danger',
+                          },
+                        ],
+                        'justify': 'end',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Provider',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'failure': 'ProviderDeleteFailed',
+                      'success': 'ProviderDeleted',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'PROVIDER_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Provider',
+                  {
+                    'emit': {
+                      'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ProvidersPage',
+        'path': '/providers',
+        'traits': [
+          {
+            'ref': 'BookingProviderAppLayout',
+          },
+          {
+            'ref': 'ProviderCatalog',
+          },
+          {
+            'ref': 'ProviderSearch',
+          },
+          {
+            'ref': 'ProviderFilter',
+          },
+          {
+            'ref': 'ProviderStats',
+          },
+          {
+            'ref': 'ProviderGraphs',
+          },
+          {
+            'ref': 'ProviderBrowseList',
+          },
+          {
+            'ref': 'ProviderCreate',
+          },
+          {
+            'ref': 'ProviderEdit',
+          },
+          {
+            'ref': 'ProviderView',
+          },
+          {
+            'ref': 'ProviderDelete',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderCatalog`. */
-export function stdBookingSystemProviderCatalogTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderSearch`. */
-export function stdBookingSystemProviderSearchTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderFilter`. */
-export function stdBookingSystemProviderFilterTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderStats`. */
-export function stdBookingSystemProviderStatsTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderGraphs`. */
-export function stdBookingSystemProviderGraphsTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderBrowseList`. */
-export function stdBookingSystemProviderBrowseListTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderCreate`. */
-export function stdBookingSystemProviderCreateTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderEdit`. */
-export function stdBookingSystemProviderEditTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderView`. */
-export function stdBookingSystemProviderViewTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `BookingSystem.traits.ProviderDelete`. */
-export function stdBookingSystemProviderDeleteTrait(params: StdBookingSystemParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProviderDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `BookingSystem.pages.ProvidersPage`. */
-export function stdBookingSystemPage(params: StdBookingSystemParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ProvidersPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Provider';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ProviderOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
-        },
-        {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-      ],
-      entity: {
-        'name': 'Provider',
-        'collection': 'providers',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'specialty',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'location',
-            'type': 'string',
-          },
-          {
-            'name': 'phone',
-            'type': 'string',
-          },
-          {
-            'name': 'rating',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'hourlyRate',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'available',
-            'type': 'boolean',
-            'default': true,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'BookingProviderAppLayout',
-          'config': {
-            'searchEvent': 'BOOKING_SEARCH',
-            'notifications': [],
-            'contentTrait': '@trait.ProviderCatalog',
-            'appName': 'BookingSystemApp',
-            'navItems': [
-              {
-                'label': 'Providers',
-                'icon': 'user-check',
-                'href': '/providers',
-              },
-              {
-                'href': '/book',
-                'label': 'Book',
-                'icon': 'calendar-plus',
-              },
-              {
-                'href': '/appointments',
-                'icon': 'calendar',
-                'label': 'Appointments',
-              },
-              {
-                'label': 'Schedule',
-                'icon': 'clock',
-                'href': '/schedule',
-              },
-            ],
-            'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
-            'SEARCH': 'BOOKING_SEARCH',
-          },
-        }),
-        {
-          'name': 'ProviderCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'BOOKING_SEARCH',
-              'triggers': 'BOOKING_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingProviderAppLayout',
-              },
-            },
-            {
-              'event': 'BOOKING_NOTIFICATIONS_OPEN',
-              'triggers': 'BOOKING_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingProviderAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'BOOKING_SEARCH',
-                'name': 'Booking Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BOOKING_NOTIFICATIONS_OPEN',
-                'name': 'Booking Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'user',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Providers',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'label': 'Add Provider',
-                                },
-                              ],
-                            },
-                          ],
-                          'justify': 'between',
-                          'gap': 'md',
-                        },
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            '@trait.ProviderSearch',
-                            '@trait.ProviderFilter',
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ProviderStats',
-                        '@trait.ProviderGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ProviderBrowseList',
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BOOKING_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'BOOKING_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'type': 'typography',
-                          'color': 'muted',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'type': 'button',
-                          'label': 'Back to providers',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'ProviderSearch',
-          'config': {
-            'placeholder': 'Search providers…',
-            'event': 'SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'ProviderFilter',
-          'config': {
-            'event': 'FILTER',
-            'filters': [
-              {
-                'filterType': 'select',
-                'options': [
-                  'general',
-                  'dental',
-                  'dermatology',
-                  'cardiology',
-                  'psychiatry',
-                ],
-                'label': 'Specialty',
-                'field': 'specialty',
-              },
-              {
-                'label': 'Rating',
-                'field': 'rating',
-                'max': 5,
-                'filterType': 'range',
-                'min': 0,
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'ProviderStats',
-          'config': {
-            'metrics': [
-              {
-                'label': 'Total Providers',
-                'icon': 'users',
-                'format': 'number',
-                'aggregation': 'count',
-                'variant': 'primary',
-              },
-              {
-                'label': 'Active',
-                'aggregation': 'count',
-                'icon': 'check-circle',
-                'format': 'number',
-                'filter': {
-                  'available': true,
-                },
-                'variant': 'success',
-              },
-              {
-                'label': 'Avg Rating',
-                'aggregation': 'avg',
-                'format': 'number',
-                'field': 'rating',
-                'variant': 'info',
-                'icon': 'star',
-              },
-              {
-                'aggregation': 'avg',
-                'format': 'currency',
-                'field': 'hourlyRate',
-                'label': 'Avg Hourly Rate',
-                'variant': 'info',
-                'icon': 'dollar-sign',
-              },
-            ],
-            'title': 'Provider Overview',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'ProviderGraphs',
-          'config': {
-            'chartType': 'pie',
-            'categoryField': 'specialty',
-            'aggregation': 'count',
-            'title': 'Providers by Specialty',
-            'subtitle': 'Distribution across specialties',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ProviderBrowseList',
-          'linkedEntity': 'Provider',
-          'config': {
-            'gap': 'md',
-            'fields': [
-              {
-                'variant': 'h3',
-                'icon': 'user',
-                'name': 'name',
-              },
-              {
-                'name': 'specialty',
-                'variant': 'badge',
-              },
-              {
-                'name': 'rating',
-                'variant': 'body',
-                'format': 'number',
-              },
-              {
-                'variant': 'h4',
-                'name': 'hourlyRate',
-                'label': 'Hourly Rate',
-                'format': 'currency',
-              },
-              {
-                'variant': 'body',
-                'name': 'available',
-                'label': 'Availability',
-                'format': 'boolean',
-              },
-            ],
-            'cols': 2,
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'variant': 'ghost',
-                'event': 'EDIT',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'PROVIDER_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderCreate',
-              },
-            },
-            {
-              'event': 'PROVIDER_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderEdit',
-              },
-            },
-            {
-              'event': 'PROVIDER_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderDelete',
-              },
-            },
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderFilter',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'ProviderCreate',
-          'category': 'interaction',
-          'linkedEntity': 'Provider',
-          'emits': [
-            {
-              'event': 'PROVIDER_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoadFailed',
-              'description': 'Fired when Provider fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoaded',
-              'description': 'Fired when Provider finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Provider]',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderCatalog',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PROVIDER_CREATED',
-                'name': 'Provider Created',
-              },
-              {
-                'key': 'ProviderLoadFailed',
-                'name': 'Provider load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderLoaded',
-                'name': 'Provider loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Provider]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderSaveFailed',
-                'name': 'Provider save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderSaved',
-                'name': 'Provider saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'name': 'plus-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': 'Add Provider',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'fields': [
-                            'name',
-                            'specialty',
-                            'location',
-                            'phone',
-                            'rating',
-                            'hourlyRate',
-                            'available',
-                          ],
-                          'submitEvent': 'SAVE',
-                          'mode': 'create',
-                          'type': 'form-section',
-                          'cancelEvent': 'CLOSE',
-                        },
-                      ],
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Provider',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ProviderSaved',
-                        'failure': 'ProviderSaveFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PROVIDER_CREATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProviderEdit',
-          'category': 'interaction',
-          'linkedEntity': 'Provider',
-          'emits': [
-            {
-              'event': 'PROVIDER_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoadFailed',
-              'description': 'Fired when Provider fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoaded',
-              'description': 'Fired when Provider finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Provider]',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderView',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Provider',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PROVIDER_UPDATED',
-                'name': 'Provider Updated',
-              },
-              {
-                'key': 'ProviderLoadFailed',
-                'name': 'Provider load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderLoaded',
-                'name': 'Provider loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Provider]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderUpdateFailed',
-                'name': 'Provider update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderUpdated',
-                'name': 'Provider updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'ProviderLoadFailed',
-                        'success': 'ProviderLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'edit',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'type': 'typography',
-                              'content': 'Edit Provider',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'entity': '@payload.row',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'name',
-                            'specialty',
-                            'location',
-                            'phone',
-                            'rating',
-                            'hourlyRate',
-                            'available',
-                          ],
-                          'mode': 'edit',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Provider',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'ProviderUpdateFailed',
-                        'success': 'ProviderUpdated',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PROVIDER_UPDATED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProviderView',
-          'category': 'interaction',
-          'linkedEntity': 'Provider',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoaded',
-              'description': 'Fired when Provider finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Provider]',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoadFailed',
-              'description': 'Fired when Provider fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'ProviderLoaded',
-                'name': 'Provider loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Provider]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderLoadFailed',
-                'name': 'Provider load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.available',
-                    true,
-                  ],
-                  [
-                    'set',
-                    '@entity.hourlyRate',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.location',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.name',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.phone',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.rating',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.specialty',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'failure': 'ProviderLoadFailed',
-                        'success': 'ProviderLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'eye',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': '@entity.name',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Name',
-                            },
-                            {
-                              'content': '@entity.name',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                        {
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Specialty',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.specialty',
-                            },
-                          ],
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Location',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.location',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Phone',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.phone',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Rating',
-                            },
-                            {
-                              'content': '@entity.rating',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Hourly Rate',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'body',
-                              'content': '@entity.hourlyRate',
-                              'type': 'typography',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Available',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.available',
-                              'variant': 'body',
-                            },
-                          ],
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'icon': 'edit',
-                              'label': 'Edit',
-                              'action': 'EDIT',
-                              'type': 'button',
-                              'variant': 'primary',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'action': 'CLOSE',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProviderDelete',
-          'category': 'interaction',
-          'linkedEntity': 'Provider',
-          'emits': [
-            {
-              'event': 'PROVIDER_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoadFailed',
-              'description': 'Fired when Provider fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ProviderLoaded',
-              'description': 'Fired when Provider finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Provider]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProviderBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'PROVIDER_DELETED',
-                'name': 'Provider Deleted',
-              },
-              {
-                'key': 'ProviderDeleteFailed',
-                'name': 'Provider delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderDeleted',
-                'name': 'Provider deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderLoadFailed',
-                'name': 'Provider load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ProviderLoaded',
-                'name': 'Provider loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Provider]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Delete Provider',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'error',
-                          'type': 'alert',
-                          'message': 'This action cannot be undone.',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'label': 'Cancel',
-                              'variant': 'ghost',
-                              'action': 'CANCEL',
-                            },
-                            {
-                              'label': 'Delete',
-                              'icon': 'check',
-                              'type': 'button',
-                              'action': 'CONFIRM_DELETE',
-                              'variant': 'danger',
-                            },
-                          ],
-                          'justify': 'end',
-                          'gap': 'sm',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Provider',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'failure': 'ProviderDeleteFailed',
-                        'success': 'ProviderDeleted',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'failure': 'ProviderLoadFailed',
-                        'success': 'ProviderLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'PROVIDER_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Provider',
-                    {
-                      'emit': {
-                        'success': 'ProviderLoaded',
-                        'failure': 'ProviderLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ProvidersPage',
-          'path': '/providers',
-          'traits': [
-            {
-              'ref': 'BookingProviderAppLayout',
-            },
-            {
-              'ref': 'ProviderCatalog',
-            },
-            {
-              'ref': 'ProviderSearch',
-            },
-            {
-              'ref': 'ProviderFilter',
-            },
-            {
-              'ref': 'ProviderStats',
-            },
-            {
-              'ref': 'ProviderGraphs',
-            },
-            {
-              'ref': 'ProviderBrowseList',
-            },
-            {
-              'ref': 'ProviderCreate',
-            },
-            {
-              'ref': 'ProviderEdit',
-            },
-            {
-              'ref': 'ProviderView',
-            },
-            {
-              'ref': 'ProviderDelete',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BookingOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the BookingOrbital orbital.
+ *
+ * Canonical entity: Booking.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdBookingSystemBookingOrbitalParams {
+  /** Override the canonical entity name (default: 'Booking'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the BookingOrbital orbital with consumer params. */
+export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Booking';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BookingOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-service-stripe',
+        'as': 'Stripe',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-service-stripe',
-          'as': 'Stripe',
+          'name': 'providerName',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'customerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'email',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'phone',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'scheduledAt',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'notes',
+          'type': 'string',
+        },
+        {
+          'name': 'depositAmount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'draft',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Booking',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BookingAppLayout',
+        'linkedEntity': 'Booking',
+        'config': {
+          'navItems': [
+            {
+              'href': '/providers',
+              'icon': 'user-check',
+              'label': 'Providers',
+            },
+            {
+              'href': '/book',
+              'icon': 'calendar-plus',
+              'label': 'Book',
+            },
+            {
+              'label': 'Appointments',
+              'icon': 'calendar',
+              'href': '/appointments',
+            },
+            {
+              'href': '/schedule',
+              'icon': 'clock',
+              'label': 'Schedule',
+            },
+          ],
+          'contentTrait': '@trait.BookingWizard',
+          'notifications': [],
+          'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
+          'appName': 'BookingSystemApp',
+          'searchEvent': 'BOOKING_SEARCH',
+          'topBarActions': [],
+        },
+        'events': {
+          'SEARCH': 'BOOKING_SEARCH',
+          'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stripe.traits.ServiceStripeStripe',
+        'name': 'BookingPayment',
+        'config': {
+          'amount': 0,
+          'metadata': {},
+          'uiTrait': '@trait.BookingPaymentForm',
+          'currency': 'usd',
+        },
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'providerName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'customerName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'email',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'phone',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'scheduledAt',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'notes',
-            'type': 'string',
-          },
-          {
-            'name': 'depositAmount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'draft',
+            'event': 'CREATE_PAYMENT',
+            'triggers': 'CREATE_PAYMENT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingPaymentForm',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'BookingAppLayout',
-          'linkedEntity': 'Booking',
-          'config': {
-            'navItems': [
+      }),
+      {
+        'name': 'BookingPaymentForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE_PAYMENT',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'href': '/providers',
-                'icon': 'user-check',
-                'label': 'Providers',
-              },
-              {
-                'href': '/book',
-                'icon': 'calendar-plus',
-                'label': 'Book',
-              },
-              {
-                'label': 'Appointments',
-                'icon': 'calendar',
-                'href': '/appointments',
-              },
-              {
-                'href': '/schedule',
-                'icon': 'clock',
-                'label': 'Schedule',
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'contentTrait': '@trait.BookingWizard',
-            'notifications': [],
-            'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
-            'appName': 'BookingSystemApp',
-            'searchEvent': 'BOOKING_SEARCH',
-            'topBarActions': [],
           },
-          'events': {
-            'SEARCH': 'BOOKING_SEARCH',
-            'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stripe.traits.ServiceStripeStripe',
-          'name': 'BookingPayment',
-          'config': {
-            'amount': 0,
-            'metadata': {},
-            'uiTrait': '@trait.BookingPaymentForm',
-            'currency': 'usd',
-          },
-          'listens': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE_PAYMENT',
-              'triggers': 'CREATE_PAYMENT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingPaymentForm',
-              },
+              'name': 'ready',
+              'isInitial': true,
             },
           ],
-        }),
-        {
-          'name': 'BookingPaymentForm',
-          'category': 'interaction',
-          'emits': [
+          'events': [
             {
-              'event': 'CREATE_PAYMENT',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE_PAYMENT',
+              'name': 'Create Payment',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE_PAYMENT',
-                'name': 'Create Payment',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'variant': 'info',
-                          'message': 'Enter card details to pay your booking deposit.',
-                          'type': 'alert',
-                        },
-                        {
-                          'inputType': 'text',
-                          'placeholder': 'Card number',
-                          'type': 'input',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'input',
-                              'inputType': 'text',
-                              'placeholder': 'MM/YY',
-                            },
-                            {
-                              'placeholder': 'CVC',
-                              'inputType': 'text',
-                              'type': 'input',
-                            },
-                          ],
-                        },
-                        {
-                          'icon': 'credit-card',
-                          'type': 'button',
-                          'label': 'Pay deposit',
-                          'action': 'CREATE_PAYMENT',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'variant': 'info',
+                        'message': 'Enter card details to pay your booking deposit.',
+                        'type': 'alert',
+                      },
+                      {
+                        'inputType': 'text',
+                        'placeholder': 'Card number',
+                        'type': 'input',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'input',
+                            'inputType': 'text',
+                            'placeholder': 'MM/YY',
+                          },
+                          {
+                            'placeholder': 'CVC',
+                            'inputType': 'text',
+                            'type': 'input',
+                          },
+                        ],
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'type': 'button',
+                        'label': 'Pay deposit',
+                        'action': 'CREATE_PAYMENT',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
                 ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'BookingWizard',
+        'category': 'interaction',
+        'linkedEntity': 'Booking',
+        'emits': [
+          {
+            'event': 'BOOKING_CONFIRMED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'BookingWizard',
-          'category': 'interaction',
-          'linkedEntity': 'Booking',
-          'emits': [
+          {
+            'event': 'BookingSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BookingSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BookingEmailSent',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'messageId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BookingEmailFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BookingSmsSent',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'messageSid',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BookingSmsFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'ProviderOrbital',
+              'trait': 'ProviderBrowseList',
+            },
+          },
+          {
+            'event': 'ServiceStripeStripeCompleted',
+            'triggers': 'PAYMENT_DONE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeStripeFailed',
+            'triggers': 'PAYMENT_FAILED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeLoaded',
+            'triggers': 'NOOP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingPayment',
+            },
+          },
+          {
+            'event': 'ServiceStripeLoadFailed',
+            'triggers': 'NOOP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'BookingPayment',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'BOOKING_CONFIRMED',
-              'scope': 'external',
+              'name': 'step1',
+              'isInitial': true,
+            },
+            {
+              'name': 'step2',
+            },
+            {
+              'name': 'step3',
+            },
+            {
+              'name': 'step4',
+            },
+            {
+              'name': 'review',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NEXT',
+              'name': 'Next',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PREV',
+              'name': 'Prev',
+            },
+            {
+              'key': 'PAYMENT_DONE',
+              'name': 'Payment Done',
+              'payloadSchema': [
+                {
+                  'name': 'result',
+                  'type': 'object',
+                },
+              ],
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'BOOKING_CONFIRMED',
+              'name': 'Booking Confirmed',
+            },
+            {
+              'key': 'BookingSaved',
+              'name': 'Booking saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -2504,18 +2507,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BookingSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BookingSaveFailed',
-              'scope': 'internal',
+              'key': 'BookingSaveFailed',
+              'name': 'Booking save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2528,8 +2521,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BookingEmailSent',
-              'scope': 'internal',
+              'key': 'BookingEmailSent',
+              'name': 'Booking email sent',
               'payloadSchema': [
                 {
                   'name': 'messageId',
@@ -2538,8 +2531,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BookingEmailFailed',
-              'scope': 'internal',
+              'key': 'BookingEmailFailed',
+              'name': 'Booking email failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2552,8 +2545,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BookingSmsSent',
-              'scope': 'internal',
+              'key': 'BookingSmsSent',
+              'name': 'Booking sms sent',
               'payloadSchema': [
                 {
                   'name': 'messageSid',
@@ -2562,8 +2555,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BookingSmsFailed',
-              'scope': 'internal',
+              'key': 'BookingSmsFailed',
+              'name': 'Booking sms failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2575,2576 +2568,1539 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'VIEW',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'ProviderOrbital',
-                'trait': 'ProviderBrowseList',
-              },
+              'key': 'PAYMENT_FAILED',
+              'name': 'Payment Failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
             },
             {
-              'event': 'ServiceStripeStripeCompleted',
-              'triggers': 'PAYMENT_DONE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingPayment',
-              },
-            },
-            {
-              'event': 'ServiceStripeStripeFailed',
-              'triggers': 'PAYMENT_FAILED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingPayment',
-              },
-            },
-            {
-              'event': 'ServiceStripeLoaded',
-              'triggers': 'NOOP',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingPayment',
-              },
-            },
-            {
-              'event': 'ServiceStripeLoadFailed',
-              'triggers': 'NOOP',
-              'source': {
-                'kind': 'trait',
-                'trait': 'BookingPayment',
-              },
+              'key': 'NOOP',
+              'name': 'Noop',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'message',
+                  'type': 'string',
+                },
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'step1',
-                'isInitial': true,
-              },
-              {
-                'name': 'step2',
-              },
-              {
-                'name': 'step3',
-              },
-              {
-                'name': 'step4',
-              },
-              {
-                'name': 'review',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'NEXT',
-                'name': 'Next',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PREV',
-                'name': 'Prev',
-              },
-              {
-                'key': 'PAYMENT_DONE',
-                'name': 'Payment Done',
-                'payloadSchema': [
-                  {
-                    'name': 'result',
-                    'type': 'object',
-                  },
-                ],
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'BOOKING_CONFIRMED',
-                'name': 'Booking Confirmed',
-              },
-              {
-                'key': 'BookingSaved',
-                'name': 'Booking saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BookingSaveFailed',
-                'name': 'Booking save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BookingEmailSent',
-                'name': 'Booking email sent',
-                'payloadSchema': [
-                  {
-                    'name': 'messageId',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BookingEmailFailed',
-                'name': 'Booking email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BookingSmsSent',
-                'name': 'Booking sms sent',
-                'payloadSchema': [
-                  {
-                    'name': 'messageSid',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'BookingSmsFailed',
-                'name': 'Booking sms failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PAYMENT_FAILED',
-                'name': 'Payment Failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'NOOP',
-                'name': 'Noop',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'step1',
-                'to': 'step1',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.providerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.phone',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.scheduledAt',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.notes',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.depositAmount',
-                    50,
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'draft',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'content': 'Book Appointment',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 0,
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Select Provider',
-                        },
-                        {
-                          'mode': 'create',
-                          'submitLabel': 'Continue',
-                          'showCancel': false,
-                          'fields': [
-                            {
-                              'name': 'providerName',
-                              'min': 2,
-                              'required': true,
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                          'type': 'form-section',
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step1',
-                'to': 'step2',
-                'event': 'NEXT',
-                'guard': '@payload.data.providerName',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.providerName',
-                    '@payload.data.providerName',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Book Appointment',
-                        },
-                        {
-                          'currentStep': 1,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Select Time',
-                        },
-                        {
-                          'cancelEvent': 'PREV',
-                          'submitEvent': 'NEXT',
-                          'mode': 'edit',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'scheduledAt',
-                            },
-                          ],
-                          'entity': '@entity',
-                          'type': 'form-section',
-                          'cancelLabel': 'Back',
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step3',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+          'transitions': [
+            {
+              'from': 'step1',
+              'to': 'step1',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
                   '@entity.providerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.phone',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.scheduledAt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.notes',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.depositAmount',
+                  50,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'draft',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Book Appointment',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 0,
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Select Provider',
+                      },
+                      {
+                        'mode': 'create',
+                        'submitLabel': 'Continue',
+                        'showCancel': false,
+                        'fields': [
+                          {
+                            'name': 'providerName',
+                            'min': 2,
+                            'required': true,
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step1',
+              'to': 'step2',
+              'event': 'NEXT',
+              'guard': '@payload.data.providerName',
+              'effects': [
+                [
+                  'set',
+                  '@entity.providerName',
+                  '@payload.data.providerName',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Book Appointment',
+                      },
+                      {
+                        'currentStep': 1,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Select Time',
+                      },
+                      {
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'scheduledAt',
+                          },
+                        ],
+                        'entity': '@entity',
+                        'type': 'form-section',
+                        'cancelLabel': 'Back',
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step3',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.providerName',
+                '@payload.data.scheduledAt',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.scheduledAt',
                   '@payload.data.scheduledAt',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.scheduledAt',
-                    '@payload.data.scheduledAt',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'content': 'Book Appointment',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                          'currentStep': 2,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Your Details',
-                          'type': 'typography',
-                        },
-                        {
-                          'submitLabel': 'Continue',
-                          'type': 'form-section',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'customerName',
-                              'min': 2,
-                            },
-                            {
-                              'name': 'email',
-                              'required': true,
-                              'type': 'email',
-                            },
-                            {
-                              'name': 'phone',
-                              'required': true,
-                            },
-                            {
-                              'name': 'notes',
-                            },
-                          ],
-                          'mode': 'edit',
-                          'cancelLabel': 'Back',
-                          'cancelEvent': 'PREV',
-                          'submitEvent': 'NEXT',
-                          'entity': '@entity',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Book Appointment',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Your Details',
+                        'type': 'typography',
+                      },
+                      {
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'customerName',
+                            'min': 2,
+                          },
+                          {
+                            'name': 'email',
+                            'required': true,
+                            'type': 'email',
+                          },
+                          {
+                            'name': 'phone',
+                            'required': true,
+                          },
+                          {
+                            'name': 'notes',
+                          },
+                        ],
+                        'mode': 'edit',
+                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                        'entity': '@entity',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step1',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Book Appointment',
-                        },
-                        {
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Select Provider',
-                          'type': 'typography',
-                        },
-                        {
-                          'submitLabel': 'Continue',
-                          'mode': 'edit',
-                          'fields': [
-                            {
-                              'min': 2,
-                              'name': 'providerName',
-                              'required': true,
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                          'showCancel': false,
-                          'type': 'form-section',
-                          'entity': '@entity',
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step1',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Book Appointment',
+                      },
+                      {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Select Provider',
+                        'type': 'typography',
+                      },
+                      {
+                        'submitLabel': 'Continue',
+                        'mode': 'edit',
+                        'fields': [
+                          {
+                            'min': 2,
+                            'name': 'providerName',
+                            'required': true,
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                        'showCancel': false,
+                        'type': 'form-section',
+                        'entity': '@entity',
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
                 ],
-              },
-              {
-                'from': 'step3',
-                'to': 'step4',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'step4',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@payload.data.customerName',
+                '@payload.data.email',
+                '@payload.data.phone',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
                   '@payload.data.customerName',
+                ],
+                [
+                  'set',
+                  '@entity.email',
                   '@payload.data.email',
+                ],
+                [
+                  'set',
+                  '@entity.phone',
                   '@payload.data.phone',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '@payload.data.customerName',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '@payload.data.email',
-                  ],
-                  [
-                    'set',
-                    '@entity.phone',
-                    '@payload.data.phone',
-                  ],
-                  [
-                    'set',
-                    '@entity.notes',
-                    '@payload.data.notes',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Book Appointment',
-                        },
-                        {
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                          'currentStep': 3,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Pay Deposit',
-                          'variant': 'h3',
-                        },
-                        '@trait.BookingPayment',
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'justify': 'start',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'icon': 'arrow-left',
-                              'label': 'Back',
-                              'action': 'PREV',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
+                [
+                  'set',
+                  '@entity.notes',
+                  '@payload.data.notes',
                 ],
-              },
-              {
-                'from': 'step3',
-                'to': 'step2',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Book Appointment',
-                        },
-                        {
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                          'type': 'wizard-progress',
-                          'currentStep': 1,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Select Time',
-                        },
-                        {
-                          'cancelEvent': 'PREV',
-                          'submitLabel': 'Continue',
-                          'mode': 'edit',
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                          'cancelLabel': 'Back',
-                          'fields': [
-                            {
-                              'name': 'scheduledAt',
-                              'required': true,
-                            },
-                          ],
-                          'type': 'form-section',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Book Appointment',
+                      },
+                      {
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                        'currentStep': 3,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Pay Deposit',
+                        'variant': 'h3',
+                      },
+                      '@trait.BookingPayment',
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'justify': 'start',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
+                            'action': 'PREV',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
                 ],
-              },
-              {
-                'from': 'step4',
-                'to': 'review',
-                'event': 'PAYMENT_DONE',
-                'guard': [
-                  'and',
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'step2',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Book Appointment',
+                      },
+                      {
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                        'type': 'wizard-progress',
+                        'currentStep': 1,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Select Time',
+                      },
+                      {
+                        'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                        'mode': 'edit',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'cancelLabel': 'Back',
+                        'fields': [
+                          {
+                            'name': 'scheduledAt',
+                            'required': true,
+                          },
+                        ],
+                        'type': 'form-section',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step4',
+              'to': 'review',
+              'event': 'PAYMENT_DONE',
+              'guard': [
+                'and',
+                '@entity.providerName',
+                '@entity.scheduledAt',
+                '@entity.customerName',
+                '@entity.email',
+                '@entity.phone',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Review your booking',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 4,
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'Provider',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.providerName',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'When',
+                              },
+                              {
+                                'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.scheduledAt',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'content': 'Customer',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.customerName',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'content': 'Email',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'content': '@entity.email',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'Phone',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.phone',
+                              },
+                            ],
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Deposit Paid',
+                                'type': 'typography',
+                              },
+                              {
+                                'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.depositAmount',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'icon': 'arrow-left',
+                            'action': 'PREV',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'label': 'Back',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Confirm booking',
+                            'action': 'COMPLETE',
+                            'variant': 'primary',
+                            'icon': 'check',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                      },
+                    ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step4',
+              'to': 'step3',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'content': 'Book Appointment',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'currentStep': 2,
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Your Details',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'form-section',
+                        'fields': [
+                          {
+                            'required': true,
+                            'min': 2,
+                            'name': 'customerName',
+                          },
+                          {
+                            'name': 'email',
+                            'required': true,
+                            'type': 'email',
+                          },
+                          {
+                            'name': 'phone',
+                            'required': true,
+                          },
+                          {
+                            'name': 'notes',
+                          },
+                        ],
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
+                        'cancelLabel': 'Back',
+                        'submitLabel': 'Continue',
+                        'entity': '@entity',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'guard': [
+                'and',
+                '@entity.providerName',
+                '@entity.scheduledAt',
+                '@entity.customerName',
+                '@entity.email',
+                '@entity.phone',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'confirmed',
+                ],
+                [
+                  'persist',
+                  'create',
+                  'Booking',
+                  '@entity',
+                  {
+                    'emit': {
+                      'success': 'BookingSaved',
+                      'failure': 'BookingSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'body': 'Your booking is confirmed.',
+                    'sender': 'noreply@bookings.example',
+                    'recipient': '@entity.email',
+                    'subject': 'Booking Confirmed',
+                  },
+                  {
+                    'emit': {
+                      'success': 'BookingEmailSent',
+                      'failure': 'BookingEmailFailed',
+                    },
+                  },
+                ],
+                [
+                  'call-service',
+                  'twilio',
+                  'sendSMS',
+                  {
+                    'recipient': '@entity.phone',
+                    'sender': '+15551234567',
+                    'body': 'Booking confirmed for @entity.scheduledAt',
+                  },
+                  {
+                    'emit': {
+                      'success': 'BookingSmsSent',
+                      'failure': 'BookingSmsFailed',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'BOOKING_CONFIRMED',
+                  {
+                    'id': '@entity.id',
+                  },
+                ],
+                [
+                  'notify',
+                  'success',
+                  'Booking confirmed',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'name': 'check-circle',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Booking confirmed',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'body',
+                        'content': 'We have emailed and SMS-confirmed your appointment.',
+                      },
+                      {
+                        'label': 'Book another',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'action': 'RESTART',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'align': 'center',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'step4',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Book Appointment',
+                        'type': 'typography',
+                      },
+                      {
+                        'currentStep': 3,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Pay Deposit',
+                      },
+                      '@trait.BookingPayment',
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'justify': 'start',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'label': 'Back',
+                            'action': 'PREV',
+                            'variant': 'ghost',
+                            'icon': 'arrow-left',
+                            'type': 'button',
+                          },
+                        ],
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'step1',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'set',
                   '@entity.providerName',
-                  '@entity.scheduledAt',
+                  '',
+                ],
+                [
+                  'set',
                   '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
                   '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
                   '@entity.phone',
+                  '',
                 ],
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Review your booking',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 4,
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                  'content': 'Provider',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@entity.providerName',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'type': 'stack',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                  'content': 'When',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                  'content': '@entity.scheduledAt',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'content': 'Customer',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.customerName',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'content': 'Email',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'content': '@entity.email',
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                  'content': 'Phone',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.phone',
-                                },
-                              ],
-                              'type': 'stack',
-                              'justify': 'between',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Deposit Paid',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                  'content': '@entity.depositAmount',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'icon': 'arrow-left',
-                              'action': 'PREV',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'label': 'Back',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Confirm booking',
-                              'action': 'COMPLETE',
-                              'variant': 'primary',
-                              'icon': 'check',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                        },
-                      ],
-                      'className': 'max-w-xl mx-auto w-full',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step4',
-                'to': 'step3',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'content': 'Book Appointment',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 2,
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Your Details',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'form-section',
-                          'fields': [
-                            {
-                              'required': true,
-                              'min': 2,
-                              'name': 'customerName',
-                            },
-                            {
-                              'name': 'email',
-                              'required': true,
-                              'type': 'email',
-                            },
-                            {
-                              'name': 'phone',
-                              'required': true,
-                            },
-                            {
-                              'name': 'notes',
-                            },
-                          ],
-                          'cancelEvent': 'PREV',
-                          'submitEvent': 'NEXT',
-                          'mode': 'edit',
-                          'cancelLabel': 'Back',
-                          'submitLabel': 'Continue',
-                          'entity': '@entity',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'guard': [
-                  'and',
-                  '@entity.providerName',
+                [
+                  'set',
                   '@entity.scheduledAt',
-                  '@entity.customerName',
-                  '@entity.email',
-                  '@entity.phone',
+                  '',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'confirmed',
-                  ],
-                  [
-                    'persist',
-                    'create',
-                    'Booking',
-                    '@entity',
-                    {
-                      'emit': {
-                        'success': 'BookingSaved',
-                        'failure': 'BookingSaveFailed',
+                [
+                  'set',
+                  '@entity.notes',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.depositAmount',
+                  50,
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'draft',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Book Appointment',
+                        'variant': 'h2',
                       },
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'body': 'Your booking is confirmed.',
-                      'sender': 'noreply@bookings.example',
-                      'recipient': '@entity.email',
-                      'subject': 'Booking Confirmed',
-                    },
-                    {
-                      'emit': {
-                        'success': 'BookingEmailSent',
-                        'failure': 'BookingEmailFailed',
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 0,
+                        'steps': [
+                          'Select Provider',
+                          'Select Time',
+                          'Your Details',
+                          'Payment',
+                          'Confirmation',
+                        ],
                       },
-                    },
-                  ],
-                  [
-                    'call-service',
-                    'twilio',
-                    'sendSMS',
-                    {
-                      'recipient': '@entity.phone',
-                      'sender': '+15551234567',
-                      'body': 'Booking confirmed for @entity.scheduledAt',
-                    },
-                    {
-                      'emit': {
-                        'success': 'BookingSmsSent',
-                        'failure': 'BookingSmsFailed',
+                      {
+                        'type': 'divider',
                       },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'BOOKING_CONFIRMED',
-                    {
-                      'id': '@entity.id',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'success',
-                    'Booking confirmed',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full py-12',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'name': 'check-circle',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h2',
-                          'type': 'typography',
-                          'content': 'Booking confirmed',
-                        },
-                        {
-                          'type': 'typography',
-                          'color': 'muted',
-                          'variant': 'body',
-                          'content': 'We have emailed and SMS-confirmed your appointment.',
-                        },
-                        {
-                          'label': 'Book another',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'action': 'RESTART',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'align': 'center',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                    },
-                  ],
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Select Provider',
+                      },
+                      {
+                        'showCancel': false,
+                        'mode': 'create',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'providerName',
+                            'min': 2,
+                          },
+                        ],
+                        'type': 'form-section',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'review',
-                'to': 'step4',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Book Appointment',
-                          'type': 'typography',
-                        },
-                        {
-                          'currentStep': 3,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Pay Deposit',
-                        },
-                        '@trait.BookingPayment',
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'justify': 'start',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'label': 'Back',
-                              'action': 'PREV',
-                              'variant': 'ghost',
-                              'icon': 'arrow-left',
-                              'type': 'button',
-                            },
-                          ],
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'step1',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.providerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.phone',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.scheduledAt',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.notes',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.depositAmount',
-                    50,
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'draft',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Book Appointment',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 0,
-                          'steps': [
-                            'Select Provider',
-                            'Select Time',
-                            'Your Details',
-                            'Payment',
-                            'Confirmation',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Select Provider',
-                        },
-                        {
-                          'showCancel': false,
-                          'mode': 'create',
-                          'submitEvent': 'NEXT',
-                          'submitLabel': 'Continue',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'providerName',
-                              'min': 2,
-                            },
-                          ],
-                          'type': 'form-section',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Book',
-          'path': '/book',
-          'traits': [
-            {
-              'ref': 'BookingAppLayout',
-            },
-            {
-              'ref': 'BookingWizard',
-            },
-            {
-              'ref': 'BookingPayment',
-            },
-            {
-              'ref': 'BookingPaymentForm',
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AppointmentOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-calendar',
-          'as': 'Calendar',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Appointment',
-        'collection': 'appointments',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Book',
+        'path': '/book',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'BookingAppLayout',
           },
           {
-            'name': 'providerName',
-            'type': 'string',
-            'required': true,
+            'ref': 'BookingWizard',
           },
           {
-            'name': 'customerName',
-            'type': 'string',
-            'required': true,
+            'ref': 'BookingPayment',
           },
           {
-            'name': 'summary',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'scheduledAt',
-            'type': 'datetime',
-            'required': true,
-          },
-          {
-            'name': 'time',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'scheduled',
-          },
-          {
-            'name': 'notes',
-            'type': 'string',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'BookingPaymentForm',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'AppointmentAppLayout',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
-            'notifications': [],
-            'contentTrait': '@trait.AppointmentDashboard',
-            'searchEvent': 'APPOINTMENT_SEARCH',
-            'appName': 'BookingSystemApp',
-            'navItems': [
-              {
-                'href': '/providers',
-                'label': 'Providers',
-                'icon': 'user-check',
-              },
-              {
-                'href': '/book',
-                'icon': 'calendar-plus',
-                'label': 'Book',
-              },
-              {
-                'icon': 'calendar',
-                'href': '/appointments',
-                'label': 'Appointments',
-              },
-              {
-                'label': 'Schedule',
-                'href': '/schedule',
-                'icon': 'clock',
-              },
-            ],
-            'topBarActions': [],
-          },
-          'events': {
-            'SEARCH': 'APPOINTMENT_SEARCH',
-            'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
-          },
-        }),
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the AppointmentOrbital orbital.
+ *
+ * Canonical entity: Appointment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdBookingSystemAppointmentOrbitalParams {
+  /** Override the canonical entity name (default: 'Appointment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AppointmentOrbital orbital with consumer params. */
+export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppointmentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Appointment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AppointmentOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-calendar',
+        'as': 'Calendar',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'appointments',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'AppointmentDashboard',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'name': 'calendar',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Appointments',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'align': 'center',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'icon': 'plus',
-                                  'label': 'Create Appointment',
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AppointmentCalendar',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AppointmentBrowseList',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Calendar.traits.CalendarEventCalendar',
-          'name': 'AppointmentCalendar',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'titleField': 'summary',
-            'colorField': 'status',
-            'dateField': 'scheduledAt',
-          },
-          'listens': [
-            {
-              'event': 'APPOINTMENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCreate',
-              },
-            },
-            {
-              'event': 'APPOINTMENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentEdit',
-              },
-            },
-            {
-              'event': 'APPOINTMENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDelete',
-              },
-            },
-            {
-              'event': 'BOOKING_CONFIRMED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'BookingOrbital',
-                'trait': 'BookingWizard',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'AppointmentBrowseList',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'gap': 'sm',
-            'cols': 1,
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'event': 'VIEW',
-                'label': 'View',
-              },
-              {
-                'variant': 'ghost',
-                'label': 'Edit',
-                'event': 'EDIT',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'fields': [
-              {
-                'icon': 'calendar',
-                'name': 'summary',
-                'variant': 'h3',
-                'label': 'Summary',
-              },
-              {
-                'name': 'providerName',
-                'variant': 'body',
-                'label': 'Provider',
-              },
-              {
-                'variant': 'body',
-                'name': 'customerName',
-                'label': 'Customer',
-              },
-              {
-                'format': 'date',
-                'label': 'When',
-                'variant': 'body',
-                'name': 'scheduledAt',
-              },
-              {
-                'name': 'time',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'APPOINTMENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCreate',
-              },
-            },
-            {
-              'event': 'APPOINTMENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentEdit',
-              },
-            },
-            {
-              'event': 'APPOINTMENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDelete',
-              },
-            },
-            {
-              'event': 'BOOKING_CONFIRMED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'BookingOrbital',
-                'trait': 'BookingWizard',
-              },
-            },
-          ],
-        }),
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
         {
-          'name': 'AppointmentCreate',
-          'category': 'interaction',
-          'linkedEntity': 'Appointment',
-          'emits': [
+          'name': 'providerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'customerName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'summary',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'scheduledAt',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'time',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'scheduled',
+        },
+        {
+          'name': 'notes',
+          'type': 'string',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AppointmentAppLayout',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'contentTrait': '@trait.AppointmentDashboard',
+          'searchEvent': 'APPOINTMENT_SEARCH',
+          'appName': 'BookingSystemApp',
+          'navItems': [
             {
-              'event': 'APPOINTMENT_CREATED',
+              'href': '/providers',
+              'label': 'Providers',
+              'icon': 'user-check',
             },
             {
-              'event': 'AppointmentLoadFailed',
-              'description': 'Fired when Appointment fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
+              'href': '/book',
+              'icon': 'calendar-plus',
+              'label': 'Book',
             },
             {
-              'event': 'AppointmentLoaded',
-              'description': 'Fired when Appointment finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Appointment]',
-                },
-              ],
+              'icon': 'calendar',
+              'href': '/appointments',
+              'label': 'Appointments',
             },
             {
-              'event': 'AppointmentSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AppointmentSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'label': 'Schedule',
+              'href': '/schedule',
+              'icon': 'clock',
             },
           ],
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDashboard',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
+          'topBarActions': [],
+        },
+        'events': {
+          'SEARCH': 'APPOINTMENT_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'AppointmentDashboard',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'APPOINTMENT_CREATED',
-                'name': 'Appointment Created',
-              },
-              {
-                'key': 'AppointmentLoadFailed',
-                'name': 'Appointment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentLoaded',
-                'name': 'Appointment loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Appointment]',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentSaveFailed',
-                'name': 'Appointment save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentSaved',
-                'name': 'Appointment saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'CREATE',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'success': 'AppointmentLoaded',
-                        'failure': 'AppointmentLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'plus-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Create Appointment',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'fields': [
-                            'providerName',
-                            'customerName',
-                            'summary',
-                            'scheduledAt',
-                            'time',
-                            'status',
-                            'notes',
-                          ],
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                          'type': 'form-section',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Appointment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'AppointmentSaved',
-                        'failure': 'AppointmentSaveFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'APPOINTMENT_CREATED',
-                  ],
-                ],
+                'name': 'source',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'AppointmentEdit',
-          'category': 'interaction',
-          'linkedEntity': 'Appointment',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'APPOINTMENT_UPDATED',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
-              'event': 'AppointmentLoadFailed',
-              'description': 'Fired when Appointment fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
+              'key': 'CREATE',
+              'name': 'Create',
             },
+          ],
+          'transitions': [
             {
-              'event': 'AppointmentLoaded',
-              'description': 'Fired when Appointment finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Appointment]',
-                },
-              ],
-            },
-            {
-              'event': 'AppointmentUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'AppointmentUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'name': 'calendar',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Appointments',
+                                'type': 'typography',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'label': 'Create Appointment',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AppointmentCalendar',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AppointmentBrowseList',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
               ],
             },
           ],
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentView',
-              },
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Calendar.traits.CalendarEventCalendar',
+        'name': 'AppointmentCalendar',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'titleField': 'summary',
+          'colorField': 'status',
+          'dateField': 'scheduledAt',
+        },
+        'listens': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCreate',
             },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Appointment',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'APPOINTMENT_UPDATED',
-                'name': 'Appointment Updated',
-              },
-              {
-                'key': 'AppointmentLoadFailed',
-                'name': 'Appointment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentLoaded',
-                'name': 'Appointment loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Appointment]',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentUpdateFailed',
-                'name': 'Appointment update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentUpdated',
-                'name': 'Appointment updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'success': 'AppointmentLoaded',
-                        'failure': 'AppointmentLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'EDIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'edit',
-                            },
-                            {
-                              'content': 'Edit Appointment',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CLOSE',
-                          'fields': [
-                            'providerName',
-                            'customerName',
-                            'summary',
-                            'scheduledAt',
-                            'time',
-                            'status',
-                            'notes',
-                          ],
-                          'mode': 'edit',
-                          'type': 'form-section',
-                          'entity': '@payload.row',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Appointment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'AppointmentUpdated',
-                        'failure': 'AppointmentUpdateFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'APPOINTMENT_UPDATED',
-                  ],
-                ],
-              },
-            ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'AppointmentView',
-          'category': 'interaction',
-          'linkedEntity': 'Appointment',
-          'emits': [
-            {
-              'event': 'EDIT',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentEdit',
             },
-            {
-              'event': 'AppointmentLoaded',
-              'description': 'Fired when Appointment finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Appointment]',
-                },
-              ],
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDelete',
             },
-            {
-              'event': 'AppointmentLoadFailed',
-              'description': 'Fired when Appointment fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'BOOKING_CONFIRMED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'BookingOrbital',
+              'trait': 'BookingWizard',
             },
-          ],
-          'listens': [
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'AppointmentBrowseList',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'gap': 'sm',
+          'cols': 1,
+          'itemActions': [
             {
+              'variant': 'ghost',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
             },
           ],
-          'stateMachine': {
-            'states': [
+          'fields': [
+            {
+              'icon': 'calendar',
+              'name': 'summary',
+              'variant': 'h3',
+              'label': 'Summary',
+            },
+            {
+              'name': 'providerName',
+              'variant': 'body',
+              'label': 'Provider',
+            },
+            {
+              'variant': 'body',
+              'name': 'customerName',
+              'label': 'Customer',
+            },
+            {
+              'format': 'date',
+              'label': 'When',
+              'variant': 'body',
+              'name': 'scheduledAt',
+            },
+            {
+              'name': 'time',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCreate',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentEdit',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDelete',
+            },
+          },
+          {
+            'event': 'BOOKING_CONFIRMED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'BookingOrbital',
+              'trait': 'BookingWizard',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'AppointmentCreate',
+        'category': 'interaction',
+        'linkedEntity': 'Appointment',
+        'emits': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+          },
+          {
+            'event': 'AppointmentLoadFailed',
+            'description': 'Fired when Appointment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'name': 'closed',
-                'isInitial': true,
+                'name': 'error',
+                'type': 'string',
               },
               {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-              },
-              {
-                'key': 'AppointmentLoaded',
-                'name': 'Appointment loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Appointment]',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentLoadFailed',
-                'name': 'Appointment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.customerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.summary',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.notes',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.providerName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.scheduledAt',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.time',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'AppointmentLoaded',
-                        'failure': 'AppointmentLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'eye',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': '@entity.summary',
-                              'type': 'typography',
-                            },
-                          ],
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'content': 'Provider',
-                              'variant': 'caption',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.providerName',
-                              'variant': 'body',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'content': 'Customer',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@entity.customerName',
-                              'variant': 'body',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'When',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.scheduledAt',
-                            },
-                          ],
-                        },
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Time',
-                            },
-                            {
-                              'variant': 'body',
-                              'type': 'typography',
-                              'content': '@entity.time',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Status',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.status',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'content': 'Notes',
-                              'type': 'typography',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.notes',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'justify': 'end',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'variant': 'primary',
-                              'label': 'Edit',
-                              'icon': 'edit',
-                              'action': 'EDIT',
-                            },
-                            {
-                              'label': 'Close',
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'action': 'CLOSE',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                ],
+                'name': 'code',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'AppointmentDelete',
-          'category': 'interaction',
-          'linkedEntity': 'Appointment',
-          'emits': [
+          {
+            'event': 'AppointmentLoaded',
+            'description': 'Fired when Appointment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Appointment]',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDashboard',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'APPOINTMENT_DELETED',
+              'name': 'closed',
+              'isInitial': true,
             },
             {
-              'event': 'AppointmentDeleteFailed',
-              'scope': 'internal',
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'APPOINTMENT_CREATED',
+              'name': 'Appointment Created',
+            },
+            {
+              'key': 'AppointmentLoadFailed',
+              'name': 'Appointment load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -5157,8 +4113,570 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'AppointmentDeleted',
-              'scope': 'internal',
+              'key': 'AppointmentLoaded',
+              'name': 'Appointment loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentSaveFailed',
+              'name': 'Appointment save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentSaved',
+              'name': 'Appointment saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'CREATE',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'plus-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Create Appointment',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'fields': [
+                          'providerName',
+                          'customerName',
+                          'summary',
+                          'scheduledAt',
+                          'time',
+                          'status',
+                          'notes',
+                        ],
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Appointment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'AppointmentSaved',
+                      'failure': 'AppointmentSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'APPOINTMENT_CREATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'AppointmentEdit',
+        'category': 'interaction',
+        'linkedEntity': 'Appointment',
+        'emits': [
+          {
+            'event': 'APPOINTMENT_UPDATED',
+          },
+          {
+            'event': 'AppointmentLoadFailed',
+            'description': 'Fired when Appointment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentLoaded',
+            'description': 'Fired when Appointment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Appointment]',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentView',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'row',
+                  'type': 'Appointment',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'APPOINTMENT_UPDATED',
+              'name': 'Appointment Updated',
+            },
+            {
+              'key': 'AppointmentLoadFailed',
+              'name': 'Appointment load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentLoaded',
+              'name': 'Appointment loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentUpdateFailed',
+              'name': 'Appointment update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentUpdated',
+              'name': 'Appointment updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'edit',
+                          },
+                          {
+                            'content': 'Edit Appointment',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'fields': [
+                          'providerName',
+                          'customerName',
+                          'summary',
+                          'scheduledAt',
+                          'time',
+                          'status',
+                          'notes',
+                        ],
+                        'mode': 'edit',
+                        'type': 'form-section',
+                        'entity': '@payload.row',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Appointment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'AppointmentUpdated',
+                      'failure': 'AppointmentUpdateFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'APPOINTMENT_UPDATED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'AppointmentView',
+        'category': 'interaction',
+        'linkedEntity': 'Appointment',
+        'emits': [
+          {
+            'event': 'EDIT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentLoaded',
+            'description': 'Fired when Appointment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Appointment]',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentLoadFailed',
+            'description': 'Fired when Appointment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -5167,9 +4685,430 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'AppointmentLoadFailed',
-              'description': 'Fired when Appointment fails to load',
-              'scope': 'internal',
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'AppointmentLoaded',
+              'name': 'Appointment loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Appointment]',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentLoadFailed',
+              'name': 'Appointment load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.customerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.summary',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.notes',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.providerName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.scheduledAt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.time',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'eye',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': '@entity.summary',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'content': 'Provider',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.providerName',
+                            'variant': 'body',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Customer',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@entity.customerName',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'When',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.scheduledAt',
+                          },
+                        ],
+                      },
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Time',
+                          },
+                          {
+                            'variant': 'body',
+                            'type': 'typography',
+                            'content': '@entity.time',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Status',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.status',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Notes',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.notes',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'justify': 'end',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'label': 'Edit',
+                            'icon': 'edit',
+                            'action': 'EDIT',
+                          },
+                          {
+                            'label': 'Close',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'CLOSE',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'AppointmentDelete',
+        'category': 'interaction',
+        'linkedEntity': 'Appointment',
+        'emits': [
+          {
+            'event': 'APPOINTMENT_DELETED',
+          },
+          {
+            'event': 'AppointmentDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentLoadFailed',
+            'description': 'Fired when Appointment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentLoaded',
+            'description': 'Fired when Appointment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Appointment]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DELETE',
+              'name': 'Confirm Delete',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'APPOINTMENT_DELETED',
+              'name': 'Appointment Deleted',
+            },
+            {
+              'key': 'AppointmentDeleteFailed',
+              'name': 'Appointment delete failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -5182,9 +5121,32 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'AppointmentLoaded',
-              'description': 'Fired when Appointment finishes loading',
-              'scope': 'internal',
+              'key': 'AppointmentDeleted',
+              'name': 'Appointment deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentLoadFailed',
+              'name': 'Appointment load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'AppointmentLoaded',
+              'name': 'Appointment loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -5193,436 +5155,444 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': 'Delete Appointment',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'message': 'This action cannot be undone.',
+                        'variant': 'error',
+                        'type': 'alert',
+                      },
+                      {
+                        'justify': 'end',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
+                            'variant': 'ghost',
+                            'type': 'button',
+                          },
+                          {
+                            'variant': 'danger',
+                            'action': 'CONFIRM_DELETE',
+                            'label': 'Delete',
+                            'type': 'button',
+                            'icon': 'check',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Appointment',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'success': 'AppointmentDeleted',
+                      'failure': 'AppointmentDeleteFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'APPOINTMENT_DELETED',
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'Appointment',
+                  {
+                    'emit': {
+                      'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
+                    },
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DELETE',
-                'name': 'Confirm Delete',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'APPOINTMENT_DELETED',
-                'name': 'Appointment Deleted',
-              },
-              {
-                'key': 'AppointmentDeleteFailed',
-                'name': 'Appointment delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentDeleted',
-                'name': 'Appointment deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentLoadFailed',
-                'name': 'Appointment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentLoaded',
-                'name': 'Appointment loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Appointment]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DELETE',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'success': 'AppointmentLoaded',
-                        'failure': 'AppointmentLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': 'Delete Appointment',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'message': 'This action cannot be undone.',
-                          'variant': 'error',
-                          'type': 'alert',
-                        },
-                        {
-                          'justify': 'end',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'label': 'Cancel',
-                              'action': 'CANCEL',
-                              'variant': 'ghost',
-                              'type': 'button',
-                            },
-                            {
-                              'variant': 'danger',
-                              'action': 'CONFIRM_DELETE',
-                              'label': 'Delete',
-                              'type': 'button',
-                              'icon': 'check',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Appointment',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'success': 'AppointmentDeleted',
-                        'failure': 'AppointmentDeleteFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'APPOINTMENT_DELETED',
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'failure': 'AppointmentLoadFailed',
-                        'success': 'AppointmentLoaded',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'Appointment',
-                    {
-                      'emit': {
-                        'success': 'AppointmentLoaded',
-                        'failure': 'AppointmentLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Appointments',
-          'path': '/appointments',
-          'traits': [
-            {
-              'ref': 'AppointmentAppLayout',
-            },
-            {
-              'ref': 'AppointmentDashboard',
-            },
-            {
-              'ref': 'AppointmentCalendar',
-            },
-            {
-              'ref': 'AppointmentBrowseList',
-            },
-            {
-              'ref': 'AppointmentCreate',
-            },
-            {
-              'ref': 'AppointmentEdit',
-            },
-            {
-              'ref': 'AppointmentView',
-            },
-            {
-              'ref': 'AppointmentDelete',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ScheduleOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-      ],
-      entity: {
-        'name': 'Schedule',
-        'persistence': 'singleton',
-        'fields': [
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Appointments',
+        'path': '/appointments',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'AppointmentAppLayout',
           },
           {
-            'name': 'totalBookings',
-            'type': 'number',
-            'default': 0,
+            'ref': 'AppointmentDashboard',
           },
           {
-            'name': 'confirmedToday',
-            'type': 'number',
-            'default': 0,
+            'ref': 'AppointmentCalendar',
           },
           {
-            'name': 'pendingBookings',
-            'type': 'number',
-            'default': 0,
+            'ref': 'AppointmentBrowseList',
           },
           {
-            'name': 'availableSlots',
-            'type': 'number',
-            'default': 0,
+            'ref': 'AppointmentCreate',
+          },
+          {
+            'ref': 'AppointmentEdit',
+          },
+          {
+            'ref': 'AppointmentView',
+          },
+          {
+            'ref': 'AppointmentDelete',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ScheduleAppLayout',
-          'linkedEntity': 'Schedule',
-          'config': {
-            'notificationClickEvent': 'SCHEDULE_NOTIFICATIONS_OPEN',
-            'navItems': [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ScheduleOrbital orbital.
+ *
+ * Canonical entity: Schedule.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdBookingSystemScheduleOrbitalParams {
+  /** Override the canonical entity name (default: 'Schedule'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ScheduleOrbital orbital with consumer params. */
+export function stdBookingSystemScheduleOrbital(params: StdBookingSystemScheduleOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Schedule';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ScheduleOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'singleton',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'totalBookings',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'confirmedToday',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'pendingBookings',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'availableSlots',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ScheduleAppLayout',
+        'linkedEntity': 'Schedule',
+        'config': {
+          'notificationClickEvent': 'SCHEDULE_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/providers',
+              'icon': 'user-check',
+              'label': 'Providers',
+            },
+            {
+              'icon': 'calendar-plus',
+              'href': '/book',
+              'label': 'Book',
+            },
+            {
+              'href': '/appointments',
+              'label': 'Appointments',
+              'icon': 'calendar',
+            },
+            {
+              'label': 'Schedule',
+              'href': '/schedule',
+              'icon': 'clock',
+            },
+          ],
+          'topBarActions': [],
+          'contentTrait': '@trait.ScheduleDisplay',
+          'notifications': [],
+          'searchEvent': 'SCHEDULE_SEARCH',
+          'appName': 'BookingSystemApp',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'SCHEDULE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'SCHEDULE_SEARCH',
+        },
+      }),
+      {
+        'name': 'ScheduleDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'Schedule',
+        'emits': [
+          {
+            'event': 'ScheduleLoaded',
+            'description': 'Fired when Schedule finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
               {
-                'href': '/providers',
-                'icon': 'user-check',
-                'label': 'Providers',
-              },
-              {
-                'icon': 'calendar-plus',
-                'href': '/book',
-                'label': 'Book',
-              },
-              {
-                'href': '/appointments',
-                'label': 'Appointments',
-                'icon': 'calendar',
-              },
-              {
-                'label': 'Schedule',
-                'href': '/schedule',
-                'icon': 'clock',
+                'name': 'data',
+                'type': '[Schedule]',
               },
             ],
-            'topBarActions': [],
-            'contentTrait': '@trait.ScheduleDisplay',
-            'notifications': [],
-            'searchEvent': 'SCHEDULE_SEARCH',
-            'appName': 'BookingSystemApp',
           },
-          'events': {
-            'NOTIFY_CLICK': 'SCHEDULE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'SCHEDULE_SEARCH',
+          {
+            'event': 'ScheduleLoadFailed',
+            'description': 'Fired when Schedule fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'ScheduleDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'Schedule',
-          'emits': [
+        ],
+        'listens': [
+          {
+            'event': 'BOOKING_CONFIRMED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'BookingOrbital',
+              'trait': 'BookingWizard',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ScheduleLoaded',
-              'description': 'Fired when Schedule finishes loading',
-              'scope': 'internal',
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'displaying',
+            },
+            {
+              'name': 'refreshing',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'REFRESH',
+              'name': 'Refresh',
+            },
+            {
+              'key': 'ScheduleLoaded',
+              'name': 'Schedule loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -5631,9 +5601,8 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'ScheduleLoadFailed',
-              'description': 'Fired when Schedule fails to load',
-              'scope': 'internal',
+              'key': 'ScheduleLoadFailed',
+              'name': 'Schedule load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -5646,468 +5615,453 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalDefinit
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
-              'event': 'BOOKING_CONFIRMED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'BookingOrbital',
-                'trait': 'BookingWizard',
-              },
+              'from': 'loading',
+              'to': 'displaying',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.availableSlots',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.confirmedToday',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.pendingBookings',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.totalBookings',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'Schedule',
+                  {
+                    'emit': {
+                      'success': 'ScheduleLoaded',
+                      'failure': 'ScheduleLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'clock',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Schedule Overview',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
+                            'icon': 'refresh-cw',
+                            'action': 'REFRESH',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'cols': 4,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'value': '@entity.totalBookings',
+                            'label': 'Total Bookings',
+                            'type': 'stat-display',
+                            'icon': 'calendar',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'icon': 'check-circle',
+                            'label': 'Confirmed Today',
+                            'value': '@entity.confirmedToday',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Pending',
+                            'value': '@entity.pendingBookings',
+                            'icon': 'clock',
+                          },
+                          {
+                            'label': 'Available Slots',
+                            'icon': 'calendar-plus',
+                            'value': '@entity.availableSlots',
+                            'type': 'stat-display',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'calendar-grid',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'refreshing',
+              'event': 'REFRESH',
+              'effects': [
+                [
+                  'fetch',
+                  'Schedule',
+                  {
+                    'emit': {
+                      'failure': 'ScheduleLoadFailed',
+                      'success': 'ScheduleLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Refreshing…',
+                        'variant': 'caption',
+                        'color': 'muted',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'displaying',
+              'to': 'displaying',
+              'event': 'ScheduleLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'clock',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Schedule Overview',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          {
+                            'action': 'REFRESH',
+                            'icon': 'refresh-cw',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
+                            'type': 'button',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'icon': 'calendar',
+                            'label': 'Total Bookings',
+                            'value': '@entity.totalBookings',
+                          },
+                          {
+                            'label': 'Confirmed Today',
+                            'type': 'stat-display',
+                            'icon': 'check-circle',
+                            'value': '@entity.confirmedToday',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Pending',
+                            'value': '@entity.pendingBookings',
+                            'icon': 'clock',
+                          },
+                          {
+                            'icon': 'calendar-plus',
+                            'label': 'Available Slots',
+                            'value': '@entity.availableSlots',
+                            'type': 'stat-display',
+                          },
+                        ],
+                        'cols': 4,
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'calendar-grid',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'refreshing',
+              'to': 'displaying',
+              'event': 'ScheduleLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'clock',
+                              },
+                              {
+                                'content': 'Schedule Overview',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                          {
+                            'label': 'Refresh',
+                            'icon': 'refresh-cw',
+                            'action': 'REFRESH',
+                            'type': 'button',
+                            'variant': 'secondary',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 4,
+                        'children': [
+                          {
+                            'value': '@entity.totalBookings',
+                            'label': 'Total Bookings',
+                            'type': 'stat-display',
+                            'icon': 'calendar',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.confirmedToday',
+                            'icon': 'check-circle',
+                            'label': 'Confirmed Today',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.pendingBookings',
+                            'label': 'Pending',
+                            'icon': 'clock',
+                          },
+                          {
+                            'label': 'Available Slots',
+                            'type': 'stat-display',
+                            'icon': 'calendar-plus',
+                            'value': '@entity.availableSlots',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'calendar-grid',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'refreshing',
+              'to': 'displaying',
+              'event': 'ScheduleLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to refresh schedule',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'body',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'label': 'Retry',
+                        'action': 'REFRESH',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'displaying',
-              },
-              {
-                'name': 'refreshing',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'REFRESH',
-                'name': 'Refresh',
-              },
-              {
-                'key': 'ScheduleLoaded',
-                'name': 'Schedule loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Schedule]',
-                  },
-                ],
-              },
-              {
-                'key': 'ScheduleLoadFailed',
-                'name': 'Schedule load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'displaying',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.availableSlots',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.confirmedToday',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.pendingBookings',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.totalBookings',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'Schedule',
-                    {
-                      'emit': {
-                        'success': 'ScheduleLoaded',
-                        'failure': 'ScheduleLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'clock',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Schedule Overview',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Refresh',
-                              'variant': 'secondary',
-                              'icon': 'refresh-cw',
-                              'action': 'REFRESH',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'cols': 4,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'value': '@entity.totalBookings',
-                              'label': 'Total Bookings',
-                              'type': 'stat-display',
-                              'icon': 'calendar',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'icon': 'check-circle',
-                              'label': 'Confirmed Today',
-                              'value': '@entity.confirmedToday',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Pending',
-                              'value': '@entity.pendingBookings',
-                              'icon': 'clock',
-                            },
-                            {
-                              'label': 'Available Slots',
-                              'icon': 'calendar-plus',
-                              'value': '@entity.availableSlots',
-                              'type': 'stat-display',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'calendar-grid',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'refreshing',
-                'event': 'REFRESH',
-                'effects': [
-                  [
-                    'fetch',
-                    'Schedule',
-                    {
-                      'emit': {
-                        'failure': 'ScheduleLoadFailed',
-                        'success': 'ScheduleLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-12',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
-                      'gap': 'md',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Refreshing…',
-                          'variant': 'caption',
-                          'color': 'muted',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'displaying',
-                'to': 'displaying',
-                'event': 'ScheduleLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'clock',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Schedule Overview',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'align': 'center',
-                              'type': 'stack',
-                            },
-                            {
-                              'action': 'REFRESH',
-                              'icon': 'refresh-cw',
-                              'label': 'Refresh',
-                              'variant': 'secondary',
-                              'type': 'button',
-                            },
-                          ],
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'icon': 'calendar',
-                              'label': 'Total Bookings',
-                              'value': '@entity.totalBookings',
-                            },
-                            {
-                              'label': 'Confirmed Today',
-                              'type': 'stat-display',
-                              'icon': 'check-circle',
-                              'value': '@entity.confirmedToday',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Pending',
-                              'value': '@entity.pendingBookings',
-                              'icon': 'clock',
-                            },
-                            {
-                              'icon': 'calendar-plus',
-                              'label': 'Available Slots',
-                              'value': '@entity.availableSlots',
-                              'type': 'stat-display',
-                            },
-                          ],
-                          'cols': 4,
-                          'type': 'simple-grid',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'calendar-grid',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'refreshing',
-                'to': 'displaying',
-                'event': 'ScheduleLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'md',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'clock',
-                                },
-                                {
-                                  'content': 'Schedule Overview',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                            {
-                              'label': 'Refresh',
-                              'icon': 'refresh-cw',
-                              'action': 'REFRESH',
-                              'type': 'button',
-                              'variant': 'secondary',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 4,
-                          'children': [
-                            {
-                              'value': '@entity.totalBookings',
-                              'label': 'Total Bookings',
-                              'type': 'stat-display',
-                              'icon': 'calendar',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.confirmedToday',
-                              'icon': 'check-circle',
-                              'label': 'Confirmed Today',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.pendingBookings',
-                              'label': 'Pending',
-                              'icon': 'clock',
-                            },
-                            {
-                              'label': 'Available Slots',
-                              'type': 'stat-display',
-                              'icon': 'calendar-plus',
-                              'value': '@entity.availableSlots',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'calendar-grid',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'refreshing',
-                'to': 'displaying',
-                'event': 'ScheduleLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'alert-triangle',
-                          'color': 'destructive',
-                          'type': 'icon',
-                        },
-                        {
-                          'content': 'Failed to refresh schedule',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'variant': 'body',
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': '@payload.error',
-                        },
-                        {
-                          'label': 'Retry',
-                          'action': 'REFRESH',
-                          'variant': 'primary',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Schedule',
+        'path': '/schedule',
+        'traits': [
+          {
+            'ref': 'ScheduleAppLayout',
           },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Schedule',
-          'path': '/schedule',
-          'traits': [
-            {
-              'ref': 'ScheduleAppLayout',
-            },
-            {
-              'ref': 'ScheduleDisplay',
-            },
-          ],
-        } as never,
-      ],
+          {
+            'ref': 'ScheduleDisplay',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-booking-system — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdBookingSystemParams {
+  Provider?: StdBookingSystemProviderOrbitalParams;
+  Booking?: StdBookingSystemBookingOrbitalParams;
+  Appointment?: StdBookingSystemAppointmentOrbitalParams;
+  Schedule?: StdBookingSystemScheduleOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdBookingSystem(params: StdBookingSystemParams = {}): OrbitalDefinition[] {
+  return [
+    stdBookingSystemProviderOrbital(params.Provider ?? {}),
+    stdBookingSystemBookingOrbital(params.Booking ?? {}),
+    stdBookingSystemAppointmentOrbital(params.Appointment ?? {}),
+    stdBookingSystemScheduleOrbital(params.Schedule ?? {}),
+  ];
 }

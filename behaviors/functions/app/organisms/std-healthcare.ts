@@ -34,1181 +34,952 @@ export interface StdHealthcareConfig {
 }
 
 /**
- * Params for the std-healthcare descriptor helpers.
+ * Tunable params for the PatientOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Patient.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdHealthcareParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdHealthcarePatientOrbitalParams {
+  /** Override the canonical entity name (default: 'Patient'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdHealthcareConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Healthcare.traits.PatientAppLayout`. */
-export function stdHealthcarePatientAppLayoutTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientCatalog`. */
-export function stdHealthcarePatientCatalogTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientSearch`. */
-export function stdHealthcarePatientSearchTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientFilter`. */
-export function stdHealthcarePatientFilterTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientStats`. */
-export function stdHealthcarePatientStatsTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientGraphs`. */
-export function stdHealthcarePatientGraphsTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientBrowseList`. */
-export function stdHealthcarePatientBrowseListTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientCreate`. */
-export function stdHealthcarePatientCreateTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientEdit`. */
-export function stdHealthcarePatientEditTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientView`. */
-export function stdHealthcarePatientViewTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientDelete`. */
-export function stdHealthcarePatientDeleteTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientPersistor`. */
-export function stdHealthcarePatientPersistorTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Healthcare.traits.PatientDocumentUpload`. */
-export function stdHealthcarePatientDocumentUploadTrait(params: StdHealthcareParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PatientDocumentUpload`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Healthcare.pages.PatientsPage`. */
-export function stdHealthcarePatientsPagePage(params: StdHealthcareParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.PatientsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Healthcare.pages.PatientUploadPage`. */
-export function stdHealthcarePatientUploadPagePage(params: StdHealthcareParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.PatientUploadPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (5 orbitals). */
-export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Patient';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the PatientOrbital orbital with consumer params. */
+export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Patient';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PatientOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PatientOrbital',
-      uses: [
+      collection: 'patients',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'firstName',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'lastName',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'dateOfBirth',
+          'type': 'datetime',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'phone',
+          'type': 'string',
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'insuranceId',
+          'type': 'string',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'email',
+          'type': 'string',
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'status',
+          'type': 'string',
+          'default': 'active',
+          'values': [
+            'active',
+            'inactive',
+            'discharged',
+          ],
         },
         {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Patient',
-        'collection': 'patients',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PatientAppLayout',
+        'config': {
+          'searchEvent': 'PATIENT_SEARCH',
+          'appName': 'HealthcareApp',
+          'navItems': [
+            {
+              'href': '/patients',
+              'icon': 'user-plus',
+              'label': 'Patients',
+            },
+            {
+              'icon': 'calendar',
+              'href': '/appointments',
+              'label': 'Appointments',
+            },
+            {
+              'label': 'Intake',
+              'href': '/intake',
+              'icon': 'layout-list',
+            },
+            {
+              'label': 'Prescriptions',
+              'icon': 'pill',
+              'href': '/prescriptions',
+            },
+            {
+              'label': 'Dashboard',
+              'href': '/dashboard',
+              'icon': 'layout-dashboard',
+            },
+          ],
+          'notificationClickEvent': 'PATIENT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PatientCatalog',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'PATIENT_SEARCH',
+          'NOTIFY_CLICK': 'PATIENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'PatientCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'firstName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'lastName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'dateOfBirth',
-            'type': 'datetime',
-            'required': true,
-          },
-          {
-            'name': 'phone',
-            'type': 'string',
-          },
-          {
-            'name': 'insuranceId',
-            'type': 'string',
-          },
-          {
-            'name': 'email',
-            'type': 'string',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'active',
-            'values': [
-              'active',
-              'inactive',
-              'discharged',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'PatientAppLayout',
-          'config': {
-            'searchEvent': 'PATIENT_SEARCH',
-            'appName': 'HealthcareApp',
-            'navItems': [
-              {
-                'href': '/patients',
-                'icon': 'user-plus',
-                'label': 'Patients',
-              },
-              {
-                'icon': 'calendar',
-                'href': '/appointments',
-                'label': 'Appointments',
-              },
-              {
-                'label': 'Intake',
-                'href': '/intake',
-                'icon': 'layout-list',
-              },
-              {
-                'label': 'Prescriptions',
-                'icon': 'pill',
-                'href': '/prescriptions',
-              },
-              {
-                'label': 'Dashboard',
-                'href': '/dashboard',
-                'icon': 'layout-dashboard',
-              },
-            ],
-            'notificationClickEvent': 'PATIENT_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.PatientCatalog',
-            'notifications': [],
+        'listens': [
+          {
+            'event': 'PATIENT_SEARCH',
+            'triggers': 'PATIENT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientAppLayout',
+            },
           },
-          'events': {
-            'SEARCH': 'PATIENT_SEARCH',
-            'NOTIFY_CLICK': 'PATIENT_NOTIFICATIONS_OPEN',
+          {
+            'event': 'PATIENT_NOTIFICATIONS_OPEN',
+            'triggers': 'PATIENT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'PatientCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PATIENT_SEARCH',
+              'name': 'Patient Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'PATIENT_NOTIFICATIONS_OPEN',
+              'name': 'Patient Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'user-plus',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Patients',
+                              },
+                            ],
+                          },
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'New Patient',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          '@trait.PatientSearch',
+                          '@trait.PatientFilter',
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                      '@trait.PatientStats',
+                      '@trait.PatientGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.PatientBrowseList',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'PATIENT_SEARCH',
-              'triggers': 'PATIENT_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'PATIENT_NOTIFICATIONS_OPEN',
-              'triggers': 'PATIENT_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientAppLayout',
-              },
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                      },
+                      {
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to patients',
+                        'variant': 'ghost',
+                      },
+                    ],
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'PATIENT_SEARCH',
-                'name': 'Patient Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PATIENT_NOTIFICATIONS_OPEN',
-                'name': 'Patient Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'user-plus',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Patients',
-                                },
-                              ],
-                            },
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'label': 'New Patient',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            '@trait.PatientSearch',
-                            '@trait.PatientFilter',
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                        '@trait.PatientStats',
-                        '@trait.PatientGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.PatientBrowseList',
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PATIENT_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PATIENT_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'color': 'muted',
-                        },
-                        {
-                          'action': 'INIT',
-                          'type': 'button',
-                          'label': 'Back to patients',
-                          'variant': 'ghost',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'PatientSearch',
-          'config': {
-            'event': 'SEARCH',
-            'placeholder': 'Search patients by name…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'PatientFilter',
-          'config': {
-            'filters': [
-              {
-                'field': 'status',
-                'label': 'Status',
-                'options': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'PatientSearch',
+        'config': {
+          'event': 'SEARCH',
+          'placeholder': 'Search patients by name…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'PatientFilter',
+        'config': {
+          'filters': [
+            {
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'active',
+                'inactive',
+                'discharged',
+              ],
+              'filterType': 'select',
+            },
+            {
+              'label': 'Insurance',
+              'field': 'insuranceId',
+              'options': [
+                'aetna',
+                'bcbs',
+                'cigna',
+                'uhc',
+              ],
+              'filterType': 'select',
+            },
+          ],
+          'event': 'FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'PatientStats',
+        'config': {
+          'title': 'Patient Overview',
+          'metrics': [
+            {
+              'aggregation': 'count',
+              'icon': 'users',
+              'format': 'number',
+              'variant': 'primary',
+              'label': 'Total Patients',
+            },
+            {
+              'label': 'Active',
+              'aggregation': 'count',
+              'icon': 'check-circle',
+              'format': 'number',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
                   'active',
-                  'inactive',
-                  'discharged',
                 ],
-                'filterType': 'select',
-              },
-              {
-                'label': 'Insurance',
-                'field': 'insuranceId',
-                'options': [
-                  'aetna',
-                  'bcbs',
-                  'cigna',
-                  'uhc',
-                ],
-                'filterType': 'select',
-              },
-            ],
-            'event': 'FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'PatientStats',
-          'config': {
-            'title': 'Patient Overview',
-            'metrics': [
-              {
-                'aggregation': 'count',
-                'icon': 'users',
-                'format': 'number',
-                'variant': 'primary',
-                'label': 'Total Patients',
-              },
-              {
-                'label': 'Active',
-                'aggregation': 'count',
-                'icon': 'check-circle',
-                'format': 'number',
-                'variant': 'success',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'active',
-                  ],
-                ],
-              },
-              {
-                'format': 'number',
-                'aggregation': 'count',
-                'label': 'New This Month',
-                'icon': 'user-plus',
-                'variant': 'info',
-              },
-              {
-                'aggregation': 'count',
-                'variant': 'default',
-                'format': 'number',
-                'icon': 'shield',
-                'label': 'By Insurance',
-              },
-            ],
-          },
-          'listens': [
+              ],
+            },
             {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientBrowseList',
-              },
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'New This Month',
+              'icon': 'user-plus',
+              'variant': 'info',
+            },
+            {
+              'aggregation': 'count',
+              'variant': 'default',
+              'format': 'number',
+              'icon': 'shield',
+              'label': 'By Insurance',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'PatientGraphs',
-          'config': {
-            'categoryField': 'insuranceId',
-            'title': 'Patients by Insurance',
-            'subtitle': 'Distribution across providers',
-            'chartType': 'pie',
-            'height': 280,
-            'aggregation': 'count',
-            'showLegend': true,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientBrowseList',
+            },
           },
-          'listens': [
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'PatientGraphs',
+        'config': {
+          'categoryField': 'insuranceId',
+          'title': 'Patients by Insurance',
+          'subtitle': 'Distribution across providers',
+          'chartType': 'pie',
+          'height': 280,
+          'aggregation': 'count',
+          'showLegend': true,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'PatientBrowseList',
+        'linkedEntity': 'Patient',
+        'config': {
+          'fields': [
             {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientBrowseList',
-              },
+              'icon': 'user',
+              'label': 'Name',
+              'name': 'firstName',
+              'variant': 'h3',
+            },
+            {
+              'name': 'lastName',
+              'variant': 'body',
+            },
+            {
+              'format': 'date',
+              'name': 'dateOfBirth',
+              'variant': 'caption',
+              'label': 'DOB',
+            },
+            {
+              'name': 'insuranceId',
+              'label': 'Insurance',
+              'variant': 'badge',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'email',
+              'variant': 'caption',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'PatientBrowseList',
-          'linkedEntity': 'Patient',
-          'config': {
-            'fields': [
-              {
-                'icon': 'user',
-                'label': 'Name',
-                'name': 'firstName',
-                'variant': 'h3',
-              },
-              {
-                'name': 'lastName',
-                'variant': 'body',
-              },
-              {
-                'format': 'date',
-                'name': 'dateOfBirth',
-                'variant': 'caption',
-                'label': 'DOB',
-              },
-              {
-                'name': 'insuranceId',
-                'label': 'Insurance',
-                'variant': 'badge',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'email',
-                'variant': 'caption',
-              },
-            ],
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'variant': 'ghost',
-                'label': 'Edit',
-                'event': 'EDIT',
-              },
-              {
-                'event': 'DELETE',
-                'variant': 'danger',
-                'label': 'Delete',
-              },
-            ],
-            'gap': 'sm',
-          },
-          'listens': [
+          'itemActions': [
             {
-              'event': 'PATIENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientCreate',
-              },
-            },
-            {
-              'event': 'PATIENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientEdit',
-              },
-            },
-            {
-              'event': 'PATIENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientDelete',
-              },
-            },
-            {
-              'event': 'INTAKE_SUBMITTED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'IntakeFormOrbital',
-                'trait': 'IntakeFormWizard',
-              },
-            },
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientFilter',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PatientCreate',
-          'linkedEntity': 'Patient',
-          'config': {
-            'fields': [
-              'firstName',
-              'lastName',
-              'dateOfBirth',
-              'phone',
-              'email',
-              'insuranceId',
-              'status',
-            ],
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'title': 'Create Patient',
-          },
-          'events': {
-            'SAVE': 'PATIENT_CREATED',
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PatientEdit',
-          'linkedEntity': 'Patient',
-          'config': {
-            'title': 'Edit Patient',
-            'mode': 'edit',
-            'fields': [
-              'firstName',
-              'lastName',
-              'dateOfBirth',
-              'phone',
-              'email',
-              'insuranceId',
-              'status',
-            ],
-            'icon': 'edit',
-          },
-          'events': {
-            'SAVE': 'PATIENT_UPDATED',
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PatientView',
-          'linkedEntity': 'Patient',
-          'config': {
-            'icon': 'eye',
-            'fields': [
-              'firstName',
-              'lastName',
-              'dateOfBirth',
-              'phone',
-              'email',
-              'insuranceId',
-              'status',
-            ],
-            'mode': 'edit',
-            'title': 'Patient Details',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'label': 'View',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientBrowseList',
-              },
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'PatientDelete',
-          'linkedEntity': 'Patient',
-          'config': {
-            'icon': 'alert-triangle',
-            'title': 'Delete Patient',
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'PATIENT_DELETED',
-          },
-          'listens': [
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientBrowseList',
-              },
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-        }),
-        {
-          'name': 'PatientPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Patient',
-          'emits': [
-            {
-              'event': 'PATIENT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'PATIENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientCreate',
             },
-            {
-              'event': 'PATIENT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
+          },
+          {
+            'event': 'PATIENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientEdit',
             },
-            {
-              'event': 'PATIENT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
+          },
+          {
+            'event': 'PATIENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientDelete',
             },
+          },
+          {
+            'event': 'INTAKE_SUBMITTED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'IntakeFormOrbital',
+              'trait': 'IntakeFormWizard',
+            },
+          },
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientFilter',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PatientCreate',
+        'linkedEntity': 'Patient',
+        'config': {
+          'fields': [
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'phone',
+            'email',
+            'insuranceId',
+            'status',
           ],
-          'listens': [
-            {
-              'event': 'PATIENT_CREATED',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientCreate',
-              },
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'Create Patient',
+        },
+        'events': {
+          'SAVE': 'PATIENT_CREATED',
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientCatalog',
             },
-            {
-              'event': 'PATIENT_UPDATED',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientEdit',
-              },
-            },
-            {
-              'event': 'PATIENT_DELETED',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PatientDelete',
-              },
-            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PatientEdit',
+        'linkedEntity': 'Patient',
+        'config': {
+          'title': 'Edit Patient',
+          'mode': 'edit',
+          'fields': [
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'phone',
+            'email',
+            'insuranceId',
+            'status',
           ],
-          'stateMachine': {
-            'states': [
+          'icon': 'edit',
+        },
+        'events': {
+          'SAVE': 'PATIENT_UPDATED',
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PatientView',
+        'linkedEntity': 'Patient',
+        'config': {
+          'icon': 'eye',
+          'fields': [
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'phone',
+            'email',
+            'insuranceId',
+            'status',
+          ],
+          'mode': 'edit',
+          'title': 'Patient Details',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'PatientDelete',
+        'linkedEntity': 'Patient',
+        'config': {
+          'icon': 'alert-triangle',
+          'title': 'Delete Patient',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'PATIENT_DELETED',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'PatientPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Patient',
+        'emits': [
+          {
+            'event': 'PATIENT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Patient',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Patient',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PATIENT_CREATED',
-                'name': 'Patient Created',
-              },
-              {
-                'key': 'PATIENT_UPDATED',
-                'name': 'Patient Updated',
-              },
-              {
-                'key': 'PATIENT_DELETED',
-                'name': 'Patient Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Patient',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PATIENT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Patient',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PATIENT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Patient',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'PATIENT_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'PatientDocumentUpload',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'PATIENT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'PATIENT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PATIENT_CREATED',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientCreate',
+            },
+          },
+          {
+            'event': 'PATIENT_UPDATED',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientEdit',
+            },
+          },
+          {
+            'event': 'PATIENT_DELETED',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PatientDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'DocumentUploaded',
-              'scope': 'external',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Patient',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Patient',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PATIENT_CREATED',
+              'name': 'Patient Created',
+            },
+            {
+              'key': 'PATIENT_UPDATED',
+              'name': 'Patient Updated',
+            },
+            {
+              'key': 'PATIENT_DELETED',
+              'name': 'Patient Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Patient',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PATIENT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Patient',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PATIENT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Patient',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'PATIENT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'PatientDocumentUpload',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'DocumentUploaded',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DocumentUploadFailed',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'uploading',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+              'payloadSchema': [
+                {
+                  'name': 'file',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DocumentUploaded',
+              'name': 'Document uploaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1217,8 +988,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'DocumentUploadFailed',
-              'scope': 'external',
+              'key': 'DocumentUploadFailed',
+              'name': 'Document upload failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1227,721 +998,839 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-              {
-                'name': 'uploading',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'file',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DocumentUploaded',
-                'name': 'Document uploaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DocumentUploadFailed',
-                'name': 'Document upload failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'paperclip',
-                            },
-                            {
-                              'content': 'Upload Medical Record',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        {
-                          'inputType': 'text',
-                          'placeholder': 'Choose file path…',
-                          'type': 'input',
-                        },
-                        {
-                          'label': 'Upload',
-                          'variant': 'primary',
-                          'icon': 'upload',
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'uploading',
-                'event': 'UPLOAD',
-                'effects': [
-                  [
-                    'call-service',
-                    'storage',
-                    'upload',
-                    {
-                      'file': '@payload.file',
-                      'bucket': 'patient-records',
-                      'acl': 'private',
-                      'maxSize': 10485760,
-                    },
-                    {
-                      'emit': {
-                        'failure': 'DocumentUploadFailed',
-                        'success': 'DocumentUploaded',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'paperclip',
+                          },
+                          {
+                            'content': 'Upload Medical Record',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
+                      {
+                        'inputType': 'text',
+                        'placeholder': 'Choose file path…',
+                        'type': 'input',
+                      },
+                      {
+                        'label': 'Upload',
+                        'variant': 'primary',
+                        'icon': 'upload',
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'uploading',
+              'event': 'UPLOAD',
+              'effects': [
+                [
+                  'call-service',
+                  'storage',
+                  'upload',
+                  {
+                    'file': '@payload.file',
+                    'bucket': 'patient-records',
+                    'acl': 'private',
+                    'maxSize': 10485760,
+                  },
+                  {
+                    'emit': {
+                      'failure': 'DocumentUploadFailed',
+                      'success': 'DocumentUploaded',
                     },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'gap': 'md',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Uploading…',
-                          'color': 'muted',
-                          'variant': 'caption',
-                        },
-                      ],
-                    },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'uploading',
-                'to': 'ready',
-                'event': 'DocumentUploaded',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Document uploaded',
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Uploading…',
+                        'color': 'muted',
+                        'variant': 'caption',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'uploading',
-                'to': 'ready',
-                'event': 'DocumentUploadFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Upload failed',
-                  ],
+              ],
+            },
+            {
+              'from': 'uploading',
+              'to': 'ready',
+              'event': 'DocumentUploaded',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Document uploaded',
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'PatientsPage',
-          'path': '/patients',
-          'traits': [
-            {
-              'ref': 'PatientAppLayout',
+              ],
             },
             {
-              'ref': 'PatientCatalog',
-            },
-            {
-              'ref': 'PatientSearch',
-            },
-            {
-              'ref': 'PatientFilter',
-            },
-            {
-              'ref': 'PatientStats',
-            },
-            {
-              'ref': 'PatientGraphs',
-            },
-            {
-              'ref': 'PatientBrowseList',
-            },
-            {
-              'ref': 'PatientCreate',
-            },
-            {
-              'ref': 'PatientEdit',
-            },
-            {
-              'ref': 'PatientView',
-            },
-            {
-              'ref': 'PatientDelete',
-            },
-            {
-              'ref': 'PatientPersistor',
+              'from': 'uploading',
+              'to': 'ready',
+              'event': 'DocumentUploadFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Upload failed',
+                ],
+              ],
             },
           ],
-        } as never,
-        {
-          'name': 'PatientUploadPage',
-          'path': '/patients/upload',
-          'traits': [
-            {
-              'ref': 'PatientAppLayout',
-            },
-            {
-              'ref': 'PatientDocumentUpload',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AppointmentOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-calendar',
-          'as': 'Calendar',
-        },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
-        {
-          'from': 'std/behaviors/std-service-twilio',
-          'as': 'Twilio',
-        },
-      ],
-      entity: {
-        'name': 'Appointment',
-        'collection': 'appointments',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'PatientsPage',
+        'path': '/patients',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'PatientAppLayout',
           },
           {
-            'name': 'patientName',
-            'type': 'string',
-            'required': true,
+            'ref': 'PatientCatalog',
           },
           {
-            'name': 'patientEmail',
-            'type': 'string',
+            'ref': 'PatientSearch',
           },
           {
-            'name': 'patientPhone',
-            'type': 'string',
+            'ref': 'PatientFilter',
           },
           {
-            'name': 'doctorName',
-            'type': 'string',
-            'required': true,
+            'ref': 'PatientStats',
           },
           {
-            'name': 'summary',
-            'type': 'string',
-            'default': '',
+            'ref': 'PatientGraphs',
           },
           {
-            'name': 'scheduledAt',
-            'type': 'datetime',
-            'required': true,
+            'ref': 'PatientBrowseList',
           },
           {
-            'name': 'reason',
-            'type': 'string',
+            'ref': 'PatientCreate',
           },
           {
-            'name': 'status',
-            'type': 'string',
-            'default': 'scheduled',
-            'values': [
-              'scheduled',
-              'completed',
-              'cancelled',
-              'no-show',
-            ],
+            'ref': 'PatientEdit',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'ref': 'PatientView',
+          },
+          {
+            'ref': 'PatientDelete',
+          },
+          {
+            'ref': 'PatientPersistor',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'AppointmentAppLayout',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'topBarActions': [],
-            'searchEvent': 'APPOINTMENT_SEARCH',
-            'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
-            'notifications': [],
-            'appName': 'HealthcareApp',
-            'navItems': [
+      } as never,
+      {
+        'name': 'PatientUploadPage',
+        'path': '/patients/upload',
+        'traits': [
+          {
+            'ref': 'PatientAppLayout',
+          },
+          {
+            'ref': 'PatientDocumentUpload',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the AppointmentOrbital orbital.
+ *
+ * Canonical entity: Appointment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHealthcareAppointmentOrbitalParams {
+  /** Override the canonical entity name (default: 'Appointment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AppointmentOrbital orbital with consumer params. */
+export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointmentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Appointment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AppointmentOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-calendar',
+        'as': 'Calendar',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+      {
+        'from': 'std/behaviors/std-service-twilio',
+        'as': 'Twilio',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'appointments',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'patientName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'patientEmail',
+          'type': 'string',
+        },
+        {
+          'name': 'patientPhone',
+          'type': 'string',
+        },
+        {
+          'name': 'doctorName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'summary',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'scheduledAt',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'reason',
+          'type': 'string',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'scheduled',
+          'values': [
+            'scheduled',
+            'completed',
+            'cancelled',
+            'no-show',
+          ],
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AppointmentAppLayout',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'topBarActions': [],
+          'searchEvent': 'APPOINTMENT_SEARCH',
+          'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'HealthcareApp',
+          'navItems': [
+            {
+              'icon': 'user-plus',
+              'href': '/patients',
+              'label': 'Patients',
+            },
+            {
+              'label': 'Appointments',
+              'icon': 'calendar',
+              'href': '/appointments',
+            },
+            {
+              'label': 'Intake',
+              'href': '/intake',
+              'icon': 'layout-list',
+            },
+            {
+              'label': 'Prescriptions',
+              'href': '/prescriptions',
+              'icon': 'pill',
+            },
+            {
+              'icon': 'layout-dashboard',
+              'label': 'Dashboard',
+              'href': '/dashboard',
+            },
+          ],
+          'contentTrait': '@trait.AppointmentCatalog',
+        },
+        'events': {
+          'SEARCH': 'APPOINTMENT_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'AppointmentCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'user-plus',
-                'href': '/patients',
-                'label': 'Patients',
-              },
-              {
-                'label': 'Appointments',
-                'icon': 'calendar',
-                'href': '/appointments',
-              },
-              {
-                'label': 'Intake',
-                'href': '/intake',
-                'icon': 'layout-list',
-              },
-              {
-                'label': 'Prescriptions',
-                'href': '/prescriptions',
-                'icon': 'pill',
-              },
-              {
-                'icon': 'layout-dashboard',
-                'label': 'Dashboard',
-                'href': '/dashboard',
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'contentTrait': '@trait.AppointmentCatalog',
           },
-          'events': {
-            'SEARCH': 'APPOINTMENT_SEARCH',
-            'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'AppointmentCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'calendar',
+                              },
+                              {
+                                'content': 'Appointments',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Appointment',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'justify': 'between',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AppointmentCalendar',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AppointmentBrowseList',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'calendar',
-                                },
-                                {
-                                  'content': 'Appointments',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'label': 'New Appointment',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                          ],
-                          'justify': 'between',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AppointmentCalendar',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AppointmentBrowseList',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Calendar.traits.CalendarEventCalendar',
-          'name': 'AppointmentCalendar',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'colorField': 'status',
-            'dateField': 'scheduledAt',
-            'titleField': 'summary',
-          },
-          'listens': [
-            {
-              'event': 'APPOINTMENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCreate',
-              },
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Calendar.traits.CalendarEventCalendar',
+        'name': 'AppointmentCalendar',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'colorField': 'status',
+          'dateField': 'scheduledAt',
+          'titleField': 'summary',
+        },
+        'listens': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCreate',
             },
-            {
-              'event': 'APPOINTMENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentEdit',
-              },
-            },
-            {
-              'event': 'APPOINTMENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDelete',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'AppointmentBrowseList',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'fields': [
-              {
-                'label': 'Patient',
-                'variant': 'h4',
-                'name': 'patientName',
-                'icon': 'user',
-              },
-              {
-                'label': 'Doctor',
-                'variant': 'body',
-                'name': 'doctorName',
-              },
-              {
-                'variant': 'caption',
-                'label': 'When',
-                'format': 'date',
-                'name': 'scheduledAt',
-              },
-              {
-                'variant': 'badge',
-                'name': 'status',
-              },
-              {
-                'variant': 'caption',
-                'name': 'reason',
-              },
-            ],
-            'gap': 'sm',
           },
-          'listens': [
-            {
-              'event': 'APPOINTMENT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCreate',
-              },
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentEdit',
             },
-            {
-              'event': 'APPOINTMENT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentEdit',
-              },
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDelete',
             },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'AppointmentBrowseList',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'itemActions': [
             {
-              'event': 'APPOINTMENT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDelete',
-              },
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AppointmentCreate',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'title': 'Create Appointment',
-            'icon': 'plus-circle',
-            'fields': [
-              'patientName',
-              'patientEmail',
-              'patientPhone',
-              'doctorName',
-              'summary',
-              'scheduledAt',
-              'reason',
-              'status',
-            ],
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-            'SAVE': 'APPOINTMENT_CREATED',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AppointmentEdit',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'title': 'Edit Appointment',
-            'icon': 'edit',
-            'fields': [
-              'patientName',
-              'patientEmail',
-              'patientPhone',
-              'doctorName',
-              'summary',
-              'scheduledAt',
-              'reason',
-              'status',
-            ],
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-            'SAVE': 'APPOINTMENT_UPDATED',
-          },
-          'listens': [
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'Edit',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AppointmentView',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'fields': [
-              'patientName',
-              'doctorName',
-              'summary',
-              'scheduledAt',
-              'reason',
-              'status',
-            ],
-            'mode': 'edit',
-            'title': 'Appointment Details',
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
             {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'AppointmentDelete',
-          'linkedEntity': 'Appointment',
-          'config': {
-            'confirmLabel': 'Delete',
-            'title': 'Delete Appointment',
-            'alertMessage': 'This action cannot be undone.',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'APPOINTMENT_DELETED',
-          },
-          'listens': [
-            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'AppointmentPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Appointment',
-          'emits': [
+          'fields': [
             {
-              'event': 'APPOINTMENT_CREATED',
-              'scope': 'external',
+              'label': 'Patient',
+              'variant': 'h4',
+              'name': 'patientName',
+              'icon': 'user',
+            },
+            {
+              'label': 'Doctor',
+              'variant': 'body',
+              'name': 'doctorName',
+            },
+            {
+              'variant': 'caption',
+              'label': 'When',
+              'format': 'date',
+              'name': 'scheduledAt',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'variant': 'caption',
+              'name': 'reason',
+            },
+          ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCreate',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentEdit',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AppointmentCreate',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'title': 'Create Appointment',
+          'icon': 'plus-circle',
+          'fields': [
+            'patientName',
+            'patientEmail',
+            'patientPhone',
+            'doctorName',
+            'summary',
+            'scheduledAt',
+            'reason',
+            'status',
+          ],
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+          'SAVE': 'APPOINTMENT_CREATED',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AppointmentEdit',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'title': 'Edit Appointment',
+          'icon': 'edit',
+          'fields': [
+            'patientName',
+            'patientEmail',
+            'patientPhone',
+            'doctorName',
+            'summary',
+            'scheduledAt',
+            'reason',
+            'status',
+          ],
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+          'SAVE': 'APPOINTMENT_UPDATED',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AppointmentView',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'fields': [
+            'patientName',
+            'doctorName',
+            'summary',
+            'scheduledAt',
+            'reason',
+            'status',
+          ],
+          'mode': 'edit',
+          'title': 'Appointment Details',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'AppointmentDelete',
+        'linkedEntity': 'Appointment',
+        'config': {
+          'confirmLabel': 'Delete',
+          'title': 'Delete Appointment',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'APPOINTMENT_DELETED',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'AppointmentPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Appointment',
+        'emits': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentEmailSent',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'AppointmentEmailFailed',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'APPOINTMENT_CREATED',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentCreate',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_UPDATED',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentEdit',
+            },
+          },
+          {
+            'event': 'APPOINTMENT_DELETED',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AppointmentDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Appointment',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Appointment',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1951,29 +1840,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'APPOINTMENT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'APPOINTMENT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'AppointmentEmailSent',
+              'key': 'AppointmentEmailSent',
+              'name': 'Appointment email sent',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1982,7 +1850,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'AppointmentEmailFailed',
+              'key': 'AppointmentEmailFailed',
+              'name': 'Appointment email failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1994,227 +1863,178 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
                 },
               ],
             },
-          ],
-          'listens': [
             {
-              'event': 'APPOINTMENT_CREATED',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentCreate',
-              },
+              'key': 'APPOINTMENT_CREATED',
+              'name': 'Appointment Created',
             },
             {
-              'event': 'APPOINTMENT_UPDATED',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentEdit',
-              },
+              'key': 'APPOINTMENT_UPDATED',
+              'name': 'Appointment Updated',
             },
             {
-              'event': 'APPOINTMENT_DELETED',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AppointmentDelete',
-              },
+              'key': 'APPOINTMENT_DELETED',
+              'name': 'Appointment Deleted',
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Appointment',
+                  '@payload.data',
                   {
-                    'name': 'data',
-                    'type': 'Appointment',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Appointment',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentEmailSent',
-                'name': 'Appointment email sent',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'AppointmentEmailFailed',
-                'name': 'Appointment email failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'APPOINTMENT_CREATED',
-                'name': 'Appointment Created',
-              },
-              {
-                'key': 'APPOINTMENT_UPDATED',
-                'name': 'Appointment Updated',
-              },
-              {
-                'key': 'APPOINTMENT_DELETED',
-                'name': 'Appointment Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Appointment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'APPOINTMENT_CREATED',
-                      },
+                    'emit': {
+                      'success': 'APPOINTMENT_CREATED',
                     },
-                  ],
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'body': 'Your appointment is scheduled.',
-                      'sender': 'noreply@clinic.example',
-                      'recipient': '@payload.data.patientEmail',
-                      'subject': 'Appointment Confirmed',
+                  },
+                ],
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'body': 'Your appointment is scheduled.',
+                    'sender': 'noreply@clinic.example',
+                    'recipient': '@payload.data.patientEmail',
+                    'subject': 'Appointment Confirmed',
+                  },
+                  {
+                    'emit': {
+                      'success': 'AppointmentEmailSent',
+                      'failure': 'AppointmentEmailFailed',
                     },
-                    {
-                      'emit': {
-                        'success': 'AppointmentEmailSent',
-                        'failure': 'AppointmentEmailFailed',
-                      },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Appointment',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'APPOINTMENT_UPDATED',
                     },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Appointment',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'APPOINTMENT_UPDATED',
-                      },
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Appointment',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'APPOINTMENT_DELETED',
                     },
-                  ],
+                  },
                 ],
-              },
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'AppointmentEmailSent',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Confirmation email sent',
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'AppointmentEmailFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Email confirmation failed',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'AppointmentReminderSms',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'ReminderSent',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Appointment',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'APPOINTMENT_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'AppointmentEmailSent',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Confirmation email sent',
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'AppointmentEmailFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Email confirmation failed',
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'AppointmentReminderSms',
-          'category': 'interaction',
-          'emits': [
+          {
+            'event': 'ReminderFailed',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ReminderSent',
-              'scope': 'external',
+              'name': 'ready',
+              'isInitial': true,
+            },
+            {
+              'name': 'sending',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SEND_REMINDER',
+              'name': 'Send Reminder',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'ReminderSent',
+              'name': 'Reminder sent',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -2223,8 +2043,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'ReminderFailed',
-              'scope': 'external',
+              'key': 'ReminderFailed',
+              'name': 'Reminder failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2233,340 +2053,442 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-              {
-                'name': 'sending',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SEND_REMINDER',
-                'name': 'Send Reminder',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'ReminderSent',
-                'name': 'Reminder sent',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ReminderFailed',
-                'name': 'Reminder failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'bell',
-                            },
-                            {
-                              'content': 'Send Appointment Reminder',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'label': 'Send SMS Reminder',
-                          'variant': 'primary',
-                          'action': 'SEND_REMINDER',
-                          'type': 'button',
-                          'icon': 'send',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'sending',
-                'event': 'SEND_REMINDER',
-                'effects': [
-                  [
-                    'call-service',
-                    'twilio',
-                    'sendSMS',
-                    {
-                      'sender': '+15551234567',
-                      'recipient': '@payload.data.patientPhone',
-                      'body': 'Reminder: appointment tomorrow.',
-                    },
-                    {
-                      'emit': {
-                        'success': 'ReminderSent',
-                        'failure': 'ReminderFailed',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'bell',
+                          },
+                          {
+                            'content': 'Send Appointment Reminder',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
                       },
+                      {
+                        'label': 'Send SMS Reminder',
+                        'variant': 'primary',
+                        'action': 'SEND_REMINDER',
+                        'type': 'button',
+                        'icon': 'send',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'sending',
+              'event': 'SEND_REMINDER',
+              'effects': [
+                [
+                  'call-service',
+                  'twilio',
+                  'sendSMS',
+                  {
+                    'sender': '+15551234567',
+                    'recipient': '@payload.data.patientPhone',
+                    'body': 'Reminder: appointment tomorrow.',
+                  },
+                  {
+                    'emit': {
+                      'success': 'ReminderSent',
+                      'failure': 'ReminderFailed',
                     },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': 'Sending reminder…',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'align': 'center',
-                    },
-                  ],
+                  },
                 ],
-              },
-              {
-                'from': 'sending',
-                'to': 'ready',
-                'event': 'ReminderSent',
-                'effects': [
-                  [
-                    'notify',
-                    'success',
-                    'Reminder sent',
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'Sending reminder…',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'align': 'center',
+                  },
                 ],
-              },
-              {
-                'from': 'sending',
-                'to': 'ready',
-                'event': 'ReminderFailed',
-                'effects': [
-                  [
-                    'notify',
-                    'error',
-                    'Reminder failed',
-                  ],
+              ],
+            },
+            {
+              'from': 'sending',
+              'to': 'ready',
+              'event': 'ReminderSent',
+              'effects': [
+                [
+                  'notify',
+                  'success',
+                  'Reminder sent',
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'AppointmentsPage',
-          'path': '/appointments',
-          'traits': [
-            {
-              'ref': 'AppointmentAppLayout',
+              ],
             },
             {
-              'ref': 'AppointmentCatalog',
-            },
-            {
-              'ref': 'AppointmentCalendar',
-            },
-            {
-              'ref': 'AppointmentBrowseList',
-            },
-            {
-              'ref': 'AppointmentCreate',
-            },
-            {
-              'ref': 'AppointmentEdit',
-            },
-            {
-              'ref': 'AppointmentView',
-            },
-            {
-              'ref': 'AppointmentDelete',
-            },
-            {
-              'ref': 'AppointmentPersistor',
+              'from': 'sending',
+              'to': 'ready',
+              'event': 'ReminderFailed',
+              'effects': [
+                [
+                  'notify',
+                  'error',
+                  'Reminder failed',
+                ],
+              ],
             },
           ],
-        } as never,
-        {
-          'name': 'AppointmentReminderPage',
-          'path': '/appointments/reminder',
-          'traits': [
-            {
-              'ref': 'AppointmentReminderSms',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'IntakeFormOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-      ],
-      entity: {
-        'name': 'IntakeForm',
-        'collection': 'intakeforms',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'AppointmentsPage',
+        'path': '/appointments',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'AppointmentAppLayout',
           },
           {
-            'name': 'firstName',
-            'type': 'string',
-            'required': true,
+            'ref': 'AppointmentCatalog',
           },
           {
-            'name': 'lastName',
-            'type': 'string',
-            'required': true,
+            'ref': 'AppointmentCalendar',
           },
           {
-            'name': 'dateOfBirth',
-            'type': 'datetime',
-            'required': true,
+            'ref': 'AppointmentBrowseList',
           },
           {
-            'name': 'allergies',
-            'type': 'string',
-            'default': '',
+            'ref': 'AppointmentCreate',
           },
           {
-            'name': 'medications',
-            'type': 'string',
-            'default': '',
+            'ref': 'AppointmentEdit',
           },
           {
-            'name': 'emergencyContact',
-            'type': 'string',
-            'default': '',
+            'ref': 'AppointmentView',
           },
           {
-            'name': 'insuranceProvider',
-            'type': 'string',
-            'default': '',
+            'ref': 'AppointmentDelete',
           },
           {
-            'name': 'insuranceId',
-            'type': 'string',
-            'default': '',
+            'ref': 'AppointmentPersistor',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'IntakeFormAppLayout',
-          'linkedEntity': 'IntakeForm',
-          'config': {
-            'navItems': [
+      } as never,
+      {
+        'name': 'AppointmentReminderPage',
+        'path': '/appointments/reminder',
+        'traits': [
+          {
+            'ref': 'AppointmentReminderSms',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the IntakeFormOrbital orbital.
+ *
+ * Canonical entity: IntakeForm.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHealthcareIntakeFormOrbitalParams {
+  /** Override the canonical entity name (default: 'IntakeForm'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the IntakeFormOrbital orbital with consumer params. */
+export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'IntakeForm';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'IntakeFormOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'intakeforms',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'firstName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'lastName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'dateOfBirth',
+          'type': 'datetime',
+          'required': true,
+        },
+        {
+          'name': 'allergies',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'medications',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'emergencyContact',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'insuranceProvider',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'insuranceId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'IntakeFormAppLayout',
+        'linkedEntity': 'IntakeForm',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'user-plus',
+              'label': 'Patients',
+              'href': '/patients',
+            },
+            {
+              'label': 'Appointments',
+              'icon': 'calendar',
+              'href': '/appointments',
+            },
+            {
+              'icon': 'layout-list',
+              'label': 'Intake',
+              'href': '/intake',
+            },
+            {
+              'icon': 'pill',
+              'href': '/prescriptions',
+              'label': 'Prescriptions',
+            },
+            {
+              'icon': 'layout-dashboard',
+              'label': 'Dashboard',
+              'href': '/dashboard',
+            },
+          ],
+          'contentTrait': '@trait.IntakeFormWizard',
+          'notificationClickEvent': 'INTAKE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'INTAKE_SEARCH',
+          'topBarActions': [],
+          'notifications': [],
+          'appName': 'HealthcareApp',
+        },
+        'events': {
+          'SEARCH': 'INTAKE_SEARCH',
+          'NOTIFY_CLICK': 'INTAKE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'IntakeFormWizard',
+        'category': 'interaction',
+        'linkedEntity': 'IntakeForm',
+        'emits': [
+          {
+            'event': 'INTAKE_SUBMITTED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'icon': 'user-plus',
-                'label': 'Patients',
-                'href': '/patients',
-              },
-              {
-                'label': 'Appointments',
-                'icon': 'calendar',
-                'href': '/appointments',
-              },
-              {
-                'icon': 'layout-list',
-                'label': 'Intake',
-                'href': '/intake',
-              },
-              {
-                'icon': 'pill',
-                'href': '/prescriptions',
-                'label': 'Prescriptions',
-              },
-              {
-                'icon': 'layout-dashboard',
-                'label': 'Dashboard',
-                'href': '/dashboard',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'contentTrait': '@trait.IntakeFormWizard',
-            'notificationClickEvent': 'INTAKE_NOTIFICATIONS_OPEN',
-            'searchEvent': 'INTAKE_SEARCH',
-            'topBarActions': [],
-            'notifications': [],
-            'appName': 'HealthcareApp',
           },
-          'events': {
-            'SEARCH': 'INTAKE_SEARCH',
-            'NOTIFY_CLICK': 'INTAKE_NOTIFICATIONS_OPEN',
+          {
+            'event': 'IntakeFormLoaded',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[IntakeForm]',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'IntakeFormWizard',
-          'category': 'interaction',
-          'linkedEntity': 'IntakeForm',
-          'emits': [
+          {
+            'event': 'IntakeFormLoadFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'IntakeFormSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'IntakeFormSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'INTAKE_SUBMITTED',
-              'scope': 'external',
+              'name': 'step1',
+              'isInitial': true,
+            },
+            {
+              'name': 'step2',
+            },
+            {
+              'name': 'step3',
+            },
+            {
+              'name': 'review',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NEXT',
+              'name': 'Next',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
                 },
               ],
             },
             {
-              'event': 'IntakeFormLoaded',
-              'scope': 'internal',
+              'key': 'PREV',
+              'name': 'Prev',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'INTAKE_SUBMITTED',
+              'name': 'Intake Submitted',
+            },
+            {
+              'key': 'IntakeFormLoaded',
+              'name': 'IntakeForm loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -2575,8 +2497,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'IntakeFormLoadFailed',
-              'scope': 'internal',
+              'key': 'IntakeFormLoadFailed',
+              'name': 'IntakeForm load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2589,8 +2511,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'IntakeFormSaved',
-              'scope': 'internal',
+              'key': 'IntakeFormSaved',
+              'name': 'IntakeForm saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -2599,8 +2521,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'IntakeFormSaveFailed',
-              'scope': 'internal',
+              'key': 'IntakeFormSaveFailed',
+              'name': 'IntakeForm save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -2613,1399 +2535,1417 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'step1',
-                'isInitial': true,
-              },
-              {
-                'name': 'step2',
-              },
-              {
-                'name': 'step3',
-              },
-              {
-                'name': 'review',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'NEXT',
-                'name': 'Next',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'step1',
+              'to': 'step1',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.firstName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.dateOfBirth',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.allergies',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.medications',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.emergencyContact',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceProvider',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceId',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'IntakeForm',
                   {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
+                    'emit': {
+                      'success': 'IntakeFormLoaded',
+                      'failure': 'IntakeFormLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'PREV',
-                'name': 'Prev',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'INTAKE_SUBMITTED',
-                'name': 'Intake Submitted',
-              },
-              {
-                'key': 'IntakeFormLoaded',
-                'name': 'IntakeForm loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[IntakeForm]',
-                  },
-                ],
-              },
-              {
-                'key': 'IntakeFormLoadFailed',
-                'name': 'IntakeForm load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'IntakeFormSaved',
-                'name': 'IntakeForm saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'IntakeFormSaveFailed',
-                'name': 'IntakeForm save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'step1',
-                'to': 'step1',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.firstName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.lastName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.dateOfBirth',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.allergies',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.medications',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.emergencyContact',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceProvider',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceId',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'IntakeForm',
-                    {
-                      'emit': {
-                        'success': 'IntakeFormLoaded',
-                        'failure': 'IntakeFormLoadFailed',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'clipboard',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Patient Intake',
+                          },
+                        ],
+                        'direction': 'horizontal',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'clipboard',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Patient Intake',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Personal Info',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'submitEvent': 'NEXT',
-                          'showCancel': false,
-                          'submitLabel': 'Continue',
-                          'type': 'form-section',
-                          'mode': 'create',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'firstName',
-                            },
-                            {
-                              'name': 'lastName',
-                              'required': true,
-                            },
-                            {
-                              'name': 'dateOfBirth',
-                              'required': true,
-                            },
-                          ],
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
+                      {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Personal Info',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'submitEvent': 'NEXT',
+                        'showCancel': false,
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'firstName',
+                          },
+                          {
+                            'name': 'lastName',
+                            'required': true,
+                          },
+                          {
+                            'name': 'dateOfBirth',
+                            'required': true,
+                          },
+                        ],
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
                 ],
-              },
-              {
-                'from': 'step1',
-                'to': 'step2',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+              ],
+            },
+            {
+              'from': 'step1',
+              'to': 'step2',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@payload.data.firstName',
+                '@payload.data.lastName',
+                '@payload.data.dateOfBirth',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.firstName',
                   '@payload.data.firstName',
+                ],
+                [
+                  'set',
+                  '@entity.lastName',
                   '@payload.data.lastName',
+                ],
+                [
+                  'set',
+                  '@entity.dateOfBirth',
                   '@payload.data.dateOfBirth',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.firstName',
-                    '@payload.data.firstName',
-                  ],
-                  [
-                    'set',
-                    '@entity.lastName',
-                    '@payload.data.lastName',
-                  ],
-                  [
-                    'set',
-                    '@entity.dateOfBirth',
-                    '@payload.data.dateOfBirth',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Patient Intake',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 1,
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Medical History',
-                          'variant': 'h3',
-                        },
-                        {
-                          'fields': [
-                            'allergies',
-                            'medications',
-                          ],
-                          'cancelEvent': 'PREV',
-                          'entity': '@entity',
-                          'mode': 'edit',
-                          'type': 'form-section',
-                          'submitLabel': 'Continue',
-                          'cancelLabel': 'Back',
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Patient Intake',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 1,
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Medical History',
+                        'variant': 'h3',
+                      },
+                      {
+                        'fields': [
+                          'allergies',
+                          'medications',
+                        ],
+                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step3',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.firstName',
-                  '@entity.lastName',
-                  '@entity.dateOfBirth',
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step3',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.firstName',
+                '@entity.lastName',
+                '@entity.dateOfBirth',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.allergies',
+                  '@payload.data.allergies',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.allergies',
-                    '@payload.data.allergies',
-                  ],
-                  [
-                    'set',
-                    '@entity.medications',
-                    '@payload.data.medications',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Patient Intake',
-                        },
-                        {
-                          'currentStep': 2,
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Insurance',
-                        },
-                        {
-                          'type': 'form-section',
-                          'entity': '@entity',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'emergencyContact',
-                            },
-                            {
-                              'name': 'insuranceProvider',
-                              'required': true,
-                            },
-                            {
-                              'name': 'insuranceId',
-                              'required': true,
-                            },
-                          ],
-                          'submitEvent': 'NEXT',
-                          'mode': 'edit',
-                          'submitLabel': 'Continue',
-                          'cancelLabel': 'Back',
-                          'cancelEvent': 'PREV',
-                        },
-                      ],
-                    },
-                  ],
+                [
+                  'set',
+                  '@entity.medications',
+                  '@payload.data.medications',
                 ],
-              },
-              {
-                'from': 'step2',
-                'to': 'step1',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Patient Intake',
-                          'variant': 'h2',
-                        },
-                        {
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Personal Info',
-                        },
-                        {
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                          'mode': 'edit',
-                          'showCancel': false,
-                          'type': 'form-section',
-                          'submitLabel': 'Continue',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'firstName',
-                            },
-                            {
-                              'name': 'lastName',
-                              'required': true,
-                            },
-                            {
-                              'name': 'dateOfBirth',
-                              'required': true,
-                            },
-                          ],
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Patient Intake',
+                      },
+                      {
+                        'currentStep': 2,
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Insurance',
+                      },
+                      {
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'emergencyContact',
+                          },
+                          {
+                            'name': 'insuranceProvider',
+                            'required': true,
+                          },
+                          {
+                            'name': 'insuranceId',
+                            'required': true,
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'step3',
-                'to': 'review',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.firstName',
-                  '@entity.lastName',
-                  '@entity.dateOfBirth',
+              ],
+            },
+            {
+              'from': 'step2',
+              'to': 'step1',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Patient Intake',
+                        'variant': 'h2',
+                      },
+                      {
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Personal Info',
+                      },
+                      {
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
+                        'showCancel': false,
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'firstName',
+                          },
+                          {
+                            'name': 'lastName',
+                            'required': true,
+                          },
+                          {
+                            'name': 'dateOfBirth',
+                            'required': true,
+                          },
+                        ],
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'step3',
+              'to': 'review',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.firstName',
+                '@entity.lastName',
+                '@entity.dateOfBirth',
+                '@payload.data.emergencyContact',
+                '@payload.data.insuranceProvider',
+                '@payload.data.insuranceId',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.emergencyContact',
                   '@payload.data.emergencyContact',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceProvider',
                   '@payload.data.insuranceProvider',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceId',
                   '@payload.data.insuranceId',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.emergencyContact',
-                    '@payload.data.emergencyContact',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceProvider',
-                    '@payload.data.insuranceProvider',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceId',
-                    '@payload.data.insuranceId',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'content': 'Review intake',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 3,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'First Name',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': '@entity.firstName',
-                                  'variant': 'body',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Last Name',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@entity.lastName',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'justify': 'between',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Date of Birth',
-                                },
-                                {
-                                  'content': '@entity.dateOfBirth',
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                },
-                              ],
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Allergies',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.allergies',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'content': 'Medications',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'content': '@entity.medications',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'variant': 'caption',
-                                  'content': 'Emergency Contact',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': '@entity.emergencyContact',
-                                  'variant': 'body',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Insurance Provider',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.insuranceProvider',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'content': 'Insurance ID',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'content': '@entity.insuranceId',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'justify': 'between',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                            },
-                          ],
-                          'direction': 'vertical',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'label': 'Back',
-                              'icon': 'arrow-left',
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'action': 'PREV',
-                            },
-                            {
-                              'label': 'Submit Intake',
-                              'type': 'button',
-                              'action': 'COMPLETE',
-                              'variant': 'primary',
-                              'icon': 'check',
-                            },
-                          ],
-                          'type': 'stack',
-                          'justify': 'between',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'step3',
-                'to': 'step2',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'content': 'Patient Intake',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                          'type': 'wizard-progress',
-                          'currentStep': 1,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'type': 'typography',
-                          'content': 'Medical History',
-                        },
-                        {
-                          'fields': [
-                            'allergies',
-                            'medications',
-                          ],
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                          'cancelLabel': 'Back',
-                          'mode': 'edit',
-                          'cancelEvent': 'PREV',
-                          'submitLabel': 'Continue',
-                          'type': 'form-section',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'guard': [
-                  'and',
-                  '@entity.firstName',
-                  '@entity.lastName',
-                  '@entity.dateOfBirth',
-                  '@entity.emergencyContact',
-                  '@entity.insuranceProvider',
-                  '@entity.insuranceId',
-                ],
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'IntakeForm',
-                    '@entity',
-                    {
-                      'emit': {
-                        'failure': 'IntakeFormSaveFailed',
-                        'success': 'IntakeFormSaved',
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'content': 'Review intake',
+                        'variant': 'h2',
                       },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'INTAKE_SUBMITTED',
-                    {
-                      'id': '@entity.id',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'success',
-                    'Intake submitted',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'check-circle',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Intake Complete',
-                        },
-                        {
-                          'color': 'muted',
-                          'variant': 'body',
-                          'content': 'Patient intake has been submitted.',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'button',
-                          'label': 'Start new intake',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                          'action': 'RESTART',
-                        },
-                      ],
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full py-12',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'align': 'center',
-                    },
-                  ],
+                      {
+                        'currentStep': 3,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'First Name',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': '@entity.firstName',
+                                'variant': 'body',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Last Name',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.lastName',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Date of Birth',
+                              },
+                              {
+                                'content': '@entity.dateOfBirth',
+                                'type': 'typography',
+                                'variant': 'body',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Allergies',
+                                'type': 'typography',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.allergies',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                          {
+                            'children': [
+                              {
+                                'content': 'Medications',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.medications',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'children': [
+                              {
+                                'variant': 'caption',
+                                'content': 'Emergency Contact',
+                                'type': 'typography',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': '@entity.emergencyContact',
+                                'variant': 'body',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Insurance Provider',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.insuranceProvider',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'children': [
+                              {
+                                'content': 'Insurance ID',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'content': '@entity.insuranceId',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                            'justify': 'between',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'label': 'Back',
+                            'icon': 'arrow-left',
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'action': 'PREV',
+                          },
+                          {
+                            'label': 'Submit Intake',
+                            'type': 'button',
+                            'action': 'COMPLETE',
+                            'variant': 'primary',
+                            'icon': 'check',
+                          },
+                        ],
+                        'type': 'stack',
+                        'justify': 'between',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
                 ],
-              },
-              {
-                'from': 'review',
-                'to': 'step3',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'content': 'Patient Intake',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 2,
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Insurance',
-                        },
-                        {
-                          'submitLabel': 'Continue',
-                          'cancelEvent': 'PREV',
-                          'fields': [
-                            {
-                              'name': 'emergencyContact',
-                              'required': true,
-                            },
-                            {
-                              'name': 'insuranceProvider',
-                              'required': true,
-                            },
-                            {
-                              'name': 'insuranceId',
-                              'required': true,
-                            },
-                          ],
-                          'type': 'form-section',
-                          'entity': '@entity',
-                          'mode': 'edit',
-                          'submitEvent': 'NEXT',
-                          'cancelLabel': 'Back',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'step1',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.firstName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.lastName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.dateOfBirth',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.allergies',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.medications',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.emergencyContact',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceProvider',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.insuranceId',
-                    '',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'typography',
-                          'variant': 'h2',
-                          'content': 'Patient Intake',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'currentStep': 0,
-                          'steps': [
-                            'Personal Info',
-                            'Medical History',
-                            'Insurance',
-                            'Review',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Personal Info',
-                          'variant': 'h3',
-                        },
-                        {
-                          'showCancel': false,
-                          'fields': [
-                            {
-                              'name': 'firstName',
-                              'required': true,
-                            },
-                            {
-                              'name': 'lastName',
-                              'required': true,
-                            },
-                            {
-                              'required': true,
-                              'name': 'dateOfBirth',
-                            },
-                          ],
-                          'type': 'form-section',
-                          'submitEvent': 'NEXT',
-                          'mode': 'create',
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'IntakePage',
-          'path': '/intake',
-          'traits': [
-            {
-              'ref': 'IntakeFormAppLayout',
+              ],
             },
             {
-              'ref': 'IntakeFormWizard',
+              'from': 'step3',
+              'to': 'step2',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'content': 'Patient Intake',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                        'type': 'wizard-progress',
+                        'currentStep': 1,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Medical History',
+                      },
+                      {
+                        'fields': [
+                          'allergies',
+                          'medications',
+                        ],
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'cancelLabel': 'Back',
+                        'mode': 'edit',
+                        'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PrescriptionOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-      ],
-      entity: {
-        'name': 'Prescription',
-        'collection': 'prescriptions',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'medication',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'dosage',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'frequency',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'patientName',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'prescribedBy',
-            'type': 'string',
-          },
-          {
-            'name': 'startDate',
-            'type': 'datetime',
-          },
-          {
-            'name': 'endDate',
-            'type': 'datetime',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'active',
-            'values': [
-              'active',
-              'expired',
-              'discontinued',
-            ],
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'PrescriptionAppLayout',
-          'linkedEntity': 'Prescription',
-          'config': {
-            'notifications': [],
-            'appName': 'HealthcareApp',
-            'searchEvent': 'PRESCRIPTION_SEARCH',
-            'notificationClickEvent': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'label': 'Patients',
-                'icon': 'user-plus',
-                'href': '/patients',
-              },
-              {
-                'label': 'Appointments',
-                'href': '/appointments',
-                'icon': 'calendar',
-              },
-              {
-                'icon': 'layout-list',
-                'label': 'Intake',
-                'href': '/intake',
-              },
-              {
-                'label': 'Prescriptions',
-                'href': '/prescriptions',
-                'icon': 'pill',
-              },
-              {
-                'icon': 'layout-dashboard',
-                'label': 'Dashboard',
-                'href': '/dashboard',
-              },
-            ],
-            'contentTrait': '@trait.PrescriptionCatalog',
-            'topBarActions': [],
-          },
-          'events': {
-            'SEARCH': 'PRESCRIPTION_SEARCH',
-            'NOTIFY_CLICK': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'PrescriptionCatalog',
-          'category': 'interaction',
-          'emits': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'from': 'review',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'guard': [
+                'and',
+                '@entity.firstName',
+                '@entity.lastName',
+                '@entity.dateOfBirth',
+                '@entity.emergencyContact',
+                '@entity.insuranceProvider',
+                '@entity.insuranceId',
+              ],
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'IntakeForm',
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'IntakeFormSaveFailed',
+                      'success': 'IntakeFormSaved',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'INTAKE_SUBMITTED',
+                  {
+                    'id': '@entity.id',
+                  },
+                ],
+                [
+                  'notify',
+                  'success',
+                  'Intake submitted',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'check-circle',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Intake Complete',
+                      },
+                      {
+                        'color': 'muted',
+                        'variant': 'body',
+                        'content': 'Patient intake has been submitted.',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Start new intake',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                        'action': 'RESTART',
+                      },
+                    ],
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'step3',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'content': 'Patient Intake',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 2,
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Insurance',
+                      },
+                      {
+                        'submitLabel': 'Continue',
+                        'cancelEvent': 'PREV',
+                        'fields': [
+                          {
+                            'name': 'emergencyContact',
+                            'required': true,
+                          },
+                          {
+                            'name': 'insuranceProvider',
+                            'required': true,
+                          },
+                          {
+                            'name': 'insuranceId',
+                            'required': true,
+                          },
+                        ],
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'submitEvent': 'NEXT',
+                        'cancelLabel': 'Back',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'step1',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'set',
+                  '@entity.firstName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.dateOfBirth',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.allergies',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.medications',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.emergencyContact',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceProvider',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.insuranceId',
+                  '',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Patient Intake',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'currentStep': 0,
+                        'steps': [
+                          'Personal Info',
+                          'Medical History',
+                          'Insurance',
+                          'Review',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Personal Info',
+                        'variant': 'h3',
+                      },
+                      {
+                        'showCancel': false,
+                        'fields': [
+                          {
+                            'name': 'firstName',
+                            'required': true,
+                          },
+                          {
+                            'name': 'lastName',
+                            'required': true,
+                          },
+                          {
+                            'required': true,
+                            'name': 'dateOfBirth',
+                          },
+                        ],
+                        'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                        'mode': 'create',
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'IntakePage',
+        'path': '/intake',
+        'traits': [
+          {
+            'ref': 'IntakeFormAppLayout',
+          },
+          {
+            'ref': 'IntakeFormWizard',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the PrescriptionOrbital orbital.
+ *
+ * Canonical entity: Prescription.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHealthcarePrescriptionOrbitalParams {
+  /** Override the canonical entity name (default: 'Prescription'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the PrescriptionOrbital orbital with consumer params. */
+export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescriptionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Prescription';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PrescriptionOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'prescriptions',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'medication',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'dosage',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'frequency',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'patientName',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'prescribedBy',
+          'type': 'string',
+        },
+        {
+          'name': 'startDate',
+          'type': 'datetime',
+        },
+        {
+          'name': 'endDate',
+          'type': 'datetime',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'active',
+          'values': [
+            'active',
+            'expired',
+            'discontinued',
+          ],
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PrescriptionAppLayout',
+        'linkedEntity': 'Prescription',
+        'config': {
+          'notifications': [],
+          'appName': 'HealthcareApp',
+          'searchEvent': 'PRESCRIPTION_SEARCH',
+          'notificationClickEvent': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'label': 'Patients',
+              'icon': 'user-plus',
+              'href': '/patients',
+            },
+            {
+              'label': 'Appointments',
+              'href': '/appointments',
+              'icon': 'calendar',
+            },
+            {
+              'icon': 'layout-list',
+              'label': 'Intake',
+              'href': '/intake',
+            },
+            {
+              'label': 'Prescriptions',
+              'href': '/prescriptions',
+              'icon': 'pill',
+            },
+            {
+              'icon': 'layout-dashboard',
+              'label': 'Dashboard',
+              'href': '/dashboard',
+            },
+          ],
+          'contentTrait': '@trait.PrescriptionCatalog',
+          'topBarActions': [],
+        },
+        'events': {
+          'SEARCH': 'PRESCRIPTION_SEARCH',
+          'NOTIFY_CLICK': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'PrescriptionCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'pill',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Prescriptions',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'align': 'center',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'label': 'New Prescription',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.PrescriptionBrowseList',
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'pill',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Prescriptions',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'label': 'New Prescription',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.PrescriptionBrowseList',
+                    ],
+                    'type': 'stack',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'PrescriptionBrowseList',
-          'linkedEntity': 'Prescription',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'variant': 'ghost',
-                'event': 'VIEW',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'variant': 'danger',
-                'label': 'Delete',
-                'event': 'DELETE',
-              },
-            ],
-            'gap': 'sm',
-            'fields': [
-              {
-                'variant': 'h3',
-                'name': 'medication',
-                'icon': 'pill',
-              },
-              {
-                'name': 'dosage',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'body',
-                'name': 'frequency',
-              },
-              {
-                'variant': 'body',
-                'label': 'Patient',
-                'name': 'patientName',
-              },
-              {
-                'name': 'prescribedBy',
-                'label': 'Prescribed By',
-                'variant': 'caption',
-              },
-              {
-                'label': 'Start',
-                'name': 'startDate',
-                'format': 'date',
-                'variant': 'caption',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'PRESCRIPTION_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionCreate',
-              },
-            },
-            {
-              'event': 'PRESCRIPTION_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionEdit',
-              },
-            },
-            {
-              'event': 'PRESCRIPTION_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionDelete',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PrescriptionCreate',
-          'linkedEntity': 'Prescription',
-          'config': {
-            'title': 'New Prescription',
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'fields': [
-              'medication',
-              'dosage',
-              'frequency',
-              'patientName',
-              'prescribedBy',
-              'startDate',
-              'endDate',
-              'status',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-            'SAVE': 'PRESCRIPTION_CREATED',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'PrescriptionBrowseList',
+        'linkedEntity': 'Prescription',
+        'config': {
+          'itemActions': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionCatalog',
-              },
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PrescriptionEdit',
-          'linkedEntity': 'Prescription',
-          'config': {
-            'title': 'Edit Prescription',
-            'mode': 'edit',
-            'icon': 'edit',
-            'fields': [
-              'medication',
-              'dosage',
-              'frequency',
-              'patientName',
-              'prescribedBy',
-              'startDate',
-              'endDate',
-              'status',
-            ],
-          },
-          'events': {
-            'SAVE': 'PRESCRIPTION_UPDATED',
-            'OPEN': 'EDIT',
-          },
-          'listens': [
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
-        }),
-        {
-          'name': 'PrescriptionView',
-          'category': 'interaction',
-          'linkedEntity': 'Prescription',
-          'emits': [
+          'gap': 'sm',
+          'fields': [
             {
-              'event': 'CLOSE',
+              'variant': 'h3',
+              'name': 'medication',
+              'icon': 'pill',
             },
             {
-              'event': 'PrescriptionLoaded',
-              'scope': 'internal',
+              'name': 'dosage',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'body',
+              'name': 'frequency',
+            },
+            {
+              'variant': 'body',
+              'label': 'Patient',
+              'name': 'patientName',
+            },
+            {
+              'name': 'prescribedBy',
+              'label': 'Prescribed By',
+              'variant': 'caption',
+            },
+            {
+              'label': 'Start',
+              'name': 'startDate',
+              'format': 'date',
+              'variant': 'caption',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'PRESCRIPTION_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionCreate',
+            },
+          },
+          {
+            'event': 'PRESCRIPTION_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionEdit',
+            },
+          },
+          {
+            'event': 'PRESCRIPTION_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PrescriptionCreate',
+        'linkedEntity': 'Prescription',
+        'config': {
+          'title': 'New Prescription',
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'medication',
+            'dosage',
+            'frequency',
+            'patientName',
+            'prescribedBy',
+            'startDate',
+            'endDate',
+            'status',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+          'SAVE': 'PRESCRIPTION_CREATED',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PrescriptionEdit',
+        'linkedEntity': 'Prescription',
+        'config': {
+          'title': 'Edit Prescription',
+          'mode': 'edit',
+          'icon': 'edit',
+          'fields': [
+            'medication',
+            'dosage',
+            'frequency',
+            'patientName',
+            'prescribedBy',
+            'startDate',
+            'endDate',
+            'status',
+          ],
+        },
+        'events': {
+          'SAVE': 'PRESCRIPTION_UPDATED',
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'PrescriptionView',
+        'category': 'interaction',
+        'linkedEntity': 'Prescription',
+        'emits': [
+          {
+            'event': 'CLOSE',
+          },
+          {
+            'event': 'PrescriptionLoaded',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Prescription]',
+              },
+            ],
+          },
+          {
+            'event': 'PrescriptionLoadFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Prescription',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'PrescriptionLoaded',
+              'name': 'Prescription loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -4014,8 +3954,8 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
             {
-              'event': 'PrescriptionLoadFailed',
-              'scope': 'internal',
+              'key': 'PrescriptionLoadFailed',
+              'name': 'Prescription load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -4028,792 +3968,817 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalDefinition[] 
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.medication',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.dosage',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.frequency',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.patientName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.prescribedBy',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.startDate',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.endDate',
+                  '',
+                ],
+                [
+                  'fetch',
+                  'Prescription',
+                  {
+                    'emit': {
+                      'success': 'PrescriptionLoaded',
+                      'failure': 'PrescriptionLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Prescription',
-                  },
+              'effects': [
+                [
+                  'set',
+                  '@entity.medication',
+                  '@payload.row.medication',
                 ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'PrescriptionLoaded',
-                'name': 'Prescription loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Prescription]',
-                  },
+                [
+                  'set',
+                  '@entity.dosage',
+                  '@payload.row.dosage',
                 ],
-              },
-              {
-                'key': 'PrescriptionLoadFailed',
-                'name': 'Prescription load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
+                [
+                  'set',
+                  '@entity.frequency',
+                  '@payload.row.frequency',
                 ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.medication',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.dosage',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.frequency',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.patientName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.prescribedBy',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.startDate',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.endDate',
-                    '',
-                  ],
-                  [
-                    'fetch',
-                    'Prescription',
-                    {
-                      'emit': {
-                        'success': 'PrescriptionLoaded',
-                        'failure': 'PrescriptionLoadFailed',
+                [
+                  'set',
+                  '@entity.patientName',
+                  '@payload.row.patientName',
+                ],
+                [
+                  'set',
+                  '@entity.prescribedBy',
+                  '@payload.row.prescribedBy',
+                ],
+                [
+                  'set',
+                  '@entity.startDate',
+                  '@payload.row.startDate',
+                ],
+                [
+                  'set',
+                  '@entity.endDate',
+                  '@payload.row.endDate',
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'pill',
+                          },
+                          {
+                            'content': '@entity.medication',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
                       },
-                    },
-                  ],
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'gap': 'md',
+                        'cols': 3,
+                        'children': [
+                          {
+                            'gap': 'xs',
+                            'type': 'stack',
+                            'direction': 'vertical',
+                            'children': [
+                              {
+                                'content': 'Drug',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h4',
+                                'content': '@entity.medication',
+                              },
+                            ],
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'content': 'Dose',
+                                'variant': 'caption',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h4',
+                                'content': '@entity.dosage',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'type': 'stack',
+                            'gap': 'xs',
+                          },
+                          {
+                            'direction': 'vertical',
+                            'children': [
+                              {
+                                'content': 'Frequency',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'content': '@entity.frequency',
+                                'type': 'typography',
+                                'variant': 'h4',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'xs',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Patient',
+                          },
+                          {
+                            'content': '@entity.patientName',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'content': 'Prescribed By',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.prescribedBy',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Start',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.startDate',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'End',
+                          },
+                          {
+                            'content': '@entity.endDate',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'action': 'CLOSE',
+                            'label': 'Close',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'VIEW',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.medication',
-                    '@payload.row.medication',
-                  ],
-                  [
-                    'set',
-                    '@entity.dosage',
-                    '@payload.row.dosage',
-                  ],
-                  [
-                    'set',
-                    '@entity.frequency',
-                    '@payload.row.frequency',
-                  ],
-                  [
-                    'set',
-                    '@entity.patientName',
-                    '@payload.row.patientName',
-                  ],
-                  [
-                    'set',
-                    '@entity.prescribedBy',
-                    '@payload.row.prescribedBy',
-                  ],
-                  [
-                    'set',
-                    '@entity.startDate',
-                    '@payload.row.startDate',
-                  ],
-                  [
-                    'set',
-                    '@entity.endDate',
-                    '@payload.row.endDate',
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'pill',
-                            },
-                            {
-                              'content': '@entity.medication',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'gap': 'md',
-                          'cols': 3,
-                          'children': [
-                            {
-                              'gap': 'xs',
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'children': [
-                                {
-                                  'content': 'Drug',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                  'content': '@entity.medication',
-                                },
-                              ],
-                            },
-                            {
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'content': 'Dose',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                  'content': '@entity.dosage',
-                                },
-                              ],
-                              'direction': 'vertical',
-                              'type': 'stack',
-                              'gap': 'xs',
-                            },
-                            {
-                              'direction': 'vertical',
-                              'children': [
-                                {
-                                  'content': 'Frequency',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'content': '@entity.frequency',
-                                  'type': 'typography',
-                                  'variant': 'h4',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'xs',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'caption',
-                              'type': 'typography',
-                              'content': 'Patient',
-                            },
-                            {
-                              'content': '@entity.patientName',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'content': 'Prescribed By',
-                              'type': 'typography',
-                              'variant': 'caption',
-                            },
-                            {
-                              'content': '@entity.prescribedBy',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Start',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'body',
-                              'content': '@entity.startDate',
-                            },
-                          ],
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'End',
-                            },
-                            {
-                              'content': '@entity.endDate',
-                              'type': 'typography',
-                              'variant': 'body',
-                            },
-                          ],
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'justify': 'end',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'action': 'CLOSE',
-                              'label': 'Close',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                        },
-                      ],
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'PrescriptionDelete',
-          'linkedEntity': 'Prescription',
-          'config': {
-            'confirmLabel': 'Delete',
-            'title': 'Delete Prescription',
-            'alertMessage': 'This action cannot be undone.',
-            'icon': 'alert-triangle',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'PRESCRIPTION_DELETED',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'PrescriptionPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Prescription',
-          'emits': [
-            {
-              'event': 'PRESCRIPTION_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
               ],
             },
             {
-              'event': 'PRESCRIPTION_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-              ],
-            },
-            {
-              'event': 'PRESCRIPTION_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
               ],
             },
           ],
-          'listens': [
-            {
-              'event': 'PRESCRIPTION_CREATED',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionCreate',
-              },
-            },
-            {
-              'event': 'PRESCRIPTION_UPDATED',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionEdit',
-              },
-            },
-            {
-              'event': 'PRESCRIPTION_DELETED',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PrescriptionDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Prescription',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Prescription',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'PRESCRIPTION_CREATED',
-                'name': 'Prescription Created',
-              },
-              {
-                'key': 'PRESCRIPTION_UPDATED',
-                'name': 'Prescription Updated',
-              },
-              {
-                'key': 'PRESCRIPTION_DELETED',
-                'name': 'Prescription Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Prescription',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PRESCRIPTION_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Prescription',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PRESCRIPTION_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Prescription',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'PRESCRIPTION_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'PrescriptionsPage',
-          'path': '/prescriptions',
-          'traits': [
-            {
-              'ref': 'PrescriptionAppLayout',
-            },
-            {
-              'ref': 'PrescriptionCatalog',
-            },
-            {
-              'ref': 'PrescriptionBrowseList',
-            },
-            {
-              'ref': 'PrescriptionCreate',
-            },
-            {
-              'ref': 'PrescriptionEdit',
-            },
-            {
-              'ref': 'PrescriptionView',
-            },
-            {
-              'ref': 'PrescriptionDelete',
-            },
-            {
-              'ref': 'PrescriptionPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'DashboardOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-      ],
-      entity: {
-        'name': 'DashboardSummary',
-        'persistence': 'runtime',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'PrescriptionDelete',
+        'linkedEntity': 'Prescription',
+        'config': {
+          'confirmLabel': 'Delete',
+          'title': 'Delete Prescription',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'PRESCRIPTION_DELETED',
+        },
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionBrowseList',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'DashboardAppLayout',
-          'linkedEntity': 'DashboardSummary',
-          'config': {
-            'searchEvent': 'DASHBOARD_SEARCH',
-            'topBarActions': [],
-            'contentTrait': '@trait.DashboardDisplay',
-            'notifications': [],
-            'notificationClickEvent': 'DASHBOARD_NOTIFICATIONS_OPEN',
-            'appName': 'HealthcareApp',
-            'navItems': [
+      }),
+      {
+        'name': 'PrescriptionPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Prescription',
+        'emits': [
+          {
+            'event': 'PRESCRIPTION_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'label': 'Patients',
-                'href': '/patients',
-                'icon': 'user-plus',
-              },
-              {
-                'label': 'Appointments',
-                'href': '/appointments',
-                'icon': 'calendar',
-              },
-              {
-                'icon': 'layout-list',
-                'href': '/intake',
-                'label': 'Intake',
-              },
-              {
-                'label': 'Prescriptions',
-                'href': '/prescriptions',
-                'icon': 'pill',
-              },
-              {
-                'label': 'Dashboard',
-                'icon': 'layout-dashboard',
-                'href': '/dashboard',
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
             ],
           },
-          'events': {
-            'NOTIFY_CLICK': 'DASHBOARD_NOTIFICATIONS_OPEN',
-            'SEARCH': 'DASHBOARD_SEARCH',
-          },
-        }),
-        {
-          'name': 'DashboardDisplay',
-          'category': 'interaction',
-          'linkedEntity': 'DashboardSummary',
-          'stateMachine': {
-            'states': [
+          {
+            'event': 'PRESCRIPTION_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'name': 'activity',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h2',
-                              'content': 'Clinic Dashboard',
-                              'type': 'typography',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'content': 'Quick Links',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                            {
-                              'type': 'breadcrumb',
-                              'items': [
-                                {
-                                  'label': 'Patients',
-                                  'href': '/patients',
-                                },
-                                {
-                                  'label': 'Appointments',
-                                  'href': '/appointments',
-                                },
-                                {
-                                  'href': '/prescriptions',
-                                  'label': 'Prescriptions',
-                                },
-                              ],
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Patient stats, graphs, and the appointment calendar live on their respective pages.',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'type': 'typography',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'DashboardPage',
-          'path': '/dashboard',
-          'traits': [
-            {
-              'ref': 'DashboardAppLayout',
+          {
+            'event': 'PRESCRIPTION_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PRESCRIPTION_CREATED',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionCreate',
             },
+          },
+          {
+            'event': 'PRESCRIPTION_UPDATED',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionEdit',
+            },
+          },
+          {
+            'event': 'PRESCRIPTION_DELETED',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PrescriptionDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'DashboardDisplay',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Prescription',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Prescription',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'PRESCRIPTION_CREATED',
+              'name': 'Prescription Created',
+            },
+            {
+              'key': 'PRESCRIPTION_UPDATED',
+              'name': 'Prescription Updated',
+            },
+            {
+              'key': 'PRESCRIPTION_DELETED',
+              'name': 'Prescription Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Prescription',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PRESCRIPTION_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Prescription',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PRESCRIPTION_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Prescription',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'PRESCRIPTION_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'PrescriptionsPage',
+        'path': '/prescriptions',
+        'traits': [
+          {
+            'ref': 'PrescriptionAppLayout',
+          },
+          {
+            'ref': 'PrescriptionCatalog',
+          },
+          {
+            'ref': 'PrescriptionBrowseList',
+          },
+          {
+            'ref': 'PrescriptionCreate',
+          },
+          {
+            'ref': 'PrescriptionEdit',
+          },
+          {
+            'ref': 'PrescriptionView',
+          },
+          {
+            'ref': 'PrescriptionDelete',
+          },
+          {
+            'ref': 'PrescriptionPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the DashboardOrbital orbital.
+ *
+ * Canonical entity: DashboardSummary.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdHealthcareDashboardOrbitalParams {
+  /** Override the canonical entity name (default: 'DashboardSummary'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the DashboardOrbital orbital with consumer params. */
+export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'DashboardSummary';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'DashboardOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DashboardAppLayout',
+        'linkedEntity': 'DashboardSummary',
+        'config': {
+          'searchEvent': 'DASHBOARD_SEARCH',
+          'topBarActions': [],
+          'contentTrait': '@trait.DashboardDisplay',
+          'notifications': [],
+          'notificationClickEvent': 'DASHBOARD_NOTIFICATIONS_OPEN',
+          'appName': 'HealthcareApp',
+          'navItems': [
+            {
+              'label': 'Patients',
+              'href': '/patients',
+              'icon': 'user-plus',
+            },
+            {
+              'label': 'Appointments',
+              'href': '/appointments',
+              'icon': 'calendar',
+            },
+            {
+              'icon': 'layout-list',
+              'href': '/intake',
+              'label': 'Intake',
+            },
+            {
+              'label': 'Prescriptions',
+              'href': '/prescriptions',
+              'icon': 'pill',
+            },
+            {
+              'label': 'Dashboard',
+              'icon': 'layout-dashboard',
+              'href': '/dashboard',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'DASHBOARD_NOTIFICATIONS_OPEN',
+          'SEARCH': 'DASHBOARD_SEARCH',
+        },
+      }),
+      {
+        'name': 'DashboardDisplay',
+        'category': 'interaction',
+        'linkedEntity': 'DashboardSummary',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'activity',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Clinic Dashboard',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Quick Links',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                          {
+                            'type': 'breadcrumb',
+                            'items': [
+                              {
+                                'label': 'Patients',
+                                'href': '/patients',
+                              },
+                              {
+                                'label': 'Appointments',
+                                'href': '/appointments',
+                              },
+                              {
+                                'href': '/prescriptions',
+                                'label': 'Prescriptions',
+                              },
+                            ],
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Patient stats, graphs, and the appointment calendar live on their respective pages.',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'DashboardPage',
+        'path': '/dashboard',
+        'traits': [
+          {
+            'ref': 'DashboardAppLayout',
+          },
+          {
+            'ref': 'DashboardDisplay',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-healthcare — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdHealthcareParams {
+  Patient?: StdHealthcarePatientOrbitalParams;
+  Appointment?: StdHealthcareAppointmentOrbitalParams;
+  IntakeForm?: StdHealthcareIntakeFormOrbitalParams;
+  Prescription?: StdHealthcarePrescriptionOrbitalParams;
+  Dashboard?: StdHealthcareDashboardOrbitalParams;
+}
+
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
+export function stdHealthcare(params: StdHealthcareParams = {}): OrbitalDefinition[] {
+  return [
+    stdHealthcarePatientOrbital(params.Patient ?? {}),
+    stdHealthcareAppointmentOrbital(params.Appointment ?? {}),
+    stdHealthcareIntakeFormOrbital(params.IntakeForm ?? {}),
+    stdHealthcarePrescriptionOrbital(params.Prescription ?? {}),
+    stdHealthcareDashboardOrbital(params.Dashboard ?? {}),
+  ];
 }

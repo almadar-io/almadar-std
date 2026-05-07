@@ -34,1896 +34,1840 @@ export interface StdTradingDashboardConfig {
 }
 
 /**
- * Params for the std-trading-dashboard descriptor helpers.
+ * Tunable params for the PortfolioOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Portfolio.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdTradingDashboardParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdTradingDashboardPortfolioOrbitalParams {
+  /** Override the canonical entity name (default: 'Portfolio'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdTradingDashboardConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `TradingDashboard.traits.PortfolioAppLayout`. */
-export function stdTradingDashboardPortfolioAppLayoutTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the PortfolioOrbital orbital with consumer params. */
+export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardPortfolioOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Portfolio';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'PortfolioOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'portfolios',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'symbol',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'qty',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'avgCost',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'marketValue',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'dailyPnl',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PortfolioAppLayout',
+        'config': {
+          'appName': 'Trading Dashboard',
+          'searchEvent': 'PORTFOLIO_SEARCH',
+          'navItems': [
+            {
+              'href': '/portfolio',
+              'label': 'Portfolio',
+              'icon': 'layout-list',
+            },
+            {
+              'href': '/orders',
+              'label': 'Orders',
+              'icon': 'clipboard-list',
+            },
+            {
+              'label': 'Market',
+              'icon': 'activity',
+              'href': '/market',
+            },
+          ],
+          'notifications': [],
+          'contentTrait': '@trait.PortfolioCatalog',
+          'notificationClickEvent': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'PORTFOLIO_SEARCH',
+          'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'PortfolioCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PORTFOLIO_SEARCH',
+            'triggers': 'PORTFOLIO_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioAppLayout',
+            },
+          },
+          {
+            'event': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+            'triggers': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PORTFOLIO_SEARCH',
+              'name': 'Portfolio Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+              'name': 'Portfolio Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'trending-up',
+                              },
+                              {
+                                'content': 'Portfolio',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'Add Position',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          '@trait.PortfolioSearch',
+                          '@trait.PortfolioFilter',
+                        ],
+                      },
+                      '@trait.PortfolioStats',
+                      '@trait.PortfolioGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.PortfolioBrowseList',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PORTFOLIO_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'label': 'Back to portfolio',
+                        'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'PortfolioSearch',
+        'config': {
+          'event': 'PORTFOLIO_SEARCH',
+          'placeholder': 'Search positions…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'PortfolioFilter',
+        'config': {
+          'event': 'PORTFOLIO_FILTER',
+          'filters': [
+            {
+              'field': 'symbol',
+              'label': 'Symbol',
+              'filterType': 'text',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'PortfolioStats',
+        'config': {
+          'metrics': [
+            {
+              'aggregation': 'sum',
+              'field': 'marketValue',
+              'icon': 'dollar-sign',
+              'format': 'currency',
+              'label': 'Total Value',
+              'variant': 'primary',
+            },
+            {
+              'format': 'currency',
+              'label': 'Daily PnL',
+              'field': 'dailyPnl',
+              'variant': 'success',
+              'aggregation': 'sum',
+              'icon': 'trending-up',
+            },
+            {
+              'aggregation': 'count',
+              'icon': 'layout-list',
+              'variant': 'info',
+              'format': 'number',
+              'label': 'Positions',
+            },
+            {
+              'variant': 'success',
+              'format': 'number',
+              'label': 'Winners',
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '>',
+                  '@row.dailyPnl',
+                  0,
+                ],
+              ],
+              'icon': 'check-circle',
+            },
+          ],
+          'title': 'Portfolio',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'PortfolioGraphs',
+        'config': {
+          'valueField': 'dailyPnl',
+          'categoryField': 'symbol',
+          'title': 'Daily PnL',
+          'showLegend': false,
+          'chartType': 'line',
+          'subtitle': 'Profit and loss across positions',
+          'aggregation': 'sum',
+          'height': 240,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'PortfolioBrowseList',
+        'linkedEntity': 'Portfolio',
+        'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
+          'fields': [
+            {
+              'name': 'symbol',
+              'variant': 'h3',
+              'icon': 'trending-up',
+            },
+            {
+              'name': 'qty',
+              'label': 'Qty',
+              'variant': 'body',
+              'format': 'number',
+            },
+            {
+              'format': 'currency',
+              'variant': 'body',
+              'label': 'Avg Cost',
+              'name': 'avgCost',
+            },
+            {
+              'variant': 'h4',
+              'name': 'marketValue',
+              'format': 'currency',
+              'label': 'Market Value',
+            },
+            {
+              'label': 'Daily PnL',
+              'format': 'currency',
+              'name': 'dailyPnl',
+              'variant': 'badge',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioFilter',
+            },
+          },
+          {
+            'event': 'PORTFOLIO_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioPersistor',
+            },
+          },
+          {
+            'event': 'PORTFOLIO_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioPersistor',
+            },
+          },
+          {
+            'event': 'PORTFOLIO_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PortfolioCreate',
+        'linkedEntity': 'Portfolio',
+        'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'symbol',
+            'qty',
+            'avgCost',
+            'marketValue',
+            'dailyPnl',
+          ],
+          'title': 'Add Position',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PortfolioEdit',
+        'linkedEntity': 'Portfolio',
+        'config': {
+          'fields': [
+            'symbol',
+            'qty',
+            'avgCost',
+            'marketValue',
+            'dailyPnl',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Position',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PortfolioView',
+        'linkedEntity': 'Portfolio',
+        'config': {
+          'title': 'View Position',
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'symbol',
+            'qty',
+            'avgCost',
+            'marketValue',
+            'dailyPnl',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'PortfolioDelete',
+        'linkedEntity': 'Portfolio',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Close',
+          'icon': 'alert-triangle',
+          'title': 'Close Position',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'PortfolioPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Portfolio',
+        'emits': [
+          {
+            'event': 'PORTFOLIO_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PORTFOLIO_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PORTFOLIO_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PortfolioDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PORTFOLIO_CREATED',
+              'name': 'Portfolio Created',
+            },
+            {
+              'key': 'PORTFOLIO_UPDATED',
+              'name': 'Portfolio Updated',
+            },
+            {
+              'key': 'PORTFOLIO_DELETED',
+              'name': 'Portfolio Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Portfolio',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PORTFOLIO_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Portfolio',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PORTFOLIO_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Portfolio',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'PORTFOLIO_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'PortfolioPage',
+        'path': '/portfolio',
+        'traits': [
+          {
+            'ref': 'PortfolioAppLayout',
+          },
+          {
+            'ref': 'PortfolioCatalog',
+          },
+          {
+            'ref': 'PortfolioSearch',
+          },
+          {
+            'ref': 'PortfolioFilter',
+          },
+          {
+            'ref': 'PortfolioStats',
+          },
+          {
+            'ref': 'PortfolioGraphs',
+          },
+          {
+            'ref': 'PortfolioBrowseList',
+          },
+          {
+            'ref': 'PortfolioCreate',
+          },
+          {
+            'ref': 'PortfolioEdit',
+          },
+          {
+            'ref': 'PortfolioView',
+          },
+          {
+            'ref': 'PortfolioDelete',
+          },
+          {
+            'ref': 'PortfolioPersistor',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioCatalog`. */
-export function stdTradingDashboardPortfolioCatalogTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioSearch`. */
-export function stdTradingDashboardPortfolioSearchTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioFilter`. */
-export function stdTradingDashboardPortfolioFilterTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioStats`. */
-export function stdTradingDashboardPortfolioStatsTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioGraphs`. */
-export function stdTradingDashboardPortfolioGraphsTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioBrowseList`. */
-export function stdTradingDashboardPortfolioBrowseListTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioCreate`. */
-export function stdTradingDashboardPortfolioCreateTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioEdit`. */
-export function stdTradingDashboardPortfolioEditTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioView`. */
-export function stdTradingDashboardPortfolioViewTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioDelete`. */
-export function stdTradingDashboardPortfolioDeleteTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TradingDashboard.traits.PortfolioPersistor`. */
-export function stdTradingDashboardPortfolioPersistorTrait(params: StdTradingDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PortfolioPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `TradingDashboard.pages.PortfolioPage`. */
-export function stdTradingDashboardPage(params: StdTradingDashboardParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.PortfolioPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Portfolio';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'PortfolioOrbital',
-      uses: [
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the TradeOrderOrbital orbital.
+ *
+ * Canonical entity: TradeOrder.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdTradingDashboardTradeOrderOrbitalParams {
+  /** Override the canonical entity name (default: 'TradeOrder'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the TradeOrderOrbital orbital with consumer params. */
+export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboardTradeOrderOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'TradeOrder';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'TradeOrderOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'tradeorders',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'symbol',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'side',
+          'type': 'string',
+          'default': 'buy',
+          'values': [
+            'buy',
+            'sell',
+          ],
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'quantity',
+          'type': 'number',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'price',
+          'type': 'number',
+          'default': 0,
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'filled',
+            'cancelled',
+          ],
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Portfolio',
-        'collection': 'portfolios',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TradeOrderAppLayout',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Trading Dashboard',
+          'contentTrait': '@trait.TradeOrderCatalog',
+          'navItems': [
+            {
+              'href': '/portfolio',
+              'icon': 'layout-list',
+              'label': 'Portfolio',
+            },
+            {
+              'icon': 'clipboard-list',
+              'href': '/orders',
+              'label': 'Orders',
+            },
+            {
+              'icon': 'activity',
+              'href': '/market',
+              'label': 'Market',
+            },
+          ],
+          'searchEvent': 'TRADE_ORDER_SEARCH',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TRADE_ORDER_SEARCH',
+        },
+      }),
+      {
+        'name': 'TradeOrderCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'symbol',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'qty',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'avgCost',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'marketValue',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'dailyPnl',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'PortfolioAppLayout',
-          'config': {
-            'appName': 'Trading Dashboard',
-            'searchEvent': 'PORTFOLIO_SEARCH',
-            'navItems': [
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'href': '/portfolio',
-                'label': 'Portfolio',
-                'icon': 'layout-list',
-              },
-              {
-                'href': '/orders',
-                'label': 'Orders',
-                'icon': 'clipboard-list',
-              },
-              {
-                'label': 'Market',
-                'icon': 'activity',
-                'href': '/market',
+                'name': 'source',
+                'type': 'string',
               },
             ],
-            'notifications': [],
-            'contentTrait': '@trait.PortfolioCatalog',
-            'notificationClickEvent': 'PORTFOLIO_NOTIFICATIONS_OPEN',
           },
-          'events': {
-            'SEARCH': 'PORTFOLIO_SEARCH',
-            'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'PortfolioCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'clipboard-list',
+                              },
+                              {
+                                'content': 'Trade Orders',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'type': 'button',
+                                'label': 'New Order',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TradeOrderBrowseList',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
               ],
             },
           ],
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'TradeOrderBrowseList',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'itemActions': [
             {
-              'event': 'PORTFOLIO_SEARCH',
-              'triggers': 'PORTFOLIO_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioAppLayout',
-              },
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
             },
-            {
-              'event': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-              'triggers': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'PORTFOLIO_SEARCH',
-                'name': 'Portfolio Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-                'name': 'Portfolio Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'justify': 'between',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'trending-up',
-                                },
-                                {
-                                  'content': 'Portfolio',
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                            },
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'label': 'Add Position',
-                                  'type': 'button',
-                                  'icon': 'plus',
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'direction': 'horizontal',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            '@trait.PortfolioSearch',
-                            '@trait.PortfolioFilter',
-                          ],
-                        },
-                        '@trait.PortfolioStats',
-                        '@trait.PortfolioGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.PortfolioBrowseList',
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PORTFOLIO_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'label': 'Back to portfolio',
-                          'type': 'button',
-                          'action': 'INIT',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'className': 'py-8',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'PortfolioSearch',
-          'config': {
-            'event': 'PORTFOLIO_SEARCH',
-            'placeholder': 'Search positions…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'PortfolioFilter',
-          'config': {
-            'event': 'PORTFOLIO_FILTER',
-            'filters': [
-              {
-                'field': 'symbol',
-                'label': 'Symbol',
-                'filterType': 'text',
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'PortfolioStats',
-          'config': {
-            'metrics': [
-              {
-                'aggregation': 'sum',
-                'field': 'marketValue',
-                'icon': 'dollar-sign',
-                'format': 'currency',
-                'label': 'Total Value',
-                'variant': 'primary',
-              },
-              {
-                'format': 'currency',
-                'label': 'Daily PnL',
-                'field': 'dailyPnl',
-                'variant': 'success',
-                'aggregation': 'sum',
-                'icon': 'trending-up',
-              },
-              {
-                'aggregation': 'count',
-                'icon': 'layout-list',
-                'variant': 'info',
-                'format': 'number',
-                'label': 'Positions',
-              },
-              {
-                'variant': 'success',
-                'format': 'number',
-                'label': 'Winners',
-                'aggregation': 'count',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '>',
-                    '@row.dailyPnl',
-                    0,
-                  ],
-                ],
-                'icon': 'check-circle',
-              },
-            ],
-            'title': 'Portfolio',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'PortfolioGraphs',
-          'config': {
-            'valueField': 'dailyPnl',
-            'categoryField': 'symbol',
-            'title': 'Daily PnL',
-            'showLegend': false,
-            'chartType': 'line',
-            'subtitle': 'Profit and loss across positions',
-            'aggregation': 'sum',
-            'height': 240,
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'PortfolioBrowseList',
-          'linkedEntity': 'Portfolio',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Edit',
-                'variant': 'ghost',
-                'event': 'EDIT',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'cols': 1,
-            'gap': 'sm',
-            'fields': [
-              {
-                'name': 'symbol',
-                'variant': 'h3',
-                'icon': 'trending-up',
-              },
-              {
-                'name': 'qty',
-                'label': 'Qty',
-                'variant': 'body',
-                'format': 'number',
-              },
-              {
-                'format': 'currency',
-                'variant': 'body',
-                'label': 'Avg Cost',
-                'name': 'avgCost',
-              },
-              {
-                'variant': 'h4',
-                'name': 'marketValue',
-                'format': 'currency',
-                'label': 'Market Value',
-              },
-              {
-                'label': 'Daily PnL',
-                'format': 'currency',
-                'name': 'dailyPnl',
-                'variant': 'badge',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioFilter',
-              },
-            },
-            {
-              'event': 'PORTFOLIO_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioPersistor',
-              },
-            },
-            {
-              'event': 'PORTFOLIO_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioPersistor',
-              },
-            },
-            {
-              'event': 'PORTFOLIO_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PortfolioCreate',
-          'linkedEntity': 'Portfolio',
-          'config': {
-            'icon': 'plus-circle',
-            'mode': 'create',
-            'fields': [
-              'symbol',
-              'qty',
-              'avgCost',
-              'marketValue',
-              'dailyPnl',
-            ],
-            'title': 'Add Position',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PortfolioEdit',
-          'linkedEntity': 'Portfolio',
-          'config': {
-            'fields': [
-              'symbol',
-              'qty',
-              'avgCost',
-              'marketValue',
-              'dailyPnl',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Position',
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'Edit',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'PortfolioView',
-          'linkedEntity': 'Portfolio',
-          'config': {
-            'title': 'View Position',
-            'icon': 'eye',
-            'mode': 'edit',
-            'fields': [
-              'symbol',
-              'qty',
-              'avgCost',
-              'marketValue',
-              'dailyPnl',
-            ],
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
             {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'PortfolioDelete',
-          'linkedEntity': 'Portfolio',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'confirmLabel': 'Close',
-            'icon': 'alert-triangle',
-            'title': 'Close Position',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
+              'label': 'Cancel',
+              'variant': 'danger',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioBrowseList',
-              },
             },
           ],
-        }),
-        {
-          'name': 'PortfolioPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Portfolio',
-          'emits': [
+          'cols': 1,
+          'fields': [
             {
-              'event': 'PORTFOLIO_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'name': 'symbol',
+              'variant': 'h3',
+              'icon': 'trending-up',
             },
             {
-              'event': 'PORTFOLIO_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'badge',
+              'name': 'side',
             },
             {
-              'event': 'PORTFOLIO_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+              'variant': 'body',
+              'name': 'quantity',
+              'format': 'number',
+            },
+            {
+              'name': 'price',
+              'variant': 'h4',
+              'format': 'currency',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'PortfolioDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'PORTFOLIO_CREATED',
-                'name': 'Portfolio Created',
-              },
-              {
-                'key': 'PORTFOLIO_UPDATED',
-                'name': 'Portfolio Updated',
-              },
-              {
-                'key': 'PORTFOLIO_DELETED',
-                'name': 'Portfolio Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Portfolio',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PORTFOLIO_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Portfolio',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'PORTFOLIO_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Portfolio',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'PORTFOLIO_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'PortfolioPage',
-          'path': '/portfolio',
-          'traits': [
-            {
-              'ref': 'PortfolioAppLayout',
-            },
-            {
-              'ref': 'PortfolioCatalog',
-            },
-            {
-              'ref': 'PortfolioSearch',
-            },
-            {
-              'ref': 'PortfolioFilter',
-            },
-            {
-              'ref': 'PortfolioStats',
-            },
-            {
-              'ref': 'PortfolioGraphs',
-            },
-            {
-              'ref': 'PortfolioBrowseList',
-            },
-            {
-              'ref': 'PortfolioCreate',
-            },
-            {
-              'ref': 'PortfolioEdit',
-            },
-            {
-              'ref': 'PortfolioView',
-            },
-            {
-              'ref': 'PortfolioDelete',
-            },
-            {
-              'ref': 'PortfolioPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'TradeOrderOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'gap': 'sm',
         },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'TradeOrder',
-        'collection': 'tradeorders',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'TRADE_ORDER_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderPersistor',
+            },
           },
           {
-            'name': 'symbol',
-            'type': 'string',
-            'required': true,
+            'event': 'TRADE_ORDER_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderPersistor',
+            },
           },
           {
-            'name': 'side',
-            'type': 'string',
-            'default': 'buy',
-            'values': [
-              'buy',
-              'sell',
-            ],
-          },
-          {
-            'name': 'quantity',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'price',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'filled',
-              'cancelled',
-            ],
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'TRADE_ORDER_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'TradeOrderAppLayout',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
-            'notifications': [],
-            'appName': 'Trading Dashboard',
-            'contentTrait': '@trait.TradeOrderCatalog',
-            'navItems': [
-              {
-                'href': '/portfolio',
-                'icon': 'layout-list',
-                'label': 'Portfolio',
-              },
-              {
-                'icon': 'clipboard-list',
-                'href': '/orders',
-                'label': 'Orders',
-              },
-              {
-                'icon': 'activity',
-                'href': '/market',
-                'label': 'Market',
-              },
-            ],
-            'searchEvent': 'TRADE_ORDER_SEARCH',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
-            'SEARCH': 'TRADE_ORDER_SEARCH',
-          },
-        }),
-        {
-          'name': 'TradeOrderCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TradeOrderCreate',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'icon': 'plus-circle',
+          'title': 'New Order',
+          'fields': [
+            'symbol',
+            'side',
+            'quantity',
+            'price',
+            'status',
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'clipboard-list',
-                                },
-                                {
-                                  'content': 'Trade Orders',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                  'type': 'button',
-                                  'label': 'New Order',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.TradeOrderBrowseList',
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'TradeOrderBrowseList',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Cancel',
-                'variant': 'danger',
-                'event': 'DELETE',
-              },
-            ],
-            'cols': 1,
-            'fields': [
-              {
-                'name': 'symbol',
-                'variant': 'h3',
-                'icon': 'trending-up',
-              },
-              {
-                'variant': 'badge',
-                'name': 'side',
-              },
-              {
-                'variant': 'body',
-                'name': 'quantity',
-                'format': 'number',
-              },
-              {
-                'name': 'price',
-                'variant': 'h4',
-                'format': 'currency',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-            ],
-            'gap': 'sm',
-          },
-          'listens': [
-            {
-              'event': 'TRADE_ORDER_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderPersistor',
-              },
-            },
-            {
-              'event': 'TRADE_ORDER_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderPersistor',
-              },
-            },
-            {
-              'event': 'TRADE_ORDER_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderPersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TradeOrderCreate',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'icon': 'plus-circle',
-            'title': 'New Order',
-            'fields': [
-              'symbol',
-              'side',
-              'quantity',
-              'price',
-              'status',
-            ],
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TradeOrderEdit',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'icon': 'edit',
-            'mode': 'edit',
-            'title': 'Edit Order',
-            'fields': [
-              'symbol',
-              'side',
-              'quantity',
-              'price',
-              'status',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'TradeOrderView',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'mode': 'edit',
-            'icon': 'eye',
-            'fields': [
-              'symbol',
-              'side',
-              'quantity',
-              'price',
-              'status',
-            ],
-            'title': 'View Order',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'TradeOrderDelete',
-          'linkedEntity': 'TradeOrder',
-          'config': {
-            'icon': 'alert-triangle',
-            'title': 'Cancel Order',
-            'confirmLabel': 'Cancel Order',
-            'alertMessage': 'Cancel this pending order?',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'TradeOrderPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'TradeOrder',
-          'emits': [
-            {
-              'event': 'TRADE_ORDER_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TRADE_ORDER_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'TRADE_ORDER_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'TradeOrderDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TRADE_ORDER_CREATED',
-                'name': 'Trade Order Created',
-              },
-              {
-                'key': 'TRADE_ORDER_UPDATED',
-                'name': 'Trade Order Updated',
-              },
-              {
-                'key': 'TRADE_ORDER_DELETED',
-                'name': 'Trade Order Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'TradeOrder',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TRADE_ORDER_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'TradeOrder',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'TRADE_ORDER_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'TradeOrder',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'TRADE_ORDER_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Orders',
-          'path': '/orders',
-          'traits': [
-            {
-              'ref': 'TradeOrderAppLayout',
-            },
-            {
-              'ref': 'TradeOrderCatalog',
-            },
-            {
-              'ref': 'TradeOrderBrowseList',
-            },
-            {
-              'ref': 'TradeOrderCreate',
-            },
-            {
-              'ref': 'TradeOrderEdit',
-            },
-            {
-              'ref': 'TradeOrderView',
-            },
-            {
-              'ref': 'TradeOrderDelete',
-            },
-            {
-              'ref': 'TradeOrderPersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'MarketFeedOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'mode': 'create',
         },
-        {
-          'from': 'std/behaviors/std-selection',
-          'as': 'Selection',
+        'events': {
+          'OPEN': 'CREATE',
         },
-      ],
-      entity: {
-        'name': 'MarketFeed',
-        'persistence': 'runtime',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'symbol',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'price',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'change',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'volume',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'dailyPnl',
-            'type': 'number',
-            'default': 0,
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderCatalog',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'MarketFeedAppLayout',
-          'linkedEntity': 'MarketFeed',
-          'config': {
-            'searchEvent': 'MARKET_FEED_SEARCH',
-            'contentTrait': '@trait.MarketFeedDisplay',
-            'notificationClickEvent': 'MARKET_FEED_NOTIFICATIONS_OPEN',
-            'navItems': [
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TradeOrderEdit',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Order',
+          'fields': [
+            'symbol',
+            'side',
+            'quantity',
+            'price',
+            'status',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'TradeOrderView',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'mode': 'edit',
+          'icon': 'eye',
+          'fields': [
+            'symbol',
+            'side',
+            'quantity',
+            'price',
+            'status',
+          ],
+          'title': 'View Order',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'TradeOrderDelete',
+        'linkedEntity': 'TradeOrder',
+        'config': {
+          'icon': 'alert-triangle',
+          'title': 'Cancel Order',
+          'confirmLabel': 'Cancel Order',
+          'alertMessage': 'Cancel this pending order?',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'TradeOrderPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'TradeOrder',
+        'emits': [
+          {
+            'event': 'TRADE_ORDER_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'label': 'Portfolio',
-                'href': '/portfolio',
-                'icon': 'layout-list',
-              },
-              {
-                'label': 'Orders',
-                'href': '/orders',
-                'icon': 'clipboard-list',
-              },
-              {
-                'label': 'Market',
-                'href': '/market',
-                'icon': 'activity',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'appName': 'Trading Dashboard',
-            'notifications': [],
           },
-          'events': {
-            'NOTIFY_CLICK': 'MARKET_FEED_NOTIFICATIONS_OPEN',
-            'SEARCH': 'MARKET_FEED_SEARCH',
-          },
-        }),
-        {
-          'name': 'MarketFeedDisplay',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
+          {
+            'event': 'TRADE_ORDER_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        '@trait.MarketFeedAsync',
-                      ],
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Selection.traits.SelectableItemSelection',
-          'name': 'MarketSelection',
-          'linkedEntity': 'MarketFeed',
-          'config': {
-            'multi': true,
+          {
+            'event': 'TRADE_ORDER_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
-        }),
-        {
-          'name': 'MarketFeedAsync',
-          'category': 'interaction',
-          'linkedEntity': 'MarketFeed',
-          'emits': [
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'TradeOrderDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'MarketFeedLoaded',
-              'description': 'Fired when MarketFeed finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'TRADE_ORDER_CREATED',
+              'name': 'Trade Order Created',
+            },
+            {
+              'key': 'TRADE_ORDER_UPDATED',
+              'name': 'Trade Order Updated',
+            },
+            {
+              'key': 'TRADE_ORDER_DELETED',
+              'name': 'Trade Order Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'TradeOrder',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TRADE_ORDER_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'TradeOrder',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'TRADE_ORDER_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'TradeOrder',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'TRADE_ORDER_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Orders',
+        'path': '/orders',
+        'traits': [
+          {
+            'ref': 'TradeOrderAppLayout',
+          },
+          {
+            'ref': 'TradeOrderCatalog',
+          },
+          {
+            'ref': 'TradeOrderBrowseList',
+          },
+          {
+            'ref': 'TradeOrderCreate',
+          },
+          {
+            'ref': 'TradeOrderEdit',
+          },
+          {
+            'ref': 'TradeOrderView',
+          },
+          {
+            'ref': 'TradeOrderDelete',
+          },
+          {
+            'ref': 'TradeOrderPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the MarketFeedOrbital orbital.
+ *
+ * Canonical entity: MarketFeed.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdTradingDashboardMarketFeedOrbitalParams {
+  /** Override the canonical entity name (default: 'MarketFeed'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the MarketFeedOrbital orbital with consumer params. */
+export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboardMarketFeedOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'MarketFeed';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'MarketFeedOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-selection',
+        'as': 'Selection',
+      },
+    ],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'symbol',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'price',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'change',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'volume',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'dailyPnl',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'MarketFeedAppLayout',
+        'linkedEntity': 'MarketFeed',
+        'config': {
+          'searchEvent': 'MARKET_FEED_SEARCH',
+          'contentTrait': '@trait.MarketFeedDisplay',
+          'notificationClickEvent': 'MARKET_FEED_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'label': 'Portfolio',
+              'href': '/portfolio',
+              'icon': 'layout-list',
+            },
+            {
+              'label': 'Orders',
+              'href': '/orders',
+              'icon': 'clipboard-list',
+            },
+            {
+              'label': 'Market',
+              'href': '/market',
+              'icon': 'activity',
+            },
+          ],
+          'appName': 'Trading Dashboard',
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'MARKET_FEED_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MARKET_FEED_SEARCH',
+        },
+      }),
+      {
+        'name': 'MarketFeedDisplay',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      '@trait.MarketFeedAsync',
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Selection.traits.SelectableItemSelection',
+        'name': 'MarketSelection',
+        'linkedEntity': 'MarketFeed',
+        'config': {
+          'multi': true,
+        },
+      }),
+      {
+        'name': 'MarketFeedAsync',
+        'category': 'interaction',
+        'linkedEntity': 'MarketFeed',
+        'emits': [
+          {
+            'event': 'MarketFeedLoaded',
+            'description': 'Fired when MarketFeed finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[MarketFeed]',
+              },
+            ],
+          },
+          {
+            'event': 'MarketFeedLoadFailed',
+            'description': 'Fired when MarketFeed fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MarketFeedSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MarketFeedSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'loading',
+            },
+            {
+              'name': 'success',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'LOADED',
+              'name': 'Loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FAILED',
+              'name': 'Failed',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'RETRY',
+              'name': 'Retry',
+            },
+            {
+              'key': 'MarketFeedLoaded',
+              'name': 'MarketFeed loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1932,9 +1876,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
               ],
             },
             {
-              'event': 'MarketFeedLoadFailed',
-              'description': 'Fired when MarketFeed fails to load',
-              'scope': 'internal',
+              'key': 'MarketFeedLoadFailed',
+              'name': 'MarketFeed load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1947,8 +1890,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
               ],
             },
             {
-              'event': 'MarketFeedSaved',
-              'scope': 'internal',
+              'key': 'MarketFeedSaved',
+              'name': 'MarketFeed saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1957,8 +1900,8 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
               ],
             },
             {
-              'event': 'MarketFeedSaveFailed',
-              'scope': 'internal',
+              'key': 'MarketFeedSaveFailed',
+              'name': 'MarketFeed save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1971,550 +1914,495 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalD
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'loading',
-              },
-              {
-                'name': 'success',
-              },
-              {
-                'name': 'error',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'LOADED',
-                'name': 'Loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'MarketFeed',
                   {
-                    'name': 'data',
-                    'type': 'string',
+                    'emit': {
+                      'failure': 'MarketFeedLoadFailed',
+                      'success': 'MarketFeedLoaded',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'FAILED',
-                'name': 'Failed',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'RETRY',
-                'name': 'Retry',
-              },
-              {
-                'key': 'MarketFeedLoaded',
-                'name': 'MarketFeed loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[MarketFeed]',
-                  },
-                ],
-              },
-              {
-                'key': 'MarketFeedLoadFailed',
-                'name': 'MarketFeed load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MarketFeedSaved',
-                'name': 'MarketFeed saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MarketFeedSaveFailed',
-                'name': 'MarketFeed save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'MarketFeed',
-                    {
-                      'emit': {
-                        'failure': 'MarketFeedLoadFailed',
-                        'success': 'MarketFeedLoaded',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'name': 'activity',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Market Feed',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'name': 'activity',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Market Feed',
-                              'type': 'typography',
-                              'variant': 'h2',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'body',
-                          'color': 'muted',
-                          'content': 'Connect to live market data.',
-                        },
-                        {
-                          'icon': 'play',
-                          'type': 'button',
-                          'action': 'START',
-                          'variant': 'primary',
-                          'label': 'Start Stream',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'loading',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'title': 'Connecting to market feed…',
-                          'message': 'Streaming ticks…',
-                          'type': 'loading-state',
-                        },
-                        {
-                          'type': 'skeleton',
-                          'variant': 'text',
-                        },
-                      ],
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'success',
-                'event': 'LOADED',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'MarketFeed',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'MarketFeedSaved',
-                        'failure': 'MarketFeedSaveFailed',
+                      {
+                        'type': 'divider',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'activity',
-                                },
-                                {
-                                  'content': 'Live Market Feed',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'variant': 'success',
-                                  'message': 'Connected',
-                                  'type': 'alert',
-                                },
-                                {
-                                  'variant': 'ghost',
-                                  'label': 'Reset',
-                                  'icon': 'rotate-ccw',
-                                  'action': 'RESET',
-                                  'type': 'button',
-                                },
-                              ],
-                            },
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'card',
-                          'type': 'data-list',
-                          'fields': [
-                            {
-                              'icon': 'trending-up',
-                              'variant': 'h4',
-                              'name': 'symbol',
-                            },
-                            {
-                              'format': 'currency',
-                              'variant': 'h3',
-                              'name': 'price',
-                            },
-                            {
-                              'format': 'currency',
-                              'name': 'change',
-                              'variant': 'badge',
-                            },
-                            {
-                              'format': 'number',
-                              'variant': 'caption',
-                              'name': 'volume',
-                            },
-                          ],
-                          'entity': '@payload.data',
-                          'gap': 'sm',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'line-chart',
-                          'data': [
-                            {
-                              'value': 100,
-                              'date': '09:30',
-                            },
-                            {
-                              'date': '10:00',
-                              'value': 102,
-                            },
-                            {
-                              'date': '10:30',
-                              'value': 99,
-                            },
-                            {
-                              'date': '11:00',
-                              'value': 105,
-                            },
-                            {
-                              'value': 107,
-                              'date': '11:30',
-                            },
-                            {
-                              'value': 104,
-                              'date': '12:00',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'chart-legend',
-                          'items': [
-                            {
-                              'color': 'primary',
-                              'label': 'Price',
-                            },
-                            {
-                              'color': 'muted',
-                              'label': 'Volume',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': 'Connect to live market data.',
+                      },
+                      {
+                        'icon': 'play',
+                        'type': 'button',
+                        'action': 'START',
+                        'variant': 'primary',
+                        'label': 'Start Stream',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                  },
                 ],
-              },
-              {
-                'from': 'loading',
-                'to': 'error',
-                'event': 'FAILED',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'error-state',
-                          'onRetry': 'RETRY',
-                          'title': 'Stream Disconnected',
-                          'message': 'Market feed disconnected.',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'center',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'icon': 'refresh-cw',
-                              'variant': 'primary',
-                              'label': 'Retry',
-                              'action': 'RETRY',
-                            },
-                            {
-                              'variant': 'ghost',
-                              'action': 'RESET',
-                              'label': 'Reset',
-                              'icon': 'rotate-ccw',
-                              'type': 'button',
-                            },
-                          ],
-                          'gap': 'sm',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'success',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'activity',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Market Feed',
-                              'variant': 'h2',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'body',
-                          'color': 'muted',
-                          'content': 'Connect to live market data.',
-                        },
-                        {
-                          'icon': 'play',
-                          'action': 'START',
-                          'variant': 'primary',
-                          'type': 'button',
-                          'label': 'Start Stream',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'idle',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'activity',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Market Feed',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'body',
-                          'content': 'Connect to live market data.',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'action': 'START',
-                          'variant': 'primary',
-                          'type': 'button',
-                          'label': 'Start Stream',
-                          'icon': 'play',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'error',
-                'to': 'loading',
-                'event': 'RETRY',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'title': 'Connecting to market feed…',
-                          'message': 'Streaming ticks…',
-                          'type': 'loading-state',
-                        },
-                        {
-                          'type': 'skeleton',
-                          'variant': 'text',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Market',
-          'path': '/market',
-          'traits': [
-            {
-              'ref': 'MarketFeedAppLayout',
+              ],
             },
             {
-              'ref': 'MarketFeedDisplay',
+              'from': 'idle',
+              'to': 'loading',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'title': 'Connecting to market feed…',
+                        'message': 'Streaming ticks…',
+                        'type': 'loading-state',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'text',
+                      },
+                    ],
+                    'align': 'center',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'MarketFeedAsync',
+              'from': 'loading',
+              'to': 'success',
+              'event': 'LOADED',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'MarketFeed',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'MarketFeedSaved',
+                      'failure': 'MarketFeedSaveFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'activity',
+                              },
+                              {
+                                'content': 'Live Market Feed',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'success',
+                                'message': 'Connected',
+                                'type': 'alert',
+                              },
+                              {
+                                'variant': 'ghost',
+                                'label': 'Reset',
+                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
+                                'type': 'button',
+                              },
+                            ],
+                          },
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'card',
+                        'type': 'data-list',
+                        'fields': [
+                          {
+                            'icon': 'trending-up',
+                            'variant': 'h4',
+                            'name': 'symbol',
+                          },
+                          {
+                            'format': 'currency',
+                            'variant': 'h3',
+                            'name': 'price',
+                          },
+                          {
+                            'format': 'currency',
+                            'name': 'change',
+                            'variant': 'badge',
+                          },
+                          {
+                            'format': 'number',
+                            'variant': 'caption',
+                            'name': 'volume',
+                          },
+                        ],
+                        'entity': '@payload.data',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'line-chart',
+                        'data': [
+                          {
+                            'value': 100,
+                            'date': '09:30',
+                          },
+                          {
+                            'date': '10:00',
+                            'value': 102,
+                          },
+                          {
+                            'date': '10:30',
+                            'value': 99,
+                          },
+                          {
+                            'date': '11:00',
+                            'value': 105,
+                          },
+                          {
+                            'value': 107,
+                            'date': '11:30',
+                          },
+                          {
+                            'value': 104,
+                            'date': '12:00',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'chart-legend',
+                        'items': [
+                          {
+                            'color': 'primary',
+                            'label': 'Price',
+                          },
+                          {
+                            'color': 'muted',
+                            'label': 'Volume',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
             },
             {
-              'ref': 'MarketSelection',
+              'from': 'loading',
+              'to': 'error',
+              'event': 'FAILED',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'error-state',
+                        'onRetry': 'RETRY',
+                        'title': 'Stream Disconnected',
+                        'message': 'Market feed disconnected.',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'center',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'icon': 'refresh-cw',
+                            'variant': 'primary',
+                            'label': 'Retry',
+                            'action': 'RETRY',
+                          },
+                          {
+                            'variant': 'ghost',
+                            'action': 'RESET',
+                            'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                          },
+                        ],
+                        'gap': 'sm',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'success',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'activity',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Market Feed',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': 'Connect to live market data.',
+                      },
+                      {
+                        'icon': 'play',
+                        'action': 'START',
+                        'variant': 'primary',
+                        'type': 'button',
+                        'label': 'Start Stream',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'idle',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'activity',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Market Feed',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'body',
+                        'content': 'Connect to live market data.',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'action': 'START',
+                        'variant': 'primary',
+                        'type': 'button',
+                        'label': 'Start Stream',
+                        'icon': 'play',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'RETRY',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'title': 'Connecting to market feed…',
+                        'message': 'Streaming ticks…',
+                        'type': 'loading-state',
+                      },
+                      {
+                        'type': 'skeleton',
+                        'variant': 'text',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Market',
+        'path': '/market',
+        'traits': [
+          {
+            'ref': 'MarketFeedAppLayout',
+          },
+          {
+            'ref': 'MarketFeedDisplay',
+          },
+          {
+            'ref': 'MarketFeedAsync',
+          },
+          {
+            'ref': 'MarketSelection',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-trading-dashboard — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdTradingDashboardParams {
+  Portfolio?: StdTradingDashboardPortfolioOrbitalParams;
+  TradeOrder?: StdTradingDashboardTradeOrderOrbitalParams;
+  MarketFeed?: StdTradingDashboardMarketFeedOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdTradingDashboard(params: StdTradingDashboardParams = {}): OrbitalDefinition[] {
+  return [
+    stdTradingDashboardPortfolioOrbital(params.Portfolio ?? {}),
+    stdTradingDashboardTradeOrderOrbital(params.TradeOrder ?? {}),
+    stdTradingDashboardMarketFeedOrbital(params.MarketFeed ?? {}),
+  ];
 }

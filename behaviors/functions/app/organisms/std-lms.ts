@@ -34,1072 +34,867 @@ export interface StdLmsConfig {
 }
 
 /**
- * Params for the std-lms descriptor helpers.
+ * Tunable params for the CourseOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Course.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdLmsParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdLmsCourseOrbitalParams {
+  /** Override the canonical entity name (default: 'Course'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdLmsConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `Lms.traits.CourseAppLayout`. */
-export function stdLmsCourseAppLayoutTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseCatalog`. */
-export function stdLmsCourseCatalogTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseSearch`. */
-export function stdLmsCourseSearchTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseFilter`. */
-export function stdLmsCourseFilterTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseStats`. */
-export function stdLmsCourseStatsTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseGraphs`. */
-export function stdLmsCourseGraphsTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseGallery`. */
-export function stdLmsCourseGalleryTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseGallery`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseCreateModal`. */
-export function stdLmsCourseCreateModalTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseCreateModal`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseEditModal`. */
-export function stdLmsCourseEditModalTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseEditModal`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseDeleteConfirm`. */
-export function stdLmsCourseDeleteConfirmTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseDeleteConfirm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CoursePersistor`. */
-export function stdLmsCoursePersistorTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CoursePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseThumbnailForm`. */
-export function stdLmsCourseThumbnailFormTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseThumbnailForm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseThumbnailUpload`. */
-export function stdLmsCourseThumbnailUploadTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseThumbnailUpload`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseLessonVideo`. */
-export function stdLmsCourseLessonVideoTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseLessonVideo`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Lms.traits.CourseLessonPlayer`. */
-export function stdLmsCourseLessonPlayerTrait(params: StdLmsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CourseLessonPlayer`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Lms.pages.CoursesPage`. */
-export function stdLmsPage(params: StdLmsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.CoursesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'Course';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the CourseOrbital orbital with consumer params. */
+export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Course';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'CourseOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-gallery',
+        'as': 'Gallery',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+      {
+        'from': 'std/behaviors/std-service-youtube',
+        'as': 'YouTube',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'CourseOrbital',
-      uses: [
+      collection: 'courses',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'title',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'description',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'category',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'level',
+          'type': 'string',
+          'default': 'beginner',
+          'values': [
+            'beginner',
+            'intermediate',
+            'advanced',
+          ],
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'duration',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'instructor',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'thumbnail',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-gallery',
-          'as': 'Gallery',
+          'name': 'videoId',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
-        {
-          'from': 'std/behaviors/std-service-youtube',
-          'as': 'YouTube',
-        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Course',
-        'collection': 'courses',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CourseAppLayout',
+        'config': {
+          'appName': 'LMS',
+          'searchEvent': 'COURSE_SEARCH',
+          'navItems': [
+            {
+              'icon': 'graduation-cap',
+              'label': 'Courses',
+              'href': '/courses',
+            },
+            {
+              'label': 'Enroll',
+              'icon': 'user-plus',
+              'href': '/enroll',
+            },
+            {
+              'icon': 'trending-up',
+              'href': '/progress',
+              'label': 'Progress',
+            },
+          ],
+          'contentTrait': '@trait.CourseCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'COURSE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'COURSE_SEARCH',
+          'NOTIFY_CLICK': 'COURSE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'CourseCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'category',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'level',
-            'type': 'string',
-            'default': 'beginner',
-            'values': [
-              'beginner',
-              'intermediate',
-              'advanced',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
           },
           {
-            'name': 'duration',
-            'type': 'string',
-            'default': '',
+            'event': 'EDIT_COURSE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.level',
+                'type': 'string',
+              },
+              {
+                'name': 'row.duration',
+                'type': 'string',
+              },
+              {
+                'name': 'row.instructor',
+                'type': 'string',
+              },
+              {
+                'name': 'row.thumbnail',
+                'type': 'string',
+              },
+              {
+                'name': 'row.videoId',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'instructor',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'thumbnail',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'videoId',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'DELETE_COURSE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.category',
+                'type': 'string',
+              },
+              {
+                'name': 'row.level',
+                'type': 'string',
+              },
+              {
+                'name': 'row.duration',
+                'type': 'string',
+              },
+              {
+                'name': 'row.instructor',
+                'type': 'string',
+              },
+              {
+                'name': 'row.thumbnail',
+                'type': 'string',
+              },
+              {
+                'name': 'row.videoId',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'CourseAppLayout',
-          'config': {
-            'appName': 'LMS',
-            'searchEvent': 'COURSE_SEARCH',
-            'navItems': [
-              {
-                'icon': 'graduation-cap',
-                'label': 'Courses',
-                'href': '/courses',
-              },
-              {
-                'label': 'Enroll',
-                'icon': 'user-plus',
-                'href': '/enroll',
-              },
-              {
-                'icon': 'trending-up',
-                'href': '/progress',
-                'label': 'Progress',
-              },
-            ],
-            'contentTrait': '@trait.CourseCatalog',
-            'notifications': [],
-            'notificationClickEvent': 'COURSE_NOTIFICATIONS_OPEN',
-          },
-          'events': {
-            'SEARCH': 'COURSE_SEARCH',
-            'NOTIFY_CLICK': 'COURSE_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'CourseCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
+        'listens': [
+          {
+            'event': 'COURSE_NOTIFICATIONS_OPEN',
+            'triggers': 'COURSE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseAppLayout',
             },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'EDIT_COURSE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.title',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.level',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.duration',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.instructor',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.thumbnail',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.videoId',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DELETE_COURSE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.title',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.description',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.category',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.level',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.duration',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.instructor',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.thumbnail',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.videoId',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
+              'name': 'composing',
+              'isInitial': true,
             },
           ],
-          'listens': [
+          'events': [
             {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EDIT_COURSE',
+              'name': 'Edit Course',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Course',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE_COURSE',
+              'name': 'Delete Course',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Course',
+                },
+              ],
+            },
+            {
+              'key': 'COURSE_NOTIFICATIONS_OPEN',
+              'name': 'Course Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'graduation-cap',
+                              },
+                              {
+                                'content': 'Courses',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Create Course',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'type': 'button',
+                              },
+                              {
+                                'variant': 'ghost',
+                                'type': 'button',
+                                'label': 'Edit Selected',
+                                'action': 'EDIT_COURSE',
+                                'icon': 'edit',
+                              },
+                              {
+                                'action': 'DELETE_COURSE',
+                                'type': 'button',
+                                'icon': 'trash-2',
+                                'label': 'Delete Selected',
+                                'variant': 'danger',
+                              },
+                            ],
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'children': [
+                          '@trait.CourseSearch',
+                          '@trait.CourseFilter',
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      '@trait.CourseStats',
+                      '@trait.CourseGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.CourseGallery',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'EDIT_COURSE',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'DELETE_COURSE',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'COURSE_NOTIFICATIONS_OPEN',
-              'triggers': 'COURSE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'EDIT_COURSE',
-                'name': 'Edit Course',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Course',
-                  },
-                ],
-              },
-              {
-                'key': 'DELETE_COURSE',
-                'name': 'Delete Course',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Course',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                      },
+                      {
+                        'label': 'Back to courses',
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'type': 'button',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-8',
+                    'align': 'center',
                   },
                 ],
-              },
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'CourseSearch',
+        'config': {
+          'event': 'SEARCH',
+          'placeholder': 'Search courses...',
+        },
+        'listens': [
+          {
+            'event': 'COURSE_SEARCH',
+            'triggers': 'SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseAppLayout',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'CourseFilter',
+        'config': {
+          'event': 'FILTER',
+          'filters': [
+            {
+              'label': 'Category',
+              'options': [
+                'programming',
+                'design',
+                'business',
+                'marketing',
+              ],
+              'field': 'category',
+              'filterType': 'select',
+            },
+            {
+              'field': 'level',
+              'options': [
+                'beginner',
+                'intermediate',
+                'advanced',
+              ],
+              'filterType': 'select',
+              'label': 'Level',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'CourseStats',
+        'config': {
+          'title': 'Course Stats',
+          'metrics': [
+            {
+              'format': 'number',
+              'icon': 'graduation-cap',
+              'aggregation': 'count',
+              'variant': 'primary',
+              'label': 'Total Courses',
+            },
+            {
+              'field': 'enrolledCount',
+              'aggregation': 'sum',
+              'icon': 'users',
+              'variant': 'info',
+              'format': 'number',
+              'label': 'Enrolled Students',
+            },
+            {
+              'variant': 'success',
+              'field': 'completionPct',
+              'aggregation': 'avg',
+              'label': 'Completion Rate',
+              'icon': 'check-circle',
+              'format': 'percent',
+            },
+            {
+              'icon': 'clock',
+              'variant': 'default',
+              'label': 'Avg Duration',
+              'format': 'number',
+              'suffix': 'h',
+              'field': 'durationHours',
+              'aggregation': 'avg',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'GalleryItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseGallery',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'CourseGraphs',
+        'config': {
+          'subtitle': 'Catalog distribution',
+          'categoryField': 'category',
+          'chartType': 'bar',
+          'title': 'Courses by Category',
+          'aggregation': 'count',
+          'height': 280,
+          'showLegend': true,
+        },
+        'listens': [
+          {
+            'event': 'GalleryItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseGallery',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Gallery.traits.GalleryItemGallery',
+        'name': 'CourseGallery',
+        'linkedEntity': 'Course',
+        'config': {
+          'cols': 4,
+          'gap': 'md',
+          'titleField': 'title',
+          'subtitleField': 'instructor',
+          'imageField': 'thumbnail',
+        },
+        'listens': [
+          {
+            'event': 'COURSE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CoursePersistor',
+            },
+          },
+          {
+            'event': 'COURSE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CoursePersistor',
+            },
+          },
+          {
+            'event': 'COURSE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CoursePersistor',
+            },
+          },
+          {
+            'event': 'ENROLLED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'EnrollmentOrbital',
+              'trait': 'EnrollmentWizard',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CourseCreateModal',
+        'linkedEntity': 'Course',
+        'config': {
+          'icon': 'plus-circle',
+          'title': 'Create Course',
+          'fields': [
+            'title',
+            'description',
+            'category',
+            'level',
+            'duration',
+            'instructor',
+            'thumbnail',
+            'videoId',
+          ],
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CourseEditModal',
+        'linkedEntity': 'Course',
+        'config': {
+          'title': 'Edit Course',
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'description',
+            'category',
+            'level',
+            'duration',
+            'instructor',
+            'thumbnail',
+            'videoId',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT_COURSE',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'CourseDeleteConfirm',
+        'linkedEntity': 'Course',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Course',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE_COURSE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE_COURSE',
+            'triggers': 'DELETE_COURSE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseCatalog',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CoursePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Course',
+        'emits': [
+          {
+            'event': 'COURSE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'key': 'COURSE_NOTIFICATIONS_OPEN',
-                'name': 'Course Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
+                'name': 'id',
+                'type': 'string',
               },
             ],
-            'transitions': [
+          },
+          {
+            'event': 'COURSE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'graduation-cap',
-                                },
-                                {
-                                  'content': 'Courses',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'variant': 'primary',
-                                  'label': 'Create Course',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                  'type': 'button',
-                                },
-                                {
-                                  'variant': 'ghost',
-                                  'type': 'button',
-                                  'label': 'Edit Selected',
-                                  'action': 'EDIT_COURSE',
-                                  'icon': 'edit',
-                                },
-                                {
-                                  'action': 'DELETE_COURSE',
-                                  'type': 'button',
-                                  'icon': 'trash-2',
-                                  'label': 'Delete Selected',
-                                  'variant': 'danger',
-                                },
-                              ],
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'children': [
-                            '@trait.CourseSearch',
-                            '@trait.CourseFilter',
-                          ],
-                          'align': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        '@trait.CourseStats',
-                        '@trait.CourseGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.CourseGallery',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'EDIT_COURSE',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'DELETE_COURSE',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'COURSE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'color': 'muted',
-                          'variant': 'caption',
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                        },
-                        {
-                          'label': 'Back to courses',
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'type': 'button',
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'stack',
-                      'className': 'py-8',
-                      'align': 'center',
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'CourseSearch',
-          'config': {
-            'event': 'SEARCH',
-            'placeholder': 'Search courses...',
-          },
-          'listens': [
-            {
-              'event': 'COURSE_SEARCH',
-              'triggers': 'SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseAppLayout',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'CourseFilter',
-          'config': {
-            'event': 'FILTER',
-            'filters': [
+          {
+            'event': 'COURSE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'label': 'Category',
-                'options': [
-                  'programming',
-                  'design',
-                  'business',
-                  'marketing',
-                ],
-                'field': 'category',
-                'filterType': 'select',
-              },
-              {
-                'field': 'level',
-                'options': [
-                  'beginner',
-                  'intermediate',
-                  'advanced',
-                ],
-                'filterType': 'select',
-                'label': 'Level',
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'CourseStats',
-          'config': {
-            'title': 'Course Stats',
-            'metrics': [
-              {
-                'format': 'number',
-                'icon': 'graduation-cap',
-                'aggregation': 'count',
-                'variant': 'primary',
-                'label': 'Total Courses',
-              },
-              {
-                'field': 'enrolledCount',
-                'aggregation': 'sum',
-                'icon': 'users',
-                'variant': 'info',
-                'format': 'number',
-                'label': 'Enrolled Students',
-              },
-              {
-                'variant': 'success',
-                'field': 'completionPct',
-                'aggregation': 'avg',
-                'label': 'Completion Rate',
-                'icon': 'check-circle',
-                'format': 'percent',
-              },
-              {
-                'icon': 'clock',
-                'variant': 'default',
-                'label': 'Avg Duration',
-                'format': 'number',
-                'suffix': 'h',
-                'field': 'durationHours',
-                'aggregation': 'avg',
-              },
-            ],
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseCreateModal',
+            },
           },
-          'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseEditModal',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseDeleteConfirm',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'GalleryItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseGallery',
-              },
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'CourseGraphs',
-          'config': {
-            'subtitle': 'Catalog distribution',
-            'categoryField': 'category',
-            'chartType': 'bar',
-            'title': 'Courses by Category',
-            'aggregation': 'count',
-            'height': 280,
-            'showLegend': true,
-          },
-          'listens': [
+          'events': [
             {
-              'event': 'GalleryItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseGallery',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Gallery.traits.GalleryItemGallery',
-          'name': 'CourseGallery',
-          'linkedEntity': 'Course',
-          'config': {
-            'cols': 4,
-            'gap': 'md',
-            'titleField': 'title',
-            'subtitleField': 'instructor',
-            'imageField': 'thumbnail',
-          },
-          'listens': [
-            {
-              'event': 'COURSE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CoursePersistor',
-              },
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
-              'event': 'COURSE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CoursePersistor',
-              },
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
             },
             {
-              'event': 'COURSE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CoursePersistor',
-              },
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
             },
             {
-              'event': 'ENROLLED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'EnrollmentOrbital',
-                'trait': 'EnrollmentWizard',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CourseCreateModal',
-          'linkedEntity': 'Course',
-          'config': {
-            'icon': 'plus-circle',
-            'title': 'Create Course',
-            'fields': [
-              'title',
-              'description',
-              'category',
-              'level',
-              'duration',
-              'instructor',
-              'thumbnail',
-              'videoId',
-            ],
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'CourseEditModal',
-          'linkedEntity': 'Course',
-          'config': {
-            'title': 'Edit Course',
-            'icon': 'edit',
-            'mode': 'edit',
-            'fields': [
-              'title',
-              'description',
-              'category',
-              'level',
-              'duration',
-              'instructor',
-              'thumbnail',
-              'videoId',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT_COURSE',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'CourseDeleteConfirm',
-          'linkedEntity': 'Course',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Course',
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'REQUEST': 'DELETE_COURSE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE_COURSE',
-              'triggers': 'DELETE_COURSE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseCatalog',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'CoursePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Course',
-          'emits': [
-            {
-              'event': 'COURSE_CREATED',
-              'scope': 'external',
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1108,303 +903,259 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'COURSE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
+              'key': 'COURSE_CREATED',
+              'name': 'Course Created',
+            },
+            {
+              'key': 'COURSE_UPDATED',
+              'name': 'Course Updated',
+            },
+            {
+              'key': 'COURSE_DELETED',
+              'name': 'Course Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Course',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'COURSE_CREATED',
+                    },
+                  },
+                ],
               ],
             },
             {
-              'event': 'COURSE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Course',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'COURSE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Course',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'COURSE_DELETED',
+                    },
+                  },
+                ],
               ],
             },
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseCreateModal',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseEditModal',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseDeleteConfirm',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'CourseThumbnailForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'UPLOAD',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
+                'name': 'source',
+                'type': 'string',
               },
               {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'COURSE_CREATED',
-                'name': 'Course Created',
-              },
-              {
-                'key': 'COURSE_UPDATED',
-                'name': 'Course Updated',
-              },
-              {
-                'key': 'COURSE_DELETED',
-                'name': 'Course Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Course',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'COURSE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Course',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'COURSE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Course',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'COURSE_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'file',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'CourseThumbnailForm',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'UPLOAD',
-              'scope': 'external',
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'image',
+                          },
+                          {
+                            'content': 'Course Thumbnail',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'inputType': 'text',
+                        'placeholder': 'Choose image...',
+                        'type': 'input',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'UPLOAD',
+                        'label': 'Upload Thumbnail',
+                        'variant': 'primary',
+                        'icon': 'upload',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Storage.traits.ServiceStorageStorage',
+        'name': 'CourseThumbnailUpload',
+        'config': {
+          'uiTrait': '@trait.CourseThumbnailForm',
+          'allowedMimeTypes': [
+            'image/png',
+            'image/jpeg',
+            'image/webp',
+          ],
+          'bucket': 'course-thumbnails',
+          'maxSize': 5242880,
+          'acl': 'public',
+        },
+        'listens': [
+          {
+            'event': 'UPLOAD',
+            'triggers': 'UPLOAD',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CourseThumbnailForm',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'YouTube.traits.ServiceYoutubeYoutube',
+        'name': 'CourseLessonVideo',
+        'config': {
+          'controls': true,
+          'autoplay': false,
+          'videoId': '',
+          'uiTrait': '@trait.CourseLessonPlayer',
+        },
+      }),
+      {
+        'name': 'CourseLessonPlayer',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'LESSON_COMPLETE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'lessonId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'NEXT_LESSON',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PREV_LESSON',
+              'name': 'Prev Lesson',
+            },
+            {
+              'key': 'NEXT_LESSON',
+              'name': 'Next Lesson',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
-                {
-                  'name': 'file',
-                  'type': 'string',
-                },
               ],
             },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'image',
-                            },
-                            {
-                              'content': 'Course Thumbnail',
-                              'type': 'typography',
-                              'variant': 'h3',
-                            },
-                          ],
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'inputType': 'text',
-                          'placeholder': 'Choose image...',
-                          'type': 'input',
-                        },
-                        {
-                          'type': 'button',
-                          'action': 'UPLOAD',
-                          'label': 'Upload Thumbnail',
-                          'variant': 'primary',
-                          'icon': 'upload',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Storage.traits.ServiceStorageStorage',
-          'name': 'CourseThumbnailUpload',
-          'config': {
-            'uiTrait': '@trait.CourseThumbnailForm',
-            'allowedMimeTypes': [
-              'image/png',
-              'image/jpeg',
-              'image/webp',
-            ],
-            'bucket': 'course-thumbnails',
-            'maxSize': 5242880,
-            'acl': 'public',
-          },
-          'listens': [
             {
-              'event': 'UPLOAD',
-              'triggers': 'UPLOAD',
-              'source': {
-                'kind': 'trait',
-                'trait': 'CourseThumbnailForm',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'YouTube.traits.ServiceYoutubeYoutube',
-          'name': 'CourseLessonVideo',
-          'config': {
-            'controls': true,
-            'autoplay': false,
-            'videoId': '',
-            'uiTrait': '@trait.CourseLessonPlayer',
-          },
-        }),
-        {
-          'name': 'CourseLessonPlayer',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'LESSON_COMPLETE',
-              'scope': 'external',
+              'key': 'LESSON_COMPLETE',
+              'name': 'Lesson Complete',
               'payloadSchema': [
                 {
                   'name': 'lessonId',
@@ -1412,381 +1163,484 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
                 },
               ],
             },
+          ],
+          'transitions': [
             {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'className': 'max-w-3xl mx-auto w-full',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'action': 'PREV_LESSON',
+                            'variant': 'ghost',
+                            'icon': 'chevron-left',
+                            'label': 'Previous',
+                          },
+                          {
+                            'content': '@entity.title',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'ghost',
+                            'action': 'NEXT_LESSON',
+                            'type': 'button',
+                            'label': 'Next',
+                            'icon': 'chevron-right',
+                          },
+                        ],
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'video',
+                              },
+                              {
+                                'variant': 'caption',
+                                'color': 'muted',
+                                'type': 'typography',
+                                'content': 'Lesson video',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@config.videoId',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'vertical',
+                            'align': 'center',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'input',
+                                'inputType': 'checkbox',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': 'Mark lesson complete',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                          {
+                            'label': 'Complete Lesson',
+                            'variant': 'primary',
+                            'action': 'LESSON_COMPLETE',
+                            'type': 'button',
+                            'icon': 'check',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'PREV_LESSON',
+              'effects': [
+                [
+                  'emit',
+                  'NEXT_LESSON',
+                  {
+                    'source': 'prev-button',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'ready',
               'event': 'NEXT_LESSON',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
+              'effects': [
+                [
+                  'emit',
+                  'NEXT_LESSON',
+                  {
+                    'source': 'next-button',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'LESSON_COMPLETE',
+              'effects': [
+                [
+                  'emit',
+                  'LESSON_COMPLETE',
+                  {
+                    'lessonId': '@entity.id',
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'PREV_LESSON',
-                'name': 'Prev Lesson',
-              },
-              {
-                'key': 'NEXT_LESSON',
-                'name': 'Next Lesson',
-                'payloadSchema': [
-                  {
-                    'name': 'source',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'LESSON_COMPLETE',
-                'name': 'Lesson Complete',
-                'payloadSchema': [
-                  {
-                    'name': 'lessonId',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'className': 'max-w-3xl mx-auto w-full',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'button',
-                              'action': 'PREV_LESSON',
-                              'variant': 'ghost',
-                              'icon': 'chevron-left',
-                              'label': 'Previous',
-                            },
-                            {
-                              'content': '@entity.title',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'ghost',
-                              'action': 'NEXT_LESSON',
-                              'type': 'button',
-                              'label': 'Next',
-                              'icon': 'chevron-right',
-                            },
-                          ],
-                          'justify': 'between',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'video',
-                                },
-                                {
-                                  'variant': 'caption',
-                                  'color': 'muted',
-                                  'type': 'typography',
-                                  'content': 'Lesson video',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@config.videoId',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'vertical',
-                              'align': 'center',
-                            },
-                          ],
-                          'type': 'card',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'gap': 'sm',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'input',
-                                  'inputType': 'checkbox',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': 'Mark lesson complete',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                            {
-                              'label': 'Complete Lesson',
-                              'variant': 'primary',
-                              'action': 'LESSON_COMPLETE',
-                              'type': 'button',
-                              'icon': 'check',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'PREV_LESSON',
-                'effects': [
-                  [
-                    'emit',
-                    'NEXT_LESSON',
-                    {
-                      'source': 'prev-button',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'NEXT_LESSON',
-                'effects': [
-                  [
-                    'emit',
-                    'NEXT_LESSON',
-                    {
-                      'source': 'next-button',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'LESSON_COMPLETE',
-                'effects': [
-                  [
-                    'emit',
-                    'LESSON_COMPLETE',
-                    {
-                      'lessonId': '@entity.id',
-                    },
-                  ],
-                ],
-              },
-            ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'CoursesPage',
+        'path': '/courses',
+        'traits': [
+          {
+            'ref': 'CourseAppLayout',
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
+          {
+            'ref': 'CourseCatalog',
+          },
+          {
+            'ref': 'CourseSearch',
+          },
+          {
+            'ref': 'CourseFilter',
+          },
+          {
+            'ref': 'CourseStats',
+          },
+          {
+            'ref': 'CourseGraphs',
+          },
+          {
+            'ref': 'CourseGallery',
+          },
+          {
+            'ref': 'CourseCreateModal',
+          },
+          {
+            'ref': 'CourseEditModal',
+          },
+          {
+            'ref': 'CourseDeleteConfirm',
+          },
+          {
+            'ref': 'CoursePersistor',
+          },
+          {
+            'ref': 'CourseThumbnailForm',
+          },
+          {
+            'ref': 'CourseThumbnailUpload',
+          },
+          {
+            'ref': 'CourseLessonVideo',
+          },
+          {
+            'ref': 'CourseLessonPlayer',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the EnrollmentOrbital orbital.
+ *
+ * Canonical entity: Enrollment.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdLmsEnrollmentOrbitalParams {
+  /** Override the canonical entity name (default: 'Enrollment'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the EnrollmentOrbital orbital with consumer params. */
+export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Enrollment';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'EnrollmentOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'enrollments',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'CoursesPage',
-          'path': '/courses',
-          'traits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'studentName',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'email',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'courseId',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'enrolledAt',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+          'default': 'pending',
+          'values': [
+            'pending',
+            'active',
+            'completed',
+          ],
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'EnrollmentAppLayout',
+        'linkedEntity': 'Enrollment',
+        'config': {
+          'topBarActions': [],
+          'notifications': [],
+          'notificationClickEvent': 'ENROLLMENT_NOTIFICATIONS_OPEN',
+          'navItems': [
             {
-              'ref': 'CourseAppLayout',
+              'icon': 'graduation-cap',
+              'label': 'Courses',
+              'href': '/courses',
             },
             {
-              'ref': 'CourseCatalog',
+              'href': '/enroll',
+              'label': 'Enroll',
+              'icon': 'user-plus',
             },
             {
-              'ref': 'CourseSearch',
-            },
-            {
-              'ref': 'CourseFilter',
-            },
-            {
-              'ref': 'CourseStats',
-            },
-            {
-              'ref': 'CourseGraphs',
-            },
-            {
-              'ref': 'CourseGallery',
-            },
-            {
-              'ref': 'CourseCreateModal',
-            },
-            {
-              'ref': 'CourseEditModal',
-            },
-            {
-              'ref': 'CourseDeleteConfirm',
-            },
-            {
-              'ref': 'CoursePersistor',
-            },
-            {
-              'ref': 'CourseThumbnailForm',
-            },
-            {
-              'ref': 'CourseThumbnailUpload',
-            },
-            {
-              'ref': 'CourseLessonVideo',
-            },
-            {
-              'ref': 'CourseLessonPlayer',
+              'icon': 'trending-up',
+              'href': '/progress',
+              'label': 'Progress',
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'EnrollmentOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'contentTrait': '@trait.EnrollmentWizard',
+          'appName': 'LMS',
+          'searchEvent': 'ENROLLMENT_SEARCH',
         },
-      ],
-      entity: {
-        'name': 'Enrollment',
-        'collection': 'enrollments',
-        'persistence': 'persistent',
-        'fields': [
+        'events': {
+          'SEARCH': 'ENROLLMENT_SEARCH',
+          'NOTIFY_CLICK': 'ENROLLMENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'EnrollmentWizard',
+        'category': 'interaction',
+        'linkedEntity': 'Enrollment',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'ENROLLED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+              {
+                'name': 'courseId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'studentName',
-            'type': 'string',
-            'default': '',
+            'event': 'EnrollmentLoaded',
+            'description': 'Fired when Enrollment finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Enrollment]',
+              },
+            ],
           },
           {
-            'name': 'email',
-            'type': 'string',
-            'default': '',
+            'event': 'EnrollmentLoadFailed',
+            'description': 'Fired when Enrollment fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'courseId',
-            'type': 'string',
-            'default': '',
+            'event': 'EnrollmentSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'enrolledAt',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'pending',
-            'values': [
-              'pending',
-              'active',
-              'completed',
+            'event': 'EnrollmentSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
             ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'EnrollmentAppLayout',
-          'linkedEntity': 'Enrollment',
-          'config': {
-            'topBarActions': [],
-            'notifications': [],
-            'notificationClickEvent': 'ENROLLMENT_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'icon': 'graduation-cap',
-                'label': 'Courses',
-                'href': '/courses',
-              },
-              {
-                'href': '/enroll',
-                'label': 'Enroll',
-                'icon': 'user-plus',
-              },
-              {
-                'icon': 'trending-up',
-                'href': '/progress',
-                'label': 'Progress',
-              },
-            ],
-            'contentTrait': '@trait.EnrollmentWizard',
-            'appName': 'LMS',
-            'searchEvent': 'ENROLLMENT_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'ENROLLMENT_SEARCH',
-            'NOTIFY_CLICK': 'ENROLLMENT_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'EnrollmentWizard',
-          'category': 'interaction',
-          'linkedEntity': 'Enrollment',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ENROLLED',
-              'scope': 'external',
+              'name': 'studentInfo',
+              'isInitial': true,
+            },
+            {
+              'name': 'courseSelection',
+            },
+            {
+              'name': 'review',
+            },
+            {
+              'name': 'confirm',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NEXT',
+              'name': 'Next',
               'payloadSchema': [
                 {
-                  'name': 'id',
-                  'type': 'string',
-                },
-                {
-                  'name': 'courseId',
-                  'type': 'string',
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
                 },
               ],
             },
             {
-              'event': 'EnrollmentLoaded',
-              'description': 'Fired when Enrollment finishes loading',
-              'scope': 'internal',
+              'key': 'PREV',
+              'name': 'Prev',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'ENROLLED',
+              'name': 'Enrolled',
+            },
+            {
+              'key': 'EnrollmentLoaded',
+              'name': 'Enrollment loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1795,9 +1649,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'EnrollmentLoadFailed',
-              'description': 'Fired when Enrollment fails to load',
-              'scope': 'internal',
+              'key': 'EnrollmentLoadFailed',
+              'name': 'Enrollment load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1810,8 +1663,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'EnrollmentSaved',
-              'scope': 'internal',
+              'key': 'EnrollmentSaved',
+              'name': 'Enrollment saved',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1820,8 +1673,8 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'EnrollmentSaveFailed',
-              'scope': 'internal',
+              'key': 'EnrollmentSaveFailed',
+              'name': 'Enrollment save failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1834,1617 +1687,1607 @@ export function stdLms(params: StdLmsParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'studentInfo',
-                'isInitial': true,
-              },
-              {
-                'name': 'courseSelection',
-              },
-              {
-                'name': 'review',
-              },
-              {
-                'name': 'confirm',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'NEXT',
-                'name': 'Next',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'studentInfo',
+              'to': 'studentInfo',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.studentName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.courseId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.enrolledAt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'pending',
+                ],
+                [
+                  'fetch',
+                  'Enrollment',
                   {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
+                    'emit': {
+                      'success': 'EnrollmentLoaded',
+                      'failure': 'EnrollmentLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'PREV',
-                'name': 'Prev',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'ENROLLED',
-                'name': 'Enrolled',
-              },
-              {
-                'key': 'EnrollmentLoaded',
-                'name': 'Enrollment loaded',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'data',
-                    'type': '[Enrollment]',
-                  },
-                ],
-              },
-              {
-                'key': 'EnrollmentLoadFailed',
-                'name': 'Enrollment load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'EnrollmentSaved',
-                'name': 'Enrollment saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'EnrollmentSaveFailed',
-                'name': 'Enrollment save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'studentInfo',
-                'to': 'studentInfo',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.studentName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.courseId',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.enrolledAt',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'pending',
-                  ],
-                  [
-                    'fetch',
-                    'Enrollment',
-                    {
-                      'emit': {
-                        'success': 'EnrollmentLoaded',
-                        'failure': 'EnrollmentLoadFailed',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'user-plus',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Course Enrollment',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'user-plus',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Course Enrollment',
-                              'variant': 'h2',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                        },
-                        {
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Student Info',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'submitLabel': 'Continue',
-                          'type': 'form-section',
-                          'mode': 'create',
-                          'showCancel': false,
-                          'submitEvent': 'NEXT',
-                          'fields': [
-                            {
-                              'required': true,
-                              'min': 2,
-                              'name': 'studentName',
-                            },
-                            {
-                              'type': 'email',
-                              'name': 'email',
-                              'required': true,
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                    },
-                  ],
+                      {
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Student Info',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'showCancel': false,
+                        'submitEvent': 'NEXT',
+                        'fields': [
+                          {
+                            'required': true,
+                            'min': 2,
+                            'name': 'studentName',
+                          },
+                          {
+                            'type': 'email',
+                            'name': 'email',
+                            'required': true,
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                  },
                 ],
-              },
-              {
-                'from': 'studentInfo',
-                'to': 'courseSelection',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
+              ],
+            },
+            {
+              'from': 'studentInfo',
+              'to': 'courseSelection',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@payload.data.studentName',
+                '@payload.data.email',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.studentName',
                   '@payload.data.studentName',
+                ],
+                [
+                  'set',
+                  '@entity.email',
                   '@payload.data.email',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.studentName',
-                    '@payload.data.studentName',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '@payload.data.email',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'user-plus',
-                            },
-                            {
-                              'content': 'Course Enrollment',
-                              'variant': 'h2',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'currentStep': 1,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Course Selection',
-                        },
-                        {
-                          'mode': 'edit',
-                          'cancelEvent': 'PREV',
-                          'entity': '@entity',
-                          'submitEvent': 'NEXT',
-                          'type': 'form-section',
-                          'submitLabel': 'Continue',
-                          'cancelLabel': 'Back',
-                          'fields': [
-                            {
-                              'required': true,
-                              'name': 'courseId',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'user-plus',
+                          },
+                          {
+                            'content': 'Course Enrollment',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'currentStep': 1,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Course Selection',
+                      },
+                      {
+                        'mode': 'edit',
+                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'fields': [
+                          {
+                            'required': true,
+                            'name': 'courseId',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'courseSelection',
-                'to': 'review',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.studentName',
-                  '@entity.email',
+              ],
+            },
+            {
+              'from': 'courseSelection',
+              'to': 'review',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.studentName',
+                '@entity.email',
+                '@payload.data.courseId',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.courseId',
                   '@payload.data.courseId',
                 ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.courseId',
-                    '@payload.data.courseId',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'user-plus',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Course Enrollment',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'currentStep': 2,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'h3',
-                          'content': 'Review',
-                          'type': 'typography',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'content': 'Student',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'body',
-                                  'content': '@entity.studentName',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'children': [
-                                {
-                                  'content': 'Email',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                  'content': '@entity.email',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'children': [
-                                {
-                                  'content': 'Course',
-                                  'variant': 'caption',
-                                  'type': 'typography',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                  'content': '@entity.courseId',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'justify': 'between',
-                              'type': 'stack',
-                            },
-                          ],
-                        },
-                        {
-                          'justify': 'between',
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'variant': 'ghost',
-                              'type': 'button',
-                              'icon': 'arrow-left',
-                              'action': 'PREV',
-                              'label': 'Back',
-                            },
-                            {
-                              'label': 'Continue',
-                              'variant': 'primary',
-                              'icon': 'arrow-right',
-                              'type': 'button',
-                              'action': 'NEXT',
-                            },
-                          ],
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'courseSelection',
-                'to': 'studentInfo',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Course Enrollment',
-                          'type': 'typography',
-                        },
-                        {
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Student Info',
-                        },
-                        {
-                          'mode': 'edit',
-                          'showCancel': false,
-                          'fields': [
-                            {
-                              'name': 'studentName',
-                              'min': 2,
-                              'required': true,
-                            },
-                            {
-                              'name': 'email',
-                              'type': 'email',
-                              'required': true,
-                            },
-                          ],
-                          'entity': '@entity',
-                          'type': 'form-section',
-                          'submitEvent': 'NEXT',
-                          'submitLabel': 'Continue',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'confirm',
-                'event': 'NEXT',
-                'guard': [
-                  'and',
-                  '@entity.studentName',
-                  '@entity.email',
-                  '@entity.courseId',
-                ],
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'variant': 'h2',
-                          'content': 'Course Enrollment',
-                          'type': 'typography',
-                        },
-                        {
-                          'currentStep': 3,
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                          'type': 'wizard-progress',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'info',
-                          'message': 'Please confirm your enrollment.',
-                          'type': 'alert',
-                        },
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'justify': 'between',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'content': 'Student',
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'content': '@entity.studentName',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'variant': 'caption',
-                                  'content': 'Email',
-                                },
-                                {
-                                  'variant': 'body',
-                                  'content': '@entity.email',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'justify': 'between',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                            },
-                            {
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'typography',
-                                  'content': 'Course',
-                                  'variant': 'caption',
-                                },
-                                {
-                                  'content': '@entity.courseId',
-                                  'variant': 'body',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'action': 'PREV',
-                              'icon': 'arrow-left',
-                              'type': 'button',
-                              'label': 'Back',
-                              'variant': 'ghost',
-                            },
-                            {
-                              'icon': 'check',
-                              'label': 'Enroll',
-                              'variant': 'primary',
-                              'action': 'COMPLETE',
-                              'type': 'button',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'gap': 'sm',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'review',
-                'to': 'courseSelection',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full',
-                      'children': [
-                        {
-                          'content': 'Course Enrollment',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                          'type': 'wizard-progress',
-                          'currentStep': 1,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Course Selection',
-                        },
-                        {
-                          'submitEvent': 'NEXT',
-                          'mode': 'edit',
-                          'cancelLabel': 'Back',
-                          'type': 'form-section',
-                          'entity': '@entity',
-                          'fields': [
-                            {
-                              'name': 'courseId',
-                              'required': true,
-                            },
-                          ],
-                          'submitLabel': 'Continue',
-                          'cancelEvent': 'PREV',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirm',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'guard': [
-                  'and',
-                  '@entity.studentName',
-                  '@entity.email',
-                  '@entity.courseId',
-                ],
-                'effects': [
-                  [
-                    'set',
-                    '@entity.status',
-                    'active',
-                  ],
-                  [
-                    'persist',
-                    'create',
-                    'Enrollment',
-                    '@entity',
-                    {
-                      'emit': {
-                        'failure': 'EnrollmentSaveFailed',
-                        'success': 'EnrollmentSaved',
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'user-plus',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Course Enrollment',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ENROLLED',
-                    {
-                      'courseId': '@entity.courseId',
-                      'id': '@entity.id',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'success',
-                    'Enrollment confirmed',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-xl mx-auto w-full py-12',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'check-circle',
-                        },
-                        {
-                          'content': 'Enrolled!',
-                          'variant': 'h2',
-                          'type': 'typography',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'body',
-                          'color': 'muted',
-                          'content': 'You have been enrolled in the course.',
-                        },
-                        {
-                          'action': 'RESTART',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'label': 'Enroll another student',
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'align': 'center',
-                    },
-                  ],
+                      {
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Review',
+                        'type': 'typography',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'content': 'Student',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.studentName',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'content': 'Email',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.email',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'children': [
+                              {
+                                'content': 'Course',
+                                'variant': 'caption',
+                                'type': 'typography',
+                              },
+                              {
+                                'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.courseId',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                          },
+                        ],
+                      },
+                      {
+                        'justify': 'between',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'icon': 'arrow-left',
+                            'action': 'PREV',
+                            'label': 'Back',
+                          },
+                          {
+                            'label': 'Continue',
+                            'variant': 'primary',
+                            'icon': 'arrow-right',
+                            'type': 'button',
+                            'action': 'NEXT',
+                          },
+                        ],
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'confirm',
-                'to': 'review',
-                'event': 'PREV',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'content': 'Course Enrollment',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                          'currentStep': 2,
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': 'Review',
-                          'variant': 'h3',
-                          'type': 'typography',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'label': 'Back',
-                              'type': 'button',
-                              'action': 'PREV',
-                              'variant': 'ghost',
-                              'icon': 'arrow-left',
-                            },
-                            {
-                              'icon': 'arrow-right',
-                              'variant': 'primary',
-                              'action': 'NEXT',
-                              'label': 'Continue',
-                              'type': 'button',
-                            },
-                          ],
-                        },
-                      ],
-                      'gap': 'lg',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'studentInfo',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.studentName',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.email',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.courseId',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.enrolledAt',
-                    '',
-                  ],
-                  [
-                    'set',
-                    '@entity.status',
-                    'pending',
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'content': 'Course Enrollment',
-                          'type': 'typography',
-                          'variant': 'h2',
-                        },
-                        {
-                          'currentStep': 0,
-                          'type': 'wizard-progress',
-                          'steps': [
-                            'Student Info',
-                            'Course Selection',
-                            'Review',
-                            'Confirm',
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Student Info',
-                          'variant': 'h3',
-                        },
-                        {
-                          'mode': 'create',
-                          'fields': [
-                            {
-                              'name': 'studentName',
-                              'required': true,
-                              'min': 2,
-                            },
-                            {
-                              'name': 'email',
-                              'type': 'email',
-                              'required': true,
-                            },
-                          ],
-                          'type': 'form-section',
-                          'submitLabel': 'Continue',
-                          'showCancel': false,
-                          'submitEvent': 'NEXT',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'className': 'max-w-xl mx-auto w-full',
-                      'gap': 'lg',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Enroll',
-          'path': '/enroll',
-          'traits': [
-            {
-              'ref': 'EnrollmentAppLayout',
+              ],
             },
             {
-              'ref': 'EnrollmentWizard',
+              'from': 'courseSelection',
+              'to': 'studentInfo',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Course Enrollment',
+                        'type': 'typography',
+                      },
+                      {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Student Info',
+                      },
+                      {
+                        'mode': 'edit',
+                        'showCancel': false,
+                        'fields': [
+                          {
+                            'name': 'studentName',
+                            'min': 2,
+                            'required': true,
+                          },
+                          {
+                            'name': 'email',
+                            'type': 'email',
+                            'required': true,
+                          },
+                        ],
+                        'entity': '@entity',
+                        'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'confirm',
+              'event': 'NEXT',
+              'guard': [
+                'and',
+                '@entity.studentName',
+                '@entity.email',
+                '@entity.courseId',
+              ],
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'variant': 'h2',
+                        'content': 'Course Enrollment',
+                        'type': 'typography',
+                      },
+                      {
+                        'currentStep': 3,
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                        'type': 'wizard-progress',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'info',
+                        'message': 'Please confirm your enrollment.',
+                        'type': 'alert',
+                      },
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'justify': 'between',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'content': 'Student',
+                                'type': 'typography',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.studentName',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Email',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.email',
+                                'type': 'typography',
+                              },
+                            ],
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                          },
+                          {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'content': 'Course',
+                                'variant': 'caption',
+                              },
+                              {
+                                'content': '@entity.courseId',
+                                'variant': 'body',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'action': 'PREV',
+                            'icon': 'arrow-left',
+                            'type': 'button',
+                            'label': 'Back',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'icon': 'check',
+                            'label': 'Enroll',
+                            'variant': 'primary',
+                            'action': 'COMPLETE',
+                            'type': 'button',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'sm',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'review',
+              'to': 'courseSelection',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'children': [
+                      {
+                        'content': 'Course Enrollment',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                        'type': 'wizard-progress',
+                        'currentStep': 1,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Course Selection',
+                      },
+                      {
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
+                        'cancelLabel': 'Back',
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'fields': [
+                          {
+                            'name': 'courseId',
+                            'required': true,
+                          },
+                        ],
+                        'submitLabel': 'Continue',
+                        'cancelEvent': 'PREV',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirm',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'guard': [
+                'and',
+                '@entity.studentName',
+                '@entity.email',
+                '@entity.courseId',
+              ],
+              'effects': [
+                [
+                  'set',
+                  '@entity.status',
+                  'active',
+                ],
+                [
+                  'persist',
+                  'create',
+                  'Enrollment',
+                  '@entity',
+                  {
+                    'emit': {
+                      'failure': 'EnrollmentSaveFailed',
+                      'success': 'EnrollmentSaved',
+                    },
+                  },
+                ],
+                [
+                  'emit',
+                  'ENROLLED',
+                  {
+                    'courseId': '@entity.courseId',
+                    'id': '@entity.id',
+                  },
+                ],
+                [
+                  'notify',
+                  'success',
+                  'Enrollment confirmed',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'check-circle',
+                      },
+                      {
+                        'content': 'Enrolled!',
+                        'variant': 'h2',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': 'You have been enrolled in the course.',
+                      },
+                      {
+                        'action': 'RESTART',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Enroll another student',
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirm',
+              'to': 'review',
+              'event': 'PREV',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'content': 'Course Enrollment',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                        'currentStep': 2,
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': 'Review',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'label': 'Back',
+                            'type': 'button',
+                            'action': 'PREV',
+                            'variant': 'ghost',
+                            'icon': 'arrow-left',
+                          },
+                          {
+                            'icon': 'arrow-right',
+                            'variant': 'primary',
+                            'action': 'NEXT',
+                            'label': 'Continue',
+                            'type': 'button',
+                          },
+                        ],
+                      },
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'studentInfo',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'set',
+                  '@entity.studentName',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.email',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.courseId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.enrolledAt',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.status',
+                  'pending',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'content': 'Course Enrollment',
+                        'type': 'typography',
+                        'variant': 'h2',
+                      },
+                      {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
+                        'steps': [
+                          'Student Info',
+                          'Course Selection',
+                          'Review',
+                          'Confirm',
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Student Info',
+                        'variant': 'h3',
+                      },
+                      {
+                        'mode': 'create',
+                        'fields': [
+                          {
+                            'name': 'studentName',
+                            'required': true,
+                            'min': 2,
+                          },
+                          {
+                            'name': 'email',
+                            'type': 'email',
+                            'required': true,
+                          },
+                        ],
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'showCancel': false,
+                        'submitEvent': 'NEXT',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ProgressOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'Progress',
-        'collection': 'progresses',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Enroll',
+        'path': '/enroll',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'ref': 'EnrollmentAppLayout',
           },
           {
-            'name': 'courseName',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'week',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'lessonsCompleted',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'totalLessons',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'completionPct',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'timeSpent',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'streak',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'lastActivity',
-            'type': 'string',
-            'default': '',
+            'ref': 'EnrollmentWizard',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ProgressAppLayout',
-          'linkedEntity': 'Progress',
-          'config': {
-            'appName': 'LMS',
-            'searchEvent': 'PROGRESS_SEARCH',
-            'topBarActions': [],
-            'navItems': [
-              {
-                'icon': 'graduation-cap',
-                'label': 'Courses',
-                'href': '/courses',
-              },
-              {
-                'label': 'Enroll',
-                'icon': 'user-plus',
-                'href': '/enroll',
-              },
-              {
-                'label': 'Progress',
-                'icon': 'trending-up',
-                'href': '/progress',
-              },
-            ],
-            'contentTrait': '@trait.ProgressDisplay',
-            'notificationClickEvent': 'PROGRESS_NOTIFICATIONS_OPEN',
-            'notifications': [],
-          },
-          'events': {
-            'NOTIFY_CLICK': 'PROGRESS_NOTIFICATIONS_OPEN',
-            'SEARCH': 'PROGRESS_SEARCH',
-          },
-        }),
-        {
-          'name': 'ProgressDisplay',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'className': 'max-w-5xl mx-auto w-full',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'trending-up',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h2',
-                              'content': 'Progress',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ProgressStats',
-                        '@trait.ProgressGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ProgressBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ProgressStats',
-          'category': 'interaction',
-          'linkedEntity': 'Progress',
-          'emits': [
-            {
-              'event': 'ProgressLoaded',
-              'description': 'Fired when Progress finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Progress]',
-                },
-              ],
-            },
-            {
-              'event': 'ProgressLoadFailed',
-              'description': 'Fired when Progress fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ProgressLoaded',
-                'name': 'Progress loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Progress]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProgressLoadFailed',
-                'name': 'Progress load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Progress',
-                    {
-                      'emit': {
-                        'success': 'ProgressLoaded',
-                        'failure': 'ProgressLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'simple-grid',
-                      'gap': 'md',
-                      'cols': 4,
-                      'children': [
-                        {
-                          'variant': 'success',
-                          'format': 'percent',
-                          'label': 'Completion %',
-                          'value': 0,
-                          'type': 'stat-display',
-                          'icon': 'check-circle',
-                        },
-                        {
-                          'icon': 'clock',
-                          'value': 0,
-                          'label': 'Time Spent',
-                          'format': 'number',
-                          'variant': 'info',
-                          'type': 'stat-display',
-                          'suffix': 'h',
-                        },
-                        {
-                          'type': 'stat-display',
-                          'value': 0,
-                          'variant': 'default',
-                          'format': 'number',
-                          'icon': 'list',
-                          'label': 'Lessons Remaining',
-                        },
-                        {
-                          'variant': 'warning',
-                          'label': 'Streak',
-                          'suffix': 'd',
-                          'icon': 'flame',
-                          'type': 'stat-display',
-                          'format': 'number',
-                          'value': 0,
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ProgressLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'variant': 'success',
-                          'value': 0,
-                          'format': 'percent',
-                          'icon': 'check-circle',
-                          'type': 'stat-display',
-                          'label': 'Completion %',
-                        },
-                        {
-                          'variant': 'info',
-                          'suffix': 'h',
-                          'label': 'Time Spent',
-                          'format': 'number',
-                          'type': 'stat-display',
-                          'value': 0,
-                          'icon': 'clock',
-                        },
-                        {
-                          'type': 'stat-display',
-                          'icon': 'list',
-                          'value': 0,
-                          'variant': 'default',
-                          'format': 'number',
-                          'label': 'Lessons Remaining',
-                        },
-                        {
-                          'variant': 'warning',
-                          'type': 'stat-display',
-                          'label': 'Streak',
-                          'icon': 'flame',
-                          'suffix': 'd',
-                          'format': 'number',
-                          'value': 0,
-                        },
-                      ],
-                      'gap': 'md',
-                      'type': 'simple-grid',
-                      'cols': 4,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'ProgressGraphs',
-          'category': 'interaction',
-          'linkedEntity': 'Progress',
-          'emits': [
-            {
-              'event': 'ProgressLoaded',
-              'description': 'Fired when Progress finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[Progress]',
-                },
-              ],
-            },
-            {
-              'event': 'ProgressLoadFailed',
-              'description': 'Fired when Progress fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ProgressLoaded',
-                'name': 'Progress loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Progress]',
-                  },
-                ],
-              },
-              {
-                'key': 'ProgressLoadFailed',
-                'name': 'Progress load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Progress',
-                    {
-                      'emit': {
-                        'failure': 'ProgressLoadFailed',
-                        'success': 'ProgressLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'chart',
-                      'subtitle': 'Average completion % per week',
-                      'chartType': 'line',
-                      'height': 280,
-                      'showLegend': true,
-                      'data': [],
-                      'title': 'Progress over time',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ProgressLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'chart',
-                      'title': 'Progress over time',
-                      'chartType': 'line',
-                      'subtitle': 'Average completion % per week',
-                      'height': 280,
-                      'data': '@payload.data',
-                      'showLegend': true,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ProgressBrowseList',
-          'linkedEntity': 'Progress',
-          'config': {
-            'gap': 'sm',
-            'cols': 1,
-            'fields': [
-              {
-                'icon': 'book-open',
-                'name': 'courseName',
-                'label': 'Course',
-                'variant': 'h4',
-              },
-              {
-                'format': 'percent',
-                'label': 'Completion',
-                'variant': 'badge',
-                'name': 'completionPct',
-              },
-              {
-                'variant': 'body',
-                'name': 'lessonsCompleted',
-                'label': 'Lessons Completed',
-              },
-              {
-                'name': 'totalLessons',
-                'variant': 'body',
-                'label': 'Total Lessons',
-              },
-              {
-                'name': 'lastActivity',
-                'label': 'Last Activity',
-                'variant': 'caption',
-                'format': 'date',
-              },
-            ],
-            'itemActions': [],
-          },
-          'listens': [
-            {
-              'event': 'ENROLLED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'EnrollmentOrbital',
-                'trait': 'EnrollmentWizard',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'ProgressItemSink',
-          'category': 'lifecycle',
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProgressBrowseList',
-              },
-            },
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProgressBrowseList',
-              },
-            },
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ProgressBrowseList',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Progress',
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Progress',
-                  },
-                ],
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'Progress',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'VIEW',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'EDIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DELETE',
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Progress',
-          'path': '/progress',
-          'traits': [
-            {
-              'ref': 'ProgressAppLayout',
-            },
-            {
-              'ref': 'ProgressDisplay',
-            },
-            {
-              'ref': 'ProgressStats',
-            },
-            {
-              'ref': 'ProgressGraphs',
-            },
-            {
-              'ref': 'ProgressBrowseList',
-            },
-            {
-              'ref': 'ProgressItemSink',
-            },
-          ],
-        } as never,
-      ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the ProgressOrbital orbital.
+ *
+ * Canonical entity: Progress.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdLmsProgressOrbitalParams {
+  /** Override the canonical entity name (default: 'Progress'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the ProgressOrbital orbital with consumer params. */
+export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Progress';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ProgressOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'progresses',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'courseName',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'week',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'lessonsCompleted',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'totalLessons',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completionPct',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'timeSpent',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'streak',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'lastActivity',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ProgressAppLayout',
+        'linkedEntity': 'Progress',
+        'config': {
+          'appName': 'LMS',
+          'searchEvent': 'PROGRESS_SEARCH',
+          'topBarActions': [],
+          'navItems': [
+            {
+              'icon': 'graduation-cap',
+              'label': 'Courses',
+              'href': '/courses',
+            },
+            {
+              'label': 'Enroll',
+              'icon': 'user-plus',
+              'href': '/enroll',
+            },
+            {
+              'label': 'Progress',
+              'icon': 'trending-up',
+              'href': '/progress',
+            },
+          ],
+          'contentTrait': '@trait.ProgressDisplay',
+          'notificationClickEvent': 'PROGRESS_NOTIFICATIONS_OPEN',
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'PROGRESS_NOTIFICATIONS_OPEN',
+          'SEARCH': 'PROGRESS_SEARCH',
+        },
+      }),
+      {
+        'name': 'ProgressDisplay',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'trending-up',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Progress',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProgressStats',
+                      '@trait.ProgressGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProgressBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ProgressStats',
+        'category': 'interaction',
+        'linkedEntity': 'Progress',
+        'emits': [
+          {
+            'event': 'ProgressLoaded',
+            'description': 'Fired when Progress finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Progress]',
+              },
+            ],
+          },
+          {
+            'event': 'ProgressLoadFailed',
+            'description': 'Fired when Progress fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ProgressLoaded',
+              'name': 'Progress loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Progress]',
+                },
+              ],
+            },
+            {
+              'key': 'ProgressLoadFailed',
+              'name': 'Progress load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Progress',
+                  {
+                    'emit': {
+                      'success': 'ProgressLoaded',
+                      'failure': 'ProgressLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'simple-grid',
+                    'gap': 'md',
+                    'cols': 4,
+                    'children': [
+                      {
+                        'variant': 'success',
+                        'format': 'percent',
+                        'label': 'Completion %',
+                        'value': 0,
+                        'type': 'stat-display',
+                        'icon': 'check-circle',
+                      },
+                      {
+                        'icon': 'clock',
+                        'value': 0,
+                        'label': 'Time Spent',
+                        'format': 'number',
+                        'variant': 'info',
+                        'type': 'stat-display',
+                        'suffix': 'h',
+                      },
+                      {
+                        'type': 'stat-display',
+                        'value': 0,
+                        'variant': 'default',
+                        'format': 'number',
+                        'icon': 'list',
+                        'label': 'Lessons Remaining',
+                      },
+                      {
+                        'variant': 'warning',
+                        'label': 'Streak',
+                        'suffix': 'd',
+                        'icon': 'flame',
+                        'type': 'stat-display',
+                        'format': 'number',
+                        'value': 0,
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ProgressLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'variant': 'success',
+                        'value': 0,
+                        'format': 'percent',
+                        'icon': 'check-circle',
+                        'type': 'stat-display',
+                        'label': 'Completion %',
+                      },
+                      {
+                        'variant': 'info',
+                        'suffix': 'h',
+                        'label': 'Time Spent',
+                        'format': 'number',
+                        'type': 'stat-display',
+                        'value': 0,
+                        'icon': 'clock',
+                      },
+                      {
+                        'type': 'stat-display',
+                        'icon': 'list',
+                        'value': 0,
+                        'variant': 'default',
+                        'format': 'number',
+                        'label': 'Lessons Remaining',
+                      },
+                      {
+                        'variant': 'warning',
+                        'type': 'stat-display',
+                        'label': 'Streak',
+                        'icon': 'flame',
+                        'suffix': 'd',
+                        'format': 'number',
+                        'value': 0,
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'simple-grid',
+                    'cols': 4,
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'ProgressGraphs',
+        'category': 'interaction',
+        'linkedEntity': 'Progress',
+        'emits': [
+          {
+            'event': 'ProgressLoaded',
+            'description': 'Fired when Progress finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Progress]',
+              },
+            ],
+          },
+          {
+            'event': 'ProgressLoadFailed',
+            'description': 'Fired when Progress fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ProgressLoaded',
+              'name': 'Progress loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Progress]',
+                },
+              ],
+            },
+            {
+              'key': 'ProgressLoadFailed',
+              'name': 'Progress load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Progress',
+                  {
+                    'emit': {
+                      'failure': 'ProgressLoadFailed',
+                      'success': 'ProgressLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'chart',
+                    'subtitle': 'Average completion % per week',
+                    'chartType': 'line',
+                    'height': 280,
+                    'showLegend': true,
+                    'data': [],
+                    'title': 'Progress over time',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ProgressLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'chart',
+                    'title': 'Progress over time',
+                    'chartType': 'line',
+                    'subtitle': 'Average completion % per week',
+                    'height': 280,
+                    'data': '@payload.data',
+                    'showLegend': true,
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ProgressBrowseList',
+        'linkedEntity': 'Progress',
+        'config': {
+          'gap': 'sm',
+          'cols': 1,
+          'fields': [
+            {
+              'icon': 'book-open',
+              'name': 'courseName',
+              'label': 'Course',
+              'variant': 'h4',
+            },
+            {
+              'format': 'percent',
+              'label': 'Completion',
+              'variant': 'badge',
+              'name': 'completionPct',
+            },
+            {
+              'variant': 'body',
+              'name': 'lessonsCompleted',
+              'label': 'Lessons Completed',
+            },
+            {
+              'name': 'totalLessons',
+              'variant': 'body',
+              'label': 'Total Lessons',
+            },
+            {
+              'name': 'lastActivity',
+              'label': 'Last Activity',
+              'variant': 'caption',
+              'format': 'date',
+            },
+          ],
+          'itemActions': [],
+        },
+        'listens': [
+          {
+            'event': 'ENROLLED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'EnrollmentOrbital',
+              'trait': 'EnrollmentWizard',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ProgressItemSink',
+        'category': 'lifecycle',
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProgressBrowseList',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProgressBrowseList',
+            },
+          },
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProgressBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Progress',
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Progress',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'Progress',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'VIEW',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'EDIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DELETE',
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Progress',
+        'path': '/progress',
+        'traits': [
+          {
+            'ref': 'ProgressAppLayout',
+          },
+          {
+            'ref': 'ProgressDisplay',
+          },
+          {
+            'ref': 'ProgressStats',
+          },
+          {
+            'ref': 'ProgressGraphs',
+          },
+          {
+            'ref': 'ProgressBrowseList',
+          },
+          {
+            'ref': 'ProgressItemSink',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-lms — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdLmsParams {
+  Course?: StdLmsCourseOrbitalParams;
+  Enrollment?: StdLmsEnrollmentOrbitalParams;
+  Progress?: StdLmsProgressOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdLms(params: StdLmsParams = {}): OrbitalDefinition[] {
+  return [
+    stdLmsCourseOrbital(params.Course ?? {}),
+    stdLmsEnrollmentOrbital(params.Enrollment ?? {}),
+    stdLmsProgressOrbital(params.Progress ?? {}),
+  ];
 }

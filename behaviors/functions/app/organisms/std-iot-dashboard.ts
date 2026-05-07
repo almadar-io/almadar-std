@@ -34,1679 +34,1041 @@ export interface StdIotDashboardConfig {
 }
 
 /**
- * Params for the std-iot-dashboard descriptor helpers.
+ * Tunable params for the SensorReadingOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: SensorReading.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdIotDashboardParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdIotDashboardSensorReadingOrbitalParams {
+  /** Override the canonical entity name (default: 'SensorReading'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdIotDashboardConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `IotDashboard.traits.SensorAppLayout`. */
-export function stdIotDashboardSensorAppLayoutTrait(params: StdIotDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SensorAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the SensorReadingOrbital orbital with consumer params. */
+export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSensorReadingOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'SensorReading';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'SensorReadingOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'sensorreadings',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'sensorId',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'value',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'unit',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'timestamp',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'type',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'threshold',
+          'type': 'number',
+          'default': 0,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'SensorAppLayout',
+        'linkedEntity': 'SensorReading',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'layout-list',
+              'href': '/sensors',
+              'label': 'Sensors',
+            },
+            {
+              'href': '/devices',
+              'label': 'Devices',
+              'icon': 'cpu',
+            },
+            {
+              'label': 'Alerts',
+              'icon': 'bell',
+              'href': '/alerts',
+            },
+          ],
+          'searchEvent': 'SENSOR_SEARCH',
+          'contentTrait': '@trait.SensorCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'SENSOR_NOTIFICATIONS_OPEN',
+          'appName': 'IoT Dashboard',
+        },
+        'events': {
+          'SEARCH': 'SENSOR_SEARCH',
+          'NOTIFY_CLICK': 'SENSOR_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'SensorCatalog',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'thermometer',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Sensor Readings',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.SensorStats',
+                      '@trait.SensorGraphs',
+                      {
+                        'type': 'meter',
+                        'label': 'Latest reading vs threshold',
+                        'min': 0,
+                        'max': '@entity.threshold',
+                        'value': '@entity.value',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.SensorBrowseList',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'SensorStats',
+        'config': {
+          'metrics': [
+            {
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '!=',
+                  '@row.sensorId',
+                  '',
+                ],
+              ],
+              'icon': 'activity',
+              'label': 'Active Sensors',
+              'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
+            },
+            {
+              'aggregation': 'average',
+              'icon': 'trending-up',
+              'format': 'number',
+              'variant': 'success',
+              'label': 'Avg Reading',
+              'field': 'value',
+            },
+            {
+              'label': 'Anomalies',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '>',
+                  '@row.value',
+                  '@row.threshold',
+                ],
+              ],
+              'aggregation': 'count',
+              'icon': 'alert-triangle',
+              'format': 'number',
+              'variant': 'warning',
+            },
+          ],
+          'title': 'Sensors',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SensorBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'SensorGraphs',
+        'config': {
+          'chartType': 'line',
+          'showLegend': true,
+          'dateField': 'timestamp',
+          'valueField': 'value',
+          'height': 240,
+          'title': 'Readings over time',
+          'subtitle': 'Sensor values across time',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SensorBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'SensorBrowseList',
+        'linkedEntity': 'SensorReading',
+        'config': {
+          'fields': [
+            {
+              'variant': 'h4',
+              'name': 'sensorId',
+              'label': 'Sensor',
+              'icon': 'thermometer',
+            },
+            {
+              'name': 'type',
+              'variant': 'badge',
+              'label': 'Type',
+            },
+            {
+              'format': 'number',
+              'name': 'value',
+              'label': 'Value',
+              'variant': 'h4',
+            },
+            {
+              'name': 'unit',
+              'label': 'Unit',
+              'variant': 'caption',
+            },
+            {
+              'name': 'timestamp',
+              'variant': 'caption',
+              'format': 'date',
+              'label': 'Timestamp',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'SensorsPage',
+        'path': '/sensors',
+        'traits': [
+          {
+            'ref': 'SensorAppLayout',
+          },
+          {
+            'ref': 'SensorCatalog',
+          },
+          {
+            'ref': 'SensorStats',
+          },
+          {
+            'ref': 'SensorGraphs',
+          },
+          {
+            'ref': 'SensorBrowseList',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `IotDashboard.traits.SensorCatalog`. */
-export function stdIotDashboardSensorCatalogTrait(params: StdIotDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SensorCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `IotDashboard.traits.SensorStats`. */
-export function stdIotDashboardSensorStatsTrait(params: StdIotDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SensorStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `IotDashboard.traits.SensorGraphs`. */
-export function stdIotDashboardSensorGraphsTrait(params: StdIotDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SensorGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `IotDashboard.traits.SensorBrowseList`. */
-export function stdIotDashboardSensorBrowseListTrait(params: StdIotDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SensorBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `IotDashboard.pages.SensorsPage`. */
-export function stdIotDashboardPage(params: StdIotDashboardParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.SensorsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (3 orbitals). */
-export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'SensorReading';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'SensorReadingOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'SensorReading',
-        'collection': 'sensorreadings',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'sensorId',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'value',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'unit',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'timestamp',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'type',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'threshold',
-            'type': 'number',
-            'default': 0,
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'SensorAppLayout',
-          'linkedEntity': 'SensorReading',
-          'config': {
-            'navItems': [
-              {
-                'icon': 'layout-list',
-                'href': '/sensors',
-                'label': 'Sensors',
-              },
-              {
-                'href': '/devices',
-                'label': 'Devices',
-                'icon': 'cpu',
-              },
-              {
-                'label': 'Alerts',
-                'icon': 'bell',
-                'href': '/alerts',
-              },
-            ],
-            'searchEvent': 'SENSOR_SEARCH',
-            'contentTrait': '@trait.SensorCatalog',
-            'notifications': [],
-            'notificationClickEvent': 'SENSOR_NOTIFICATIONS_OPEN',
-            'appName': 'IoT Dashboard',
-          },
-          'events': {
-            'SEARCH': 'SENSOR_SEARCH',
-            'NOTIFY_CLICK': 'SENSOR_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'SensorCatalog',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'justify': 'between',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'thermometer',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'type': 'typography',
-                                  'content': 'Sensor Readings',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'gap': 'sm',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.SensorStats',
-                        '@trait.SensorGraphs',
-                        {
-                          'type': 'meter',
-                          'label': 'Latest reading vs threshold',
-                          'min': 0,
-                          'max': '@entity.threshold',
-                          'value': '@entity.value',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.SensorBrowseList',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'SensorStats',
-          'config': {
-            'metrics': [
-              {
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '!=',
-                    '@row.sensorId',
-                    '',
-                  ],
-                ],
-                'icon': 'activity',
-                'label': 'Active Sensors',
-                'format': 'number',
-                'aggregation': 'count',
-                'variant': 'primary',
-              },
-              {
-                'aggregation': 'average',
-                'icon': 'trending-up',
-                'format': 'number',
-                'variant': 'success',
-                'label': 'Avg Reading',
-                'field': 'value',
-              },
-              {
-                'label': 'Anomalies',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '>',
-                    '@row.value',
-                    '@row.threshold',
-                  ],
-                ],
-                'aggregation': 'count',
-                'icon': 'alert-triangle',
-                'format': 'number',
-                'variant': 'warning',
-              },
-            ],
-            'title': 'Sensors',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SensorBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'SensorGraphs',
-          'config': {
-            'chartType': 'line',
-            'showLegend': true,
-            'dateField': 'timestamp',
-            'valueField': 'value',
-            'height': 240,
-            'title': 'Readings over time',
-            'subtitle': 'Sensor values across time',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SensorBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'SensorBrowseList',
-          'linkedEntity': 'SensorReading',
-          'config': {
-            'fields': [
-              {
-                'variant': 'h4',
-                'name': 'sensorId',
-                'label': 'Sensor',
-                'icon': 'thermometer',
-              },
-              {
-                'name': 'type',
-                'variant': 'badge',
-                'label': 'Type',
-              },
-              {
-                'format': 'number',
-                'name': 'value',
-                'label': 'Value',
-                'variant': 'h4',
-              },
-              {
-                'name': 'unit',
-                'label': 'Unit',
-                'variant': 'caption',
-              },
-              {
-                'name': 'timestamp',
-                'variant': 'caption',
-                'format': 'date',
-                'label': 'Timestamp',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
-          },
-        }),
-      ],
-      pages: [
-        {
-          'name': 'SensorsPage',
-          'path': '/sensors',
-          'traits': [
-            {
-              'ref': 'SensorAppLayout',
-            },
-            {
-              'ref': 'SensorCatalog',
-            },
-            {
-              'ref': 'SensorStats',
-            },
-            {
-              'ref': 'SensorGraphs',
-            },
-            {
-              'ref': 'SensorBrowseList',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'DeviceOrbital',
-      uses: [
+  return built;
+}
+
+/**
+ * Tunable params for the DeviceOrbital orbital.
+ *
+ * Canonical entity: Device.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdIotDashboardDeviceOrbitalParams {
+  /** Override the canonical entity name (default: 'Device'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the DeviceOrbital orbital with consumer params. */
+export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Device';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'DeviceOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'devices',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'type',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'status',
+          'type': 'string',
+          'default': 'offline',
+          'values': [
+            'online',
+            'offline',
+            'maintenance',
+          ],
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'lastSeen',
+          'type': 'datetime',
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
         },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'Device',
-        'collection': 'devices',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DeviceAppLayout',
+        'config': {
+          'contentTrait': '@trait.DeviceCatalog',
+          'notifications': [],
+          'searchEvent': 'DEVICE_SEARCH',
+          'appName': 'IoT Dashboard',
+          'notificationClickEvent': 'DEVICE_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/sensors',
+              'label': 'Sensors',
+              'icon': 'layout-list',
+            },
+            {
+              'href': '/devices',
+              'icon': 'cpu',
+              'label': 'Devices',
+            },
+            {
+              'label': 'Alerts',
+              'icon': 'bell',
+              'href': '/alerts',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'DEVICE_SEARCH',
+          'NOTIFY_CLICK': 'DEVICE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'DeviceCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'type',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'offline',
-            'values': [
-              'online',
-              'offline',
-              'maintenance',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'lastSeen',
-            'type': 'datetime',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'DeviceAppLayout',
-          'config': {
-            'contentTrait': '@trait.DeviceCatalog',
-            'notifications': [],
-            'searchEvent': 'DEVICE_SEARCH',
-            'appName': 'IoT Dashboard',
-            'notificationClickEvent': 'DEVICE_NOTIFICATIONS_OPEN',
-            'navItems': [
-              {
-                'href': '/sensors',
-                'label': 'Sensors',
-                'icon': 'layout-list',
-              },
-              {
-                'href': '/devices',
-                'icon': 'cpu',
-                'label': 'Devices',
-              },
-              {
-                'label': 'Alerts',
-                'icon': 'bell',
-                'href': '/alerts',
-              },
-            ],
-          },
-          'events': {
-            'SEARCH': 'DEVICE_SEARCH',
-            'NOTIFY_CLICK': 'DEVICE_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'DeviceCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DEVICE_SEARCH',
-              'triggers': 'DEVICE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceAppLayout',
-              },
-            },
-            {
-              'event': 'DEVICE_NOTIFICATIONS_OPEN',
-              'triggers': 'DEVICE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DEVICE_SEARCH',
-                'name': 'Device Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DEVICE_NOTIFICATIONS_OPEN',
-                'name': 'Device Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'cpu',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Devices',
-                                  'variant': 'h2',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'label': 'Create Device',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'children': [
-                            '@trait.DeviceSearch',
-                            '@trait.DeviceFilter',
-                          ],
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.DeviceBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'DEVICE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'DEVICE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'align': 'center',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'name': 'bell',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'No notifications',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                          'type': 'typography',
-                          'variant': 'caption',
-                        },
-                        {
-                          'action': 'INIT',
-                          'label': 'Back',
-                          'variant': 'ghost',
-                          'type': 'button',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'DeviceSearch',
-          'config': {
-            'placeholder': 'Search devices…',
+        'listens': [
+          {
             'event': 'DEVICE_SEARCH',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'DeviceFilter',
-          'config': {
-            'filters': [
-              {
-                'label': 'Status',
-                'options': [
-                  'online',
-                  'offline',
-                  'maintenance',
-                ],
-                'field': 'status',
-                'filterType': 'select',
-              },
-              {
-                'label': 'Type',
-                'field': 'type',
-                'filterType': 'select',
-                'options': [
-                  'sensor',
-                  'gateway',
-                  'actuator',
-                  'controller',
-                ],
-              },
-            ],
-            'event': 'DEVICE_FILTER',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'DeviceBrowseList',
-          'linkedEntity': 'Device',
-          'config': {
-            'fields': [
-              {
-                'name': 'name',
-                'variant': 'h3',
-                'icon': 'cpu',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'variant': 'body',
-                'name': 'type',
-              },
-              {
-                'label': 'Last Seen',
-                'format': 'date',
-                'name': 'lastSeen',
-                'variant': 'caption',
-              },
-            ],
-            'gap': 'md',
-            'cols': 3,
-            'itemActions': [
-              {
-                'label': 'View',
-                'event': 'VIEW',
-                'variant': 'ghost',
-              },
-              {
-                'event': 'EDIT',
-                'variant': 'ghost',
-                'label': 'Edit',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceSearch',
-              },
+            'triggers': 'DEVICE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceAppLayout',
             },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceFilter',
-              },
-            },
-            {
-              'event': 'DEVICE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DevicePersistor',
-              },
-            },
-            {
-              'event': 'DEVICE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DevicePersistor',
-              },
-            },
-            {
-              'event': 'DEVICE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DevicePersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DeviceCreate',
-          'linkedEntity': 'Device',
-          'config': {
-            'mode': 'create',
-            'icon': 'plus-circle',
-            'title': 'Create Device',
-            'fields': [
-              'name',
-              'type',
-              'status',
-              'lastSeen',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DeviceEdit',
-          'linkedEntity': 'Device',
-          'config': {
-            'icon': 'edit',
-            'title': 'Edit Device',
-            'mode': 'edit',
-            'fields': [
-              'name',
-              'type',
-              'status',
-              'lastSeen',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'DeviceView',
-          'linkedEntity': 'Device',
-          'config': {
-            'icon': 'eye',
-            'title': 'View Device',
-            'fields': [
-              'name',
-              'type',
-              'status',
-              'lastSeen',
-            ],
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'DeviceDelete',
-          'linkedEntity': 'Device',
-          'config': {
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Device',
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-          },
-          'events': {
-            'CONFIRM': 'CONFIRM_DELETE',
-            'REQUEST': 'DELETE',
-          },
-          'listens': [
-            {
-              'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceBrowseList',
-              },
-            },
-          ],
-        }),
-        {
-          'name': 'DevicePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'Device',
-          'emits': [
-            {
-              'event': 'DEVICE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DEVICE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DEVICE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'DeviceDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'DEVICE_CREATED',
-                'name': 'Device Created',
-              },
-              {
-                'key': 'DEVICE_UPDATED',
-                'name': 'Device Updated',
-              },
-              {
-                'key': 'DEVICE_DELETED',
-                'name': 'Device Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'Device',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'DEVICE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Device',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'DEVICE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'Device',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'DEVICE_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Devices',
-          'path': '/devices',
-          'traits': [
-            {
-              'ref': 'DeviceAppLayout',
-            },
-            {
-              'ref': 'DeviceCatalog',
-            },
-            {
-              'ref': 'DeviceSearch',
-            },
-            {
-              'ref': 'DeviceFilter',
-            },
-            {
-              'ref': 'DeviceBrowseList',
-            },
-            {
-              'ref': 'DeviceCreate',
-            },
-            {
-              'ref': 'DeviceEdit',
-            },
-            {
-              'ref': 'DeviceView',
-            },
-            {
-              'ref': 'DeviceDelete',
-            },
-            {
-              'ref': 'DevicePersistor',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'DeviceAlertOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
-      ],
-      entity: {
-        'name': 'DeviceAlert',
-        'collection': 'devicealerts',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
           },
           {
-            'name': 'deviceId',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'severity',
-            'type': 'string',
-            'default': 'info',
-            'values': [
-              'info',
-              'warning',
-              'critical',
-            ],
-          },
-          {
-            'name': 'message',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'acknowledged',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'failureCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'successCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'threshold',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
+            'event': 'DEVICE_NOTIFICATIONS_OPEN',
+            'triggers': 'DEVICE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceAppLayout',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'DeviceAlertAppLayout',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'navItems': [
-              {
-                'href': '/sensors',
-                'icon': 'layout-list',
-                'label': 'Sensors',
-              },
-              {
-                'icon': 'cpu',
-                'href': '/devices',
-                'label': 'Devices',
-              },
-              {
-                'icon': 'bell',
-                'label': 'Alerts',
-                'href': '/alerts',
-              },
-            ],
-            'appName': 'IoT Dashboard',
-            'notifications': [],
-            'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.AlertCatalog',
-            'searchEvent': 'ALERT_SEARCH',
-          },
-          'events': {
-            'SEARCH': 'ALERT_SEARCH',
-            'NOTIFY_CLICK': 'ALERT_NOTIFICATIONS_OPEN',
-          },
-        }),
-        {
-          'name': 'AlertCatalog',
-          'category': 'interaction',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DEVICE_SEARCH',
+              'name': 'Device Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
+            {
+              'key': 'DEVICE_NOTIFICATIONS_OPEN',
+              'name': 'Device Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'md',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'bell',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Alerts',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'type': 'button',
-                                  'action': 'CREATE',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'label': 'New Alert',
-                                },
-                              ],
-                            },
-                          ],
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AlertBrowseList',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.DeviceAlertCircuitBreaker',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'cpu',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Devices',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'label': 'Create Device',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.DeviceSearch',
+                          '@trait.DeviceFilter',
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DeviceBrowseList',
+                    ],
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'AlertBrowseList',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'itemActions': [
-              {
-                'variant': 'ghost',
-                'label': 'View',
-                'event': 'VIEW',
-              },
-              {
-                'variant': 'ghost',
-                'event': 'EDIT',
-                'label': 'Edit',
-              },
-              {
-                'variant': 'danger',
-                'event': 'DELETE',
-                'label': 'Delete',
-              },
-            ],
-            'gap': 'sm',
-            'fields': [
-              {
-                'label': 'Device',
-                'icon': 'cpu',
-                'variant': 'h4',
-                'name': 'deviceId',
-              },
-              {
-                'variant': 'badge',
-                'name': 'severity',
-                'label': 'Severity',
-              },
-              {
-                'label': 'Message',
-                'name': 'message',
-                'variant': 'body',
-              },
-              {
-                'name': 'acknowledged',
-                'format': 'boolean',
-                'label': 'Acknowledged',
-                'variant': 'badge',
-              },
-            ],
-            'cols': 1,
-          },
-          'listens': [
-            {
-              'event': 'ALERT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
+              ],
             },
             {
-              'event': 'ALERT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'DEVICE_SEARCH',
             },
             {
-              'event': 'ALERT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'DEVICE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-8',
+                    'align': 'center',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'action': 'INIT',
+                        'label': 'Back',
+                        'variant': 'ghost',
+                        'type': 'button',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                  },
+                ],
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertCreate',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'mode': 'create',
-            'title': 'New Alert',
-            'icon': 'plus-circle',
-            'fields': [
-              'deviceId',
-              'severity',
-              'message',
-              'acknowledged',
-            ],
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'DeviceSearch',
+        'config': {
+          'placeholder': 'Search devices…',
+          'event': 'DEVICE_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'DeviceFilter',
+        'config': {
+          'filters': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertCatalog',
-              },
+              'label': 'Status',
+              'options': [
+                'online',
+                'offline',
+                'maintenance',
+              ],
+              'field': 'status',
+              'filterType': 'select',
+            },
+            {
+              'label': 'Type',
+              'field': 'type',
+              'filterType': 'select',
+              'options': [
+                'sensor',
+                'gateway',
+                'actuator',
+                'controller',
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertEdit',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'fields': [
-              'deviceId',
-              'severity',
-              'message',
-              'acknowledged',
-            ],
-            'mode': 'edit',
-            'title': 'Edit Alert',
-            'icon': 'edit',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
+          'event': 'DEVICE_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'DeviceBrowseList',
+        'linkedEntity': 'Device',
+        'config': {
+          'fields': [
+            {
+              'name': 'name',
+              'variant': 'h3',
+              'icon': 'cpu',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'body',
+              'name': 'type',
+            },
+            {
+              'label': 'Last Seen',
+              'format': 'date',
+              'name': 'lastSeen',
+              'variant': 'caption',
+            },
+          ],
+          'gap': 'md',
+          'cols': 3,
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
             {
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'Edit',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertView',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'mode': 'edit',
-            'fields': [
-              'deviceId',
-              'severity',
-              'message',
-              'acknowledged',
-            ],
-            'icon': 'eye',
-            'title': 'View Alert',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
             {
-              'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'AlertDelete',
-          'linkedEntity': 'DeviceAlert',
-          'config': {
-            'icon': 'alert-triangle',
-            'confirmLabel': 'Delete',
-            'title': 'Delete Alert',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
-            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'AlertPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'DeviceAlert',
-          'emits': [
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceFilter',
+            },
+          },
+          {
+            'event': 'DEVICE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DevicePersistor',
+            },
+          },
+          {
+            'event': 'DEVICE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DevicePersistor',
+            },
+          },
+          {
+            'event': 'DEVICE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DevicePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DeviceCreate',
+        'linkedEntity': 'Device',
+        'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'Create Device',
+          'fields': [
+            'name',
+            'type',
+            'status',
+            'lastSeen',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DeviceEdit',
+        'linkedEntity': 'Device',
+        'config': {
+          'icon': 'edit',
+          'title': 'Edit Device',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'type',
+            'status',
+            'lastSeen',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DeviceView',
+        'linkedEntity': 'Device',
+        'config': {
+          'icon': 'eye',
+          'title': 'View Device',
+          'fields': [
+            'name',
+            'type',
+            'status',
+            'lastSeen',
+          ],
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'DeviceDelete',
+        'linkedEntity': 'Device',
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Device',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'DevicePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Device',
+        'emits': [
+          {
+            'event': 'DEVICE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DEVICE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DEVICE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DeviceDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ALERT_CREATED',
-              'scope': 'external',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1715,8 +1077,679 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'ALERT_UPDATED',
-              'scope': 'external',
+              'key': 'DEVICE_CREATED',
+              'name': 'Device Created',
+            },
+            {
+              'key': 'DEVICE_UPDATED',
+              'name': 'Device Updated',
+            },
+            {
+              'key': 'DEVICE_DELETED',
+              'name': 'Device Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Device',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DEVICE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Device',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DEVICE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Device',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'DEVICE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Devices',
+        'path': '/devices',
+        'traits': [
+          {
+            'ref': 'DeviceAppLayout',
+          },
+          {
+            'ref': 'DeviceCatalog',
+          },
+          {
+            'ref': 'DeviceSearch',
+          },
+          {
+            'ref': 'DeviceFilter',
+          },
+          {
+            'ref': 'DeviceBrowseList',
+          },
+          {
+            'ref': 'DeviceCreate',
+          },
+          {
+            'ref': 'DeviceEdit',
+          },
+          {
+            'ref': 'DeviceView',
+          },
+          {
+            'ref': 'DeviceDelete',
+          },
+          {
+            'ref': 'DevicePersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the DeviceAlertOrbital orbital.
+ *
+ * Canonical entity: DeviceAlert.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdIotDashboardDeviceAlertOrbitalParams {
+  /** Override the canonical entity name (default: 'DeviceAlert'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the DeviceAlertOrbital orbital with consumer params. */
+export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceAlertOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'DeviceAlert';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'DeviceAlertOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'devicealerts',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'deviceId',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'severity',
+          'type': 'string',
+          'default': 'info',
+          'values': [
+            'info',
+            'warning',
+            'critical',
+          ],
+        },
+        {
+          'name': 'message',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'acknowledged',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'failureCount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'successCount',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'threshold',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DeviceAlertAppLayout',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'navItems': [
+            {
+              'href': '/sensors',
+              'icon': 'layout-list',
+              'label': 'Sensors',
+            },
+            {
+              'icon': 'cpu',
+              'href': '/devices',
+              'label': 'Devices',
+            },
+            {
+              'icon': 'bell',
+              'label': 'Alerts',
+              'href': '/alerts',
+            },
+          ],
+          'appName': 'IoT Dashboard',
+          'notifications': [],
+          'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.AlertCatalog',
+          'searchEvent': 'ALERT_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'ALERT_SEARCH',
+          'NOTIFY_CLICK': 'ALERT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'AlertCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'bell',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Alerts',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'New Alert',
+                              },
+                            ],
+                          },
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AlertBrowseList',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DeviceAlertCircuitBreaker',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'AlertBrowseList',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
+          'fields': [
+            {
+              'label': 'Device',
+              'icon': 'cpu',
+              'variant': 'h4',
+              'name': 'deviceId',
+            },
+            {
+              'variant': 'badge',
+              'name': 'severity',
+              'label': 'Severity',
+            },
+            {
+              'label': 'Message',
+              'name': 'message',
+              'variant': 'body',
+            },
+            {
+              'name': 'acknowledged',
+              'format': 'boolean',
+              'label': 'Acknowledged',
+              'variant': 'badge',
+            },
+          ],
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'ALERT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
+          },
+          {
+            'event': 'ALERT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
+          },
+          {
+            'event': 'ALERT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertCreate',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'mode': 'create',
+          'title': 'New Alert',
+          'icon': 'plus-circle',
+          'fields': [
+            'deviceId',
+            'severity',
+            'message',
+            'acknowledged',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertEdit',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'fields': [
+            'deviceId',
+            'severity',
+            'message',
+            'acknowledged',
+          ],
+          'mode': 'edit',
+          'title': 'Edit Alert',
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertView',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'deviceId',
+            'severity',
+            'message',
+            'acknowledged',
+          ],
+          'icon': 'eye',
+          'title': 'View Alert',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'AlertDelete',
+        'linkedEntity': 'DeviceAlert',
+        'config': {
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Alert',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'AlertPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'DeviceAlert',
+        'emits': [
+          {
+            'event': 'ALERT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ALERT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'ALERT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1725,230 +1758,209 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'ALERT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
+              'key': 'ALERT_CREATED',
+              'name': 'Alert Created',
+            },
+            {
+              'key': 'ALERT_UPDATED',
+              'name': 'Alert Updated',
+            },
+            {
+              'key': 'ALERT_DELETED',
+              'name': 'Alert Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'DeviceAlert',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ALERT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'DeviceAlert',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ALERT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'DeviceAlert',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'ALERT_DELETED',
+                    },
+                  },
+                ],
               ],
             },
           ],
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'AlertEmailNotice',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
             {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertDelete',
-              },
+              'name': 'ready',
+              'isInitial': true,
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ALERT_CREATED',
-                'name': 'Alert Created',
-              },
-              {
-                'key': 'ALERT_UPDATED',
-                'name': 'Alert Updated',
-              },
-              {
-                'key': 'ALERT_DELETED',
-                'name': 'Alert Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'DeviceAlert',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ALERT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'DeviceAlert',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ALERT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'DeviceAlert',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'ALERT_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'AlertEmailNotice',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'variant': 'info',
-                      'message': 'Critical alerts auto-notify on-call ops via email.',
-                      'type': 'alert',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Email.traits.ServiceEmailEmail',
-          'name': 'AlertEmail',
-          'config': {
-            'uiTrait': '@trait.AlertEmailNotice',
-            'subject': 'Critical alert raised',
-            'body': 'A critical alert was raised on a device. Investigate immediately.',
-            'sender': 'alerts@example.com',
-            'recipient': 'ops@example.com',
-          },
-          'listens': [
+          'events': [
             {
-              'event': 'ALERT_CREATED',
-              'triggers': 'SEND',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
+              'key': 'INIT',
+              'name': 'Initialize',
             },
           ],
-        }),
-        {
-          'name': 'DeviceAlertCircuitBreaker',
-          'category': 'interaction',
-          'linkedEntity': 'DeviceAlert',
-          'emits': [
+          'transitions': [
             {
-              'event': 'DeviceAlertLoaded',
-              'description': 'Fired when DeviceAlert finishes loading',
-              'scope': 'internal',
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'info',
+                    'message': 'Critical alerts auto-notify on-call ops via email.',
+                    'type': 'alert',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Email.traits.ServiceEmailEmail',
+        'name': 'AlertEmail',
+        'config': {
+          'uiTrait': '@trait.AlertEmailNotice',
+          'subject': 'Critical alert raised',
+          'body': 'A critical alert was raised on a device. Investigate immediately.',
+          'sender': 'alerts@example.com',
+          'recipient': 'ops@example.com',
+        },
+        'listens': [
+          {
+            'event': 'ALERT_CREATED',
+            'triggers': 'SEND',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'DeviceAlertCircuitBreaker',
+        'category': 'interaction',
+        'linkedEntity': 'DeviceAlert',
+        'emits': [
+          {
+            'event': 'DeviceAlertLoaded',
+            'description': 'Fired when DeviceAlert finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[DeviceAlert]',
+              },
+            ],
+          },
+          {
+            'event': 'DeviceAlertLoadFailed',
+            'description': 'Fired when DeviceAlert fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+            {
+              'name': 'halfOpen',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FAILURE',
+              'name': 'Failure',
+            },
+            {
+              'key': 'SUCCESS',
+              'name': 'Success',
+            },
+            {
+              'key': 'TIMEOUT',
+              'name': 'Timeout',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'DeviceAlertLoaded',
+              'name': 'DeviceAlert loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1957,9 +1969,8 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
               ],
             },
             {
-              'event': 'DeviceAlertLoadFailed',
-              'description': 'Fired when DeviceAlert fails to load',
-              'scope': 'internal',
+              'key': 'DeviceAlertLoadFailed',
+              'name': 'DeviceAlert load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1972,763 +1983,745 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalDefinitio
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-              {
-                'name': 'halfOpen',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'FAILURE',
-                'name': 'Failure',
-              },
-              {
-                'key': 'SUCCESS',
-                'name': 'Success',
-              },
-              {
-                'key': 'TIMEOUT',
-                'name': 'Timeout',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'DeviceAlertLoaded',
-                'name': 'DeviceAlert loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.failureCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.successCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.threshold',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'DeviceAlert',
                   {
-                    'name': 'data',
-                    'type': '[DeviceAlert]',
+                    'emit': {
+                      'success': 'DeviceAlertLoaded',
+                      'failure': 'DeviceAlertLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'DeviceAlertLoadFailed',
-                'name': 'DeviceAlert load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.failureCount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.successCount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.threshold',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'DeviceAlert',
-                    {
-                      'emit': {
-                        'success': 'DeviceAlertLoaded',
-                        'failure': 'DeviceAlertLoadFailed',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'label': 'Closed',
+                            'status': 'online',
+                            'pulse': false,
+                            'type': 'status-dot',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'variant': 'h3',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'label': 'Closed',
-                              'status': 'online',
-                              'pulse': false,
-                              'type': 'status-dot',
-                            },
-                          ],
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'success',
-                          'message': 'Service is healthy. All requests are being processed.',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                            },
-                            {
-                              'label': 'Successes',
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'min': 0,
-                          'max': '@entity.threshold',
-                          'value': '@entity.failureCount',
-                          'type': 'meter',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
+                      {
+                        'type': 'alert',
+                        'variant': 'success',
+                        'message': 'Service is healthy. All requests are being processed.',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                          },
+                          {
+                            'label': 'Successes',
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'min': 0,
+                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
+                        'type': 'meter',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'FAILURE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'alert-triangle',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                  'content': 'Circuit Breaker',
-                                },
-                              ],
-                              'gap': 'md',
-                            },
-                            {
-                              'pulse': true,
-                              'label': 'Open',
-                              'type': 'status-dot',
-                              'status': 'critical',
-                            },
-                          ],
-                          'justify': 'between',
-                        },
-                        {
-                          'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                          'type': 'alert',
-                          'variant': 'error',
-                        },
-                        {
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                          'cols': 2,
-                        },
-                        {
-                          'max': '@entity.threshold',
-                          'min': 0,
-                          'type': 'meter',
-                          'value': '@entity.failureCount',
-                        },
-                        {
-                          'label': 'Reset',
-                          'action': 'RESET',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                        },
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'FAILURE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'alert-triangle',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                              },
+                            ],
+                            'gap': 'md',
+                          },
+                          {
+                            'pulse': true,
+                            'label': 'Open',
+                            'type': 'status-dot',
+                            'status': 'critical',
+                          },
+                        ],
+                        'justify': 'between',
+                      },
+                      {
+                        'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                        'type': 'alert',
+                        'variant': 'error',
+                      },
+                      {
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                        'cols': 2,
+                      },
+                      {
+                        'max': '@entity.threshold',
+                        'min': 0,
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
+                      },
+                      {
+                        'label': 'Reset',
+                        'action': 'RESET',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'SUCCESS',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'gap': 'md',
-                          'align': 'center',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                },
-                              ],
-                            },
-                            {
-                              'status': 'online',
-                              'pulse': false,
-                              'type': 'status-dot',
-                              'label': 'Closed',
-                            },
-                          ],
-                        },
-                        {
-                          'message': 'Service is healthy.',
-                          'type': 'alert',
-                          'variant': 'success',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'min': 0,
-                          'type': 'meter',
-                          'max': '@entity.threshold',
-                          'value': '@entity.failureCount',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'SUCCESS',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                                'variant': 'h3',
+                              },
+                            ],
+                          },
+                          {
+                            'status': 'online',
+                            'pulse': false,
+                            'type': 'status-dot',
+                            'label': 'Closed',
+                          },
+                        ],
+                      },
+                      {
+                        'message': 'Service is healthy.',
+                        'type': 'alert',
+                        'variant': 'success',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'min': 0,
+                        'type': 'meter',
+                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'open',
-                'to': 'halfOpen',
-                'event': 'TIMEOUT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'activity',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Circuit Breaker',
-                                  'variant': 'h3',
-                                },
-                              ],
-                            },
-                            {
-                              'label': 'Half-Open',
-                              'status': 'warning',
-                              'pulse': true,
-                              'type': 'status-dot',
-                            },
-                          ],
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'justify': 'between',
-                        },
-                        {
-                          'variant': 'warning',
-                          'type': 'alert',
-                          'message': 'Testing recovery. Limited requests allowed.',
-                        },
-                        {
-                          'cols': 2,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                              'label': 'Successes',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'halfOpen',
+              'event': 'TIMEOUT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'activity',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                              },
+                            ],
+                          },
+                          {
+                            'label': 'Half-Open',
+                            'status': 'warning',
+                            'pulse': true,
+                            'type': 'status-dot',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'variant': 'warning',
+                        'type': 'alert',
+                        'message': 'Testing recovery. Limited requests allowed.',
+                      },
+                      {
+                        'cols': 2,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                            'label': 'Successes',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'justify': 'between',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'shield-check',
-                                },
-                                {
-                                  'variant': 'h3',
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'status-dot',
-                              'pulse': false,
-                              'status': 'online',
-                              'label': 'Closed',
-                            },
-                          ],
-                        },
-                        {
-                          'variant': 'success',
-                          'message': 'Service is healthy.',
-                          'type': 'alert',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                            },
-                            {
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                              'type': 'stat-display',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'meter',
-                          'min': 0,
-                          'value': '@entity.failureCount',
-                          'max': '@entity.threshold',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'shield-check',
+                              },
+                              {
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'status-dot',
+                            'pulse': false,
+                            'status': 'online',
+                            'label': 'Closed',
+                          },
+                        ],
+                      },
+                      {
+                        'variant': 'success',
+                        'message': 'Service is healthy.',
+                        'type': 'alert',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                          },
+                          {
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                            'type': 'stat-display',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'meter',
+                        'min': 0,
+                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'closed',
-                'event': 'SUCCESS',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'shield-check',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                },
-                              ],
-                            },
-                            {
-                              'status': 'online',
-                              'pulse': false,
-                              'type': 'status-dot',
-                              'label': 'Closed',
-                            },
-                          ],
-                        },
-                        {
-                          'message': 'Service is healthy.',
-                          'type': 'alert',
-                          'variant': 'success',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'label': 'Successes',
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'min': 0,
-                          'type': 'meter',
-                          'value': '@entity.failureCount',
-                          'max': '@entity.threshold',
-                        },
-                      ],
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'SUCCESS',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'shield-check',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                                'variant': 'h3',
+                              },
+                            ],
+                          },
+                          {
+                            'status': 'online',
+                            'pulse': false,
+                            'type': 'status-dot',
+                            'label': 'Closed',
+                          },
+                        ],
+                      },
+                      {
+                        'message': 'Service is healthy.',
+                        'type': 'alert',
+                        'variant': 'success',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'label': 'Successes',
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'min': 0,
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'open',
-                'event': 'FAILURE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'alert-triangle',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                },
-                              ],
-                              'gap': 'md',
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'status-dot',
-                              'pulse': true,
-                              'status': 'critical',
-                              'label': 'Open',
-                            },
-                          ],
-                          'justify': 'between',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                          'align': 'center',
-                        },
-                        {
-                          'variant': 'error',
-                          'message': 'Circuit is open.',
-                          'type': 'alert',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'label': 'Successes',
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                          'cols': 2,
-                        },
-                        {
-                          'value': '@entity.failureCount',
-                          'max': '@entity.threshold',
-                          'type': 'meter',
-                          'min': 0,
-                        },
-                        {
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'variant': 'ghost',
-                          'label': 'Reset',
-                          'action': 'RESET',
-                        },
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'open',
+              'event': 'FAILURE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'alert-triangle',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                                'variant': 'h3',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'status-dot',
+                            'pulse': true,
+                            'status': 'critical',
+                            'label': 'Open',
+                          },
+                        ],
+                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      {
+                        'variant': 'error',
+                        'message': 'Circuit is open.',
+                        'type': 'alert',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'label': 'Successes',
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                        'cols': 2,
+                      },
+                      {
+                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
+                        'type': 'meter',
+                        'min': 0,
+                      },
+                      {
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'label': 'Reset',
+                        'action': 'RESET',
+                      },
+                    ],
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'closed',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                },
-                              ],
-                              'gap': 'md',
-                              'align': 'center',
-                            },
-                            {
-                              'status': 'online',
-                              'type': 'status-dot',
-                              'pulse': false,
-                              'label': 'Closed',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'align': 'center',
-                          'justify': 'between',
-                        },
-                        {
-                          'variant': 'success',
-                          'message': 'Service is healthy.',
-                          'type': 'alert',
-                        },
-                        {
-                          'cols': 2,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                            },
-                            {
-                              'label': 'Successes',
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'max': '@entity.threshold',
-                          'value': '@entity.failureCount',
-                          'type': 'meter',
-                          'min': 0,
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                                'variant': 'h3',
+                              },
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                          },
+                          {
+                            'status': 'online',
+                            'type': 'status-dot',
+                            'pulse': false,
+                            'label': 'Closed',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'variant': 'success',
+                        'message': 'Service is healthy.',
+                        'type': 'alert',
+                      },
+                      {
+                        'cols': 2,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                          },
+                          {
+                            'label': 'Successes',
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
+                        'type': 'meter',
+                        'min': 0,
+                      },
+                    ],
+                    'type': 'stack',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Alerts',
-          'path': '/alerts',
-          'traits': [
-            {
-              'ref': 'DeviceAlertAppLayout',
-            },
-            {
-              'ref': 'AlertCatalog',
-            },
-            {
-              'ref': 'AlertBrowseList',
-            },
-            {
-              'ref': 'AlertCreate',
-            },
-            {
-              'ref': 'AlertEdit',
-            },
-            {
-              'ref': 'AlertView',
-            },
-            {
-              'ref': 'AlertDelete',
-            },
-            {
-              'ref': 'AlertPersistor',
-            },
-            {
-              'ref': 'AlertEmail',
-            },
-            {
-              'ref': 'AlertEmailNotice',
-            },
-            {
-              'ref': 'DeviceAlertCircuitBreaker',
+              ],
             },
           ],
-        } as never,
-      ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Alerts',
+        'path': '/alerts',
+        'traits': [
+          {
+            'ref': 'DeviceAlertAppLayout',
+          },
+          {
+            'ref': 'AlertCatalog',
+          },
+          {
+            'ref': 'AlertBrowseList',
+          },
+          {
+            'ref': 'AlertCreate',
+          },
+          {
+            'ref': 'AlertEdit',
+          },
+          {
+            'ref': 'AlertView',
+          },
+          {
+            'ref': 'AlertDelete',
+          },
+          {
+            'ref': 'AlertPersistor',
+          },
+          {
+            'ref': 'AlertEmail',
+          },
+          {
+            'ref': 'AlertEmailNotice',
+          },
+          {
+            'ref': 'DeviceAlertCircuitBreaker',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-iot-dashboard — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdIotDashboardParams {
+  SensorReading?: StdIotDashboardSensorReadingOrbitalParams;
+  Device?: StdIotDashboardDeviceOrbitalParams;
+  DeviceAlert?: StdIotDashboardDeviceAlertOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdIotDashboard(params: StdIotDashboardParams = {}): OrbitalDefinition[] {
+  return [
+    stdIotDashboardSensorReadingOrbital(params.SensorReading ?? {}),
+    stdIotDashboardDeviceOrbital(params.Device ?? {}),
+    stdIotDashboardDeviceAlertOrbital(params.DeviceAlert ?? {}),
+  ];
 }

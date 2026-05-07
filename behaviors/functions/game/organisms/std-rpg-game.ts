@@ -119,1064 +119,1056 @@ export interface StdRpgGameMissionUpdateFailedPayload {
 }
 
 /**
- * Params for the std-rpg-game descriptor helpers.
+ * Tunable params for the BattleStateOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: BattleState.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdRpgGameParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdRpgGameBattleStateOrbitalParams {
+  /** Override the canonical entity name (default: 'BattleState'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdRpgGameEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `RpgGame.traits.BattleStateBattleFlow`. */
-export function stdRpgGameBattleStateBattleFlowTrait(params: StdRpgGameParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BattleStateBattleFlow`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+/** Per-orbital factory: builds the BattleStateOrbital orbital with consumer params. */
+export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'BattleState';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BattleStateOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'turn',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'phase',
+          'type': 'string',
+          'default': 'setup',
+        },
+        {
+          'name': 'outcome',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'BattleStateBattleFlow',
+        'category': 'interaction',
+        'linkedEntity': 'BattleState',
+        'emits': [
+          {
+            'event': 'LOOT_DROPPED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'itemId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'BattleStateLoaded',
+            'description': 'Fired when BattleState finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BattleState]',
+              },
+            ],
+          },
+          {
+            'event': 'BattleStateLoadFailed',
+            'description': 'Fired when BattleState fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MissionUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MissionUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ENCOUNTER_STARTED',
+            'triggers': 'START',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'WorldZoneOrbital',
+              'trait': 'WorldZoneNavigation',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'menu',
+              'isInitial': true,
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'paused',
+            },
+            {
+              'name': 'gameover',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'NAVIGATE',
+              'name': 'Navigate',
+            },
+            {
+              'key': 'END_TURN',
+              'name': 'End Turn',
+            },
+            {
+              'key': 'PAUSE',
+              'name': 'Pause',
+            },
+            {
+              'key': 'GAME_OVER',
+              'name': 'Game Over',
+            },
+            {
+              'key': 'RESUME',
+              'name': 'Resume',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'LOOT_DROPPED',
+              'name': 'Loot Dropped',
+            },
+            {
+              'key': 'BattleStateLoaded',
+              'name': 'BattleState loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BattleState]',
+                },
+              ],
+            },
+            {
+              'key': 'BattleStateLoadFailed',
+              'name': 'BattleState load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemSaved',
+              'name': 'Rpg item saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemSaveFailed',
+              'name': 'Rpg item save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemUpdated',
+              'name': 'Rpg item updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemUpdateFailed',
+              'name': 'Rpg item update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemDeleted',
+              'name': 'Rpg item deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemDeleteFailed',
+              'name': 'Rpg item delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'MissionUpdated',
+              'name': 'Mission updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'MissionUpdateFailed',
+              'name': 'Mission update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'BattleState',
+                  {
+                    'emit': {
+                      'success': 'BattleStateLoaded',
+                      'failure': 'BattleStateLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'subtitle': 'Turn-Based Strategy',
+                        'title': 'Battle Arena',
+                        'type': 'game-menu',
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'label': 'Start Battle',
+                            'variant': 'primary',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'playing',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'game-hud',
+                        'stats': [
+                          {
+                            'value': '@entity.turn',
+                            'label': 'Turn',
+                          },
+                          {
+                            'label': 'Score',
+                            'value': '@entity.score',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'playing',
+              'to': 'playing',
+              'event': 'END_TURN',
+              'effects': [
+                [
+                  'set',
+                  '@entity.turn',
+                  [
+                    '+',
+                    '@entity.turn',
+                    1,
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'stats': [
+                          {
+                            'value': '@entity.turn',
+                            'label': 'Turn',
+                          },
+                          {
+                            'label': 'Score',
+                            'value': '@entity.score',
+                          },
+                        ],
+                        'type': 'game-hud',
+                      },
+                    ],
+                    'appName': 'RPG Game',
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'playing',
+              'to': 'paused',
+              'event': 'PAUSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'title': 'Paused',
+                    'menuItems': [
+                      {
+                        'event': 'RESUME',
+                        'label': 'Resume',
+                        'variant': 'primary',
+                      },
+                      {
+                        'event': 'RESTART',
+                        'label': 'Quit',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'type': 'game-menu',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'playing',
+              'to': 'gameover',
+              'event': 'GAME_OVER',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'variant': 'primary',
+                            'label': 'Play Again',
+                            'event': 'RESTART',
+                          },
+                          {
+                            'event': 'RESTART',
+                            'variant': 'secondary',
+                            'label': 'Main Menu',
+                          },
+                        ],
+                        'stats': [
+                          {
+                            'label': 'Turns',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'value': '@entity.score',
+                            'label': 'Score',
+                          },
+                        ],
+                        'title': 'Battle Over',
+                        'type': 'game-over-screen',
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'paused',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'paused',
+              'to': 'playing',
+              'event': 'RESUME',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'type': 'game-hud',
+                        'stats': [
+                          {
+                            'label': 'Turn',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Score',
+                            'value': '@entity.score',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'playing',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'type': 'game-hud',
+                        'stats': [
+                          {
+                            'label': 'Turn',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'value': '@entity.score',
+                            'label': 'Score',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'paused',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'game-menu',
+                        'subtitle': 'Turn-Based Strategy',
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'variant': 'primary',
+                            'label': 'Start Battle',
+                          },
+                        ],
+                        'title': 'Battle Arena',
+                      },
+                    ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'gameover',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'variant': 'primary',
+                            'label': 'Start Battle',
+                          },
+                        ],
+                        'subtitle': 'Turn-Based Strategy',
+                        'type': 'game-menu',
+                        'title': 'Battle Arena',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'BattleStateCombatLog',
+        'category': 'interaction',
+        'linkedEntity': 'BattleState',
+        'emits': [
+          {
+            'event': 'BattleStateLoaded',
+            'description': 'Fired when BattleState finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BattleState]',
+              },
+            ],
+          },
+          {
+            'event': 'BattleStateLoadFailed',
+            'description': 'Fired when BattleState fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'LOG_EVENT',
+              'name': 'Log Event',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'CLEAR',
+              'name': 'Clear',
+            },
+            {
+              'key': 'BattleStateLoaded',
+              'name': 'BattleState loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BattleState]',
+                },
+              ],
+            },
+            {
+              'key': 'BattleStateLoadFailed',
+              'name': 'BattleState load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'BattleState',
+                  {
+                    'emit': {
+                      'success': 'BattleStateLoaded',
+                      'failure': 'BattleStateLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'LOG_EVENT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'autoScroll': true,
+                        'title': 'Combat Log',
+                        'events': '@BattleState',
+                        'maxVisible': 10,
+                        'showTimestamps': true,
+                        'type': 'combat-log',
+                      },
+                    ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'CLEAR',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'RPG Game',
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'autoScroll': true,
+                        'type': 'combat-log',
+                        'maxVisible': 10,
+                        'events': '@BattleState',
+                        'showTimestamps': true,
+                        'title': 'Combat Log',
+                      },
+                    ],
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'BattlePage',
+        'path': '/battle',
+        'traits': [
+          {
+            'ref': 'BattleStateBattleFlow',
+          },
+          {
+            'ref': 'BattleStateCombatLog',
+          },
+        ],
+      } as never,
+    ],
   });
-}
-
-/** Trait descriptor: `RpgGame.traits.BattleStateCombatLog`. */
-export function stdRpgGameBattleStateCombatLogTrait(params: StdRpgGameParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.BattleStateCombatLog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `RpgGame.pages.BattlePage`. */
-export function stdRpgGamePage(params: StdRpgGameParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.BattlePage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'BattleState';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
-      name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
       const tr = t as { linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
       const pr = p as { linkedEntity?: string; path?: string };
       const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
       return out;
     });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BattleStateOrbital',
-      uses: [],
-      entity: {
-        'name': 'BattleState',
-        'persistence': 'runtime',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'turn',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'phase',
-            'type': 'string',
-            'default': 'setup',
-          },
-          {
-            'name': 'outcome',
-            'type': 'string',
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'BattleStateBattleFlow',
-          'category': 'interaction',
-          'linkedEntity': 'BattleState',
-          'emits': [
-            {
-              'event': 'LOOT_DROPPED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'itemId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'BattleStateLoaded',
-              'description': 'Fired when BattleState finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[BattleState]',
-                },
-              ],
-            },
-            {
-              'event': 'BattleStateLoadFailed',
-              'description': 'Fired when BattleState fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'MissionUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'MissionUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ENCOUNTER_STARTED',
-              'triggers': 'START',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'WorldZoneOrbital',
-                'trait': 'WorldZoneNavigation',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'menu',
-                'isInitial': true,
-              },
-              {
-                'name': 'playing',
-              },
-              {
-                'name': 'paused',
-              },
-              {
-                'name': 'gameover',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'NAVIGATE',
-                'name': 'Navigate',
-              },
-              {
-                'key': 'END_TURN',
-                'name': 'End Turn',
-              },
-              {
-                'key': 'PAUSE',
-                'name': 'Pause',
-              },
-              {
-                'key': 'GAME_OVER',
-                'name': 'Game Over',
-              },
-              {
-                'key': 'RESUME',
-                'name': 'Resume',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'LOOT_DROPPED',
-                'name': 'Loot Dropped',
-              },
-              {
-                'key': 'BattleStateLoaded',
-                'name': 'BattleState loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[BattleState]',
-                  },
-                ],
-              },
-              {
-                'key': 'BattleStateLoadFailed',
-                'name': 'BattleState load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemSaved',
-                'name': 'Rpg item saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemSaveFailed',
-                'name': 'Rpg item save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemUpdated',
-                'name': 'Rpg item updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemUpdateFailed',
-                'name': 'Rpg item update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemDeleted',
-                'name': 'Rpg item deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemDeleteFailed',
-                'name': 'Rpg item delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MissionUpdated',
-                'name': 'Mission updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MissionUpdateFailed',
-                'name': 'Mission update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'BattleState',
-                    {
-                      'emit': {
-                        'success': 'BattleStateLoaded',
-                        'failure': 'BattleStateLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'appName': 'RPG Game',
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'subtitle': 'Turn-Based Strategy',
-                          'title': 'Battle Arena',
-                          'type': 'game-menu',
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'label': 'Start Battle',
-                              'variant': 'primary',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'playing',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'game-hud',
-                          'stats': [
-                            {
-                              'value': '@entity.turn',
-                              'label': 'Turn',
-                            },
-                            {
-                              'label': 'Score',
-                              'value': '@entity.score',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'playing',
-                'to': 'playing',
-                'event': 'END_TURN',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.turn',
-                    [
-                      '+',
-                      '@entity.turn',
-                      1,
-                    ],
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'value': '@entity.turn',
-                              'label': 'Turn',
-                            },
-                            {
-                              'label': 'Score',
-                              'value': '@entity.score',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                      ],
-                      'appName': 'RPG Game',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'playing',
-                'to': 'paused',
-                'event': 'PAUSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'title': 'Paused',
-                      'menuItems': [
-                        {
-                          'event': 'RESUME',
-                          'label': 'Resume',
-                          'variant': 'primary',
-                        },
-                        {
-                          'event': 'RESTART',
-                          'label': 'Quit',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'type': 'game-menu',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'playing',
-                'to': 'gameover',
-                'event': 'GAME_OVER',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'variant': 'primary',
-                              'label': 'Play Again',
-                              'event': 'RESTART',
-                            },
-                            {
-                              'event': 'RESTART',
-                              'variant': 'secondary',
-                              'label': 'Main Menu',
-                            },
-                          ],
-                          'stats': [
-                            {
-                              'label': 'Turns',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'value': '@entity.score',
-                              'label': 'Score',
-                            },
-                          ],
-                          'title': 'Battle Over',
-                          'type': 'game-over-screen',
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'paused',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'paused',
-                'to': 'playing',
-                'event': 'RESUME',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'type': 'game-hud',
-                          'stats': [
-                            {
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'label': 'Score',
-                              'value': '@entity.score',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'playing',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'type': 'game-hud',
-                          'stats': [
-                            {
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'value': '@entity.score',
-                              'label': 'Score',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'paused',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'game-menu',
-                          'subtitle': 'Turn-Based Strategy',
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'variant': 'primary',
-                              'label': 'Start Battle',
-                            },
-                          ],
-                          'title': 'Battle Arena',
-                        },
-                      ],
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'gameover',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'variant': 'primary',
-                              'label': 'Start Battle',
-                            },
-                          ],
-                          'subtitle': 'Turn-Based Strategy',
-                          'type': 'game-menu',
-                          'title': 'Battle Arena',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'BattleStateCombatLog',
-          'category': 'interaction',
-          'linkedEntity': 'BattleState',
-          'emits': [
-            {
-              'event': 'BattleStateLoaded',
-              'description': 'Fired when BattleState finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[BattleState]',
-                },
-              ],
-            },
-            {
-              'event': 'BattleStateLoadFailed',
-              'description': 'Fired when BattleState fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'LOG_EVENT',
-                'name': 'Log Event',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'CLEAR',
-                'name': 'Clear',
-              },
-              {
-                'key': 'BattleStateLoaded',
-                'name': 'BattleState loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[BattleState]',
-                  },
-                ],
-              },
-              {
-                'key': 'BattleStateLoadFailed',
-                'name': 'BattleState load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'BattleState',
-                    {
-                      'emit': {
-                        'success': 'BattleStateLoaded',
-                        'failure': 'BattleStateLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'LOG_EVENT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'autoScroll': true,
-                          'title': 'Combat Log',
-                          'events': '@BattleState',
-                          'maxVisible': 10,
-                          'showTimestamps': true,
-                          'type': 'combat-log',
-                        },
-                      ],
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'CLEAR',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'RPG Game',
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'autoScroll': true,
-                          'type': 'combat-log',
-                          'maxVisible': 10,
-                          'events': '@BattleState',
-                          'showTimestamps': true,
-                          'title': 'Combat Log',
-                        },
-                      ],
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'BattlePage',
-          'path': '/battle',
-          'traits': [
-            {
-              'ref': 'BattleStateBattleFlow',
-            },
-            {
-              'ref': 'BattleStateCombatLog',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
   }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'WorldZoneOrbital',
-      uses: [],
-      entity: {
-        'name': 'WorldZone',
-        'persistence': 'runtime',
-        'fields': [
+  return built;
+}
+
+/**
+ * Tunable params for the WorldZoneOrbital orbital.
+ *
+ * Canonical entity: WorldZone.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdRpgGameWorldZoneOrbitalParams {
+  /** Override the canonical entity name (default: 'WorldZone'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the WorldZoneOrbital orbital with consumer params. */
+export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'WorldZone';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'WorldZoneOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+        },
+        {
+          'name': 'explored',
+          'type': 'boolean',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'WorldZoneNavigation',
+        'category': 'interaction',
+        'linkedEntity': 'WorldZone',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'ENCOUNTER_STARTED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'zoneId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
+            'event': 'QUEST_ACCEPTED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'questId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'description',
-            'type': 'string',
+            'event': 'WorldZoneLoaded',
+            'description': 'Fired when WorldZone finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[WorldZone]',
+              },
+            ],
           },
           {
-            'name': 'level',
-            'type': 'number',
-          },
-          {
-            'name': 'explored',
-            'type': 'boolean',
+            'event': 'WorldZoneLoadFailed',
+            'description': 'Fired when WorldZone fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'WorldZoneNavigation',
-          'category': 'interaction',
-          'linkedEntity': 'WorldZone',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ENCOUNTER_STARTED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'zoneId',
-                  'type': 'string',
-                },
-              ],
+              'name': 'loading',
+              'isInitial': true,
             },
             {
-              'event': 'QUEST_ACCEPTED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'questId',
-                  'type': 'string',
-                },
-              ],
+              'name': 'exploring',
             },
             {
-              'event': 'WorldZoneLoaded',
-              'description': 'Fired when WorldZone finishes loading',
-              'scope': 'internal',
+              'name': 'transitioning',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'WorldZoneLoaded',
+              'name': 'WorldZone loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1185,9 +1177,8 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'WorldZoneLoadFailed',
-              'description': 'Fired when WorldZone fails to load',
-              'scope': 'internal',
+              'key': 'WorldZoneLoadFailed',
+              'name': 'WorldZone load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1199,1833 +1190,576 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
                 },
               ],
             },
+            {
+              'key': 'TRAVEL',
+              'name': 'Travel',
+            },
+            {
+              'key': 'ARRIVE',
+              'name': 'Arrive',
+            },
+            {
+              'key': 'ENCOUNTER_STARTED',
+              'name': 'Encounter Started',
+            },
+            {
+              'key': 'QUEST_ACCEPTED',
+              'name': 'Quest Accepted',
+            },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'exploring',
-              },
-              {
-                'name': 'transitioning',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'WorldZoneLoaded',
-                'name': 'WorldZone loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'WorldZone',
                   {
-                    'name': 'data',
-                    'type': '[WorldZone]',
+                    'emit': {
+                      'failure': 'WorldZoneLoadFailed',
+                      'success': 'WorldZoneLoaded',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'WorldZoneLoadFailed',
-                'name': 'WorldZone load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'TRAVEL',
-                'name': 'Travel',
-              },
-              {
-                'key': 'ARRIVE',
-                'name': 'Arrive',
-              },
-              {
-                'key': 'ENCOUNTER_STARTED',
-                'name': 'Encounter Started',
-              },
-              {
-                'key': 'QUEST_ACCEPTED',
-                'name': 'Quest Accepted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'loading',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'WorldZone',
-                    {
-                      'emit': {
-                        'failure': 'WorldZoneLoadFailed',
-                        'success': 'WorldZoneLoaded',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'type': 'stack',
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'content': 'Loading map…',
-                          'color': 'muted',
-                        },
-                      ],
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'exploring',
-                'event': 'WorldZoneLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'map',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'World Map',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'md',
-                                },
-                                {
-                                  'status': 'online',
-                                  'type': 'status-dot',
-                                  'pulse': false,
-                                  'label': 'Exploring',
-                                },
-                              ],
-                              'gap': 'md',
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'justify': 'between',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'markers': [],
-                              'height': '200px',
-                              'zoom': 10,
-                              'type': 'map-view',
-                            },
-                            {
-                              'fields': [],
-                              'entity': '@payload.data',
-                              'renderItem': [
-                                'fn',
-                                'item',
-                                {
-                                  'direction': 'vertical',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'stack',
-                                      'direction': 'horizontal',
-                                      'justify': 'between',
-                                      'children': [
-                                        {
-                                          'type': 'stack',
-                                          'direction': 'horizontal',
-                                          'children': [
-                                            {
-                                              'name': 'map-pin',
-                                              'type': 'icon',
-                                            },
-                                            {
-                                              'content': '@item.name',
-                                              'variant': 'h4',
-                                              'type': 'typography',
-                                            },
-                                          ],
-                                          'align': 'center',
-                                          'gap': 'sm',
-                                        },
-                                        {
-                                          'label': '@item.description',
-                                          'type': 'badge',
-                                        },
-                                      ],
-                                      'align': 'center',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'content': '@item.level',
-                                      'variant': 'caption',
-                                    },
-                                  ],
-                                  'gap': 'sm',
-                                },
-                              ],
-                              'itemActions': [
-                                {
-                                  'event': 'TRAVEL',
-                                  'label': 'Travel',
-                                },
-                              ],
-                              'type': 'data-grid',
-                            },
-                          ],
-                          'gap': 'lg',
-                        },
-                      ],
-                      'appName': 'RPG Game',
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'loading',
-                'event': 'WorldZoneLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'typography',
-                          'variant': 'h3',
-                          'content': 'Failed to load map',
-                        },
-                        {
-                          'variant': 'body',
-                          'type': 'typography',
-                          'color': 'muted',
-                          'content': '@payload.error',
-                        },
-                        {
-                          'variant': 'primary',
-                          'type': 'button',
-                          'icon': 'rotate-ccw',
-                          'label': 'Retry',
-                          'action': 'INIT',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'exploring',
-                'to': 'transitioning',
-                'event': 'TRAVEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                      'appName': 'RPG Game',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'name': 'loader',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Traveling...',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'content': 'Traveling to the destination worldzone.',
-                              'variant': 'body',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'transitioning',
-                'to': 'loading',
-                'event': 'ARRIVE',
-                'effects': [
-                  [
-                    'fetch',
-                    'WorldZone',
-                    {
-                      'emit': {
-                        'success': 'WorldZoneLoaded',
-                        'failure': 'WorldZoneLoadFailed',
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Loading map…',
+                        'color': 'muted',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'World',
-          'path': '/world',
-          'traits': [
-            {
-              'ref': 'WorldZoneNavigation',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'RpgItemOrbital',
-      uses: [],
-      entity: {
-        'name': 'RpgItem',
-        'collection': 'rpgitems',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'type',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'quantity',
-            'type': 'number',
-          },
-          {
-            'name': 'rarity',
-            'type': 'string',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-          },
-        ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'RpgItemBrowse',
-          'category': 'interaction',
-          'linkedEntity': 'RpgItem',
-          'emits': [
-            {
-              'event': 'ADD_ITEM',
-            },
-            {
-              'event': 'USE_ITEM',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.type',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.quantity',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.rarity',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'DROP',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.id',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.name',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.type',
-                  'type': 'string',
-                  'required': true,
-                },
-                {
-                  'name': 'row.quantity',
-                  'type': 'number',
-                },
-                {
-                  'name': 'row.rarity',
-                  'type': 'string',
-                },
-                {
-                  'name': 'row.pendingId',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemLoaded',
-              'description': 'Fired when RpgItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[RpgItem]',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemLoadFailed',
-              'description': 'Fired when RpgItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ITEM_ADDED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemAdd',
-              },
-            },
-            {
-              'event': 'ITEM_USED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemUse',
-              },
-            },
-            {
-              'event': 'CONFIRM_DROP',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemDrop',
-              },
-            },
-            {
-              'event': 'LOOT_DROPPED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'BattleStateOrbital',
-                'trait': 'BattleStateBattleFlow',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'browsing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'RpgItemLoaded',
-                'name': 'RpgItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[RpgItem]',
+                    ],
+                    'align': 'center',
                   },
                 ],
-              },
-              {
-                'key': 'RpgItemLoadFailed',
-                'name': 'RpgItem load failed',
-                'payloadSchema': [
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'exploring',
+              'event': 'WorldZoneLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ADD_ITEM',
-                'name': 'Add Item',
-              },
-              {
-                'key': 'USE_ITEM',
-                'name': 'Use Item',
-              },
-              {
-                'key': 'DROP',
-                'name': 'Drop',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-12',
-                      'gap': 'md',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'variant': 'caption',
-                          'color': 'muted',
-                          'content': 'Loading…',
-                          'type': 'typography',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'RpgItemLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'RPG Game',
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'justify': 'between',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'stack',
-                                  'align': 'center',
-                                  'children': [
-                                    {
-                                      'name': 'briefcase',
-                                      'type': 'icon',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Inventory',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                  'gap': 'sm',
-                                },
-                                {
-                                  'gap': 'sm',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'action': 'ADD_ITEM',
-                                      'label': 'Add RpgItem',
-                                      'variant': 'primary',
-                                      'icon': 'plus',
-                                      'type': 'button',
-                                    },
-                                  ],
-                                  'direction': 'horizontal',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'itemActions': [
-                                {
-                                  'variant': 'ghost',
-                                  'label': 'Use',
-                                  'event': 'USE_ITEM',
-                                },
-                                {
-                                  'label': 'Drop',
-                                  'event': 'DROP',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'type': 'data-grid',
-                              'entity': '@payload.data',
-                              'fields': [
-                                {
-                                  'label': 'Name',
-                                  'icon': 'briefcase',
-                                  'name': 'name',
-                                  'variant': 'h4',
-                                },
-                                {
-                                  'name': 'type',
-                                  'colorMap': {
-                                    'failed': 'destructive',
-                                    'disabled': 'neutral',
-                                    'active': 'success',
-                                    'pending': 'warning',
-                                    'scheduled': 'warning',
-                                    'archived': 'neutral',
-                                    'cancelled': 'destructive',
-                                    'error': 'destructive',
-                                    'done': 'success',
-                                    'draft': 'warning',
-                                    'inactive': 'neutral',
-                                    'completed': 'success',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'map',
                                   },
-                                  'label': 'Type',
-                                  'variant': 'badge',
-                                },
-                                {
-                                  'label': 'Quantity',
-                                  'variant': 'caption',
-                                  'name': 'quantity',
-                                },
-                              ],
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'className': 'max-w-5xl mx-auto w-full',
-                          'type': 'stack',
-                          'gap': 'lg',
-                        },
-                      ],
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'browsing',
-                'to': 'browsing',
-                'event': 'RpgItemLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'type': 'stack',
-                      'className': 'py-12',
-                      'align': 'center',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Failed to load rpgitem',
-                          'variant': 'h3',
-                        },
-                        {
-                          'variant': 'body',
-                          'content': '@payload.error',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'icon': 'rotate-ccw',
-                          'type': 'button',
-                          'action': 'INIT',
-                          'label': 'Retry',
-                          'variant': 'primary',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RpgItemAdd',
-          'category': 'interaction',
-          'linkedEntity': 'RpgItem',
-          'emits': [
-            {
-              'event': 'ITEM_ADDED',
-            },
-            {
-              'event': 'RpgItemLoadFailed',
-              'description': 'Fired when RpgItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemLoaded',
-              'description': 'Fired when RpgItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[RpgItem]',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemSaveFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemSaved',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'ADD_ITEM',
-              'triggers': 'ADD_ITEM',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ADD_ITEM',
-                'name': 'Add Item',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ITEM_ADDED',
-                'name': 'Item Added',
-              },
-              {
-                'key': 'RpgItemLoadFailed',
-                'name': 'RpgItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemLoaded',
-                'name': 'RpgItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[RpgItem]',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemSaveFailed',
-                'name': 'RpgItem save failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemSaved',
-                'name': 'RpgItem saved',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'World Map',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                              },
+                              {
+                                'status': 'online',
+                                'type': 'status-dot',
+                                'pulse': false,
+                                'label': 'Exploring',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'markers': [],
+                            'height': '200px',
+                            'zoom': 10,
+                            'type': 'map-view',
+                          },
+                          {
+                            'fields': [],
+                            'entity': '@payload.data',
+                            'renderItem': [
+                              'fn',
+                              'item',
+                              {
+                                'direction': 'vertical',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'stack',
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'children': [
+                                      {
+                                        'type': 'stack',
+                                        'direction': 'horizontal',
+                                        'children': [
+                                          {
+                                            'name': 'map-pin',
+                                            'type': 'icon',
+                                          },
+                                          {
+                                            'content': '@item.name',
+                                            'variant': 'h4',
+                                            'type': 'typography',
+                                          },
+                                        ],
+                                        'align': 'center',
+                                        'gap': 'sm',
+                                      },
+                                      {
+                                        'label': '@item.description',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'align': 'center',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': '@item.level',
+                                    'variant': 'caption',
+                                  },
+                                ],
+                                'gap': 'sm',
+                              },
+                            ],
+                            'itemActions': [
+                              {
+                                'event': 'TRAVEL',
+                                'label': 'Travel',
+                              },
+                            ],
+                            'type': 'data-grid',
+                          },
+                        ],
+                        'gap': 'lg',
                       },
-                    },
-                  ],
+                    ],
+                    'appName': 'RPG Game',
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'ADD_ITEM',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'WorldZoneLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'plus-circle',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'h3',
-                              'content': 'Add RpgItem',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'form-section',
-                          'submitEvent': 'SAVE',
-                          'fields': [
-                            'name',
-                            'type',
-                            'quantity',
-                            'rarity',
-                          ],
-                          'mode': 'create',
-                          'cancelEvent': 'CLOSE',
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'RpgItem',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'failure': 'RpgItemSaveFailed',
-                        'success': 'RpgItemSaved',
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Failed to load map',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ITEM_ADDED',
-                  ],
+                      {
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'variant': 'primary',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RpgItemUse',
-          'category': 'interaction',
-          'linkedEntity': 'RpgItem',
-          'emits': [
-            {
-              'event': 'ITEM_USED',
-            },
-            {
-              'event': 'RpgItemLoadFailed',
-              'description': 'Fired when RpgItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
               ],
             },
             {
-              'event': 'RpgItemLoaded',
-              'description': 'Fired when RpgItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[RpgItem]',
-                },
+              'from': 'exploring',
+              'to': 'transitioning',
+              'event': 'TRAVEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'name': 'loader',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Traveling...',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'content': 'Traveling to the destination worldzone.',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
               ],
             },
             {
-              'event': 'RpgItemUpdateFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemUpdated',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
+              'from': 'transitioning',
+              'to': 'loading',
+              'event': 'ARRIVE',
+              'effects': [
+                [
+                  'fetch',
+                  'WorldZone',
+                  {
+                    'emit': {
+                      'success': 'WorldZoneLoaded',
+                      'failure': 'WorldZoneLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
               ],
             },
           ],
-          'listens': [
-            {
-              'event': 'USE_ITEM',
-              'triggers': 'USE_ITEM',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'USE_ITEM',
-                'name': 'Use Item',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ITEM_USED',
-                'name': 'Item Used',
-              },
-              {
-                'key': 'RpgItemLoadFailed',
-                'name': 'RpgItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemLoaded',
-                'name': 'RpgItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[RpgItem]',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemUpdateFailed',
-                'name': 'RpgItem update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemUpdated',
-                'name': 'RpgItem updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'USE_ITEM',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'id': '@payload.id',
-                      'emit': {
-                        'failure': 'RpgItemLoadFailed',
-                        'success': 'RpgItemLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'align': 'center',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'zap',
-                            },
-                            {
-                              'content': 'Use RpgItem',
-                              'variant': 'h3',
-                              'type': 'typography',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'content': '@entity.name',
-                          'variant': 'body',
-                          'type': 'typography',
-                        },
-                        {
-                          'children': [
-                            {
-                              'action': 'CLOSE',
-                              'type': 'button',
-                              'variant': 'ghost',
-                              'label': 'Cancel',
-                            },
-                            {
-                              'label': 'Confirm Use',
-                              'type': 'button',
-                              'variant': 'primary',
-                              'icon': 'check',
-                              'action': 'SAVE',
-                            },
-                          ],
-                          'justify': 'center',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                        },
-                      ],
-                      'align': 'center',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'notify',
-                    'Cancelled',
-                    'info',
-                  ],
-                ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'RpgItem',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'RpgItemUpdated',
-                        'failure': 'RpgItemUpdateFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'emit',
-                    'ITEM_USED',
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        {
-          'name': 'RpgItemDrop',
-          'category': 'interaction',
-          'linkedEntity': 'RpgItem',
-          'emits': [
-            {
-              'event': 'CONFIRM_DROP',
-            },
-            {
-              'event': 'RpgItemDeleteFailed',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemDeleted',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemLoadFailed',
-              'description': 'Fired when RpgItem fails to load',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'error',
-                  'type': 'string',
-                },
-                {
-                  'name': 'code',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'RpgItemLoaded',
-              'description': 'Fired when RpgItem finishes loading',
-              'scope': 'internal',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': '[RpgItem]',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'DROP',
-              'triggers': 'DROP',
-              'source': {
-                'kind': 'trait',
-                'trait': 'RpgItemBrowse',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-              {
-                'name': 'confirming',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DROP',
-                'name': 'Drop',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CONFIRM_DROP',
-                'name': 'Confirm Drop',
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'RpgItemDeleteFailed',
-                'name': 'RpgItem delete failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemDeleted',
-                'name': 'RpgItem deleted',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemLoadFailed',
-                'name': 'RpgItem load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'RpgItemLoaded',
-                'name': 'RpgItem loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[RpgItem]',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'confirming',
-                'event': 'DROP',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.pendingId',
-                    '@payload.id',
-                  ],
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'failure': 'RpgItemLoadFailed',
-                        'success': 'RpgItemLoaded',
-                      },
-                      'id': '@payload.id',
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'alert-triangle',
-                              'type': 'icon',
-                            },
-                            {
-                              'variant': 'h3',
-                              'content': 'Drop RpgItem',
-                              'type': 'typography',
-                            },
-                          ],
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'variant': 'error',
-                          'message': 'Are you sure you want to drop this rpgitem?',
-                          'type': 'alert',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'justify': 'end',
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'label': 'Cancel',
-                              'variant': 'ghost',
-                              'action': 'CANCEL',
-                              'type': 'button',
-                            },
-                            {
-                              'type': 'button',
-                              'label': 'Drop',
-                              'action': 'CONFIRM_DROP',
-                              'variant': 'danger',
-                              'icon': 'check',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CONFIRM_DROP',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'RpgItem',
-                    '@entity.pendingId',
-                    {
-                      'emit': {
-                        'success': 'RpgItemDeleted',
-                        'failure': 'RpgItemDeleteFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'confirming',
-                'to': 'idle',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'box',
-                    },
-                  ],
-                  [
-                    'fetch',
-                    'RpgItem',
-                    {
-                      'emit': {
-                        'success': 'RpgItemLoaded',
-                        'failure': 'RpgItemLoadFailed',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Inventory',
-          'path': '/inventory',
-          'traits': [
-            {
-              'ref': 'RpgItemBrowse',
-            },
-            {
-              'ref': 'RpgItemAdd',
-            },
-            {
-              'ref': 'RpgItemUse',
-            },
-            {
-              'ref': 'RpgItemDrop',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'MissionOrbital',
-      uses: [],
-      entity: {
-        'name': 'Mission',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'World',
+        'path': '/world',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'description',
-            'type': 'string',
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-          },
-          {
-            'name': 'reward',
-            'type': 'string',
+            'ref': 'WorldZoneNavigation',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the RpgItemOrbital orbital.
+ *
+ * Canonical entity: RpgItem.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdRpgGameRpgItemOrbitalParams {
+  /** Override the canonical entity name (default: 'RpgItem'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the RpgItemOrbital orbital with consumer params. */
+export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'RpgItem';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'RpgItemOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      collection: 'rpgitems',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'MissionTracking',
-          'category': 'interaction',
-          'linkedEntity': 'Mission',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'type',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'quantity',
+          'type': 'number',
+        },
+        {
+          'name': 'rarity',
+          'type': 'string',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'RpgItemBrowse',
+        'category': 'interaction',
+        'linkedEntity': 'RpgItem',
+        'emits': [
+          {
+            'event': 'ADD_ITEM',
+          },
+          {
+            'event': 'USE_ITEM',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.type',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.quantity',
+                'type': 'number',
+              },
+              {
+                'name': 'row.rarity',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DROP',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.type',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.quantity',
+                'type': 'number',
+              },
+              {
+                'name': 'row.rarity',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoaded',
+            'description': 'Fired when RpgItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[RpgItem]',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoadFailed',
+            'description': 'Fired when RpgItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ITEM_ADDED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemAdd',
+            },
+          },
+          {
+            'event': 'ITEM_USED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemUse',
+            },
+          },
+          {
+            'event': 'CONFIRM_DROP',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemDrop',
+            },
+          },
+          {
+            'event': 'LOOT_DROPPED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'BattleStateOrbital',
+              'trait': 'BattleStateBattleFlow',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'MissionLoadFailed',
-              'description': 'Fired when Mission fails to load',
-              'scope': 'internal',
+              'name': 'browsing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'RpgItemLoaded',
+              'name': 'RpgItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[RpgItem]',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemLoadFailed',
+              'name': 'RpgItem load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3038,9 +1772,1394 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'MissionLoaded',
-              'description': 'Fired when Mission finishes loading',
-              'scope': 'internal',
+              'key': 'ADD_ITEM',
+              'name': 'Add Item',
+            },
+            {
+              'key': 'USE_ITEM',
+              'name': 'Use Item',
+            },
+            {
+              'key': 'DROP',
+              'name': 'Drop',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'type': 'typography',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'RpgItemLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'RPG Game',
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'justify': 'between',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': 'briefcase',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Inventory',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                              },
+                              {
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'action': 'ADD_ITEM',
+                                    'label': 'Add RpgItem',
+                                    'variant': 'primary',
+                                    'icon': 'plus',
+                                    'type': 'button',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'itemActions': [
+                              {
+                                'variant': 'ghost',
+                                'label': 'Use',
+                                'event': 'USE_ITEM',
+                              },
+                              {
+                                'label': 'Drop',
+                                'event': 'DROP',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'type': 'data-grid',
+                            'entity': '@payload.data',
+                            'fields': [
+                              {
+                                'label': 'Name',
+                                'icon': 'briefcase',
+                                'name': 'name',
+                                'variant': 'h4',
+                              },
+                              {
+                                'name': 'type',
+                                'colorMap': {
+                                  'failed': 'destructive',
+                                  'disabled': 'neutral',
+                                  'active': 'success',
+                                  'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'archived': 'neutral',
+                                  'cancelled': 'destructive',
+                                  'error': 'destructive',
+                                  'done': 'success',
+                                  'draft': 'warning',
+                                  'inactive': 'neutral',
+                                  'completed': 'success',
+                                },
+                                'label': 'Type',
+                                'variant': 'badge',
+                              },
+                              {
+                                'label': 'Quantity',
+                                'variant': 'caption',
+                                'name': 'quantity',
+                              },
+                            ],
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'RpgItemLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Failed to load rpgitem',
+                        'variant': 'h3',
+                      },
+                      {
+                        'variant': 'body',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'action': 'INIT',
+                        'label': 'Retry',
+                        'variant': 'primary',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RpgItemAdd',
+        'category': 'interaction',
+        'linkedEntity': 'RpgItem',
+        'emits': [
+          {
+            'event': 'ITEM_ADDED',
+          },
+          {
+            'event': 'RpgItemLoadFailed',
+            'description': 'Fired when RpgItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoaded',
+            'description': 'Fired when RpgItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[RpgItem]',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemSaveFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemSaved',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'ADD_ITEM',
+            'triggers': 'ADD_ITEM',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ADD_ITEM',
+              'name': 'Add Item',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ITEM_ADDED',
+              'name': 'Item Added',
+            },
+            {
+              'key': 'RpgItemLoadFailed',
+              'name': 'RpgItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemLoaded',
+              'name': 'RpgItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[RpgItem]',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemSaveFailed',
+              'name': 'RpgItem save failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemSaved',
+              'name': 'RpgItem saved',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'ADD_ITEM',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'plus-circle',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h3',
+                            'content': 'Add RpgItem',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'fields': [
+                          'name',
+                          'type',
+                          'quantity',
+                          'rarity',
+                        ],
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'RpgItem',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'failure': 'RpgItemSaveFailed',
+                      'success': 'RpgItemSaved',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ITEM_ADDED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RpgItemUse',
+        'category': 'interaction',
+        'linkedEntity': 'RpgItem',
+        'emits': [
+          {
+            'event': 'ITEM_USED',
+          },
+          {
+            'event': 'RpgItemLoadFailed',
+            'description': 'Fired when RpgItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoaded',
+            'description': 'Fired when RpgItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[RpgItem]',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'USE_ITEM',
+            'triggers': 'USE_ITEM',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'USE_ITEM',
+              'name': 'Use Item',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ITEM_USED',
+              'name': 'Item Used',
+            },
+            {
+              'key': 'RpgItemLoadFailed',
+              'name': 'RpgItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemLoaded',
+              'name': 'RpgItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[RpgItem]',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemUpdateFailed',
+              'name': 'RpgItem update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemUpdated',
+              'name': 'RpgItem updated',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'USE_ITEM',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'id': '@payload.id',
+                    'emit': {
+                      'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'zap',
+                          },
+                          {
+                            'content': 'Use RpgItem',
+                            'variant': 'h3',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'content': '@entity.name',
+                        'variant': 'body',
+                        'type': 'typography',
+                      },
+                      {
+                        'children': [
+                          {
+                            'action': 'CLOSE',
+                            'type': 'button',
+                            'variant': 'ghost',
+                            'label': 'Cancel',
+                          },
+                          {
+                            'label': 'Confirm Use',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'check',
+                            'action': 'SAVE',
+                          },
+                        ],
+                        'justify': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'notify',
+                  'Cancelled',
+                  'info',
+                ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'RpgItem',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'RpgItemUpdated',
+                      'failure': 'RpgItemUpdateFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'emit',
+                  'ITEM_USED',
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      {
+        'name': 'RpgItemDrop',
+        'category': 'interaction',
+        'linkedEntity': 'RpgItem',
+        'emits': [
+          {
+            'event': 'CONFIRM_DROP',
+          },
+          {
+            'event': 'RpgItemDeleteFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemDeleted',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoadFailed',
+            'description': 'Fired when RpgItem fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'RpgItemLoaded',
+            'description': 'Fired when RpgItem finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[RpgItem]',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DROP',
+            'triggers': 'DROP',
+            'source': {
+              'kind': 'trait',
+              'trait': 'RpgItemBrowse',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+            {
+              'name': 'confirming',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DROP',
+              'name': 'Drop',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CONFIRM_DROP',
+              'name': 'Confirm Drop',
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'RpgItemDeleteFailed',
+              'name': 'RpgItem delete failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemDeleted',
+              'name': 'RpgItem deleted',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemLoadFailed',
+              'name': 'RpgItem load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'RpgItemLoaded',
+              'name': 'RpgItem loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[RpgItem]',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'confirming',
+              'event': 'DROP',
+              'effects': [
+                [
+                  'set',
+                  '@entity.pendingId',
+                  '@payload.id',
+                ],
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
+                    },
+                    'id': '@payload.id',
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h3',
+                            'content': 'Drop RpgItem',
+                            'type': 'typography',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'variant': 'error',
+                        'message': 'Are you sure you want to drop this rpgitem?',
+                        'type': 'alert',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'justify': 'end',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'label': 'Cancel',
+                            'variant': 'ghost',
+                            'action': 'CANCEL',
+                            'type': 'button',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Drop',
+                            'action': 'CONFIRM_DROP',
+                            'variant': 'danger',
+                            'icon': 'check',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                    'gap': 'md',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CONFIRM_DROP',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'RpgItem',
+                  '@entity.pendingId',
+                  {
+                    'emit': {
+                      'success': 'RpgItemDeleted',
+                      'failure': 'RpgItemDeleteFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'confirming',
+              'to': 'idle',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'box',
+                  },
+                ],
+                [
+                  'fetch',
+                  'RpgItem',
+                  {
+                    'emit': {
+                      'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Inventory',
+        'path': '/inventory',
+        'traits': [
+          {
+            'ref': 'RpgItemBrowse',
+          },
+          {
+            'ref': 'RpgItemAdd',
+          },
+          {
+            'ref': 'RpgItemUse',
+          },
+          {
+            'ref': 'RpgItemDrop',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the MissionOrbital orbital.
+ *
+ * Canonical entity: Mission.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdRpgGameMissionOrbitalParams {
+  /** Override the canonical entity name (default: 'Mission'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the MissionOrbital orbital with consumer params. */
+export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'Mission';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'MissionOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'description',
+          'type': 'string',
+        },
+        {
+          'name': 'status',
+          'type': 'string',
+        },
+        {
+          'name': 'reward',
+          'type': 'string',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'MissionTracking',
+        'category': 'interaction',
+        'linkedEntity': 'Mission',
+        'emits': [
+          {
+            'event': 'MissionLoadFailed',
+            'description': 'Fired when Mission fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MissionLoaded',
+            'description': 'Fired when Mission finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Mission]',
+              },
+            ],
+          },
+          {
+            'event': 'MissionUpdateFailed',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'MissionUpdated',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'QUEST_ACCEPTED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'orbital',
+              'orbital': 'WorldZoneOrbital',
+              'trait': 'WorldZoneNavigation',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'available',
+            },
+            {
+              'name': 'active',
+            },
+            {
+              'name': 'progressing',
+            },
+            {
+              'name': 'complete',
+            },
+            {
+              'name': 'failed',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'MissionLoaded',
+              'name': 'Mission loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -3049,8 +3168,8 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'MissionUpdateFailed',
-              'scope': 'internal',
+              'key': 'MissionLoadFailed',
+              'name': 'Mission load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -3063,8 +3182,60 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
               ],
             },
             {
-              'event': 'MissionUpdated',
-              'scope': 'internal',
+              'key': 'ACCEPT',
+              'name': 'Accept',
+            },
+            {
+              'key': 'PROGRESS',
+              'name': 'Progress',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'FAIL',
+              'name': 'Fail',
+            },
+            {
+              'key': 'SAVE',
+              'name': 'Save',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'Mission',
+                },
+              ],
+            },
+            {
+              'key': 'CANCEL',
+              'name': 'Cancel',
+            },
+            {
+              'key': 'CLOSE',
+              'name': 'Close',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'MissionUpdateFailed',
+              'name': 'Mission update failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'MissionUpdated',
+              'name': 'Mission updated',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -3073,693 +3244,611 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalDefinition[] {
               ],
             },
           ],
-          'listens': [
+          'transitions': [
             {
-              'event': 'QUEST_ACCEPTED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'orbital',
-                'orbital': 'WorldZoneOrbital',
-                'trait': 'WorldZoneNavigation',
-              },
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'Loading missions…',
+                        'variant': 'caption',
+                        'type': 'typography',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'available',
+              'event': 'MissionLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'appName': 'RPG Game',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'flag',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Missions Board',
+                                  },
+                                ],
+                                'gap': 'md',
+                              },
+                            ],
+                            'justify': 'between',
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'data-list',
+                            'entity': '@payload.data',
+                            'groupBy': 'status',
+                            'itemActions': [
+                              {
+                                'label': 'Accept',
+                                'event': 'ACCEPT',
+                              },
+                            ],
+                            'fields': [],
+                            'renderItem': [
+                              'fn',
+                              'item',
+                              {
+                                'children': [
+                                  {
+                                    'type': 'stack',
+                                    'align': 'center',
+                                    'justify': 'between',
+                                    'children': [
+                                      {
+                                        'type': 'stack',
+                                        'direction': 'horizontal',
+                                        'gap': 'sm',
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'name': 'flag',
+                                            'type': 'icon',
+                                          },
+                                          {
+                                            'content': '@item.title',
+                                            'variant': 'h4',
+                                            'type': 'typography',
+                                          },
+                                        ],
+                                      },
+                                      {
+                                        'label': '@item.description',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                    'content': '@item.status',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'type': 'stack',
+                                'gap': 'sm',
+                              },
+                            ],
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'MissionLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Failed to load missions',
+                        'variant': 'h3',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                        'variant': 'body',
+                      },
+                      {
+                        'label': 'Retry',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
+                      },
+                    ],
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'available',
+              'to': 'active',
+              'event': 'ACCEPT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'content': 'Quest Active',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                          {
+                            'type': 'progress-bar',
+                            'showPercentage': true,
+                            'value': 50,
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'label': 'Progress',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'action': 'PROGRESS',
+                              },
+                              {
+                                'action': 'COMPLETE',
+                                'type': 'button',
+                                'label': 'Complete',
+                                'variant': 'success',
+                              },
+                              {
+                                'action': 'FAIL',
+                                'label': 'Fail',
+                                'type': 'button',
+                                'variant': 'danger',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'align': 'center',
+                      },
+                    ],
+                    'appName': 'RPG Game',
+                    'type': 'game-shell',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'active',
+              'to': 'progressing',
+              'event': 'PROGRESS',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'trending-up',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Update Progress',
+                            'variant': 'h3',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'entity': '@entity',
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CANCEL',
+                        'fields': [
+                          'title',
+                          'description',
+                          'status',
+                          'reward',
+                        ],
+                        'type': 'form-section',
+                        'mode': 'edit',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'active',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'check-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Quest Complete',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'success',
+                            'message': 'Congratulations! The quest has been completed.',
+                            'type': 'alert',
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'RESET',
+                            'variant': 'primary',
+                            'label': 'View Quests',
+                            'icon': 'arrow-left',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                      },
+                    ],
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'active',
+              'to': 'failed',
+              'event': 'FAIL',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'x-circle',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Quest Failed',
+                          },
+                          {
+                            'type': 'alert',
+                            'message': 'The quest was not completed. You can try again.',
+                            'variant': 'error',
+                          },
+                          {
+                            'icon': 'arrow-left',
+                            'type': 'button',
+                            'action': 'RESET',
+                            'label': 'View Quests',
+                            'variant': 'primary',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'progressing',
+              'to': 'loading',
+              'event': 'SAVE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Mission',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'MissionUpdated',
+                      'failure': 'MissionUpdateFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'progressing',
+              'to': 'loading',
+              'event': 'CANCEL',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'progressing',
+              'to': 'loading',
+              'event': 'CLOSE',
+              'effects': [
+                [
+                  'render-ui',
+                  'modal',
+                  null,
+                ],
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'failure': 'MissionLoadFailed',
+                      'success': 'MissionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'loading',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'failed',
+              'to': 'loading',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'fetch',
+                  'Mission',
+                  {
+                    'emit': {
+                      'failure': 'MissionLoadFailed',
+                      'success': 'MissionLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'loading',
-                'isInitial': true,
-              },
-              {
-                'name': 'available',
-              },
-              {
-                'name': 'active',
-              },
-              {
-                'name': 'progressing',
-              },
-              {
-                'name': 'complete',
-              },
-              {
-                'name': 'failed',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'MissionLoaded',
-                'name': 'Mission loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': '[Mission]',
-                  },
-                ],
-              },
-              {
-                'key': 'MissionLoadFailed',
-                'name': 'Mission load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ACCEPT',
-                'name': 'Accept',
-              },
-              {
-                'key': 'PROGRESS',
-                'name': 'Progress',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'FAIL',
-                'name': 'Fail',
-              },
-              {
-                'key': 'SAVE',
-                'name': 'Save',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'Mission',
-                  },
-                ],
-              },
-              {
-                'key': 'CANCEL',
-                'name': 'Cancel',
-              },
-              {
-                'key': 'CLOSE',
-                'name': 'Close',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'MissionUpdateFailed',
-                'name': 'Mission update failed',
-                'payloadSchema': [
-                  {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'MissionUpdated',
-                'name': 'Mission updated',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'loading',
-                'to': 'loading',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'success': 'MissionLoaded',
-                        'failure': 'MissionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'md',
-                      'className': 'py-12',
-                      'direction': 'vertical',
-                      'align': 'center',
-                      'children': [
-                        {
-                          'type': 'spinner',
-                        },
-                        {
-                          'color': 'muted',
-                          'content': 'Loading missions…',
-                          'variant': 'caption',
-                          'type': 'typography',
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'available',
-                'event': 'MissionLoaded',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'RPG Game',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'direction': 'horizontal',
-                                  'type': 'stack',
-                                  'children': [
-                                    {
-                                      'type': 'icon',
-                                      'name': 'flag',
-                                    },
-                                    {
-                                      'variant': 'h2',
-                                      'type': 'typography',
-                                      'content': 'Missions Board',
-                                    },
-                                  ],
-                                  'gap': 'md',
-                                },
-                              ],
-                              'justify': 'between',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'divider',
-                            },
-                            {
-                              'type': 'data-list',
-                              'entity': '@payload.data',
-                              'groupBy': 'status',
-                              'itemActions': [
-                                {
-                                  'label': 'Accept',
-                                  'event': 'ACCEPT',
-                                },
-                              ],
-                              'fields': [],
-                              'renderItem': [
-                                'fn',
-                                'item',
-                                {
-                                  'children': [
-                                    {
-                                      'type': 'stack',
-                                      'align': 'center',
-                                      'justify': 'between',
-                                      'children': [
-                                        {
-                                          'type': 'stack',
-                                          'direction': 'horizontal',
-                                          'gap': 'sm',
-                                          'align': 'center',
-                                          'children': [
-                                            {
-                                              'name': 'flag',
-                                              'type': 'icon',
-                                            },
-                                            {
-                                              'content': '@item.title',
-                                              'variant': 'h4',
-                                              'type': 'typography',
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          'label': '@item.description',
-                                          'type': 'badge',
-                                        },
-                                      ],
-                                      'direction': 'horizontal',
-                                    },
-                                    {
-                                      'type': 'typography',
-                                      'variant': 'caption',
-                                      'content': '@item.status',
-                                    },
-                                  ],
-                                  'direction': 'vertical',
-                                  'type': 'stack',
-                                  'gap': 'sm',
-                                },
-                              ],
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'loading',
-                'to': 'loading',
-                'event': 'MissionLoadFailed',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'color': 'destructive',
-                          'name': 'alert-triangle',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Failed to load missions',
-                          'variant': 'h3',
-                        },
-                        {
-                          'color': 'muted',
-                          'type': 'typography',
-                          'content': '@payload.error',
-                          'variant': 'body',
-                        },
-                        {
-                          'label': 'Retry',
-                          'action': 'INIT',
-                          'type': 'button',
-                          'icon': 'rotate-ccw',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'gap': 'md',
-                      'align': 'center',
-                      'className': 'py-12',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'available',
-                'to': 'active',
-                'event': 'ACCEPT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'content': 'Quest Active',
-                              'type': 'typography',
-                              'variant': 'h2',
-                            },
-                            {
-                              'type': 'progress-bar',
-                              'showPercentage': true,
-                              'value': 50,
-                            },
-                            {
-                              'type': 'stack',
-                              'gap': 'sm',
-                              'children': [
-                                {
-                                  'label': 'Progress',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'action': 'PROGRESS',
-                                },
-                                {
-                                  'action': 'COMPLETE',
-                                  'type': 'button',
-                                  'label': 'Complete',
-                                  'variant': 'success',
-                                },
-                                {
-                                  'action': 'FAIL',
-                                  'label': 'Fail',
-                                  'type': 'button',
-                                  'variant': 'danger',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'align': 'center',
-                        },
-                      ],
-                      'appName': 'RPG Game',
-                      'type': 'game-shell',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'active',
-                'to': 'progressing',
-                'event': 'PROGRESS',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    {
-                      'type': 'stack',
-                      'gap': 'md',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'gap': 'sm',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'name': 'trending-up',
-                              'type': 'icon',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': 'Update Progress',
-                              'variant': 'h3',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'entity': '@entity',
-                          'submitEvent': 'SAVE',
-                          'cancelEvent': 'CANCEL',
-                          'fields': [
-                            'title',
-                            'description',
-                            'status',
-                            'reward',
-                          ],
-                          'type': 'form-section',
-                          'mode': 'edit',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'active',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'name': 'check-circle',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'Quest Complete',
-                              'variant': 'h2',
-                              'type': 'typography',
-                            },
-                            {
-                              'variant': 'success',
-                              'message': 'Congratulations! The quest has been completed.',
-                              'type': 'alert',
-                            },
-                            {
-                              'type': 'button',
-                              'action': 'RESET',
-                              'variant': 'primary',
-                              'label': 'View Quests',
-                              'icon': 'arrow-left',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'lg',
-                          'align': 'center',
-                        },
-                      ],
-                      'showTopBar': true,
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'active',
-                'to': 'failed',
-                'event': 'FAIL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'align': 'center',
-                          'type': 'stack',
-                          'gap': 'lg',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'x-circle',
-                            },
-                            {
-                              'variant': 'h2',
-                              'type': 'typography',
-                              'content': 'Quest Failed',
-                            },
-                            {
-                              'type': 'alert',
-                              'message': 'The quest was not completed. You can try again.',
-                              'variant': 'error',
-                            },
-                            {
-                              'icon': 'arrow-left',
-                              'type': 'button',
-                              'action': 'RESET',
-                              'label': 'View Quests',
-                              'variant': 'primary',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'game-shell',
-                      'appName': 'RPG Game',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'progressing',
-                'to': 'loading',
-                'event': 'SAVE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'Mission',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'MissionUpdated',
-                        'failure': 'MissionUpdateFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'success': 'MissionLoaded',
-                        'failure': 'MissionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'progressing',
-                'to': 'loading',
-                'event': 'CANCEL',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'success': 'MissionLoaded',
-                        'failure': 'MissionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'progressing',
-                'to': 'loading',
-                'event': 'CLOSE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'modal',
-                    null,
-                  ],
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'failure': 'MissionLoadFailed',
-                        'success': 'MissionLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'loading',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'success': 'MissionLoaded',
-                        'failure': 'MissionLoadFailed',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'failed',
-                'to': 'loading',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'fetch',
-                    'Mission',
-                    {
-                      'emit': {
-                        'failure': 'MissionLoadFailed',
-                        'success': 'MissionLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'spinner',
-                    },
-                  ],
-                ],
-              },
-            ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Quests',
+        'path': '/quests',
+        'traits': [
+          {
+            'ref': 'MissionTracking',
           },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Quests',
-          'path': '/quests',
-          'traits': [
-            {
-              'ref': 'MissionTracking',
-            },
-          ],
-        } as never,
-      ],
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-rpg-game — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdRpgGameParams {
+  BattleState?: StdRpgGameBattleStateOrbitalParams;
+  WorldZone?: StdRpgGameWorldZoneOrbitalParams;
+  RpgItem?: StdRpgGameRpgItemOrbitalParams;
+  Mission?: StdRpgGameMissionOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdRpgGame(params: StdRpgGameParams = {}): OrbitalDefinition[] {
+  return [
+    stdRpgGameBattleStateOrbital(params.BattleState ?? {}),
+    stdRpgGameWorldZoneOrbital(params.WorldZone ?? {}),
+    stdRpgGameRpgItemOrbital(params.RpgItem ?? {}),
+    stdRpgGameMissionOrbital(params.Mission ?? {}),
+  ];
 }

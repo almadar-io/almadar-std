@@ -51,239 +51,175 @@ export interface StdCodingAcademySeqChallengeLoadFailedPayload {
 }
 
 /**
- * Params for the std-coding-academy descriptor helpers.
+ * Tunable params for the SeqChallengeOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: SeqChallenge.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdCodingAcademyParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdCodingAcademySeqChallengeOrbitalParams {
+  /** Override the canonical entity name (default: 'SeqChallenge'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
-  events?: Partial<Record<StdCodingAcademyEventKey, string>>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `CodingAcademy.traits.SeqChallengeSequencerGame`. */
-export function stdCodingAcademySeqChallengeSequencerGameTrait(params: StdCodingAcademyParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SeqChallengeSequencerGame`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CodingAcademy.traits.SeqLessonVideo`. */
-export function stdCodingAcademySeqLessonVideoTrait(params: StdCodingAcademyParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SeqLessonVideo`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CodingAcademy.traits.SeqLessonPlayer`. */
-export function stdCodingAcademySeqLessonPlayerTrait(params: StdCodingAcademyParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SeqLessonPlayer`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CodingAcademy.traits.SeqProgressStorage`. */
-export function stdCodingAcademySeqProgressStorageTrait(params: StdCodingAcademyParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SeqProgressStorage`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `CodingAcademy.traits.SeqProgressForm`. */
-export function stdCodingAcademySeqProgressFormTrait(params: StdCodingAcademyParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.SeqProgressForm`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `CodingAcademy.pages.SequencerPage`. */
-export function stdCodingAcademyPage(params: StdCodingAcademyParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.SequencerPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'SeqChallenge';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the SeqChallengeOrbital orbital with consumer params. */
+export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqChallengeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'SeqChallenge';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'SeqChallengeOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-service-youtube',
+        'as': 'YouTube',
+      },
+      {
+        'from': 'std/behaviors/std-service-storage',
+        'as': 'Storage',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'SeqChallengeOrbital',
-      uses: [
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'from': 'std/behaviors/std-service-youtube',
-          'as': 'YouTube',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-service-storage',
-          'as': 'Storage',
+          'name': 'title',
+          'type': 'string',
+          'required': true,
         },
+        {
+          'name': 'difficulty',
+          'type': 'string',
+          'default': 'easy',
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completed',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+          'default': 1,
+        },
+        {
+          'name': 'videoId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'SeqChallenge',
-        'persistence': 'runtime',
-        'fields': [
+    } as Entity,
+    traits: [
+      {
+        'name': 'SeqChallengeSequencerGame',
+        'category': 'interaction',
+        'linkedEntity': 'SeqChallenge',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'SeqChallengeLoaded',
+            'description': 'Fired when SeqChallenge finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'difficulty',
+                'type': 'string',
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+              },
+              {
+                'name': 'completed',
+                'type': 'boolean',
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+              {
+                'name': 'videoId',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'difficulty',
-            'type': 'string',
-            'default': 'easy',
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'completed',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'level',
-            'type': 'number',
-            'default': 1,
-          },
-          {
-            'name': 'videoId',
-            'type': 'string',
-            'default': '',
+            'event': 'SeqChallengeLoadFailed',
+            'description': 'Fired when SeqChallenge fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'SeqChallengeSequencerGame',
-          'category': 'interaction',
-          'linkedEntity': 'SeqChallenge',
-          'emits': [
+        'stateMachine': {
+          'states': [
             {
-              'event': 'SeqChallengeLoaded',
-              'description': 'Fired when SeqChallenge finishes loading',
-              'scope': 'internal',
+              'name': 'menu',
+              'isInitial': true,
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'NAVIGATE',
+              'name': 'Navigate',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'SeqChallengeLoaded',
+              'name': 'SeqChallenge loaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -318,9 +254,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'SeqChallengeLoadFailed',
-              'description': 'Fired when SeqChallenge fails to load',
-              'scope': 'internal',
+              'key': 'SeqChallengeLoadFailed',
+              'name': 'SeqChallenge load failed',
               'payloadSchema': [
                 {
                   'name': 'message',
@@ -329,489 +264,535 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'menu',
-                'isInitial': true,
-              },
-              {
-                'name': 'playing',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'NAVIGATE',
-                'name': 'Navigate',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'SeqChallengeLoaded',
-                'name': 'SeqChallenge loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.level',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'SeqChallenge',
                   {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'title',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'difficulty',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'completed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'videoId',
-                    'type': 'string',
+                    'emit': {
+                      'failure': 'SeqChallengeLoadFailed',
+                      'success': 'SeqChallengeLoaded',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'SeqChallengeLoadFailed',
-                'name': 'SeqChallenge load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.level',
-                    1,
-                  ],
-                  [
-                    'set',
-                    '@entity.score',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'SeqChallenge',
-                    {
-                      'emit': {
-                        'failure': 'SeqChallengeLoadFailed',
-                        'success': 'SeqChallengeLoaded',
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'type': 'game-menu',
+                        'title': 'Sequencer Challenge',
+                        'menuItems': [
+                          {
+                            'label': 'Start',
+                            'variant': 'primary',
+                            'event': 'START',
+                          },
+                        ],
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'appName': 'Coding Academy',
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'type': 'game-menu',
-                          'title': 'Sequencer Challenge',
-                          'menuItems': [
-                            {
-                              'label': 'Start',
-                              'variant': 'primary',
-                              'event': 'START',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'game-shell',
-                    },
-                  ],
+                    ],
+                    'type': 'game-shell',
+                  },
                 ],
-              },
-              {
-                'from': 'menu',
-                'to': 'playing',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'Coding Academy',
-                      'children': [
-                        {
-                          'direction': 'vertical',
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'stats': [
-                                {
-                                  'value': '@entity.score',
-                                  'label': 'Score',
-                                },
-                                {
-                                  'label': 'Level',
-                                  'value': '@entity.level',
-                                },
-                              ],
-                              'type': 'game-hud',
-                            },
-                            '@trait.SeqLessonVideo',
-                            {
-                              'type': 'sequencer-board',
-                              'completeEvent': 'COMPLETE',
-                              'entity': 'SeqChallenge',
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'playing',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'appName': 'Coding Academy',
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'event': 'RESTART',
-                              'variant': 'primary',
-                              'label': 'Play Again',
-                            },
-                          ],
-                          'title': 'Well Done!',
-                          'type': 'game-over-screen',
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'title': 'Sequencer Challenge',
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'variant': 'primary',
-                              'label': 'Start',
-                            },
-                          ],
-                          'type': 'game-menu',
-                        },
-                      ],
-                      'appName': 'Coding Academy',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-        makeTraitRef({
-          'ref': 'YouTube.traits.ServiceYoutubeYoutube',
-          'name': 'SeqLessonVideo',
-          'config': {
-            'uiTrait': '@trait.SeqLessonPlayer',
-            'videoId': '@entity.videoId',
-            'autoplay': false,
-            'controls': true,
-          },
-        }),
-        {
-          'name': 'SeqLessonPlayer',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'children': [
-                            {
-                              'type': 'icon',
-                              'name': 'video',
-                            },
-                            {
-                              'type': 'typography',
-                              'variant': 'caption',
-                              'content': 'Lesson video',
-                              'color': 'muted',
-                            },
-                            {
-                              'type': 'typography',
-                              'content': '@config.videoId',
-                              'variant': 'body',
-                            },
-                          ],
-                          'direction': 'vertical',
-                          'type': 'stack',
-                          'align': 'center',
-                        },
-                      ],
-                      'type': 'card',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Storage.traits.ServiceStorageStorage',
-          'name': 'SeqProgressStorage',
-          'config': {
-            'uiTrait': '@trait.SeqProgressForm',
-            'bucket': 'coding-academy-progress',
-            'acl': 'private',
-            'maxSize': 102400,
-            'allowedMimeTypes': [
-              'application/json',
-            ],
-          },
-          'listens': [
-            {
-              'event': 'UPLOAD',
-              'triggers': 'UPLOAD',
-              'source': {
-                'kind': 'trait',
-                'trait': 'SeqProgressForm',
-              },
+              ],
             },
-          ],
-        }),
-        {
-          'name': 'SeqProgressForm',
-          'category': 'interaction',
-          'emits': [
             {
-              'event': 'UPLOAD',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
-                {
-                  'name': 'file',
-                  'type': 'string',
-                },
+              'from': 'menu',
+              'to': 'playing',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'stats': [
+                              {
+                                'value': '@entity.score',
+                                'label': 'Score',
+                              },
+                              {
+                                'label': 'Level',
+                                'value': '@entity.level',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          '@trait.SeqLessonVideo',
+                          {
+                            'type': 'sequencer-board',
+                            'completeEvent': 'COMPLETE',
+                            'entity': 'SeqChallenge',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'playing',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'appName': 'Coding Academy',
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'event': 'RESTART',
+                            'variant': 'primary',
+                            'label': 'Play Again',
+                          },
+                        ],
+                        'title': 'Well Done!',
+                        'type': 'game-over-screen',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'title': 'Sequencer Challenge',
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'variant': 'primary',
+                            'label': 'Start',
+                          },
+                        ],
+                        'type': 'game-menu',
+                      },
+                    ],
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                  },
+                ],
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'ready',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'UPLOAD',
-                'name': 'Upload',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'ready',
-                'to': 'ready',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'sm',
-                      'children': [
-                        {
-                          'name': 'save',
-                          'type': 'icon',
-                        },
-                        {
-                          'type': 'button',
-                          'label': 'Save Progress',
-                          'variant': 'ghost',
-                          'action': 'UPLOAD',
-                          'icon': 'save',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'type': 'stack',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'SequencerPage',
-          'path': '/sequencer',
-          'traits': [
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'YouTube.traits.ServiceYoutubeYoutube',
+        'name': 'SeqLessonVideo',
+        'config': {
+          'uiTrait': '@trait.SeqLessonPlayer',
+          'videoId': '@entity.videoId',
+          'autoplay': false,
+          'controls': true,
+        },
+      }),
+      {
+        'name': 'SeqLessonPlayer',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'SeqChallengeSequencerGame',
-            },
-            {
-              'ref': 'SeqLessonVideo',
-            },
-            {
-              'ref': 'SeqLessonPlayer',
-            },
-            {
-              'ref': 'SeqProgressStorage',
-            },
-            {
-              'ref': 'SeqProgressForm',
+              'name': 'ready',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'BuildChallengeOrbital',
-      uses: [],
-      entity: {
-        'name': 'BuildChallenge',
-        'persistence': 'runtime',
-        'fields': [
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'video',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Lesson video',
+                            'color': 'muted',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': '@config.videoId',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                    ],
+                    'type': 'card',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Storage.traits.ServiceStorageStorage',
+        'name': 'SeqProgressStorage',
+        'config': {
+          'uiTrait': '@trait.SeqProgressForm',
+          'bucket': 'coding-academy-progress',
+          'acl': 'private',
+          'maxSize': 102400,
+          'allowedMimeTypes': [
+            'application/json',
+          ],
+        },
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'difficulty',
-            'type': 'string',
-            'default': 'easy',
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'completed',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'level',
-            'type': 'number',
-            'default': 1,
+            'event': 'UPLOAD',
+            'triggers': 'UPLOAD',
+            'source': {
+              'kind': 'trait',
+              'trait': 'SeqProgressForm',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        {
-          'name': 'BuildChallengeBuilderGame',
-          'category': 'interaction',
-          'linkedEntity': 'BuildChallenge',
-          'emits': [
+      }),
+      {
+        'name': 'SeqProgressForm',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'UPLOAD',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+              {
+                'name': 'file',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'BuildChallengeLoaded',
-              'description': 'Fired when BuildChallenge finishes loading',
-              'scope': 'internal',
+              'name': 'ready',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'UPLOAD',
+              'name': 'Upload',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'ready',
+              'to': 'ready',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'sm',
+                    'children': [
+                      {
+                        'name': 'save',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Save Progress',
+                        'variant': 'ghost',
+                        'action': 'UPLOAD',
+                        'icon': 'save',
+                      },
+                    ],
+                    'direction': 'horizontal',
+                    'type': 'stack',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'SequencerPage',
+        'path': '/sequencer',
+        'traits': [
+          {
+            'ref': 'SeqChallengeSequencerGame',
+          },
+          {
+            'ref': 'SeqLessonVideo',
+          },
+          {
+            'ref': 'SeqLessonPlayer',
+          },
+          {
+            'ref': 'SeqProgressStorage',
+          },
+          {
+            'ref': 'SeqProgressForm',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the BuildChallengeOrbital orbital.
+ *
+ * Canonical entity: BuildChallenge.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCodingAcademyBuildChallengeOrbitalParams {
+  /** Override the canonical entity name (default: 'BuildChallenge'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the BuildChallengeOrbital orbital with consumer params. */
+export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBuildChallengeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'BuildChallenge';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'BuildChallengeOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'difficulty',
+          'type': 'string',
+          'default': 'easy',
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completed',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+          'default': 1,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'BuildChallengeBuilderGame',
+        'category': 'interaction',
+        'linkedEntity': 'BuildChallenge',
+        'emits': [
+          {
+            'event': 'BuildChallengeLoaded',
+            'description': 'Fired when BuildChallenge finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'difficulty',
+                'type': 'string',
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+              },
+              {
+                'name': 'completed',
+                'type': 'boolean',
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'BuildChallengeLoadFailed',
+            'description': 'Fired when BuildChallenge fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'menu',
+              'isInitial': true,
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'NAVIGATE',
+              'name': 'Navigate',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'BuildChallengeLoaded',
+              'name': 'BuildChallenge loaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -842,9 +823,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'BuildChallengeLoadFailed',
-              'description': 'Fired when BuildChallenge fails to load',
-              'scope': 'internal',
+              'key': 'BuildChallengeLoadFailed',
+              'name': 'BuildChallenge load failed',
               'payloadSchema': [
                 {
                   'name': 'message',
@@ -853,308 +833,358 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'menu',
-                'isInitial': true,
-              },
-              {
-                'name': 'playing',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'NAVIGATE',
-                'name': 'Navigate',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'BuildChallengeLoaded',
-                'name': 'BuildChallenge loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'title',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'difficulty',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'completed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                ],
-              },
-              {
-                'key': 'BuildChallengeLoadFailed',
-                'name': 'BuildChallenge load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.level',
-                    1,
-                  ],
-                  [
-                    'set',
-                    '@entity.score',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'BuildChallenge',
-                    {
-                      'emit': {
-                        'failure': 'BuildChallengeLoadFailed',
-                        'success': 'BuildChallengeLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'type': 'game-menu',
-                          'title': 'Builder Challenge',
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'variant': 'primary',
-                              'label': 'Start',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'Coding Academy',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'playing',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'children': [
-                            {
-                              'stats': [
-                                {
-                                  'value': '@entity.score',
-                                  'label': 'Score',
-                                },
-                                {
-                                  'value': '@entity.level',
-                                  'label': 'Level',
-                                },
-                              ],
-                              'type': 'game-hud',
-                            },
-                            {
-                              'entity': 'BuildChallenge',
-                              'completeEvent': 'COMPLETE',
-                              'type': 'builder-board',
-                            },
-                          ],
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'gap': 'md',
-                        },
-                      ],
-                      'appName': 'Coding Academy',
-                      'showTopBar': true,
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'playing',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'Coding Academy',
-                      'children': [
-                        {
-                          'type': 'game-over-screen',
-                          'title': 'Well Done!',
-                          'menuItems': [
-                            {
-                              'variant': 'primary',
-                              'label': 'Play Again',
-                              'event': 'RESTART',
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'title': 'Builder Challenge',
-                          'type': 'game-menu',
-                          'menuItems': [
-                            {
-                              'label': 'Start',
-                              'variant': 'primary',
-                              'event': 'START',
-                            },
-                          ],
-                        },
-                      ],
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'Coding Academy',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Builder',
-          'path': '/builder',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'BuildChallengeBuilderGame',
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.level',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'BuildChallenge',
+                  {
+                    'emit': {
+                      'failure': 'BuildChallengeLoadFailed',
+                      'success': 'BuildChallengeLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'type': 'game-menu',
+                        'title': 'Builder Challenge',
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'variant': 'primary',
+                            'label': 'Start',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Coding Academy',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'playing',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'stats': [
+                              {
+                                'value': '@entity.score',
+                                'label': 'Score',
+                              },
+                              {
+                                'value': '@entity.level',
+                                'label': 'Level',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          {
+                            'entity': 'BuildChallenge',
+                            'completeEvent': 'COMPLETE',
+                            'type': 'builder-board',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'md',
+                      },
+                    ],
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'playing',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                    'children': [
+                      {
+                        'type': 'game-over-screen',
+                        'title': 'Well Done!',
+                        'menuItems': [
+                          {
+                            'variant': 'primary',
+                            'label': 'Play Again',
+                            'event': 'RESTART',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'title': 'Builder Challenge',
+                        'type': 'game-menu',
+                        'menuItems': [
+                          {
+                            'label': 'Start',
+                            'variant': 'primary',
+                            'event': 'START',
+                          },
+                        ],
+                      },
+                    ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'EventChallengeOrbital',
-      uses: [],
-      entity: {
-        'name': 'EventChallenge',
-        'persistence': 'runtime',
-        'fields': [
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Builder',
+        'path': '/builder',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'difficulty',
-            'type': 'string',
-            'default': 'easy',
-          },
-          {
-            'name': 'score',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'completed',
-            'type': 'boolean',
-            'default': false,
-          },
-          {
-            'name': 'level',
-            'type': 'number',
-            'default': 1,
+            'ref': 'BuildChallengeBuilderGame',
           },
         ],
-      } as Entity,
-      traits: [
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the EventChallengeOrbital orbital.
+ *
+ * Canonical entity: EventChallenge.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCodingAcademyEventChallengeOrbitalParams {
+  /** Override the canonical entity name (default: 'EventChallenge'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the EventChallengeOrbital orbital with consumer params. */
+export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEventChallengeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'EventChallenge';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'EventChallengeOrbital',
+    uses: [],
+    entity: {
+      name: targetName,
+      persistence: params.persistence ?? 'runtime',
+      fields: [
         {
-          'name': 'EventChallengeEventHandlerGame',
-          'category': 'interaction',
-          'linkedEntity': 'EventChallenge',
-          'emits': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'title',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'difficulty',
+          'type': 'string',
+          'default': 'easy',
+        },
+        {
+          'name': 'score',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'completed',
+          'type': 'boolean',
+          'default': false,
+        },
+        {
+          'name': 'level',
+          'type': 'number',
+          'default': 1,
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      {
+        'name': 'EventChallengeEventHandlerGame',
+        'category': 'interaction',
+        'linkedEntity': 'EventChallenge',
+        'emits': [
+          {
+            'event': 'EventChallengeLoaded',
+            'description': 'Fired when EventChallenge finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'title',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'difficulty',
+                'type': 'string',
+              },
+              {
+                'name': 'score',
+                'type': 'number',
+              },
+              {
+                'name': 'completed',
+                'type': 'boolean',
+              },
+              {
+                'name': 'level',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'EventChallengeLoadFailed',
+            'description': 'Fired when EventChallenge fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'message',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'EventChallengeLoaded',
-              'description': 'Fired when EventChallenge finishes loading',
-              'scope': 'internal',
+              'name': 'menu',
+              'isInitial': true,
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'complete',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'key': 'NAVIGATE',
+              'name': 'Navigate',
+            },
+            {
+              'key': 'COMPLETE',
+              'name': 'Complete',
+            },
+            {
+              'key': 'RESTART',
+              'name': 'Restart',
+            },
+            {
+              'key': 'EventChallengeLoaded',
+              'name': 'EventChallenge loaded',
               'payloadSchema': [
                 {
                   'name': 'id',
@@ -1185,9 +1215,8 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
             {
-              'event': 'EventChallengeLoadFailed',
-              'description': 'Fired when EventChallenge fails to load',
-              'scope': 'internal',
+              'key': 'EventChallengeLoadFailed',
+              'name': 'EventChallenge load failed',
               'payloadSchema': [
                 {
                   'name': 'message',
@@ -1196,784 +1225,799 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalDefinit
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'menu',
-                'isInitial': true,
-              },
-              {
-                'name': 'playing',
-              },
-              {
-                'name': 'complete',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'START',
-                'name': 'Start',
-              },
-              {
-                'key': 'NAVIGATE',
-                'name': 'Navigate',
-              },
-              {
-                'key': 'COMPLETE',
-                'name': 'Complete',
-              },
-              {
-                'key': 'RESTART',
-                'name': 'Restart',
-              },
-              {
-                'key': 'EventChallengeLoaded',
-                'name': 'EventChallenge loaded',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'title',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'difficulty',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'score',
-                    'type': 'number',
-                  },
-                  {
-                    'name': 'completed',
-                    'type': 'boolean',
-                  },
-                  {
-                    'name': 'level',
-                    'type': 'number',
-                  },
-                ],
-              },
-              {
-                'key': 'EventChallengeLoadFailed',
-                'name': 'EventChallenge load failed',
-                'payloadSchema': [
-                  {
-                    'name': 'message',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.level',
-                    1,
-                  ],
-                  [
-                    'set',
-                    '@entity.score',
-                    0,
-                  ],
-                  [
-                    'fetch',
-                    'EventChallenge',
-                    {
-                      'emit': {
-                        'failure': 'EventChallengeLoadFailed',
-                        'success': 'EventChallengeLoaded',
-                      },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'title': 'Event Handler Challenge',
-                          'menuItems': [
-                            {
-                              'label': 'Start',
-                              'event': 'START',
-                              'variant': 'primary',
-                            },
-                          ],
-                          'type': 'game-menu',
-                        },
-                      ],
-                      'showTopBar': true,
-                      'appName': 'Coding Academy',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'playing',
-                'event': 'START',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'vertical',
-                          'children': [
-                            {
-                              'stats': [
-                                {
-                                  'value': '@entity.score',
-                                  'label': 'Score',
-                                },
-                                {
-                                  'value': '@entity.level',
-                                  'label': 'Level',
-                                },
-                              ],
-                              'type': 'game-hud',
-                            },
-                            {
-                              'type': 'event-handler-board',
-                              'entity': 'EventChallenge',
-                              'completeEvent': 'COMPLETE',
-                            },
-                          ],
-                        },
-                      ],
-                      'appName': 'Coding Academy',
-                      'type': 'game-shell',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'menu',
-                'to': 'menu',
-                'event': 'NAVIGATE',
-              },
-              {
-                'from': 'playing',
-                'to': 'complete',
-                'event': 'COMPLETE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'children': [
-                        {
-                          'menuItems': [
-                            {
-                              'label': 'Play Again',
-                              'variant': 'primary',
-                              'event': 'RESTART',
-                            },
-                          ],
-                          'type': 'game-over-screen',
-                          'title': 'Well Done!',
-                        },
-                      ],
-                      'appName': 'Coding Academy',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'complete',
-                'to': 'menu',
-                'event': 'RESTART',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'game-menu',
-                          'title': 'Event Handler Challenge',
-                          'menuItems': [
-                            {
-                              'event': 'START',
-                              'variant': 'primary',
-                              'label': 'Start',
-                            },
-                          ],
-                        },
-                      ],
-                      'showTopBar': true,
-                      'type': 'game-shell',
-                      'appName': 'Coding Academy',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Events',
-          'path': '/events',
-          'traits': [
+          'transitions': [
             {
-              'ref': 'EventChallengeEventHandlerGame',
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.level',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.score',
+                  0,
+                ],
+                [
+                  'fetch',
+                  'EventChallenge',
+                  {
+                    'emit': {
+                      'failure': 'EventChallengeLoadFailed',
+                      'success': 'EventChallengeLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'title': 'Event Handler Challenge',
+                        'menuItems': [
+                          {
+                            'label': 'Start',
+                            'event': 'START',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'type': 'game-menu',
+                      },
+                    ],
+                    'showTopBar': true,
+                    'appName': 'Coding Academy',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'playing',
+              'event': 'START',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'stats': [
+                              {
+                                'value': '@entity.score',
+                                'label': 'Score',
+                              },
+                              {
+                                'value': '@entity.level',
+                                'label': 'Level',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                          {
+                            'type': 'event-handler-board',
+                            'entity': 'EventChallenge',
+                            'completeEvent': 'COMPLETE',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Coding Academy',
+                    'type': 'game-shell',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'menu',
+              'to': 'menu',
+              'event': 'NAVIGATE',
+            },
+            {
+              'from': 'playing',
+              'to': 'complete',
+              'event': 'COMPLETE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'menuItems': [
+                          {
+                            'label': 'Play Again',
+                            'variant': 'primary',
+                            'event': 'RESTART',
+                          },
+                        ],
+                        'type': 'game-over-screen',
+                        'title': 'Well Done!',
+                      },
+                    ],
+                    'appName': 'Coding Academy',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'complete',
+              'to': 'menu',
+              'event': 'RESTART',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'game-menu',
+                        'title': 'Event Handler Challenge',
+                        'menuItems': [
+                          {
+                            'event': 'START',
+                            'variant': 'primary',
+                            'label': 'Start',
+                          },
+                        ],
+                      },
+                    ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                  },
+                ],
+              ],
             },
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'StudentProgressOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
-        },
-        {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
-        },
-      ],
-      entity: {
-        'name': 'StudentProgress',
-        'collection': 'studentprogresses',
-        'persistence': 'persistent',
-        'fields': [
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Events',
+        'path': '/events',
+        'traits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'student',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'lessonsCompleted',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'avgScore',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'streak',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'totalTimeMinutes',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'progressPct',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'day',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'lastActiveAt',
-            'type': 'string',
-            'default': '',
+            'ref': 'EventChallengeEventHandlerGame',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'StudentProgressAppLayout',
-          'config': {
-            'appName': 'Coding Academy',
-            'searchEvent': 'STUDENT_PROGRESS_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-            'contentTrait': '@trait.StudentProgressCatalog',
-            'navItems': [
-              {
-                'label': 'Sequencer',
-                'icon': 'list-ordered',
-                'href': '/sequencer',
-              },
-              {
-                'icon': 'wrench',
-                'href': '/builder',
-                'label': 'Builder',
-              },
-              {
-                'href': '/events',
-                'icon': 'zap',
-                'label': 'Events',
-              },
-              {
-                'label': 'Progress',
-                'href': '/progress',
-                'icon': 'trending-up',
-              },
-            ],
-          },
-          'events': {
-            'SEARCH': 'STUDENT_PROGRESS_SEARCH',
-            'NOTIFY_CLICK': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-          },
-        }),
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the StudentProgressOrbital orbital.
+ *
+ * Canonical entity: StudentProgress.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdCodingAcademyStudentProgressOrbitalParams {
+  /** Override the canonical entity name (default: 'StudentProgress'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the StudentProgressOrbital orbital with consumer params. */
+export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyStudentProgressOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'StudentProgress';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'StudentProgressOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'studentprogresses',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'name': 'StudentProgressCatalog',
-          'category': 'interaction',
-          'listens': [
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'student',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'lessonsCompleted',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'avgScore',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'streak',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'totalTimeMinutes',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'progressPct',
+          'type': 'number',
+          'default': 0,
+        },
+        {
+          'name': 'day',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'lastActiveAt',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'StudentProgressAppLayout',
+        'config': {
+          'appName': 'Coding Academy',
+          'searchEvent': 'STUDENT_PROGRESS_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.StudentProgressCatalog',
+          'navItems': [
             {
+              'label': 'Sequencer',
+              'icon': 'list-ordered',
+              'href': '/sequencer',
+            },
+            {
+              'icon': 'wrench',
+              'href': '/builder',
+              'label': 'Builder',
+            },
+            {
+              'href': '/events',
+              'icon': 'zap',
+              'label': 'Events',
+            },
+            {
+              'label': 'Progress',
+              'href': '/progress',
+              'icon': 'trending-up',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'STUDENT_PROGRESS_SEARCH',
+          'NOTIFY_CLICK': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'StudentProgressCatalog',
+        'category': 'interaction',
+        'listens': [
+          {
+            'event': 'STUDENT_PROGRESS_SEARCH',
+            'triggers': 'STUDENT_PROGRESS_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressAppLayout',
+            },
+          },
+          {
+            'event': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+            'triggers': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'STUDENT_PROGRESS_SEARCH',
+              'name': 'Student Progress Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+              'name': 'Student Progress Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'trending-up',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Progress',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.StudentProgressStats',
+                      '@trait.StudentProgressGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.StudentProgressBrowseList',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'STUDENT_PROGRESS_SEARCH',
-              'triggers': 'STUDENT_PROGRESS_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-              'triggers': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressAppLayout',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'STUDENT_PROGRESS_SEARCH',
-                'name': 'Student Progress Search',
-                'payloadSchema': [
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'value',
-                    'type': 'string',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                        'label': 'Back to progress',
+                        'type': 'button',
+                      },
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
-              },
-              {
-                'key': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-                'name': 'Student Progress Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'trending-up',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                  'content': 'Progress',
-                                },
-                              ],
-                              'gap': 'sm',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.StudentProgressStats',
-                        '@trait.StudentProgressGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.StudentProgressBrowseList',
-                      ],
-                      'type': 'stack',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'STUDENT_PROGRESS_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'py-8',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'content': 'No notifications',
-                          'type': 'typography',
-                          'variant': 'h3',
-                        },
-                        {
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'color': 'muted',
-                          'content': 'You\'re all caught up.',
-                        },
-                        {
-                          'variant': 'ghost',
-                          'action': 'INIT',
-                          'label': 'Back to progress',
-                          'type': 'button',
-                        },
-                      ],
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'md',
-                      'align': 'center',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'StudentProgressStats',
-          'config': {
-            'title': 'Student Progress',
-            'metrics': [
-              {
-                'field': 'lessonsCompleted',
-                'icon': 'check-circle',
-                'label': 'Lessons Completed',
-                'format': 'number',
-                'variant': 'success',
-                'aggregation': 'sum',
-              },
-              {
-                'label': 'Average Score',
-                'format': 'number',
-                'icon': 'star',
-                'variant': 'primary',
-                'field': 'avgScore',
-                'aggregation': 'avg',
-              },
-              {
-                'field': 'streak',
-                'label': 'Streak',
-                'aggregation': 'max',
-                'icon': 'flame',
-                'variant': 'warning',
-                'format': 'number',
-                'suffix': 'd',
-              },
-              {
-                'variant': 'info',
-                'format': 'number',
-                'suffix': 'm',
-                'aggregation': 'sum',
-                'label': 'Total Time',
-                'field': 'totalTimeMinutes',
-                'icon': 'clock',
-              },
-            ],
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressBrowseList',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'StudentProgressGraphs',
-          'config': {
-            'title': 'Progress over time',
-            'subtitle': 'Daily progress %',
-            'height': 280,
-            'dateField': 'day',
-            'chartType': 'line',
-            'showLegend': true,
-            'valueField': 'progressPct',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'StudentProgressStats',
+        'config': {
+          'title': 'Student Progress',
+          'metrics': [
             {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressBrowseList',
-              },
+              'field': 'lessonsCompleted',
+              'icon': 'check-circle',
+              'label': 'Lessons Completed',
+              'format': 'number',
+              'variant': 'success',
+              'aggregation': 'sum',
+            },
+            {
+              'label': 'Average Score',
+              'format': 'number',
+              'icon': 'star',
+              'variant': 'primary',
+              'field': 'avgScore',
+              'aggregation': 'avg',
+            },
+            {
+              'field': 'streak',
+              'label': 'Streak',
+              'aggregation': 'max',
+              'icon': 'flame',
+              'variant': 'warning',
+              'format': 'number',
+              'suffix': 'd',
+            },
+            {
+              'variant': 'info',
+              'format': 'number',
+              'suffix': 'm',
+              'aggregation': 'sum',
+              'label': 'Total Time',
+              'field': 'totalTimeMinutes',
+              'icon': 'clock',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'StudentProgressBrowseList',
-          'linkedEntity': 'StudentProgress',
-          'config': {
-            'fields': [
-              {
-                'name': 'student',
-                'label': 'Student',
-                'variant': 'h4',
-                'icon': 'user',
-              },
-              {
-                'variant': 'body',
-                'name': 'lessonsCompleted',
-                'label': 'Lessons Completed',
-              },
-              {
-                'name': 'avgScore',
-                'variant': 'badge',
-                'label': 'Avg Score',
-              },
-              {
-                'name': 'streak',
-                'suffix': 'd',
-                'label': 'Streak',
-                'variant': 'body',
-              },
-              {
-                'label': 'Last Active',
-                'variant': 'caption',
-                'format': 'date',
-                'name': 'lastActiveAt',
-              },
-            ],
-            'itemActions': [],
-            'gap': 'sm',
-            'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressBrowseList',
+            },
           },
-        }),
-        {
-          'name': 'StudentProgressItemSink',
-          'category': 'lifecycle',
-          'listens': [
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'StudentProgressGraphs',
+        'config': {
+          'title': 'Progress over time',
+          'subtitle': 'Daily progress %',
+          'height': 280,
+          'dateField': 'day',
+          'chartType': 'line',
+          'showLegend': true,
+          'valueField': 'progressPct',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'StudentProgressBrowseList',
+        'linkedEntity': 'StudentProgress',
+        'config': {
+          'fields': [
             {
+              'name': 'student',
+              'label': 'Student',
+              'variant': 'h4',
+              'icon': 'user',
+            },
+            {
+              'variant': 'body',
+              'name': 'lessonsCompleted',
+              'label': 'Lessons Completed',
+            },
+            {
+              'name': 'avgScore',
+              'variant': 'badge',
+              'label': 'Avg Score',
+            },
+            {
+              'name': 'streak',
+              'suffix': 'd',
+              'label': 'Streak',
+              'variant': 'body',
+            },
+            {
+              'label': 'Last Active',
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'lastActiveAt',
+            },
+          ],
+          'itemActions': [],
+          'gap': 'sm',
+          'cols': 1,
+        },
+      }),
+      {
+        'name': 'StudentProgressItemSink',
+        'category': 'lifecycle',
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressBrowseList',
+            },
+          },
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressBrowseList',
+            },
+          },
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'StudentProgressBrowseList',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'StudentProgress',
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'StudentProgress',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'StudentProgress',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressBrowseList',
-              },
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressBrowseList',
-              },
             },
             {
+              'from': 'idle',
+              'to': 'idle',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'StudentProgressBrowseList',
-              },
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'VIEW',
-                'name': 'View',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'StudentProgress',
-                  },
-                ],
-              },
-              {
-                'key': 'EDIT',
-                'name': 'Edit',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'StudentProgress',
-                  },
-                ],
-              },
-              {
-                'key': 'DELETE',
-                'name': 'Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  {
-                    'name': 'row',
-                    'type': 'StudentProgress',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'VIEW',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'EDIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DELETE',
-              },
-            ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Progress',
+        'path': '/progress',
+        'traits': [
+          {
+            'ref': 'StudentProgressAppLayout',
           },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Progress',
-          'path': '/progress',
-          'traits': [
-            {
-              'ref': 'StudentProgressAppLayout',
-            },
-            {
-              'ref': 'StudentProgressCatalog',
-            },
-            {
-              'ref': 'StudentProgressStats',
-            },
-            {
-              'ref': 'StudentProgressGraphs',
-            },
-            {
-              'ref': 'StudentProgressBrowseList',
-            },
-            {
-              'ref': 'StudentProgressItemSink',
-            },
-          ],
-        } as never,
-      ],
+          {
+            'ref': 'StudentProgressCatalog',
+          },
+          {
+            'ref': 'StudentProgressStats',
+          },
+          {
+            'ref': 'StudentProgressGraphs',
+          },
+          {
+            'ref': 'StudentProgressBrowseList',
+          },
+          {
+            'ref': 'StudentProgressItemSink',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-coding-academy — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdCodingAcademyParams {
+  SeqChallenge?: StdCodingAcademySeqChallengeOrbitalParams;
+  BuildChallenge?: StdCodingAcademyBuildChallengeOrbitalParams;
+  EventChallenge?: StdCodingAcademyEventChallengeOrbitalParams;
+  StudentProgress?: StdCodingAcademyStudentProgressOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdCodingAcademy(params: StdCodingAcademyParams = {}): OrbitalDefinition[] {
+  return [
+    stdCodingAcademySeqChallengeOrbital(params.SeqChallenge ?? {}),
+    stdCodingAcademyBuildChallengeOrbital(params.BuildChallenge ?? {}),
+    stdCodingAcademyEventChallengeOrbital(params.EventChallenge ?? {}),
+    stdCodingAcademyStudentProgressOrbital(params.StudentProgress ?? {}),
+  ];
 }

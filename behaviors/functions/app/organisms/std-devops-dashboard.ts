@@ -34,1192 +34,986 @@ export interface StdDevopsDashboardConfig {
 }
 
 /**
- * Params for the std-devops-dashboard descriptor helpers.
+ * Tunable params for the ServiceNodeOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: ServiceNode.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
  */
-export interface StdDevopsDashboardParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdDevopsDashboardServiceNodeOrbitalParams {
+  /** Override the canonical entity name (default: 'ServiceNode'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdDevopsDashboardConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
 }
 
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeAppLayout`. */
-export function stdDevopsDashboardServiceNodeAppLayoutTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeCatalog`. */
-export function stdDevopsDashboardServiceNodeCatalogTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeSearch`. */
-export function stdDevopsDashboardServiceNodeSearchTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeFilter`. */
-export function stdDevopsDashboardServiceNodeFilterTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeStats`. */
-export function stdDevopsDashboardServiceNodeStatsTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeGraphs`. */
-export function stdDevopsDashboardServiceNodeGraphsTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeBrowseList`. */
-export function stdDevopsDashboardServiceNodeBrowseListTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeCreate`. */
-export function stdDevopsDashboardServiceNodeCreateTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeEdit`. */
-export function stdDevopsDashboardServiceNodeEditTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeView`. */
-export function stdDevopsDashboardServiceNodeViewTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeDelete`. */
-export function stdDevopsDashboardServiceNodeDeleteTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodePersistor`. */
-export function stdDevopsDashboardServiceNodePersistorTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DevopsDashboard.traits.ServiceNodeCircuitBreaker`. */
-export function stdDevopsDashboardServiceNodeCircuitBreakerTrait(params: StdDevopsDashboardParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ServiceNodeCircuitBreaker`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `DevopsDashboard.pages.ServicesPage`. */
-export function stdDevopsDashboardPage(params: StdDevopsDashboardParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ServicesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor (4 orbitals). */
-export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDefinition[] {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  /**
-   * Rebind a canonical primary orbital using the consumer's typed
-   * params. Walks the trait array swapping any `linkedEntity` that
-   * matched the canonical primary entity name; appends extra fields;
-   * threads pagePath + per-trait config overrides. Auxiliary
-   * orbitals are returned verbatim — they own their own entities.
-   */
-  type _OrbTrait = OrbitalDefinition["traits"][number];
-  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  const applyPrimaryParams = (orb: OrbitalDefinition): OrbitalDefinition => {
-    const canonicalName = 'ServiceNode';
-    const targetName = params.entityName || canonicalName;
-    const baseFields = Array.isArray((orb.entity as Entity | undefined)?.fields) ? (orb.entity as Entity).fields : [];
-    const extraFields = Array.isArray(params.fields) ? params.fields : [];
-    const mergedEntity: Entity = {
-      ...(orb.entity as Entity),
+/** Per-orbital factory: builds the ServiceNodeOrbital orbital with consumer params. */
+export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardServiceNodeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'ServiceNode';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'ServiceNodeOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
       name: targetName,
-      fields: [...baseFields, ...extraFields],
-      ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-    };
-    const reboundTraits: _OrbTrait[] = (orb.traits ?? []).map((t) => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (params.config !== undefined) {
-        out.config = params.config as TraitConfig;
-      }
-      return out;
-    });
-    const reboundPages: _OrbPage[] = (orb.pages ?? []).map((p, idx) => {
-      if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) {
-        out.linkedEntity = targetName;
-      }
-      if (idx === 0 && params.pagePath !== undefined) {
-        out.path = params.pagePath;
-      }
-      return out;
-    });
-    return { ...orb, entity: mergedEntity, traits: reboundTraits, pages: reboundPages };
-  };
-  void entity;
-  const orbitalsOut: OrbitalDefinition[] = [];
-  {
-    const built = makeOrbitalWithUses({
-      name: 'ServiceNodeOrbital',
-      uses: [
+      collection: 'servicenodes',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
         {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'name': 'id',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
+          'name': 'name',
+          'type': 'string',
+          'required': true,
         },
         {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
+          'name': 'status',
+          'type': 'string',
+          'default': 'healthy',
+          'values': [
+            'healthy',
+            'degraded',
+            'down',
+          ],
         },
         {
-          'from': 'std/behaviors/std-search',
-          'as': 'Search',
+          'name': 'region',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-filter',
-          'as': 'Filter',
+          'name': 'url',
+          'type': 'string',
+          'default': '',
         },
         {
-          'from': 'std/behaviors/std-stats',
-          'as': 'Stats',
+          'name': 'lastChecked',
+          'type': 'datetime',
         },
         {
-          'from': 'std/behaviors/std-graphs',
-          'as': 'Graphs',
+          'name': 'failureCount',
+          'type': 'number',
+          'default': 0,
         },
         {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+          'name': 'successCount',
+          'type': 'number',
+          'default': 0,
         },
+        {
+          'name': 'threshold',
+          'type': 'number',
+          'default': 5,
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
       ],
-      entity: {
-        'name': 'ServiceNode',
-        'collection': 'servicenodes',
-        'persistence': 'persistent',
-        'fields': [
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ServiceNodeAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'href': '/services',
+              'icon': 'server',
+              'label': 'Services',
+            },
+            {
+              'icon': 'bell',
+              'href': '/alerts',
+              'label': 'Alerts',
+            },
+            {
+              'label': 'Logs',
+              'href': '/logs',
+              'icon': 'terminal',
+            },
+            {
+              'label': 'Metrics',
+              'href': '/metrics',
+              'icon': 'layout-list',
+            },
+          ],
+          'contentTrait': '@trait.ServiceNodeCatalog',
+          'appName': 'DevOps Dashboard',
+          'searchEvent': 'SERVICE_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'SERVICE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'SERVICE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'SERVICE_SEARCH',
+        },
+      }),
+      {
+        'name': 'ServiceNodeCatalog',
+        'category': 'interaction',
+        'emits': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'status',
-            'type': 'string',
-            'default': 'healthy',
-            'values': [
-              'healthy',
-              'degraded',
-              'down',
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
             ],
-          },
-          {
-            'name': 'region',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'url',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'lastChecked',
-            'type': 'datetime',
-          },
-          {
-            'name': 'failureCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'successCount',
-            'type': 'number',
-            'default': 0,
-          },
-          {
-            'name': 'threshold',
-            'type': 'number',
-            'default': 5,
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'ServiceNodeAppLayout',
-          'config': {
-            'navItems': [
-              {
-                'href': '/services',
-                'icon': 'server',
-                'label': 'Services',
-              },
-              {
-                'icon': 'bell',
-                'href': '/alerts',
-                'label': 'Alerts',
-              },
-              {
-                'label': 'Logs',
-                'href': '/logs',
-                'icon': 'terminal',
-              },
-              {
-                'label': 'Metrics',
-                'href': '/metrics',
-                'icon': 'layout-list',
-              },
-            ],
-            'contentTrait': '@trait.ServiceNodeCatalog',
-            'appName': 'DevOps Dashboard',
-            'searchEvent': 'SERVICE_SEARCH',
-            'notifications': [],
-            'notificationClickEvent': 'SERVICE_NOTIFICATIONS_OPEN',
+        'listens': [
+          {
+            'event': 'SERVICE_SEARCH',
+            'triggers': 'SERVICE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeAppLayout',
+            },
           },
-          'events': {
-            'NOTIFY_CLICK': 'SERVICE_NOTIFICATIONS_OPEN',
-            'SEARCH': 'SERVICE_SEARCH',
+          {
+            'event': 'SERVICE_NOTIFICATIONS_OPEN',
+            'triggers': 'SERVICE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeAppLayout',
+            },
           },
-        }),
-        {
-          'name': 'ServiceNodeCatalog',
-          'category': 'interaction',
-          'emits': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'CREATE',
-              'scope': 'external',
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'SERVICE_SEARCH',
+              'name': 'Service Search',
               'payloadSchema': [
                 {
-                  'name': 'source',
+                  'name': 'value',
                   'type': 'string',
                 },
               ],
             },
-          ],
-          'listens': [
             {
+              'key': 'SERVICE_NOTIFICATIONS_OPEN',
+              'name': 'Service Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'server',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Services',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'Register Service',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          '@trait.ServiceNodeSearch',
+                          '@trait.ServiceNodeFilter',
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      '@trait.ServiceNodeStats',
+                      '@trait.ServiceNodeGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'status-dot',
+                            'pulse': false,
+                            'label': 'Healthy',
+                            'status': 'online',
+                          },
+                          {
+                            'status': 'warning',
+                            'type': 'status-dot',
+                            'label': 'Degraded',
+                            'pulse': false,
+                          },
+                          {
+                            'status': 'critical',
+                            'type': 'status-dot',
+                            'label': 'Down',
+                            'pulse': true,
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      '@trait.ServiceNodeBrowseList',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ServiceNodeCircuitBreaker',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'SERVICE_SEARCH',
-              'triggers': 'SERVICE_SEARCH',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeAppLayout',
-              },
             },
             {
+              'from': 'composing',
+              'to': 'composing',
               'event': 'SERVICE_NOTIFICATIONS_OPEN',
-              'triggers': 'SERVICE_NOTIFICATIONS_OPEN',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeAppLayout',
-              },
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'label': 'Back to services',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'align': 'center',
+                    'className': 'py-8',
+                    'gap': 'md',
+                  },
+                ],
+              ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'SERVICE_SEARCH',
-                'name': 'Service Search',
-                'payloadSchema': [
-                  {
-                    'name': 'value',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'SERVICE_NOTIFICATIONS_OPEN',
-                'name': 'Service Notifications Open',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'server',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Services',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'sm',
-                            },
-                            {
-                              'gap': 'sm',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'icon': 'plus',
-                                  'variant': 'primary',
-                                  'label': 'Register Service',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                            },
-                          ],
-                          'type': 'stack',
-                          'justify': 'between',
-                          'gap': 'md',
-                          'align': 'center',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'gap': 'md',
-                          'align': 'center',
-                          'children': [
-                            '@trait.ServiceNodeSearch',
-                            '@trait.ServiceNodeFilter',
-                          ],
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                        },
-                        '@trait.ServiceNodeStats',
-                        '@trait.ServiceNodeGraphs',
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'direction': 'horizontal',
-                          'gap': 'sm',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'type': 'status-dot',
-                              'pulse': false,
-                              'label': 'Healthy',
-                              'status': 'online',
-                            },
-                            {
-                              'status': 'warning',
-                              'type': 'status-dot',
-                              'label': 'Degraded',
-                              'pulse': false,
-                            },
-                            {
-                              'status': 'critical',
-                              'type': 'status-dot',
-                              'label': 'Down',
-                              'pulse': true,
-                            },
-                          ],
-                          'type': 'stack',
-                        },
-                        '@trait.ServiceNodeBrowseList',
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.ServiceNodeCircuitBreaker',
-                      ],
-                      'direction': 'vertical',
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'SERVICE_SEARCH',
-              },
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'SERVICE_NOTIFICATIONS_OPEN',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'type': 'icon',
-                          'name': 'bell',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'No notifications',
-                          'variant': 'h3',
-                        },
-                        {
-                          'content': 'You\'re all caught up.',
-                          'variant': 'caption',
-                          'type': 'typography',
-                          'color': 'muted',
-                        },
-                        {
-                          'label': 'Back to services',
-                          'action': 'INIT',
-                          'type': 'button',
-                          'variant': 'ghost',
-                        },
-                      ],
-                      'align': 'center',
-                      'className': 'py-8',
-                      'gap': 'md',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Search.traits.SearchResultSearch',
-          'name': 'ServiceNodeSearch',
-          'config': {
-            'event': 'SERVICE_SEARCH',
-            'placeholder': 'Search services…',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Filter.traits.FilterTargetFilter',
-          'name': 'ServiceNodeFilter',
-          'config': {
-            'event': 'SERVICE_FILTER',
-            'filters': [
-              {
-                'label': 'Status',
-                'options': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ServiceNodeSearch',
+        'config': {
+          'event': 'SERVICE_SEARCH',
+          'placeholder': 'Search services…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'ServiceNodeFilter',
+        'config': {
+          'event': 'SERVICE_FILTER',
+          'filters': [
+            {
+              'label': 'Status',
+              'options': [
+                'healthy',
+                'degraded',
+                'down',
+              ],
+              'field': 'status',
+              'filterType': 'select',
+            },
+            {
+              'options': [
+                'us-east',
+                'us-west',
+                'eu-central',
+                'ap-south',
+              ],
+              'field': 'region',
+              'label': 'Region',
+              'filterType': 'select',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ServiceNodeStats',
+        'config': {
+          'metrics': [
+            {
+              'variant': 'primary',
+              'label': 'Total',
+              'format': 'number',
+              'icon': 'server',
+              'aggregation': 'count',
+            },
+            {
+              'icon': 'check-circle',
+              'label': 'Healthy',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
                   'healthy',
+                ],
+              ],
+              'aggregation': 'count',
+              'format': 'number',
+            },
+            {
+              'label': 'Degraded',
+              'icon': 'alert-circle',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
                   'degraded',
+                ],
+              ],
+              'aggregation': 'count',
+              'variant': 'warning',
+            },
+            {
+              'label': 'Down',
+              'aggregation': 'count',
+              'icon': 'alert-triangle',
+              'variant': 'danger',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
                   'down',
                 ],
-                'field': 'status',
-                'filterType': 'select',
-              },
-              {
-                'options': [
-                  'us-east',
-                  'us-west',
-                  'eu-central',
-                  'ap-south',
-                ],
-                'field': 'region',
-                'label': 'Region',
-                'filterType': 'select',
-              },
-            ],
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Stats.traits.StatsItemStats',
-          'name': 'ServiceNodeStats',
-          'config': {
-            'metrics': [
-              {
-                'variant': 'primary',
-                'label': 'Total',
-                'format': 'number',
-                'icon': 'server',
-                'aggregation': 'count',
-              },
-              {
-                'icon': 'check-circle',
-                'label': 'Healthy',
-                'variant': 'success',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'healthy',
-                  ],
-                ],
-                'aggregation': 'count',
-                'format': 'number',
-              },
-              {
-                'label': 'Degraded',
-                'icon': 'alert-circle',
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'degraded',
-                  ],
-                ],
-                'aggregation': 'count',
-                'variant': 'warning',
-              },
-              {
-                'label': 'Down',
-                'aggregation': 'count',
-                'icon': 'alert-triangle',
-                'variant': 'danger',
-                'format': 'number',
-                'filter': [
-                  'fn',
-                  'row',
-                  [
-                    '=',
-                    '@row.status',
-                    'down',
-                  ],
-                ],
-              },
-            ],
-            'title': 'Services',
-          },
-          'listens': [
-            {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeBrowseList',
-              },
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Graphs.traits.GraphItemGraph',
-          'name': 'ServiceNodeGraphs',
-          'config': {
-            'height': 240,
-            'showLegend': true,
-            'categoryField': 'status',
-            'subtitle': 'Health distribution across the fleet',
-            'aggregation': 'count',
-            'title': 'Services by Status',
-            'chartType': 'pie',
+          'title': 'Services',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeBrowseList',
+            },
           },
-          'listens': [
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'ServiceNodeGraphs',
+        'config': {
+          'height': 240,
+          'showLegend': true,
+          'categoryField': 'status',
+          'subtitle': 'Health distribution across the fleet',
+          'aggregation': 'count',
+          'title': 'Services by Status',
+          'chartType': 'pie',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ServiceNodeBrowseList',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'gap': 'sm',
+          'fields': [
             {
-              'event': 'BrowseItemLoaded',
-              'triggers': 'ITEMS_LOADED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeBrowseList',
-              },
+              'name': 'name',
+              'variant': 'h4',
+              'icon': 'server',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'region',
+              'variant': 'body',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'lastChecked',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'ServiceNodeBrowseList',
-          'linkedEntity': 'ServiceNode',
-          'config': {
-            'gap': 'sm',
-            'fields': [
-              {
-                'name': 'name',
-                'variant': 'h4',
-                'icon': 'server',
-              },
-              {
-                'name': 'status',
-                'variant': 'badge',
-              },
-              {
-                'name': 'region',
-                'variant': 'body',
-              },
-              {
-                'variant': 'caption',
-                'format': 'date',
-                'name': 'lastChecked',
-              },
-            ],
-            'itemActions': [
-              {
-                'label': 'View',
-                'variant': 'ghost',
-                'event': 'VIEW',
-              },
-              {
-                'variant': 'ghost',
-                'label': 'Edit',
-                'event': 'EDIT',
-              },
-              {
-                'event': 'DELETE',
-                'variant': 'danger',
-                'label': 'Delete',
-              },
-            ],
-            'cols': 1,
-          },
-          'listens': [
+          'itemActions': [
             {
-              'event': 'SEARCH',
-              'triggers': 'REFETCH_QUERY',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeSearch',
-              },
-            },
-            {
-              'event': 'FILTER',
-              'triggers': 'REFETCH_FILTER',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeFilter',
-              },
-            },
-            {
-              'event': 'SERVICE_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodePersistor',
-              },
-            },
-            {
-              'event': 'SERVICE_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodePersistor',
-              },
-            },
-            {
-              'event': 'SERVICE_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodePersistor',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ServiceNodeCreate',
-          'linkedEntity': 'ServiceNode',
-          'config': {
-            'mode': 'create',
-            'title': 'Register Service',
-            'fields': [
-              'name',
-              'status',
-              'region',
-              'url',
-              'threshold',
-            ],
-            'icon': 'plus-circle',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
-            {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeCatalog',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ServiceNodeEdit',
-          'linkedEntity': 'ServiceNode',
-          'config': {
-            'mode': 'edit',
-            'icon': 'edit',
-            'title': 'Edit Service',
-            'fields': [
-              'name',
-              'status',
-              'region',
-              'url',
-              'threshold',
-            ],
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
-            {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeBrowseList',
-              },
-            },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'ServiceNodeView',
-          'linkedEntity': 'ServiceNode',
-          'config': {
-            'icon': 'eye',
-            'title': 'View Service',
-            'fields': [
-              'name',
-              'status',
-              'region',
-              'url',
-              'lastChecked',
-              'failureCount',
-              'successCount',
-              'threshold',
-            ],
-            'mode': 'edit',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
-            {
+              'label': 'View',
+              'variant': 'ghost',
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeBrowseList',
-              },
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'ServiceNodeDelete',
-          'linkedEntity': 'ServiceNode',
-          'config': {
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-            'title': 'Delete Service',
-            'alertMessage': 'This action cannot be undone.',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
             {
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeBrowseList',
-              },
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-        }),
-        {
-          'name': 'ServiceNodePersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'ServiceNode',
-          'emits': [
-            {
-              'event': 'SERVICE_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeSearch',
             },
-            {
-              'event': 'SERVICE_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeFilter',
             },
-            {
-              'event': 'SERVICE_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
+          },
+          {
+            'event': 'SERVICE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodePersistor',
             },
+          },
+          {
+            'event': 'SERVICE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodePersistor',
+            },
+          },
+          {
+            'event': 'SERVICE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ServiceNodeCreate',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'mode': 'create',
+          'title': 'Register Service',
+          'fields': [
+            'name',
+            'status',
+            'region',
+            'url',
+            'threshold',
           ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeCreate',
-              },
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeCatalog',
             },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'ServiceNodeDelete',
-              },
-            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ServiceNodeEdit',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Service',
+          'fields': [
+            'name',
+            'status',
+            'region',
+            'url',
+            'threshold',
           ],
-          'stateMachine': {
-            'states': [
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ServiceNodeView',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'icon': 'eye',
+          'title': 'View Service',
+          'fields': [
+            'name',
+            'status',
+            'region',
+            'url',
+            'lastChecked',
+            'failureCount',
+            'successCount',
+            'threshold',
+          ],
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'ServiceNodeDelete',
+        'linkedEntity': 'ServiceNode',
+        'config': {
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Service',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ServiceNodePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'ServiceNode',
+        'emits': [
+          {
+            'event': 'SERVICE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
               {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'SERVICE_CREATED',
-                'name': 'Service Created',
-              },
-              {
-                'key': 'SERVICE_UPDATED',
-                'name': 'Service Updated',
-              },
-              {
-                'key': 'SERVICE_DELETED',
-                'name': 'Service Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'ServiceNode',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'SERVICE_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'ServiceNode',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'SERVICE_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'ServiceNode',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'SERVICE_DELETED',
-                      },
-                    },
-                  ],
-                ],
+                'name': 'id',
+                'type': 'string',
               },
             ],
           },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'ServiceNodeCircuitBreaker',
-          'category': 'interaction',
-          'linkedEntity': 'ServiceNode',
-          'emits': [
+          {
+            'event': 'SERVICE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'SERVICE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ServiceNodeDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ServiceNodeLoaded',
-              'description': 'Fired when ServiceNode finishes loading',
-              'scope': 'internal',
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'SERVICE_CREATED',
+              'name': 'Service Created',
+            },
+            {
+              'key': 'SERVICE_UPDATED',
+              'name': 'Service Updated',
+            },
+            {
+              'key': 'SERVICE_DELETED',
+              'name': 'Service Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'ServiceNode',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'SERVICE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'ServiceNode',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'SERVICE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'ServiceNode',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'SERVICE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'ServiceNodeCircuitBreaker',
+        'category': 'interaction',
+        'linkedEntity': 'ServiceNode',
+        'emits': [
+          {
+            'event': 'ServiceNodeLoaded',
+            'description': 'Fired when ServiceNode finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[ServiceNode]',
+              },
+            ],
+          },
+          {
+            'event': 'ServiceNodeLoadFailed',
+            'description': 'Fired when ServiceNode fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'closed',
+              'isInitial': true,
+            },
+            {
+              'name': 'open',
+            },
+            {
+              'name': 'halfOpen',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FAILURE',
+              'name': 'Failure',
+            },
+            {
+              'key': 'SUCCESS',
+              'name': 'Success',
+            },
+            {
+              'key': 'TIMEOUT',
+              'name': 'Timeout',
+            },
+            {
+              'key': 'RESET',
+              'name': 'Reset',
+            },
+            {
+              'key': 'ServiceNodeLoaded',
+              'name': 'ServiceNode loaded',
               'payloadSchema': [
                 {
                   'name': 'data',
@@ -1228,9 +1022,8 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
               ],
             },
             {
-              'event': 'ServiceNodeLoadFailed',
-              'description': 'Fired when ServiceNode fails to load',
-              'scope': 'internal',
+              'key': 'ServiceNodeLoadFailed',
+              'name': 'ServiceNode load failed',
               'payloadSchema': [
                 {
                   'name': 'error',
@@ -1243,1882 +1036,2013 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalDef
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'closed',
-                'isInitial': true,
-              },
-              {
-                'name': 'open',
-              },
-              {
-                'name': 'halfOpen',
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'FAILURE',
-                'name': 'Failure',
-              },
-              {
-                'key': 'SUCCESS',
-                'name': 'Success',
-              },
-              {
-                'key': 'TIMEOUT',
-                'name': 'Timeout',
-              },
-              {
-                'key': 'RESET',
-                'name': 'Reset',
-              },
-              {
-                'key': 'ServiceNodeLoaded',
-                'name': 'ServiceNode loaded',
-                'payloadSchema': [
+          'transitions': [
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.failureCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.successCount',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.threshold',
+                  5,
+                ],
+                [
+                  'fetch',
+                  'ServiceNode',
                   {
-                    'name': 'data',
-                    'type': '[ServiceNode]',
+                    'emit': {
+                      'success': 'ServiceNodeLoaded',
+                      'failure': 'ServiceNodeLoadFailed',
+                    },
                   },
                 ],
-              },
-              {
-                'key': 'ServiceNodeLoadFailed',
-                'name': 'ServiceNode load failed',
-                'payloadSchema': [
+                [
+                  'render-ui',
+                  'main',
                   {
-                    'name': 'error',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'code',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'set',
-                    '@entity.failureCount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.successCount',
-                    0,
-                  ],
-                  [
-                    'set',
-                    '@entity.threshold',
-                    5,
-                  ],
-                  [
-                    'fetch',
-                    'ServiceNode',
-                    {
-                      'emit': {
-                        'success': 'ServiceNodeLoaded',
-                        'failure': 'ServiceNodeLoadFailed',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                              },
+                            ],
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'status-dot',
+                            'label': 'Circuit Closed',
+                            'pulse': false,
+                            'status': 'online',
+                          },
+                        ],
+                        'align': 'center',
+                        'justify': 'between',
+                        'type': 'stack',
                       },
-                    },
-                  ],
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'content': 'Circuit Breaker',
-                                  'variant': 'h3',
-                                },
-                              ],
-                              'gap': 'md',
-                            },
-                            {
-                              'type': 'status-dot',
-                              'label': 'Circuit Closed',
-                              'pulse': false,
-                              'status': 'online',
-                            },
-                          ],
-                          'align': 'center',
-                          'justify': 'between',
-                          'type': 'stack',
-                        },
-                        {
-                          'variant': 'success',
-                          'message': 'All requests are being processed.',
-                          'type': 'alert',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                            },
-                            {
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                              'type': 'stat-display',
-                            },
-                          ],
-                        },
-                        {
-                          'value': '@entity.failureCount',
-                          'type': 'meter',
-                          'max': '@entity.threshold',
-                          'min': 0,
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
+                      {
+                        'variant': 'success',
+                        'message': 'All requests are being processed.',
+                        'type': 'alert',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                          },
+                          {
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                            'type': 'stat-display',
+                          },
+                        ],
+                      },
+                      {
+                        'value': '@entity.failureCount',
+                        'type': 'meter',
+                        'max': '@entity.threshold',
+                        'min': 0,
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'open',
-                'event': 'FAILURE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'gap': 'md',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'alert-triangle',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h3',
-                                  'type': 'typography',
-                                  'content': 'Circuit Breaker',
-                                },
-                              ],
-                            },
-                            {
-                              'type': 'status-dot',
-                              'status': 'critical',
-                              'label': 'Circuit Open',
-                              'pulse': true,
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'gap': 'md',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'error',
-                          'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                              'label': 'Successes',
-                            },
-                          ],
-                          'cols': 2,
-                        },
-                        {
-                          'max': '@entity.threshold',
-                          'type': 'meter',
-                          'value': '@entity.failureCount',
-                          'min': 0,
-                        },
-                        {
-                          'action': 'RESET',
-                          'type': 'button',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                          'label': 'Reset',
-                        },
-                      ],
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'open',
+              'event': 'FAILURE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'alert-triangle',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h3',
+                                'type': 'typography',
+                                'content': 'Circuit Breaker',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'status-dot',
+                            'status': 'critical',
+                            'label': 'Circuit Open',
+                            'pulse': true,
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'error',
+                        'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                            'label': 'Successes',
+                          },
+                        ],
+                        'cols': 2,
+                      },
+                      {
+                        'max': '@entity.threshold',
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
+                        'min': 0,
+                      },
+                      {
+                        'action': 'RESET',
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                        'label': 'Reset',
+                      },
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
                 ],
-              },
-              {
-                'from': 'closed',
-                'to': 'closed',
-                'event': 'SUCCESS',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'shield-check',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                },
-                              ],
-                              'align': 'center',
-                            },
-                            {
-                              'type': 'status-dot',
-                              'label': 'Circuit Closed',
-                              'status': 'online',
-                              'pulse': false,
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'justify': 'between',
-                        },
-                        {
-                          'type': 'alert',
-                          'variant': 'success',
-                          'message': 'All requests are being processed.',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                              'label': 'Successes',
-                            },
-                          ],
-                          'cols': 2,
-                          'type': 'simple-grid',
-                        },
-                        {
-                          'type': 'meter',
-                          'value': '@entity.failureCount',
-                          'max': '@entity.threshold',
-                          'min': 0,
-                        },
-                      ],
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'closed',
+              'to': 'closed',
+              'event': 'SUCCESS',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'shield-check',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                                'variant': 'h3',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'status-dot',
+                            'label': 'Circuit Closed',
+                            'status': 'online',
+                            'pulse': false,
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'alert',
+                        'variant': 'success',
+                        'message': 'All requests are being processed.',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                            'label': 'Successes',
+                          },
+                        ],
+                        'cols': 2,
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
+                        'min': 0,
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'open',
-                'to': 'halfOpen',
-                'event': 'TIMEOUT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'align': 'center',
-                              'gap': 'md',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'activity',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                  'content': 'Circuit Breaker',
-                                },
-                              ],
-                            },
-                            {
-                              'label': 'Half-Open',
-                              'type': 'status-dot',
-                              'pulse': true,
-                              'status': 'warning',
-                            },
-                          ],
-                          'align': 'center',
-                          'justify': 'between',
-                          'gap': 'md',
-                        },
-                        {
-                          'message': 'Testing recovery. Limited requests are being allowed through.',
-                          'type': 'alert',
-                          'variant': 'warning',
-                        },
-                        {
-                          'cols': 2,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                              'type': 'stat-display',
-                            },
-                          ],
-                        },
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'halfOpen',
+              'event': 'TIMEOUT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'activity',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                              },
+                            ],
+                          },
+                          {
+                            'label': 'Half-Open',
+                            'type': 'status-dot',
+                            'pulse': true,
+                            'status': 'warning',
+                          },
+                        ],
+                        'align': 'center',
+                        'justify': 'between',
+                        'gap': 'md',
+                      },
+                      {
+                        'message': 'Testing recovery. Limited requests are being allowed through.',
+                        'type': 'alert',
+                        'variant': 'warning',
+                      },
+                      {
+                        'cols': 2,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                            'type': 'stat-display',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'open',
-                'to': 'closed',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'variant': 'h3',
-                                  'content': 'Circuit Breaker',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'gap': 'md',
-                              'align': 'center',
-                            },
-                            {
-                              'label': 'Circuit Closed',
-                              'pulse': false,
-                              'status': 'online',
-                              'type': 'status-dot',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'type': 'stack',
-                          'justify': 'between',
-                        },
-                        {
-                          'message': 'All requests are being processed.',
-                          'type': 'alert',
-                          'variant': 'success',
-                        },
-                        {
-                          'children': [
-                            {
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'value': '@entity.successCount',
-                              'label': 'Successes',
-                              'type': 'stat-display',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                          'cols': 2,
-                        },
-                        {
-                          'min': 0,
-                          'value': '@entity.failureCount',
-                          'max': '@entity.threshold',
-                          'type': 'meter',
-                        },
-                      ],
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'open',
+              'to': 'closed',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                            'align': 'center',
+                          },
+                          {
+                            'label': 'Circuit Closed',
+                            'pulse': false,
+                            'status': 'online',
+                            'type': 'status-dot',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
+                        'justify': 'between',
+                      },
+                      {
+                        'message': 'All requests are being processed.',
+                        'type': 'alert',
+                        'variant': 'success',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'value': '@entity.successCount',
+                            'label': 'Successes',
+                            'type': 'stat-display',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                        'cols': 2,
+                      },
+                      {
+                        'min': 0,
+                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
+                        'type': 'meter',
+                      },
+                    ],
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'closed',
-                'event': 'SUCCESS',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'align': 'center',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'gap': 'md',
-                              'align': 'center',
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'shield-check',
-                                },
-                                {
-                                  'type': 'typography',
-                                  'variant': 'h3',
-                                  'content': 'Circuit Breaker',
-                                },
-                              ],
-                              'type': 'stack',
-                            },
-                            {
-                              'status': 'online',
-                              'pulse': false,
-                              'type': 'status-dot',
-                              'label': 'Circuit Closed',
-                            },
-                          ],
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                          'type': 'stack',
-                        },
-                        {
-                          'type': 'alert',
-                          'message': 'All requests are being processed.',
-                          'variant': 'success',
-                        },
-                        {
-                          'cols': 2,
-                          'type': 'simple-grid',
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'meter',
-                          'max': '@entity.threshold',
-                          'value': '@entity.failureCount',
-                          'min': 0,
-                        },
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'SUCCESS',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'shield-check',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'status': 'online',
+                            'pulse': false,
+                            'type': 'status-dot',
+                            'label': 'Circuit Closed',
+                          },
+                        ],
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'alert',
+                        'message': 'All requests are being processed.',
+                        'variant': 'success',
+                      },
+                      {
+                        'cols': 2,
+                        'type': 'simple-grid',
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'meter',
+                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
+                        'min': 0,
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'open',
-                'event': 'FAILURE',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'md',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'alert-triangle',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'variant': 'h3',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'gap': 'md',
-                            },
-                            {
-                              'pulse': true,
-                              'status': 'critical',
-                              'label': 'Circuit Open',
-                              'type': 'status-dot',
-                            },
-                          ],
-                        },
-                        {
-                          'variant': 'error',
-                          'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
-                          'type': 'alert',
-                        },
-                        {
-                          'cols': 2,
-                          'children': [
-                            {
-                              'label': 'Failures',
-                              'type': 'stat-display',
-                              'value': '@entity.failureCount',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'value': '@entity.successCount',
-                              'label': 'Successes',
-                            },
-                          ],
-                          'type': 'simple-grid',
-                        },
-                        {
-                          'max': '@entity.threshold',
-                          'value': '@entity.failureCount',
-                          'min': 0,
-                          'type': 'meter',
-                        },
-                        {
-                          'label': 'Reset',
-                          'type': 'button',
-                          'action': 'RESET',
-                          'variant': 'ghost',
-                          'icon': 'rotate-ccw',
-                        },
-                      ],
-                      'gap': 'lg',
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'open',
+              'event': 'FAILURE',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'alert-triangle',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'pulse': true,
+                            'status': 'critical',
+                            'label': 'Circuit Open',
+                            'type': 'status-dot',
+                          },
+                        ],
+                      },
+                      {
+                        'variant': 'error',
+                        'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                        'type': 'alert',
+                      },
+                      {
+                        'cols': 2,
+                        'children': [
+                          {
+                            'label': 'Failures',
+                            'type': 'stat-display',
+                            'value': '@entity.failureCount',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'value': '@entity.successCount',
+                            'label': 'Successes',
+                          },
+                        ],
+                        'type': 'simple-grid',
+                      },
+                      {
+                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
+                        'min': 0,
+                        'type': 'meter',
+                      },
+                      {
+                        'label': 'Reset',
+                        'type': 'button',
+                        'action': 'RESET',
+                        'variant': 'ghost',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                    'gap': 'lg',
+                  },
                 ],
-              },
-              {
-                'from': 'halfOpen',
-                'to': 'closed',
-                'event': 'RESET',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                      'children': [
-                        {
-                          'type': 'stack',
-                          'align': 'center',
-                          'direction': 'horizontal',
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'gap': 'md',
-                              'type': 'stack',
-                              'align': 'center',
-                              'children': [
-                                {
-                                  'name': 'shield-check',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Circuit Breaker',
-                                  'variant': 'h3',
-                                  'type': 'typography',
-                                },
-                              ],
-                            },
-                            {
-                              'status': 'online',
-                              'pulse': false,
-                              'type': 'status-dot',
-                              'label': 'Circuit Closed',
-                            },
-                          ],
-                          'gap': 'md',
-                        },
-                        {
-                          'variant': 'success',
-                          'message': 'All requests are being processed.',
-                          'type': 'alert',
-                        },
-                        {
-                          'type': 'simple-grid',
-                          'cols': 2,
-                          'children': [
-                            {
-                              'value': '@entity.failureCount',
-                              'type': 'stat-display',
-                              'label': 'Failures',
-                            },
-                            {
-                              'type': 'stat-display',
-                              'label': 'Successes',
-                              'value': '@entity.successCount',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'meter',
-                          'value': '@entity.failureCount',
-                          'min': 0,
-                          'max': '@entity.threshold',
-                        },
-                      ],
-                    },
-                  ],
+              ],
+            },
+            {
+              'from': 'halfOpen',
+              'to': 'closed',
+              'event': 'RESET',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'shield-check',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'status': 'online',
+                            'pulse': false,
+                            'type': 'status-dot',
+                            'label': 'Circuit Closed',
+                          },
+                        ],
+                        'gap': 'md',
+                      },
+                      {
+                        'variant': 'success',
+                        'message': 'All requests are being processed.',
+                        'type': 'alert',
+                      },
+                      {
+                        'type': 'simple-grid',
+                        'cols': 2,
+                        'children': [
+                          {
+                            'value': '@entity.failureCount',
+                            'type': 'stat-display',
+                            'label': 'Failures',
+                          },
+                          {
+                            'type': 'stat-display',
+                            'label': 'Successes',
+                            'value': '@entity.successCount',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
+                        'min': 0,
+                        'max': '@entity.threshold',
+                      },
+                    ],
+                  },
                 ],
-              },
-            ],
-          },
-          'scope': 'collection',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'ServicesPage',
-          'path': '/services',
-          'traits': [
-            {
-              'ref': 'ServiceNodeAppLayout',
-            },
-            {
-              'ref': 'ServiceNodeCatalog',
-            },
-            {
-              'ref': 'ServiceNodeSearch',
-            },
-            {
-              'ref': 'ServiceNodeFilter',
-            },
-            {
-              'ref': 'ServiceNodeStats',
-            },
-            {
-              'ref': 'ServiceNodeGraphs',
-            },
-            {
-              'ref': 'ServiceNodeBrowseList',
-            },
-            {
-              'ref': 'ServiceNodeCreate',
-            },
-            {
-              'ref': 'ServiceNodeEdit',
-            },
-            {
-              'ref': 'ServiceNodeView',
-            },
-            {
-              'ref': 'ServiceNodeDelete',
-            },
-            {
-              'ref': 'ServiceNodePersistor',
-            },
-            {
-              'ref': 'ServiceNodeCircuitBreaker',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(applyPrimaryParams(built));
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'AlertMetricOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
-        },
-        {
-          'from': 'std/behaviors/std-modal',
-          'as': 'Modal',
-        },
-        {
-          'from': 'std/behaviors/std-confirmation',
-          'as': 'Confirmation',
-        },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-        {
-          'from': 'std/behaviors/std-service-email',
-          'as': 'Email',
-        },
-      ],
-      entity: {
-        'name': 'AlertMetric',
-        'collection': 'alertmetrics',
-        'persistence': 'persistent',
-        'fields': [
-          {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'severity',
-            'type': 'string',
-            'default': 'info',
-            'values': [
-              'info',
-              'warning',
-              'critical',
-            ],
-          },
-          {
-            'name': 'message',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'timestamp',
-            'type': 'datetime',
-          },
-          {
-            'name': 'source',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'pendingId',
-            'type': 'string',
-            'default': '',
-          },
-        ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'AlertMetricAppLayout',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'contentTrait': '@trait.AlertCatalog',
-            'appName': 'DevOps Dashboard',
-            'navItems': [
-              {
-                'label': 'Services',
-                'href': '/services',
-                'icon': 'server',
-              },
-              {
-                'label': 'Alerts',
-                'href': '/alerts',
-                'icon': 'bell',
-              },
-              {
-                'label': 'Logs',
-                'href': '/logs',
-                'icon': 'terminal',
-              },
-              {
-                'label': 'Metrics',
-                'icon': 'layout-list',
-                'href': '/metrics',
-              },
-            ],
-            'searchEvent': 'ALERT_SEARCH',
-            'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
-            'notifications': [],
-          },
-          'events': {
-            'NOTIFY_CLICK': 'ALERT_NOTIFICATIONS_OPEN',
-            'SEARCH': 'ALERT_SEARCH',
-          },
-        }),
-        {
-          'name': 'AlertCatalog',
-          'category': 'interaction',
-          'emits': [
-            {
-              'event': 'CREATE',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'source',
-                  'type': 'string',
-                },
               ],
             },
           ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'CREATE',
-                'name': 'Create',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'children': [
-                            {
-                              'direction': 'horizontal',
-                              'type': 'stack',
-                              'children': [
-                                {
-                                  'name': 'bell',
-                                  'type': 'icon',
-                                },
-                                {
-                                  'content': 'Alerts',
-                                  'type': 'typography',
-                                  'variant': 'h2',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'align': 'center',
-                            },
-                            {
-                              'direction': 'horizontal',
-                              'children': [
-                                {
-                                  'label': 'New Alert',
-                                  'action': 'CREATE',
-                                  'type': 'button',
-                                  'variant': 'primary',
-                                  'icon': 'plus',
-                                },
-                              ],
-                              'gap': 'sm',
-                              'type': 'stack',
-                            },
-                          ],
-                          'type': 'stack',
-                          'align': 'center',
-                          'gap': 'md',
-                          'direction': 'horizontal',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.AlertBrowseList',
-                      ],
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
+        },
+        'scope': 'collection',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'ServicesPage',
+        'path': '/services',
+        'traits': [
+          {
+            'ref': 'ServiceNodeAppLayout',
           },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'AlertBrowseList',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'fields': [
-              {
-                'name': 'severity',
-                'variant': 'badge',
-              },
-              {
-                'icon': 'alert-triangle',
-                'variant': 'h4',
-                'name': 'message',
-              },
+          {
+            'ref': 'ServiceNodeCatalog',
+          },
+          {
+            'ref': 'ServiceNodeSearch',
+          },
+          {
+            'ref': 'ServiceNodeFilter',
+          },
+          {
+            'ref': 'ServiceNodeStats',
+          },
+          {
+            'ref': 'ServiceNodeGraphs',
+          },
+          {
+            'ref': 'ServiceNodeBrowseList',
+          },
+          {
+            'ref': 'ServiceNodeCreate',
+          },
+          {
+            'ref': 'ServiceNodeEdit',
+          },
+          {
+            'ref': 'ServiceNodeView',
+          },
+          {
+            'ref': 'ServiceNodeDelete',
+          },
+          {
+            'ref': 'ServiceNodePersistor',
+          },
+          {
+            'ref': 'ServiceNodeCircuitBreaker',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the AlertMetricOrbital orbital.
+ *
+ * Canonical entity: AlertMetric.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdDevopsDashboardAlertMetricOrbitalParams {
+  /** Override the canonical entity name (default: 'AlertMetric'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the AlertMetricOrbital orbital with consumer params. */
+export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardAlertMetricOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'AlertMetric';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'AlertMetricOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-service-email',
+        'as': 'Email',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'alertmetrics',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'severity',
+          'type': 'string',
+          'default': 'info',
+          'values': [
+            'info',
+            'warning',
+            'critical',
+          ],
+        },
+        {
+          'name': 'message',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'timestamp',
+          'type': 'datetime',
+        },
+        {
+          'name': 'source',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'pendingId',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AlertMetricAppLayout',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'contentTrait': '@trait.AlertCatalog',
+          'appName': 'DevOps Dashboard',
+          'navItems': [
+            {
+              'label': 'Services',
+              'href': '/services',
+              'icon': 'server',
+            },
+            {
+              'label': 'Alerts',
+              'href': '/alerts',
+              'icon': 'bell',
+            },
+            {
+              'label': 'Logs',
+              'href': '/logs',
+              'icon': 'terminal',
+            },
+            {
+              'label': 'Metrics',
+              'icon': 'layout-list',
+              'href': '/metrics',
+            },
+          ],
+          'searchEvent': 'ALERT_SEARCH',
+          'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'ALERT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ALERT_SEARCH',
+        },
+      }),
+      {
+        'name': 'AlertCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
               {
                 'name': 'source',
-                'variant': 'body',
-              },
-              {
-                'variant': 'caption',
-                'name': 'timestamp',
-                'format': 'date',
+                'type': 'string',
               },
             ],
-            'itemActions': [
-              {
-                'event': 'VIEW',
-                'variant': 'ghost',
-                'label': 'View',
-              },
-              {
-                'label': 'Edit',
-                'event': 'EDIT',
-                'variant': 'ghost',
-              },
-              {
-                'label': 'Delete',
-                'event': 'DELETE',
-                'variant': 'danger',
-              },
-            ],
-            'gap': 'sm',
-            'cols': 1,
           },
-          'listens': [
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'event': 'ALERT_CREATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
-            },
-            {
-              'event': 'ALERT_UPDATED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
-            },
-            {
-              'event': 'ALERT_DELETED',
-              'triggers': 'INIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
+              'name': 'composing',
+              'isInitial': true,
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertCreate',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'title': 'New Alert',
-            'fields': [
-              'severity',
-              'message',
-              'source',
-              'timestamp',
-            ],
-            'icon': 'plus-circle',
-            'mode': 'create',
-          },
-          'events': {
-            'OPEN': 'CREATE',
-          },
-          'listens': [
+          'events': [
             {
-              'event': 'CREATE',
-              'triggers': 'CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertCatalog',
-              },
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertEdit',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'mode': 'edit',
-            'fields': [
-              'severity',
-              'message',
-              'source',
-              'timestamp',
-            ],
-            'icon': 'edit',
-            'title': 'Edit Alert',
-          },
-          'events': {
-            'OPEN': 'EDIT',
-          },
-          'listens': [
+          'transitions': [
             {
-              'event': 'EDIT',
-              'triggers': 'EDIT',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'name': 'bell',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Alerts',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'label': 'New Alert',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.AlertBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
             },
           ],
-        }),
-        makeTraitRef({
-          'ref': 'Modal.traits.ModalRecordModal',
-          'name': 'AlertView',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'mode': 'edit',
-            'title': 'View Alert',
-            'fields': [
-              'severity',
-              'message',
-              'source',
-              'timestamp',
-            ],
-            'icon': 'eye',
-          },
-          'events': {
-            'OPEN': 'VIEW',
-          },
-          'listens': [
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'AlertBrowseList',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'fields': [
+            {
+              'name': 'severity',
+              'variant': 'badge',
+            },
+            {
+              'icon': 'alert-triangle',
+              'variant': 'h4',
+              'name': 'message',
+            },
+            {
+              'name': 'source',
+              'variant': 'body',
+            },
+            {
+              'variant': 'caption',
+              'name': 'timestamp',
+              'format': 'date',
+            },
+          ],
+          'itemActions': [
             {
               'event': 'VIEW',
-              'triggers': 'VIEW',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
+              'variant': 'ghost',
+              'label': 'View',
             },
-          ],
-        }),
-        makeTraitRef({
-          'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-          'name': 'AlertDelete',
-          'linkedEntity': 'AlertMetric',
-          'config': {
-            'confirmLabel': 'Delete',
-            'icon': 'alert-triangle',
-            'alertMessage': 'This action cannot be undone.',
-            'title': 'Delete Alert',
-          },
-          'events': {
-            'REQUEST': 'DELETE',
-            'CONFIRM': 'CONFIRM_DELETE',
-          },
-          'listens': [
             {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
               'event': 'DELETE',
-              'triggers': 'DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertBrowseList',
-              },
+              'variant': 'danger',
             },
           ],
-        }),
-        {
-          'name': 'AlertPersistor',
-          'category': 'lifecycle',
-          'linkedEntity': 'AlertMetric',
-          'emits': [
-            {
-              'event': 'ALERT_CREATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ALERT_UPDATED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-            {
-              'event': 'ALERT_DELETED',
-              'scope': 'external',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'listens': [
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_CREATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertCreate',
-              },
-            },
-            {
-              'event': 'SAVE',
-              'triggers': 'DO_UPDATE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertEdit',
-              },
-            },
-            {
-              'event': 'CONFIRM_DELETE',
-              'triggers': 'DO_DELETE',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertDelete',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'DO_CREATE',
-                'name': 'Do Create',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_UPDATE',
-                'name': 'Do Update',
-                'payloadSchema': [
-                  {
-                    'name': 'data',
-                    'type': 'object',
-                    'required': true,
-                  },
-                ],
-              },
-              {
-                'key': 'DO_DELETE',
-                'name': 'Do Delete',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                ],
-              },
-              {
-                'key': 'ALERT_CREATED',
-                'name': 'Alert Created',
-              },
-              {
-                'key': 'ALERT_UPDATED',
-                'name': 'Alert Updated',
-              },
-              {
-                'key': 'ALERT_DELETED',
-                'name': 'Alert Deleted',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_CREATE',
-                'effects': [
-                  [
-                    'persist',
-                    'create',
-                    'AlertMetric',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ALERT_CREATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_UPDATE',
-                'effects': [
-                  [
-                    'persist',
-                    'update',
-                    'AlertMetric',
-                    '@payload.data',
-                    {
-                      'emit': {
-                        'success': 'ALERT_UPDATED',
-                      },
-                    },
-                  ],
-                ],
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'DO_DELETE',
-                'effects': [
-                  [
-                    'persist',
-                    'delete',
-                    'AlertMetric',
-                    '@payload.id',
-                    {
-                      'emit': {
-                        'success': 'ALERT_DELETED',
-                      },
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        {
-          'name': 'AlertEmail',
-          'category': 'lifecycle',
-          'linkedEntity': 'AlertMetric',
-          'listens': [
-            {
-              'event': 'ALERT_CREATED',
-              'triggers': 'ALERT_TRIGGERED',
-              'source': {
-                'kind': 'trait',
-                'trait': 'AlertPersistor',
-              },
-            },
-          ],
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'idle',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-              {
-                'key': 'ALERT_TRIGGERED',
-                'name': 'Alert Triggered',
-                'payloadSchema': [
-                  {
-                    'name': 'id',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'severity',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'recipient',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'subject',
-                    'type': 'string',
-                  },
-                  {
-                    'name': 'body',
-                    'type': 'string',
-                  },
-                ],
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'INIT',
-              },
-              {
-                'from': 'idle',
-                'to': 'idle',
-                'event': 'ALERT_TRIGGERED',
-                'guard': [
-                  '=',
-                  '@payload.severity',
-                  'critical',
-                ],
-                'effects': [
-                  [
-                    'call-service',
-                    'email',
-                    'send',
-                    {
-                      'sender': 'alerts@example.com',
-                      'subject': '@payload.subject',
-                      'body': '@payload.body',
-                      'recipient': '@payload.recipient',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'AlertsPage',
-          'path': '/alerts',
-          'traits': [
-            {
-              'ref': 'AlertMetricAppLayout',
-            },
-            {
-              'ref': 'AlertCatalog',
-            },
-            {
-              'ref': 'AlertBrowseList',
-            },
-            {
-              'ref': 'AlertCreate',
-            },
-            {
-              'ref': 'AlertEdit',
-            },
-            {
-              'ref': 'AlertView',
-            },
-            {
-              'ref': 'AlertDelete',
-            },
-            {
-              'ref': 'AlertPersistor',
-            },
-            {
-              'ref': 'AlertEmail',
-            },
-          ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'LogEntryOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'gap': 'sm',
+          'cols': 1,
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
-        },
-      ],
-      entity: {
-        'name': 'LogEntry',
-        'collection': 'logentries',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'ALERT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
           },
           {
-            'name': 'level',
-            'type': 'string',
-            'default': 'info',
-            'values': [
-              'debug',
-              'info',
-              'warn',
-              'error',
-            ],
+            'event': 'ALERT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
           },
           {
-            'name': 'message',
-            'type': 'string',
-            'required': true,
-          },
-          {
-            'name': 'timestamp',
-            'type': 'datetime',
-          },
-          {
-            'name': 'service',
-            'type': 'string',
-            'default': '',
+            'event': 'ALERT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'LogEntryAppLayout',
-          'linkedEntity': 'LogEntry',
-          'config': {
-            'searchEvent': 'LOG_SEARCH',
-            'navItems': [
-              {
-                'href': '/services',
-                'icon': 'server',
-                'label': 'Services',
-              },
-              {
-                'icon': 'bell',
-                'label': 'Alerts',
-                'href': '/alerts',
-              },
-              {
-                'icon': 'terminal',
-                'href': '/logs',
-                'label': 'Logs',
-              },
-              {
-                'label': 'Metrics',
-                'href': '/metrics',
-                'icon': 'layout-list',
-              },
-            ],
-            'notificationClickEvent': 'LOG_NOTIFICATIONS_OPEN',
-            'appName': 'DevOps Dashboard',
-            'notifications': [],
-            'contentTrait': '@trait.LogCatalog',
-          },
-          'events': {
-            'NOTIFY_CLICK': 'LOG_NOTIFICATIONS_OPEN',
-            'SEARCH': 'LOG_SEARCH',
-          },
-        }),
-        {
-          'name': 'LogCatalog',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'type': 'stack',
-                      'direction': 'vertical',
-                      'gap': 'lg',
-                      'children': [
-                        {
-                          'justify': 'between',
-                          'align': 'center',
-                          'type': 'stack',
-                          'children': [
-                            {
-                              'children': [
-                                {
-                                  'type': 'icon',
-                                  'name': 'terminal',
-                                },
-                                {
-                                  'variant': 'h2',
-                                  'content': 'Logs',
-                                  'type': 'typography',
-                                },
-                              ],
-                              'type': 'stack',
-                              'direction': 'horizontal',
-                              'align': 'center',
-                              'gap': 'sm',
-                            },
-                          ],
-                          'direction': 'horizontal',
-                          'gap': 'md',
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        '@trait.LogBrowseList',
-                      ],
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'LogBrowseList',
-          'linkedEntity': 'LogEntry',
-          'config': {
-            'gap': 'sm',
-            'variant': 'dense',
-            'fields': [
-              {
-                'variant': 'badge',
-                'name': 'level',
-              },
-              {
-                'variant': 'body',
-                'name': 'message',
-                'icon': 'file-text',
-              },
-              {
-                'variant': 'caption',
-                'name': 'service',
-              },
-              {
-                'variant': 'caption',
-                'name': 'timestamp',
-                'format': 'date',
-              },
-            ],
-            'cols': 1,
-          },
-        }),
-      ],
-      pages: [
-        {
-          'name': 'LogsPage',
-          'path': '/logs',
-          'traits': [
-            {
-              'ref': 'LogEntryAppLayout',
-            },
-            {
-              'ref': 'LogCatalog',
-            },
-            {
-              'ref': 'LogBrowseList',
-            },
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertCreate',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'title': 'New Alert',
+          'fields': [
+            'severity',
+            'message',
+            'source',
+            'timestamp',
           ],
-        } as never,
-      ],
-    });
-    orbitalsOut.push(built);
-  }
-  {
-    const built = makeOrbitalWithUses({
-      name: 'SystemMetricOrbital',
-      uses: [
-        {
-          'from': 'std/behaviors/std-app-layout',
-          'as': 'AppShell',
+          'icon': 'plus-circle',
+          'mode': 'create',
         },
-        {
-          'from': 'std/behaviors/std-browse',
-          'as': 'Browse',
+        'events': {
+          'OPEN': 'CREATE',
         },
-      ],
-      entity: {
-        'name': 'SystemMetric',
-        'collection': 'systemmetrics',
-        'persistence': 'persistent',
-        'fields': [
+        'listens': [
           {
-            'name': 'id',
-            'type': 'string',
-            'required': true,
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertEdit',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'severity',
+            'message',
+            'source',
+            'timestamp',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Alert',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'AlertView',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'mode': 'edit',
+          'title': 'View Alert',
+          'fields': [
+            'severity',
+            'message',
+            'source',
+            'timestamp',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'AlertDelete',
+        'linkedEntity': 'AlertMetric',
+        'config': {
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Alert',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'AlertPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'AlertMetric',
+        'emits': [
+          {
+            'event': 'ALERT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
+            'event': 'ALERT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
           },
           {
-            'name': 'value',
-            'type': 'number',
-            'required': true,
-          },
-          {
-            'name': 'unit',
-            'type': 'string',
-            'default': '',
-          },
-          {
-            'name': 'trend',
-            'type': 'string',
-            'default': 'flat',
-            'values': [
-              'up',
-              'down',
-              'flat',
+            'event': 'ALERT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
             ],
           },
         ],
-      } as Entity,
-      traits: [
-        makeTraitRef({
-          'ref': 'AppShell.traits.AppLayout',
-          'name': 'SystemMetricAppLayout',
-          'linkedEntity': 'SystemMetric',
-          'config': {
-            'contentTrait': '@trait.SystemMetricDisplay',
-            'navItems': [
-              {
-                'href': '/services',
-                'label': 'Services',
-                'icon': 'server',
-              },
-              {
-                'label': 'Alerts',
-                'href': '/alerts',
-                'icon': 'bell',
-              },
-              {
-                'label': 'Logs',
-                'href': '/logs',
-                'icon': 'terminal',
-              },
-              {
-                'label': 'Metrics',
-                'icon': 'layout-list',
-                'href': '/metrics',
-              },
-            ],
-            'searchEvent': 'SYSTEM_METRIC_SEARCH',
-            'notificationClickEvent': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
-            'appName': 'DevOps Dashboard',
-            'notifications': [],
-          },
-          'events': {
-            'SEARCH': 'SYSTEM_METRIC_SEARCH',
-            'NOTIFY_CLICK': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
-          },
-        }),
-        makeTraitRef({
-          'ref': 'Browse.traits.BrowseItemBrowse',
-          'name': 'SystemMetricsBrowse',
-          'linkedEntity': 'SystemMetric',
-          'config': {
-            'displayPageSize': 10,
-            'pageSize': 100,
-            'fields': [
-              {
-                'name': 'name',
-                'label': 'Metric',
-                'variant': 'h4',
-              },
-              {
-                'name': 'value',
-                'format': 'number',
-                'label': 'Value',
-                'variant': 'h3',
-              },
-              {
-                'label': 'Unit',
-                'name': 'unit',
-                'variant': 'caption',
-              },
-              {
-                'variant': 'badge',
-                'name': 'trend',
-                'label': 'Trend',
-              },
-            ],
-          },
-        }),
-        {
-          'name': 'SystemMetricDisplay',
-          'category': 'interaction',
-          'stateMachine': {
-            'states': [
-              {
-                'name': 'composing',
-                'isInitial': true,
-              },
-            ],
-            'events': [
-              {
-                'key': 'INIT',
-                'name': 'Initialize',
-              },
-            ],
-            'transitions': [
-              {
-                'from': 'composing',
-                'to': 'composing',
-                'event': 'INIT',
-                'effects': [
-                  [
-                    'render-ui',
-                    'main',
-                    {
-                      'className': 'max-w-6xl mx-auto w-full p-4',
-                      'gap': 'lg',
-                      'direction': 'vertical',
-                      'children': [
-                        {
-                          'gap': 'sm',
-                          'type': 'stack',
-                          'direction': 'horizontal',
-                          'align': 'center',
-                          'children': [
-                            {
-                              'name': 'activity',
-                              'type': 'icon',
-                            },
-                            {
-                              'content': 'System Metrics',
-                              'type': 'typography',
-                              'variant': 'h2',
-                            },
-                          ],
-                        },
-                        {
-                          'type': 'divider',
-                        },
-                        {
-                          'type': 'typography',
-                          'content': 'Recent',
-                          'variant': 'h3',
-                        },
-                        '@trait.SystemMetricsBrowse',
-                      ],
-                      'type': 'stack',
-                    },
-                  ],
-                ],
-              },
-            ],
-          },
-          'scope': 'instance',
-        } as never,
-      ],
-      pages: [
-        {
-          'name': 'Metrics',
-          'path': '/metrics',
-          'traits': [
-            {
-              'ref': 'SystemMetricAppLayout',
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertCreate',
             },
-            {
-              'ref': 'SystemMetricDisplay',
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertEdit',
             },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
             {
-              'ref': 'SystemMetricsBrowse',
+              'name': 'idle',
+              'isInitial': true,
             },
           ],
-        } as never,
-      ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'ALERT_CREATED',
+              'name': 'Alert Created',
+            },
+            {
+              'key': 'ALERT_UPDATED',
+              'name': 'Alert Updated',
+            },
+            {
+              'key': 'ALERT_DELETED',
+              'name': 'Alert Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'AlertMetric',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ALERT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'AlertMetric',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'ALERT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'AlertMetric',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'ALERT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      {
+        'name': 'AlertEmail',
+        'category': 'lifecycle',
+        'linkedEntity': 'AlertMetric',
+        'listens': [
+          {
+            'event': 'ALERT_CREATED',
+            'triggers': 'ALERT_TRIGGERED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'AlertPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'ALERT_TRIGGERED',
+              'name': 'Alert Triggered',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+                {
+                  'name': 'severity',
+                  'type': 'string',
+                },
+                {
+                  'name': 'recipient',
+                  'type': 'string',
+                },
+                {
+                  'name': 'subject',
+                  'type': 'string',
+                },
+                {
+                  'name': 'body',
+                  'type': 'string',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'ALERT_TRIGGERED',
+              'guard': [
+                '=',
+                '@payload.severity',
+                'critical',
+              ],
+              'effects': [
+                [
+                  'call-service',
+                  'email',
+                  'send',
+                  {
+                    'sender': 'alerts@example.com',
+                    'subject': '@payload.subject',
+                    'body': '@payload.body',
+                    'recipient': '@payload.recipient',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'AlertsPage',
+        'path': '/alerts',
+        'traits': [
+          {
+            'ref': 'AlertMetricAppLayout',
+          },
+          {
+            'ref': 'AlertCatalog',
+          },
+          {
+            'ref': 'AlertBrowseList',
+          },
+          {
+            'ref': 'AlertCreate',
+          },
+          {
+            'ref': 'AlertEdit',
+          },
+          {
+            'ref': 'AlertView',
+          },
+          {
+            'ref': 'AlertDelete',
+          },
+          {
+            'ref': 'AlertPersistor',
+          },
+          {
+            'ref': 'AlertEmail',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
     });
-    orbitalsOut.push(built);
   }
-  return orbitalsOut;
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the LogEntryOrbital orbital.
+ *
+ * Canonical entity: LogEntry.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdDevopsDashboardLogEntryOrbitalParams {
+  /** Override the canonical entity name (default: 'LogEntry'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the LogEntryOrbital orbital with consumer params. */
+export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogEntryOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'LogEntry';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'LogEntryOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'logentries',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'level',
+          'type': 'string',
+          'default': 'info',
+          'values': [
+            'debug',
+            'info',
+            'warn',
+            'error',
+          ],
+        },
+        {
+          'name': 'message',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'timestamp',
+          'type': 'datetime',
+        },
+        {
+          'name': 'service',
+          'type': 'string',
+          'default': '',
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'LogEntryAppLayout',
+        'linkedEntity': 'LogEntry',
+        'config': {
+          'searchEvent': 'LOG_SEARCH',
+          'navItems': [
+            {
+              'href': '/services',
+              'icon': 'server',
+              'label': 'Services',
+            },
+            {
+              'icon': 'bell',
+              'label': 'Alerts',
+              'href': '/alerts',
+            },
+            {
+              'icon': 'terminal',
+              'href': '/logs',
+              'label': 'Logs',
+            },
+            {
+              'label': 'Metrics',
+              'href': '/metrics',
+              'icon': 'layout-list',
+            },
+          ],
+          'notificationClickEvent': 'LOG_NOTIFICATIONS_OPEN',
+          'appName': 'DevOps Dashboard',
+          'notifications': [],
+          'contentTrait': '@trait.LogCatalog',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'LOG_NOTIFICATIONS_OPEN',
+          'SEARCH': 'LOG_SEARCH',
+        },
+      }),
+      {
+        'name': 'LogCatalog',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'terminal',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Logs',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.LogBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'LogBrowseList',
+        'linkedEntity': 'LogEntry',
+        'config': {
+          'gap': 'sm',
+          'variant': 'dense',
+          'fields': [
+            {
+              'variant': 'badge',
+              'name': 'level',
+            },
+            {
+              'variant': 'body',
+              'name': 'message',
+              'icon': 'file-text',
+            },
+            {
+              'variant': 'caption',
+              'name': 'service',
+            },
+            {
+              'variant': 'caption',
+              'name': 'timestamp',
+              'format': 'date',
+            },
+          ],
+          'cols': 1,
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'LogsPage',
+        'path': '/logs',
+        'traits': [
+          {
+            'ref': 'LogEntryAppLayout',
+          },
+          {
+            'ref': 'LogCatalog',
+          },
+          {
+            'ref': 'LogBrowseList',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Tunable params for the SystemMetricOrbital orbital.
+ *
+ * Canonical entity: SystemMetric.
+ * Override the canonical name to rebind every trait/page whose
+ * `linkedEntity` matched the canonical entity name.
+ */
+export interface StdDevopsDashboardSystemMetricOrbitalParams {
+  /** Override the canonical entity name (default: 'SystemMetric'). */
+  entityName?: string;
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Per-trait config override applied to every trait in this orbital. */
+  config?: TraitConfig;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+}
+
+/** Per-orbital factory: builds the SystemMetricOrbital orbital with consumer params. */
+export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboardSystemMetricOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = 'SystemMetric';
+  const targetName = params.entityName || canonicalName;
+  const built = makeOrbitalWithUses({
+    name: 'SystemMetricOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+    ],
+    entity: {
+      name: targetName,
+      collection: 'systemmetrics',
+      persistence: params.persistence ?? 'persistent',
+      fields: [
+        {
+          'name': 'id',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'name',
+          'type': 'string',
+          'required': true,
+        },
+        {
+          'name': 'value',
+          'type': 'number',
+          'required': true,
+        },
+        {
+          'name': 'unit',
+          'type': 'string',
+          'default': '',
+        },
+        {
+          'name': 'trend',
+          'type': 'string',
+          'default': 'flat',
+          'values': [
+            'up',
+            'down',
+            'flat',
+          ],
+        },
+        ...(params.fields ?? []),
+      ],
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'SystemMetricAppLayout',
+        'linkedEntity': 'SystemMetric',
+        'config': {
+          'contentTrait': '@trait.SystemMetricDisplay',
+          'navItems': [
+            {
+              'href': '/services',
+              'label': 'Services',
+              'icon': 'server',
+            },
+            {
+              'label': 'Alerts',
+              'href': '/alerts',
+              'icon': 'bell',
+            },
+            {
+              'label': 'Logs',
+              'href': '/logs',
+              'icon': 'terminal',
+            },
+            {
+              'label': 'Metrics',
+              'icon': 'layout-list',
+              'href': '/metrics',
+            },
+          ],
+          'searchEvent': 'SYSTEM_METRIC_SEARCH',
+          'notificationClickEvent': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
+          'appName': 'DevOps Dashboard',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'SYSTEM_METRIC_SEARCH',
+          'NOTIFY_CLICK': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'SystemMetricsBrowse',
+        'linkedEntity': 'SystemMetric',
+        'config': {
+          'displayPageSize': 10,
+          'pageSize': 100,
+          'fields': [
+            {
+              'name': 'name',
+              'label': 'Metric',
+              'variant': 'h4',
+            },
+            {
+              'name': 'value',
+              'format': 'number',
+              'label': 'Value',
+              'variant': 'h3',
+            },
+            {
+              'label': 'Unit',
+              'name': 'unit',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'badge',
+              'name': 'trend',
+              'label': 'Trend',
+            },
+          ],
+        },
+      }),
+      {
+        'name': 'SystemMetricDisplay',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'activity',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'System Metrics',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'Recent',
+                        'variant': 'h3',
+                      },
+                      '@trait.SystemMetricsBrowse',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+    ],
+    pages: [
+      {
+        'name': 'Metrics',
+        'path': '/metrics',
+        'traits': [
+          {
+            'ref': 'SystemMetricAppLayout',
+          },
+          {
+            'ref': 'SystemMetricDisplay',
+          },
+          {
+            'ref': 'SystemMetricsBrowse',
+          },
+        ],
+      } as never,
+    ],
+  });
+  // Post-rebind: thread params.entityName / pagePath / config through
+  // any inline literal that referenced the canonical name.
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  if (built.traits) {
+    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
+      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      return out;
+    });
+  }
+  if (built.pages) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      const pr = p as { linkedEntity?: string; path?: string };
+      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
+      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/**
+ * Bundled params for std-devops-dashboard — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdDevopsDashboardParams {
+  ServiceNode?: StdDevopsDashboardServiceNodeOrbitalParams;
+  AlertMetric?: StdDevopsDashboardAlertMetricOrbitalParams;
+  LogEntry?: StdDevopsDashboardLogEntryOrbitalParams;
+  SystemMetric?: StdDevopsDashboardSystemMetricOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdDevopsDashboard(params: StdDevopsDashboardParams = {}): OrbitalDefinition[] {
+  return [
+    stdDevopsDashboardServiceNodeOrbital(params.ServiceNode ?? {}),
+    stdDevopsDashboardAlertMetricOrbital(params.AlertMetric ?? {}),
+    stdDevopsDashboardLogEntryOrbital(params.LogEntry ?? {}),
+    stdDevopsDashboardSystemMetricOrbital(params.SystemMetric ?? {}),
+  ];
 }
