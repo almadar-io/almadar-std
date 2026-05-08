@@ -14,7 +14,7 @@ import { stdCms } from '@almadar/std/behaviors/functions';
 import { makeSchema } from '@almadar/core/builders';
 import type { OrbitalSchema } from '@almadar/core/types';
 
-const allCmsOrbitals = stdCms({ entityName: 'IGNORED-multi-orbital' });
+const allCmsOrbitals = stdCms();
 // std-cms publishes 4 orbitals: Articles, MediaAssets, Categories, CmsHub.
 // Slicing has a contract: the agent picks orbital(s) whose emit/listen
 // graph is self-contained, otherwise cross-orbital `*Browse` traits

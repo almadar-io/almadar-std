@@ -51,13 +51,12 @@ export interface StdArcadeGameArcadeStateLoadFailedPayload {
 /**
  * Tunable params for the ArcadeStateOrbital orbital.
  *
- * Canonical entity: ArcadeState.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: ArcadeState (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdArcadeGameArcadeStateOrbitalParams {
-  /** Override the canonical entity name (default: 'ArcadeState'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -71,12 +70,11 @@ export interface StdArcadeGameArcadeStateOrbitalParams {
 /** Per-orbital factory: builds the ArcadeStateOrbital orbital with consumer params. */
 export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeStateOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'ArcadeState';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ArcadeStateOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -547,35 +545,29 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -585,13 +577,12 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
 /**
  * Tunable params for the ArcadeCanvasOrbital orbital.
  *
- * Canonical entity: ArcadeCanvas.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: ArcadeCanvas (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdArcadeGameArcadeCanvasOrbitalParams {
-  /** Override the canonical entity name (default: 'ArcadeCanvas'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -605,12 +596,11 @@ export interface StdArcadeGameArcadeCanvasOrbitalParams {
 /** Per-orbital factory: builds the ArcadeCanvasOrbital orbital with consumer params. */
 export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanvasOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'ArcadeCanvas';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ArcadeCanvasOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -958,35 +948,29 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -996,13 +980,12 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
 /**
  * Tunable params for the ArcadeScoreOrbital orbital.
  *
- * Canonical entity: ArcadeScore.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: ArcadeScore (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdArcadeGameArcadeScoreOrbitalParams {
-  /** Override the canonical entity name (default: 'ArcadeScore'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -1016,12 +999,11 @@ export interface StdArcadeGameArcadeScoreOrbitalParams {
 /** Per-orbital factory: builds the ArcadeScoreOrbital orbital with consumer params. */
 export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScoreOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'ArcadeScore';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ArcadeScoreOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -1383,35 +1365,29 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -1421,13 +1397,12 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
 /**
  * Tunable params for the ArcadeHudOrbital orbital.
  *
- * Canonical entity: ArcadeHud.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: ArcadeHud (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdArcadeGameArcadeHudOrbitalParams {
-  /** Override the canonical entity name (default: 'ArcadeHud'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -1441,12 +1416,11 @@ export interface StdArcadeGameArcadeHudOrbitalParams {
 /** Per-orbital factory: builds the ArcadeHudOrbital orbital with consumer params. */
 export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'ArcadeHud';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ArcadeHudOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -1696,35 +1670,29 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }

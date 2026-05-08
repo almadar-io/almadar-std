@@ -114,13 +114,12 @@ export interface StdAgentPipelineExecutionLogSaveFailedPayload {
 /**
  * Tunable params for the PipelinePlanOrbital orbital.
  *
- * Canonical entity: PipelinePlan.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: PipelinePlan (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelinePipelinePlanOrbitalParams {
-  /** Override the canonical entity name (default: 'PipelinePlan'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -134,7 +133,6 @@ export interface StdAgentPipelinePipelinePlanOrbitalParams {
 /** Per-orbital factory: builds the PipelinePlanOrbital orbital with consumer params. */
 export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipelinePlanOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'PipelinePlan';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'PipelinePlanOrbital',
     uses: [
@@ -148,7 +146,7 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -3087,35 +3085,29 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -3125,13 +3117,12 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
 /**
  * Tunable params for the PipelineExecOrbital orbital.
  *
- * Canonical entity: PipelineExec.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: PipelineExec (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelinePipelineExecOrbitalParams {
-  /** Override the canonical entity name (default: 'PipelineExec'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -3145,12 +3136,11 @@ export interface StdAgentPipelinePipelineExecOrbitalParams {
 /** Per-orbital factory: builds the PipelineExecOrbital orbital with consumer params. */
 export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipelineExecOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'PipelineExec';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'PipelineExecOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -8890,35 +8880,29 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -8928,13 +8912,12 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
 /**
  * Tunable params for the PipelineSessionOrbital orbital.
  *
- * Canonical entity: PipelineSession.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: PipelineSession (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelinePipelineSessionOrbitalParams {
-  /** Override the canonical entity name (default: 'PipelineSession'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -8948,12 +8931,11 @@ export interface StdAgentPipelinePipelineSessionOrbitalParams {
 /** Per-orbital factory: builds the PipelineSessionOrbital orbital with consumer params. */
 export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelinePipelineSessionOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'PipelineSession';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'PipelineSessionOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -10124,35 +10106,29 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -10162,13 +10138,12 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
 /**
  * Tunable params for the ExecutionLogOrbital orbital.
  *
- * Canonical entity: ExecutionLog.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: ExecutionLog (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelineExecutionLogOrbitalParams {
-  /** Override the canonical entity name (default: 'ExecutionLog'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -10182,12 +10157,11 @@ export interface StdAgentPipelineExecutionLogOrbitalParams {
 /** Per-orbital factory: builds the ExecutionLogOrbital orbital with consumer params. */
 export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExecutionLogOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'ExecutionLog';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ExecutionLogOrbital',
     uses: [],
     entity: {
-      name: targetName,
+      name: canonicalName,
       collection: 'executionlogs',
       persistence: params.persistence ?? 'persistent',
       fields: [
@@ -11525,35 +11499,29 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -11563,13 +11531,12 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
 /**
  * Tunable params for the PipelineProgressOrbital orbital.
  *
- * Canonical entity: PipelineProgress.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: PipelineProgress (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelinePipelineProgressOrbitalParams {
-  /** Override the canonical entity name (default: 'PipelineProgress'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -11583,7 +11550,6 @@ export interface StdAgentPipelinePipelineProgressOrbitalParams {
 /** Per-orbital factory: builds the PipelineProgressOrbital orbital with consumer params. */
 export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipelinePipelineProgressOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'PipelineProgress';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'PipelineProgressOrbital',
     uses: [
@@ -11593,7 +11559,7 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -11641,35 +11607,29 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -11679,13 +11639,12 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
 /**
  * Tunable params for the SessionTreeOrbital orbital.
  *
- * Canonical entity: SessionTree.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: SessionTree (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdAgentPipelineSessionTreeOrbitalParams {
-  /** Override the canonical entity name (default: 'SessionTree'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -11699,7 +11658,6 @@ export interface StdAgentPipelineSessionTreeOrbitalParams {
 /** Per-orbital factory: builds the SessionTreeOrbital orbital with consumer params. */
 export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessionTreeOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'SessionTree';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'SessionTreeOrbital',
     uses: [
@@ -11709,7 +11667,7 @@ export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessi
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -11752,35 +11710,29 @@ export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessi
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }

@@ -36,13 +36,12 @@ export interface StdBookingSystemConfig {
 /**
  * Tunable params for the ProviderOrbital orbital.
  *
- * Canonical entity: Provider.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: Provider (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdBookingSystemProviderOrbitalParams {
-  /** Override the canonical entity name (default: 'Provider'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -56,7 +55,6 @@ export interface StdBookingSystemProviderOrbitalParams {
 /** Per-orbital factory: builds the ProviderOrbital orbital with consumer params. */
 export function stdBookingSystemProviderOrbital(params: StdBookingSystemProviderOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'Provider';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ProviderOrbital',
     uses: [
@@ -86,7 +84,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       collection: 'providers',
       persistence: params.persistence ?? 'persistent',
       fields: [
@@ -2038,35 +2036,29 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -2076,13 +2068,12 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
 /**
  * Tunable params for the BookingOrbital orbital.
  *
- * Canonical entity: Booking.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: Booking (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdBookingSystemBookingOrbitalParams {
-  /** Override the canonical entity name (default: 'Booking'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -2096,7 +2087,6 @@ export interface StdBookingSystemBookingOrbitalParams {
 /** Per-orbital factory: builds the BookingOrbital orbital with consumer params. */
 export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'Booking';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'BookingOrbital',
     uses: [
@@ -2110,7 +2100,7 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'runtime',
       fields: [
         {
@@ -3600,35 +3590,29 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -3638,13 +3622,12 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
 /**
  * Tunable params for the AppointmentOrbital orbital.
  *
- * Canonical entity: Appointment.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: Appointment (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdBookingSystemAppointmentOrbitalParams {
-  /** Override the canonical entity name (default: 'Appointment'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -3658,7 +3641,6 @@ export interface StdBookingSystemAppointmentOrbitalParams {
 /** Per-orbital factory: builds the AppointmentOrbital orbital with consumer params. */
 export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppointmentOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'Appointment';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'AppointmentOrbital',
     uses: [
@@ -3676,7 +3658,7 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       collection: 'appointments',
       persistence: params.persistence ?? 'persistent',
       fields: [
@@ -5410,35 +5392,29 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
@@ -5448,13 +5424,12 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
 /**
  * Tunable params for the ScheduleOrbital orbital.
  *
- * Canonical entity: Schedule.
- * Override the canonical name to rebind every trait/page whose
- * `linkedEntity` matched the canonical entity name.
+ * Canonical entity: Schedule (locked — not overridable).
+ * The factory hardcodes `linkedEntity` to the canonical entity on
+ * every trait/page; renaming the entity would desync those references.
+ * Tunable surface is fields (appended), pagePath, config, and persistence.
  */
 export interface StdBookingSystemScheduleOrbitalParams {
-  /** Override the canonical entity name (default: 'Schedule'). */
-  entityName?: string;
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
@@ -5468,7 +5443,6 @@ export interface StdBookingSystemScheduleOrbitalParams {
 /** Per-orbital factory: builds the ScheduleOrbital orbital with consumer params. */
 export function stdBookingSystemScheduleOrbital(params: StdBookingSystemScheduleOrbitalParams = {}): OrbitalDefinition {
   const canonicalName = 'Schedule';
-  const targetName = params.entityName || canonicalName;
   const built = makeOrbitalWithUses({
     name: 'ScheduleOrbital',
     uses: [
@@ -5478,7 +5452,7 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
       },
     ],
     entity: {
-      name: targetName,
+      name: canonicalName,
       persistence: params.persistence ?? 'singleton',
       fields: [
         {
@@ -6042,35 +6016,29 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
       } as never,
     ],
   });
-  // Post-rebind: thread params.entityName / pagePath / config through
-  // any inline literal that referenced the canonical name.
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits) {
+  if (built.traits && params.config !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
-      const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
-      if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
+      const tr = t as { ref?: string; config?: TraitConfig };
       // Apply params.config ONLY to trait references (`ref:` set) —
       // those declare a config schema that the consumer is expected
       // to fill. Inline traits (no `ref:`) carry their own state
       // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine. See
-      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
-      if (params.config !== undefined && typeof tr.ref === "string") {
-        out.config = { ...(tr.config ?? {}), ...params.config };
-      }
+      // resolver mishandles, stripping the inline stateMachine.
+      if (typeof tr.ref !== "string") return t;
+      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
+      out.config = { ...(tr.config ?? {}), ...params.config };
       return out;
     });
   }
-  if (built.pages) {
+  if (built.pages && params.pagePath !== undefined) {
     built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
       if (!p || typeof p !== "object") return p;
-      const pr = p as { linkedEntity?: string; path?: string };
-      const out = { ...p } as _OrbPage & { linkedEntity?: string; path?: string };
-      if (pr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (idx === 0 && params.pagePath !== undefined) out.path = params.pagePath;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
       return out;
     });
   }
