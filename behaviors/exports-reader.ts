@@ -51,13 +51,22 @@ function getEntries(): BehaviorEntry[] {
 
 function callBehavior(entry: BehaviorEntry): OrbitalSchema {
   const result = entry.fn({ entityName: entry.name.replace(/^std-/, '') });
-  // Phase 4.2: std{X}() returns OrbitalDefinition; wrap it in an OrbitalSchema
-  // so the catalog surface stays stable for existing consumers (analyzer,
-  // compiler embedded loader, tests).
-  const orbital = result as OrbitalDefinition;
+  // Phase 4.2: per-orbital factories return a single `OrbitalDefinition`.
+  // Phase 2 (organism-oriented model): the bundled wrapper for each app
+  // organism (`stdEcommerce`, `stdHelpdesk`, etc.) returns
+  // `OrbitalDefinition[]` — one entry per per-orbital factory it
+  // composes. Detect both shapes and spread the array form so the
+  // wrapping schema's `orbitals` stays flat. Without this branch,
+  // every app organism round-tripped through `loadGoldenOrb` came
+  // back as `{ orbitals: [ [orb1, orb2, ...] ] }` and downstream
+  // consumers (analyzer catalog, compiler embedded loader) iterated
+  // arrays where they expected OrbitalDefinitions.
+  const orbitals: OrbitalDefinition[] = Array.isArray(result)
+    ? (result as OrbitalDefinition[])
+    : [result as OrbitalDefinition];
   return {
     name: entry.name,
-    orbitals: [orbital],
+    orbitals,
   };
 }
 
