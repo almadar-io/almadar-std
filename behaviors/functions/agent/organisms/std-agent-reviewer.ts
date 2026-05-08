@@ -973,10 +973,18 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
@@ -3297,10 +3305,18 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
@@ -4540,10 +4556,18 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
@@ -5830,10 +5854,18 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
@@ -5955,10 +5987,18 @@ export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewN
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
@@ -6057,10 +6097,18 @@ export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerRevie
   if (built.traits) {
     built.traits = (built.traits as _OrbTrait[]).map((t) => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { linkedEntity?: string; config?: TraitConfig };
+      const tr = t as { ref?: string; linkedEntity?: string; config?: TraitConfig };
       const out = { ...t } as _OrbTrait & { linkedEntity?: string; config?: TraitConfig };
       if (tr.linkedEntity === canonicalName) out.linkedEntity = targetName;
-      if (params.config !== undefined) out.config = { ...(tr.config ?? {}), ...params.config };
+      // Apply params.config ONLY to trait references (`ref:` set) —
+      // those declare a config schema that the consumer is expected
+      // to fill. Inline traits (no `ref:`) carry their own state
+      // machine and would treat the blanket config as an override the
+      // resolver mishandles, stripping the inline stateMachine. See
+      // agent-side ORB_T_UNDEFINED_TRAIT regression after Phase 2.
+      if (params.config !== undefined && typeof tr.ref === "string") {
+        out.config = { ...(tr.config ?? {}), ...params.config };
+      }
       return out;
     });
   }
