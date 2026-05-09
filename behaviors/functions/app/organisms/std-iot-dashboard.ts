@@ -16,7 +16,8 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
+import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-iot-dashboard';
@@ -39,17 +40,45 @@ export interface StdIotDashboardConfig {
  * Canonical entity: SensorReading (locked — not overridable).
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
- * Tunable surface is fields (appended), pagePath, config, and persistence.
+ *
+ * Override surface (Phase 9):
+ *   fields            — extra entity fields (appended)
+ *   pagePath          — first-page URL override
+ *   persistence       — entity persistence mode
+ *   traitOverrides    — Zone 1: per-imported-trait override surface
+ *                       (config / events / effects / listens / emitsScope /
+ *                       linkedEntity). Atom owns topology.
+ *   interactionStates — Zone 2: inline-trait state-machine splice
+ *                       (states / events / transitions). Factory
+ *                       owns topology.
  */
 export interface StdIotDashboardSensorReadingOrbitalParams {
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Per-trait config override applied to every trait in this orbital. */
-  config?: TraitConfig;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /**
+   * Zone 1 — per-imported-trait override surface. Keyed on each
+   * imported trait's local `name`. The atom owns state-machine
+   * topology (states/events/transitions); these fields rewrite the
+   * caller-side surface only.
+   */
+  traitOverrides?: Partial<Record<
+    'SensorAppLayout' | 'SensorStats' | 'SensorGraphs' | 'SensorBrowseList',
+    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
+  >>;
+  /**
+   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
+   * (factory-authored, no `ref:`) trait's `name`. Merges into the
+   * matching inline trait's `stateMachine` block. Factory owns topology;
+   * splice inserts caller-named states/events/transitions.
+   */
+  interactionStates?: Partial<Record<
+    'SensorCatalog',
+    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+  >>;
 }
 
 /** Per-orbital factory: builds the SensorReadingOrbital orbital with consumer params. */
@@ -381,19 +410,49 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits && params.config !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
+  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
+  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
+  // After the `ref:`-string filter, the trait variant is TraitReference,
+  // whose surface matches the override surface 1:1.
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; config?: TraitConfig };
-      // Apply params.config ONLY to trait references (`ref:` set) —
-      // those declare a config schema that the consumer is expected
-      // to fill. Inline traits (no `ref:`) carry their own state
-      // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine.
-      if (typeof tr.ref !== "string") return t;
-      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
-      out.config = { ...(tr.config ?? {}), ...params.config };
-      return out;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
+      if (override.listens !== undefined) merged.listens = override.listens;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      return merged;
+    });
+  }
+  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
+  // After the `ref:`-not-set filter, the trait variant is Trait, whose
+  // stateMachine block is what we splice into.
+  if (built.traits && params.interactionStates !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as Trait & { ref?: string };
+      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
+      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
+      const splice = splices?.[tr.name];
+      if (!splice || !tr.stateMachine) return t;
+      const sm = tr.stateMachine;
+      const mergedSm: StateMachine = {
+        ...sm,
+        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
+        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
+        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
+      };
+      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
+      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -408,23 +467,95 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
   return built;
 }
 
+/** Phase 9 manifest — describes the params surface of stdIotDashboardSensorReadingOrbital. */
+export const StdIotDashboardSensorReadingOrbitalManifest = {
+  organism: 'std-iot-dashboard',
+  orbitalName: 'SensorReadingOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
+    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+  ] as const,
+  traitNames: [
+    'SensorAppLayout',
+    'SensorStats',
+    'SensorGraphs',
+    'SensorBrowseList',
+  ] as const,
+  inlineTraitNames: [
+    'SensorCatalog',
+  ] as const,
+};
+
+/** Phase 9 typed guard — runtime validates StdIotDashboardSensorReadingOrbitalParams keys. */
+export function isStdIotDashboardSensorReadingOrbitalParams(p: object): p is StdIotDashboardSensorReadingOrbitalParams {
+  type _OverrideRecord = NonNullable<StdIotDashboardSensorReadingOrbitalParams['traitOverrides']>;
+  type _SpliceRecord = NonNullable<StdIotDashboardSensorReadingOrbitalParams['interactionStates']>;
+  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdIotDashboardSensorReadingOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  if (obj.interactionStates !== undefined) {
+    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
+    const allowed: readonly string[] = StdIotDashboardSensorReadingOrbitalManifest.inlineTraitNames;
+    for (const k of Object.keys(obj.interactionStates)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Tunable params for the DeviceOrbital orbital.
  *
  * Canonical entity: Device (locked — not overridable).
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
- * Tunable surface is fields (appended), pagePath, config, and persistence.
+ *
+ * Override surface (Phase 9):
+ *   fields            — extra entity fields (appended)
+ *   pagePath          — first-page URL override
+ *   persistence       — entity persistence mode
+ *   traitOverrides    — Zone 1: per-imported-trait override surface
+ *                       (config / events / effects / listens / emitsScope /
+ *                       linkedEntity). Atom owns topology.
+ *   interactionStates — Zone 2: inline-trait state-machine splice
+ *                       (states / events / transitions). Factory
+ *                       owns topology.
  */
 export interface StdIotDashboardDeviceOrbitalParams {
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Per-trait config override applied to every trait in this orbital. */
-  config?: TraitConfig;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /**
+   * Zone 1 — per-imported-trait override surface. Keyed on each
+   * imported trait's local `name`. The atom owns state-machine
+   * topology (states/events/transitions); these fields rewrite the
+   * caller-side surface only.
+   */
+  traitOverrides?: Partial<Record<
+    'DeviceAppLayout' | 'DeviceSearch' | 'DeviceFilter' | 'DeviceBrowseList' | 'DeviceCreate' | 'DeviceEdit' | 'DeviceView' | 'DeviceDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
+  >>;
+  /**
+   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
+   * (factory-authored, no `ref:`) trait's `name`. Merges into the
+   * matching inline trait's `stateMachine` block. Factory owns topology;
+   * splice inserts caller-named states/events/transitions.
+   */
+  interactionStates?: Partial<Record<
+    'DeviceCatalog' | 'DevicePersistor',
+    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+  >>;
 }
 
 /** Per-orbital factory: builds the DeviceOrbital orbital with consumer params. */
@@ -1193,19 +1324,49 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits && params.config !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
+  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
+  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
+  // After the `ref:`-string filter, the trait variant is TraitReference,
+  // whose surface matches the override surface 1:1.
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; config?: TraitConfig };
-      // Apply params.config ONLY to trait references (`ref:` set) —
-      // those declare a config schema that the consumer is expected
-      // to fill. Inline traits (no `ref:`) carry their own state
-      // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine.
-      if (typeof tr.ref !== "string") return t;
-      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
-      out.config = { ...(tr.config ?? {}), ...params.config };
-      return out;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
+      if (override.listens !== undefined) merged.listens = override.listens;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      return merged;
+    });
+  }
+  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
+  // After the `ref:`-not-set filter, the trait variant is Trait, whose
+  // stateMachine block is what we splice into.
+  if (built.traits && params.interactionStates !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as Trait & { ref?: string };
+      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
+      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
+      const splice = splices?.[tr.name];
+      if (!splice || !tr.stateMachine) return t;
+      const sm = tr.stateMachine;
+      const mergedSm: StateMachine = {
+        ...sm,
+        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
+        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
+        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
+      };
+      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
+      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1220,23 +1381,100 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
   return built;
 }
 
+/** Phase 9 manifest — describes the params surface of stdIotDashboardDeviceOrbital. */
+export const StdIotDashboardDeviceOrbitalManifest = {
+  organism: 'std-iot-dashboard',
+  orbitalName: 'DeviceOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
+    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+  ] as const,
+  traitNames: [
+    'DeviceAppLayout',
+    'DeviceSearch',
+    'DeviceFilter',
+    'DeviceBrowseList',
+    'DeviceCreate',
+    'DeviceEdit',
+    'DeviceView',
+    'DeviceDelete',
+  ] as const,
+  inlineTraitNames: [
+    'DeviceCatalog',
+    'DevicePersistor',
+  ] as const,
+};
+
+/** Phase 9 typed guard — runtime validates StdIotDashboardDeviceOrbitalParams keys. */
+export function isStdIotDashboardDeviceOrbitalParams(p: object): p is StdIotDashboardDeviceOrbitalParams {
+  type _OverrideRecord = NonNullable<StdIotDashboardDeviceOrbitalParams['traitOverrides']>;
+  type _SpliceRecord = NonNullable<StdIotDashboardDeviceOrbitalParams['interactionStates']>;
+  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdIotDashboardDeviceOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  if (obj.interactionStates !== undefined) {
+    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
+    const allowed: readonly string[] = StdIotDashboardDeviceOrbitalManifest.inlineTraitNames;
+    for (const k of Object.keys(obj.interactionStates)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Tunable params for the DeviceAlertOrbital orbital.
  *
  * Canonical entity: DeviceAlert (locked — not overridable).
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
- * Tunable surface is fields (appended), pagePath, config, and persistence.
+ *
+ * Override surface (Phase 9):
+ *   fields            — extra entity fields (appended)
+ *   pagePath          — first-page URL override
+ *   persistence       — entity persistence mode
+ *   traitOverrides    — Zone 1: per-imported-trait override surface
+ *                       (config / events / effects / listens / emitsScope /
+ *                       linkedEntity). Atom owns topology.
+ *   interactionStates — Zone 2: inline-trait state-machine splice
+ *                       (states / events / transitions). Factory
+ *                       owns topology.
  */
 export interface StdIotDashboardDeviceAlertOrbitalParams {
   /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Per-trait config override applied to every trait in this orbital. */
-  config?: TraitConfig;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /**
+   * Zone 1 — per-imported-trait override surface. Keyed on each
+   * imported trait's local `name`. The atom owns state-machine
+   * topology (states/events/transitions); these fields rewrite the
+   * caller-side surface only.
+   */
+  traitOverrides?: Partial<Record<
+    'DeviceAlertAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete' | 'AlertEmail',
+    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
+  >>;
+  /**
+   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
+   * (factory-authored, no `ref:`) trait's `name`. Merges into the
+   * matching inline trait's `stateMachine` block. Factory owns topology;
+   * splice inserts caller-named states/events/transitions.
+   */
+  interactionStates?: Partial<Record<
+    'AlertCatalog' | 'AlertPersistor' | 'AlertEmailNotice' | 'DeviceAlertCircuitBreaker',
+    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+  >>;
 }
 
 /** Per-orbital factory: builds the DeviceAlertOrbital orbital with consumer params. */
@@ -2680,19 +2918,49 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  if (built.traits && params.config !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t) => {
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
+  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
+  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
+  // After the `ref:`-string filter, the trait variant is TraitReference,
+  // whose surface matches the override surface 1:1.
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as { ref?: string; config?: TraitConfig };
-      // Apply params.config ONLY to trait references (`ref:` set) —
-      // those declare a config schema that the consumer is expected
-      // to fill. Inline traits (no `ref:`) carry their own state
-      // machine and would treat the blanket config as an override the
-      // resolver mishandles, stripping the inline stateMachine.
-      if (typeof tr.ref !== "string") return t;
-      const out = { ...t } as _OrbTrait & { config?: TraitConfig };
-      out.config = { ...(tr.config ?? {}), ...params.config };
-      return out;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
+      if (override.listens !== undefined) merged.listens = override.listens;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      return merged;
+    });
+  }
+  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
+  // After the `ref:`-not-set filter, the trait variant is Trait, whose
+  // stateMachine block is what we splice into.
+  if (built.traits && params.interactionStates !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as Trait & { ref?: string };
+      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
+      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
+      const splice = splices?.[tr.name];
+      if (!splice || !tr.stateMachine) return t;
+      const sm = tr.stateMachine;
+      const mergedSm: StateMachine = {
+        ...sm,
+        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
+        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
+        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
+      };
+      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
+      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -2705,6 +2973,56 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
     });
   }
   return built;
+}
+
+/** Phase 9 manifest — describes the params surface of stdIotDashboardDeviceAlertOrbital. */
+export const StdIotDashboardDeviceAlertOrbitalManifest = {
+  organism: 'std-iot-dashboard',
+  orbitalName: 'DeviceAlertOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
+    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+  ] as const,
+  traitNames: [
+    'DeviceAlertAppLayout',
+    'AlertBrowseList',
+    'AlertCreate',
+    'AlertEdit',
+    'AlertView',
+    'AlertDelete',
+    'AlertEmail',
+  ] as const,
+  inlineTraitNames: [
+    'AlertCatalog',
+    'AlertPersistor',
+    'AlertEmailNotice',
+    'DeviceAlertCircuitBreaker',
+  ] as const,
+};
+
+/** Phase 9 typed guard — runtime validates StdIotDashboardDeviceAlertOrbitalParams keys. */
+export function isStdIotDashboardDeviceAlertOrbitalParams(p: object): p is StdIotDashboardDeviceAlertOrbitalParams {
+  type _OverrideRecord = NonNullable<StdIotDashboardDeviceAlertOrbitalParams['traitOverrides']>;
+  type _SpliceRecord = NonNullable<StdIotDashboardDeviceAlertOrbitalParams['interactionStates']>;
+  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdIotDashboardDeviceAlertOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  if (obj.interactionStates !== undefined) {
+    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
+    const allowed: readonly string[] = StdIotDashboardDeviceAlertOrbitalManifest.inlineTraitNames;
+    for (const k of Object.keys(obj.interactionStates)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
 }
 
 /**

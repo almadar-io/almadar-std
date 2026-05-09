@@ -119,3 +119,7 @@ export * from './app/organisms/std-trading-dashboard.js';
 
 // Re-export shared builder helpers for convenience.
 export { connect, compose, pipe, makeEntity, makePage, makeOrbital, makeSchema, mergeOrbitals, wire, extractTrait, ensureIdField, plural } from '@almadar/core/builders';
+
+// Phase 9 — typed factory dispatcher (multi-orbital organisms only).
+export { dispatchOrbitalFactory, getOrbitalFactoryManifest, listOrganismOrbitalManifests } from './dispatch.js';
+export type { OrbitalParamsManifest, ParamFieldDescriptor } from './dispatch.js';
