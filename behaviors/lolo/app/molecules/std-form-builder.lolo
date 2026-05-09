@@ -1,0 +1,171 @@
+app std-form-builder "1.0.0"
+"std-form-builder — survey form composer. One Survey entity holds metadata, a JSON-encoded question library, and JSON-encoded branching rules. Three traits coordinate authoring on a single page: SurveyManage (CRUD on the survey), SurveyQuestions (in-place editing of questionsJson), SurveyBranching (in-place editing of rulesJson)."
+
+orbital FormBuilderOrbital {
+  entity Survey [persistent: surveys] {
+    id            : string!
+    title         : string!
+    description   : string
+    questionsJson : string
+    rulesJson     : string
+    status        : "draft" | "published" = "draft"
+    createdAt     : string
+  }
+
+  type SurveyLoaded         = Event { data : [Survey] }                "Fired when the survey collection finishes loading"
+  type SurveyLoadFailed     = Event { error : string, code : string }  "Fired when the survey collection fails to load"
+  type SurveyCreated        = Event { row : Survey }                   "Fired after a new survey is persisted"
+  type SurveyUpdated        = Event { row : Survey }                   "Fired after an existing survey is updated"
+  type SurveyPublished      = Event { id : string }                    "Fired after a survey is marked published"
+
+  trait SurveyManage -> Survey [interaction, collection] {
+    config {
+      title : string = "Survey Builder"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading surveys…" }] })
+      SurveyLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h2" }] }, { type: "button", label: "New survey", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "createdAt", label: "Created", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Edit", event: "UPDATE", variant: "ghost", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "primary", icon: "send" }] }] })
+      SurveyLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      CREATE -> editing
+        (persist create Survey @payload.data { emit: { success: "SurveyCreated", failure: "SurveyLoadFailed" } })
+      UPDATE -> editing
+        (set @entity.id @payload.surveyId)
+        (set @entity.title @payload.row.title)
+        (set @entity.description @payload.row.description)
+        (set @entity.questionsJson @payload.row.questionsJson)
+        (set @entity.rulesJson @payload.row.rulesJson)
+        (set @entity.status @payload.row.status)
+        (set @entity.createdAt @payload.row.createdAt)
+        (persist update Survey @entity { emit: { success: "SurveyUpdated", failure: "SurveyLoadFailed" } })
+      PUBLISH -> editing
+        (set @entity.id @payload.surveyId)
+        (set @entity.status "published")
+        (persist update Survey @entity { emit: { success: "SurveyPublished", failure: "SurveyLoadFailed" } })
+      SurveyCreated -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyUpdated -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyPublished -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state editing {
+      SurveyCreated -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyUpdated -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyPublished -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+      SurveyLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Survey { emit: { success: "SurveyLoaded", failure: "SurveyLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      CREATE          { data : object! }
+      UPDATE          { surveyId : string!, row : Survey, data : object! }
+      PUBLISH         { surveyId : string!, row : Survey }
+      SurveyLoaded     { data : [Survey] }
+      SurveyLoadFailed { error : string, code : string }
+      SurveyCreated    { row : Survey }
+      SurveyUpdated    { row : Survey }
+      SurveyPublished  { id : string! }
+    }
+    listens {
+      CREATE          { data : object! }
+      UPDATE          { surveyId : string!, row : Survey, data : object! }
+      PUBLISH         { surveyId : string!, row : Survey }
+      SurveyLoaded     { data : [Survey] }
+      SurveyLoadFailed { error : string, code : string }
+      SurveyCreated    { row : Survey }
+      SurveyUpdated    { row : Survey }
+      SurveyPublished  { id : string! }
+      SurveyQuestions.QuestionsChanged -> INIT
+      SurveyBranching.RulesChanged     -> INIT
+    }
+  }
+
+  ;; Question library: edits @entity.questionsJson on the active survey.
+  ;; QuestionsChanged is the cross-trait signal to refetch the survey list.
+  trait SurveyQuestions -> Survey [interaction, instance] {
+    config {
+      title : string = "Survey questions"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Survey { emit: { success: "SurveyHydrated", failure: "QuestionsSaveFailed" } })
+        (render-ui sidebar { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "input", placeholder: "Questions JSON", value: @entity.questionsJson, action: "EDIT_QUESTIONS_JSON" }, { type: "button", label: "Save questions", action: "SAVE_QUESTIONS", variant: "primary", icon: "save" }] })
+      EDIT_QUESTIONS_JSON -> idle
+        (set @entity.questionsJson @payload.value)
+      SAVE_QUESTIONS -> idle
+        (persist update Survey @entity { emit: { success: "QuestionsChanged", failure: "QuestionsSaveFailed" } })
+      SurveyHydrated -> idle
+      QuestionsChanged -> idle
+      QuestionsSaveFailed -> idle
+        (render-ui sidebar { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    emits {
+      EDIT_QUESTIONS_JSON { value : string! }
+      SAVE_QUESTIONS
+      SurveyHydrated      { data : [Survey] }
+      QuestionsChanged    -> external { id : string! }
+      QuestionsSaveFailed { error : string, code : string }
+    }
+    listens {
+      EDIT_QUESTIONS_JSON { value : string! }
+      SAVE_QUESTIONS
+      SurveyHydrated      { data : [Survey] }
+      QuestionsChanged    { id : string! }
+      QuestionsSaveFailed { error : string, code : string }
+    }
+  }
+
+  ;; Branching rules: edits @entity.rulesJson on the active survey.
+  trait SurveyBranching -> Survey [interaction, instance] {
+    config {
+      title : string = "Branching rules"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Survey { emit: { success: "SurveyHydrated", failure: "RulesSaveFailed" } })
+        (render-ui sidebar { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "git-branch" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "branching-logic-builder", questions: [], rules: [] }, { type: "input", placeholder: "Rules JSON", value: @entity.rulesJson, action: "EDIT_RULES_JSON" }, { type: "button", label: "Save rules", action: "SAVE_RULES", variant: "primary", icon: "save" }] })
+      EDIT_RULES_JSON -> idle
+        (set @entity.rulesJson @payload.value)
+      SAVE_RULES -> idle
+        (persist update Survey @entity { emit: { success: "RulesChanged", failure: "RulesSaveFailed" } })
+      SurveyHydrated -> idle
+      RulesChanged -> idle
+      RulesSaveFailed -> idle
+        (render-ui sidebar { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    emits {
+      EDIT_RULES_JSON { value : string! }
+      SAVE_RULES
+      SurveyHydrated  { data : [Survey] }
+      RulesChanged    -> external { id : string! }
+      RulesSaveFailed { error : string, code : string }
+    }
+    listens {
+      EDIT_RULES_JSON { value : string! }
+      SAVE_RULES
+      SurveyHydrated  { data : [Survey] }
+      RulesChanged    { id : string! }
+      RulesSaveFailed { error : string, code : string }
+    }
+  }
+
+  page "/survey-builder" as FormBuilderPage -> SurveyManage, SurveyQuestions, SurveyBranching
+}

@@ -1,0 +1,454 @@
+app std-restaurant-pos "1.0.0"
+"Restaurant POS: floor plan with tables, order at table, kitchen display, tip split at close. Pick for table-service restaurants."
+
+orbital MenuOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+  uses MenuAtom      from "std/behaviors/std-menu"
+  uses ModifierAtom  from "std/behaviors/std-modifier-group"
+  uses ImageUpload   from "std/behaviors/std-image-upload-multi"
+  uses Search        from "std/behaviors/std-search"
+  uses Filter        from "std/behaviors/std-filter"
+  uses Browse        from "std/behaviors/std-browse"
+  uses TagTaxonomy   from "std/behaviors/std-tag-taxonomy"
+
+  entity MenuRecord [persistent: menurecords] {
+    id          : string!
+    name        : string!
+    description : string = ""
+    price       : number = 0
+    category    : string = ""
+    available   : boolean = true
+    pendingId   : string = ""
+  }
+
+  trait MenuAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.MenuCatalog",
+      appName: "Restaurant POS",
+      navItems: [{ label: "Menu", href: "/menu", icon: "utensils" }, { label: "Floor", href: "/floor", icon: "layout-grid" }, { label: "Orders", href: "/orders", icon: "receipt" }, { label: "Kitchen", href: "/kitchen", icon: "chef-hat" }],
+      searchEvent: "MENU_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MENU_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MENU_SEARCH
+      NOTIFY_CLICK: MENU_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait MenuCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "utensils" },
+              { type: "typography", content: "Menu", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Item", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.MenuSearch",
+            "@trait.MenuFilter"
+          ]},
+          "@trait.MenuCategoryTree",
+          { type: "divider" },
+          "@trait.MenuBrowseList",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Modifier groups" },
+          "@trait.MenuModifierGroups",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Item images" },
+          "@trait.MenuImageUpload"
+        ]})
+      MENU_SEARCH -> composing
+      MENU_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "button", label: "Back to menu", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      MenuAppLayout.MENU_SEARCH -> MENU_SEARCH
+      MenuAppLayout.MENU_NOTIFICATIONS_OPEN -> MENU_NOTIFICATIONS_OPEN
+      MENU_SEARCH { value : string }
+      MENU_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait MenuSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search menu…",
+      event: "MENU_SEARCH"
+    }
+  }
+
+  trait MenuFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "category",  label: "Category",  filterType: "select", options: ["appetizer", "entree", "dessert", "drink"] },
+        { field: "available", label: "Available", filterType: "select", options: ["true", "false"] }
+      ],
+      event: "MENU_FILTER"
+    }
+  }
+
+  trait MenuCategoryTree = TagTaxonomy.traits.TagBrowse {
+    config: {
+      title: "Categories",
+      allowEdit: false
+    }
+  }
+
+  trait MenuBrowseList = Browse.traits.BrowseItemBrowse -> MenuRecord {
+    config: {
+      fields: [
+        { name: "name",        variant: "h4",      icon: "utensils" },
+        { name: "category",    variant: "badge" },
+        { name: "price",       variant: "caption" },
+        { name: "available",   variant: "badge" },
+        { name: "description", variant: "caption" }
+      ],
+      itemActions: [
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      MenuSearch.SEARCH                  -> REFETCH_QUERY
+      MenuFilter.FILTER                  -> REFETCH_FILTER
+      MenuPersistor.MENU_CREATED         -> INIT
+      MenuPersistor.MENU_UPDATED         -> INIT
+      MenuPersistor.MENU_DELETED         -> INIT
+    }
+  }
+
+  trait MenuModifierGroups = ModifierAtom.traits.ModifierGroupManage {
+    config: {
+      title: "Modifier Groups"
+    }
+  }
+
+  trait MenuImageUpload = ImageUpload.traits.UploadedImageUpload {
+    config: {
+      title: "Item Images",
+      maxImages: 12,
+      maxBytesPerImage: 5242880,
+      accept: "image/*"
+    }
+  }
+
+  trait MenuCreate = Modal.traits.ModalRecordModal -> MenuRecord {
+    config: {
+      icon: "plus-circle",
+      title: "New Menu Item",
+      mode: "create",
+      fields: ["name", "description", "price", "category", "available"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      MenuCatalog.CREATE -> CREATE
+      CREATE { id : string, row : MenuRecord }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MenuEdit = Modal.traits.ModalRecordModal -> MenuRecord {
+    config: {
+      icon: "edit",
+      title: "Edit Menu Item",
+      mode: "edit",
+      fields: ["name", "description", "price", "category", "available"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      MenuBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : MenuRecord }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MenuDelete = Confirmation.traits.ConfirmActionConfirmation -> MenuRecord {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Menu Item",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      MenuBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : MenuRecord }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MenuPersistor -> MenuRecord [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create MenuRecord @payload.data { emit: { success: "MENU_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update MenuRecord @payload.data { emit: { success: "MENU_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete MenuRecord @payload.id { emit: { success: "MENU_DELETED" } })
+    }
+    emits {
+      MENU_CREATED -> external { id : string }
+      MENU_UPDATED -> external { id : string }
+      MENU_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      MenuCreate.SAVE          -> DO_CREATE
+      MenuEdit.SAVE            -> DO_UPDATE
+      MenuDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/menu" as MenuPage -> MenuAppLayout, MenuCatalog, MenuSearch, MenuFilter, MenuCategoryTree, MenuBrowseList, MenuModifierGroups, MenuImageUpload, MenuCreate, MenuEdit, MenuDelete, MenuPersistor
+}
+
+orbital TableOrbital {
+  uses Modal     from "std/behaviors/std-modal"
+  uses TableMap  from "std/behaviors/std-table-map"
+  uses Browse    from "std/behaviors/std-browse"
+
+  entity TableRecord [persistent: tablerecords] {
+    id        : string!
+    label     : string!
+    capacity  : number = 4
+    section   : string = ""
+    pendingId : string = ""
+  }
+
+  trait TableFloorPlan = TableMap.traits.TableManage {
+    config: {
+      title: "Floor Plan",
+      canvasWidth: 960,
+      canvasHeight: 640
+    }
+  }
+
+  trait TableRoster = Browse.traits.BrowseItemBrowse -> TableRecord {
+    config: {
+      fields: [
+        { name: "label",    variant: "h4",      icon: "layout-grid" },
+        { name: "capacity", variant: "badge" },
+        { name: "section",  variant: "caption" }
+      ],
+      itemActions: [
+        { label: "Edit", event: "EDIT", variant: "ghost" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      TablePersistor.TABLE_UPDATED -> INIT
+    }
+  }
+
+  trait TableEdit = Modal.traits.ModalRecordModal -> TableRecord {
+    config: {
+      icon: "edit",
+      title: "Edit Table",
+      mode: "edit",
+      fields: ["label", "capacity", "section"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      TableRoster.EDIT -> EDIT
+      EDIT { id : string, row : TableRecord }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TablePersistor -> TableRecord [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_UPDATE -> idle
+        (persist update TableRecord @payload.data { emit: { success: "TABLE_UPDATED" } })
+    }
+    emits {
+      TABLE_UPDATED -> external { id : string }
+    }
+    listens {
+      DO_UPDATE { data : object! }
+      TableEdit.SAVE -> DO_UPDATE
+    }
+  }
+
+  page "/floor" as FloorPage -> TableFloorPlan, TableRoster, TableEdit, TablePersistor
+}
+
+orbital OrderOrbital {
+  uses Modal        from "std/behaviors/std-modal"
+  uses Cart         from "std/behaviors/std-cart"
+  uses Confirmation from "std/behaviors/std-confirmation"
+
+  entity OrderTicket [persistent: orderTickets] {
+    id        : string!
+    tableId   : string!
+    serverName : string = ""
+    subtotal  : number = 0
+    taxAmount : number = 0
+    tipAmount : number = 0
+    total     : number = 0
+    status    : "open" | "submitted" | "closed" = "open"
+    pendingId : string = ""
+  }
+
+  type OrderTicketLoaded     = Event { data : [OrderTicket] }                "Fired when the order ticket collection finishes loading"
+  type OrderTicketLoadFailed = Event { error : string, code : string }       "Fired when the order ticket collection fails to load"
+
+  trait OrderCart = Cart.traits.CartItemCartBrowse {
+    config: {
+      keyedOn: "tableId"
+    }
+  }
+
+  trait OrderCartAddItem = Cart.traits.CartItemAddItem {
+    config: {
+      icon: "plus-circle",
+      title: "Add to Order",
+      openButtonLabel: "Add Item",
+      fields: ["name", "description", "status"],
+      mode: "create"
+    }
+  }
+
+  trait OrderCartRemoveConfirm = Cart.traits.CartItemRemoveConfirm {
+    config: {
+      icon: "alert-triangle",
+      title: "Remove From Order",
+      alertMessage: "Remove this item from the order?",
+      confirmLabel: "Remove"
+    }
+  }
+
+  trait OrderCartPersistor = Cart.traits.CartItemPersistor {
+  }
+
+  trait OrderClose -> OrderTicket [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch OrderTicket { emit: { success: "OrderTicketLoaded", failure: "OrderTicketLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading order…" }] })
+      OrderTicketLoaded -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "receipt" },
+            { type: "typography", content: "Close & Tip Split", variant: "h3" }
+          ]},
+          { type: "divider" },
+          { type: "data-grid", entity: @payload.data, fields: [
+            { name: "tableId",    variant: "label" },
+            { name: "subtotal",   variant: "caption" },
+            { name: "taxAmount",  variant: "caption" },
+            { name: "tipAmount",  variant: "caption" },
+            { name: "total",      variant: "h4" },
+            { name: "status",     variant: "badge" }
+          ], cols: 1, gap: "sm" },
+          { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [
+            { type: "button", label: "Submit to Kitchen", action: "SUBMIT",     variant: "secondary", icon: "send" },
+            { type: "button", label: "Close & Split Tip", action: "CLOSE_TICKET", variant: "primary",   icon: "split" }
+          ]}
+        ]})
+      OrderTicketLoadFailed -> ready
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state ready {
+      INIT -> loading
+        (fetch OrderTicket { emit: { success: "OrderTicketLoaded", failure: "OrderTicketLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      SUBMIT -> ready
+        (set @entity.id @payload.id)
+        (set @entity.status "submitted")
+        (persist update OrderTicket @entity { emit: { success: "ORDER_SUBMITTED" } })
+      CLOSE_TICKET -> ready
+        (set @entity.id @payload.id)
+        (set @entity.tipAmount @payload.tipAmount)
+        (set @entity.total @payload.total)
+        (set @entity.status "closed")
+        (persist update OrderTicket @entity { emit: { success: "ORDER_CLOSED" } })
+    }
+    emits {
+      SUBMIT          { id : string!, source : string }
+      CLOSE_TICKET    { id : string!, tipAmount : number!, total : number! }
+      ORDER_SUBMITTED -> external { id : string }
+      ORDER_CLOSED    -> external { id : string }
+      OrderTicketLoaded
+      OrderTicketLoadFailed
+    }
+    listens {
+      SUBMIT       { id : string!, source : string }
+      CLOSE_TICKET { id : string!, tipAmount : number!, total : number! }
+      OrderTicketLoaded     { data : [OrderTicket] }
+      OrderTicketLoadFailed { error : string, code : string }
+    }
+  }
+
+  page "/orders" as OrderPage -> OrderCart, OrderCartAddItem, OrderCartRemoveConfirm, OrderCartPersistor, OrderClose
+}
+
+orbital KitchenOrbital {
+  uses Kitchen from "std/behaviors/std-kitchen-display"
+  uses Browse  from "std/behaviors/std-browse"
+
+  entity KitchenLog [persistent: kitchenlogs] {
+    id        : string!
+    orderId   : string!
+    note      : string = ""
+    createdAt : string = ""
+  }
+
+  trait KitchenBoard = Kitchen.traits.KitchenTicketManage {
+    config: {
+      title: "Kitchen Display",
+      overdueMinutes: 18
+    }
+  }
+
+  trait KitchenLogList = Browse.traits.BrowseItemBrowse -> KitchenLog {
+    config: {
+      fields: [
+        { name: "orderId",   variant: "label" },
+        { name: "note",      variant: "caption" },
+        { name: "createdAt", variant: "caption" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+  }
+
+  page "/kitchen" as KitchenPage -> KitchenBoard, KitchenLogList
+}

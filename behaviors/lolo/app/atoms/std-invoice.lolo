@@ -1,0 +1,121 @@
+app std-invoice "1.0.0"
+"std-invoice — invoice generation atom. Owns an Invoice entity (line-items + tax + total + refund tiers via config). Browses invoices in a data-grid with Send / Mark-Paid / Void / Refund actions; viewing state renders the canonical invoice pattern detail."
+
+orbital InvoiceOrbital {
+  entity InvoiceRecord [persistent: invoices] {
+    id              : string!
+    invoiceNumber   : string!
+    customerId      : string!
+    subscriptionId  : string
+    status          : "draft" | "sent" | "paid" | "overdue" | "void" = "draft"
+    currency        : string = "USD"
+    subtotal        : number = 0
+    tax             : number = 0
+    total           : number = 0
+    issuedAt        : string
+    dueAt           : string
+    paidAt          : string
+    lineItemsJson   : string
+    notes           : string
+  }
+
+  type InvoiceLoaded         = Event { data : [InvoiceRecord] }          "Fired when the invoice collection finishes loading"
+  type InvoiceLoadFailed     = Event { error : string, code : string }   "Fired when the invoice collection fails to load"
+  type InvoiceUpdated        = Event { row : InvoiceRecord }             "Fired after an invoice row's status persists (send / mark-paid / void)"
+  type InvoiceUpdateFailed   = Event { error : string, code : string }   "Fired when an invoice row's status update fails to persist"
+  type InvoiceRefunded       = Event { row : InvoiceRecord }             "Fired when a stripe refund call completes successfully"
+  type InvoiceRefundFailed   = Event { error : string, code : string }   "Fired when a stripe refund call fails"
+
+  trait InvoiceManage -> InvoiceRecord [interaction, collection] {
+    config {
+      title           : string = "Invoices"
+      refundTiersJson : string = "[]"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading invoices…" }] })
+      InvoiceLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "invoiceNumber", label: "Invoice #", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary", icon: "eye" }, { label: "Send", event: "SEND", variant: "primary", icon: "send" }, { label: "Mark Paid", event: "MARK_PAID", variant: "primary", icon: "check" }, { label: "Void", event: "VOID", variant: "destructive", icon: "x" }, { label: "Refund", event: "REFUND", variant: "destructive", icon: "rotate-ccw" }] }] })
+      InvoiceLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      VIEW -> viewing
+        (set @entity.id @payload.invoiceId)
+        (set @entity.invoiceNumber @payload.row.invoiceNumber)
+        (set @entity.status @payload.row.status)
+        (set @entity.issuedAt @payload.row.issuedAt)
+        (set @entity.dueAt @payload.row.dueAt)
+        (set @entity.customerId @payload.row.customerId)
+        (set @entity.currency @payload.row.currency)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "invoice", invoiceNumber: "@entity.invoiceNumber", status: "@entity.status", issuedAt: "@entity.issuedAt", dueAt: "@entity.dueAt", from: { name: "Your Company" }, to: { id: "@entity.customerId" }, items: [], currency: "@entity.currency", notes: "@entity.notes" })
+      SEND -> browsing
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "sent")
+        (set @entity.issuedAt "now")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+        (call-service email send { invoiceId: @payload.invoiceId } { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+      MARK_PAID -> browsing
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "paid")
+        (set @entity.paidAt "now")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+      VOID -> browsing
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "void")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+      REFUND -> browsing
+        (set @entity.id @payload.invoiceId)
+        (call-service stripe refund { invoiceId: @payload.invoiceId, amount: @payload.amount } { emit: { success: "InvoiceRefunded", failure: "InvoiceRefundFailed" } })
+      InvoiceUpdated -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+      InvoiceUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      InvoiceRefunded -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+      InvoiceRefundFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing {
+      INIT -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+      InvoiceUpdated -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+    }
+    state error {
+      INIT -> loading
+        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW       { invoiceId : string!, row : InvoiceRecord }
+      SEND       { invoiceId : string! }
+      MARK_PAID  { invoiceId : string! }
+      VOID       { invoiceId : string! }
+      REFUND     { invoiceId : string!, amount : number! }
+      InvoiceLoaded       { data : [InvoiceRecord] }
+      InvoiceLoadFailed   { error : string, code : string }
+      InvoiceUpdated      { row : InvoiceRecord }
+      InvoiceUpdateFailed { error : string, code : string }
+      InvoiceRefunded     { row : InvoiceRecord }
+      InvoiceRefundFailed { error : string, code : string }
+    }
+    listens {
+      VIEW       { invoiceId : string!, row : InvoiceRecord }
+      SEND       { invoiceId : string! }
+      MARK_PAID  { invoiceId : string! }
+      VOID       { invoiceId : string! }
+      REFUND     { invoiceId : string!, amount : number! }
+      InvoiceLoaded       { data : [InvoiceRecord] }
+      InvoiceLoadFailed   { error : string, code : string }
+      InvoiceUpdated      { row : InvoiceRecord }
+      InvoiceUpdateFailed { error : string, code : string }
+      InvoiceRefunded     { row : InvoiceRecord }
+      InvoiceRefundFailed { error : string, code : string }
+    }
+  }
+  page "/invoices/manage" as InvoiceManagePage -> InvoiceManage
+}

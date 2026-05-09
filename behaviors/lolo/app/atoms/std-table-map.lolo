@@ -1,0 +1,96 @@
+app std-table-map "1.0.0"
+"std-table-map — restaurant POS interactive floor plan: TableNode entities rendered as draggable nodes (round/rectangle/square) with status (empty/seated/ordered/awaiting-bill/cleaning). Owns a TableNode entity and a single manage trait that loads tables, renders them on a TableFloorPlan canvas, and persists select / move / seat / clear actions back to the row."
+
+orbital TableMapOrbital {
+  entity TableNode [persistent: tables] {
+    id              : string!
+    label           : string!
+    x               : number = 0
+    y               : number = 0
+    shape           : "round" | "rectangle" | "square" = "round"
+    capacity        : number!
+    status          : "empty" | "seated" | "ordered" | "awaiting-bill" | "cleaning" = "empty"
+    partySize       : number = 0
+    serverName      : string
+    currentOrderId  : string
+  }
+
+  type TableLoaded     = Event { data : [TableNode] }            "Fired when the table collection finishes loading"
+  type TableLoadFailed = Event { error : string, code : string } "Fired when the table collection fails to load"
+  type TableSelected   = Event { id : string }                   "Fired when a table is selected on the floor plan"
+  type TableUpdated    = Event { row : TableNode }               "Fired after a table row's position / status persists"
+  type TableWriteFailed = Event { error : string, code : string } "Fired when a table row update fails to persist"
+
+  trait TableManage -> TableNode [interaction, collection] {
+    config {
+      title         : string = "Floor Plan"
+      canvasWidth   : number = 800
+      canvasHeight  : number = 600
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch TableNode { emit: { success: "TableLoaded", failure: "TableLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading floor plan…" }] })
+      TableLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "layout-grid" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "table-floor-plan", tables: "@payload.data", width: @config.canvasWidth, height: @config.canvasHeight, selectedId: @entity.id, editable: true, onSelect: "SELECT_TABLE", onMove: "MOVE_TABLE" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Seat Party", action: "SEAT", variant: "primary", icon: "users" }, { type: "button", label: "Clear Table", action: "CLEAR_TABLE", variant: "secondary", icon: "eraser" }] }] })
+      TableLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      SELECT_TABLE -> browsing
+        (set @entity.id @payload.id)
+        (emit TableSelected { id: "@payload.id" })
+      MOVE_TABLE -> browsing
+        (set @entity.id @payload.id)
+        (set @entity.x @payload.x)
+        (set @entity.y @payload.y)
+        (persist update TableNode { id: "@payload.id", x: "@payload.x", y: "@payload.y" } { emit: { success: "TableUpdated", failure: "TableWriteFailed" } })
+      SEAT -> browsing
+        (set @entity.id @payload.id)
+        (set @entity.status "seated")
+        (set @entity.partySize @payload.partySize)
+        (set @entity.serverName @payload.serverName)
+        (persist update TableNode { id: "@payload.id", status: "seated", partySize: "@payload.partySize", serverName: "@payload.serverName" } { emit: { success: "TableUpdated", failure: "TableWriteFailed" } })
+      CLEAR_TABLE -> browsing
+        (set @entity.id @payload.id)
+        (set @entity.status "empty")
+        (set @entity.partySize 0)
+        (persist update TableNode { id: "@payload.id", status: "empty", partySize: 0 } { emit: { success: "TableUpdated", failure: "TableWriteFailed" } })
+      TableUpdated -> loading
+        (fetch TableNode { emit: { success: "TableLoaded", failure: "TableLoadFailed" } })
+      TableSelected -> browsing
+        (set @entity.id @payload.id)
+      TableWriteFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch TableNode { emit: { success: "TableLoaded", failure: "TableLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      SELECT_TABLE  { id : string! }
+      MOVE_TABLE    { id : string!, x : number!, y : number! }
+      SEAT          { id : string!, partySize : number, serverName : string }
+      CLEAR_TABLE   { id : string! }
+      TableLoaded       { data : [TableNode] }
+      TableLoadFailed   { error : string, code : string }
+      TableSelected     { id : string! }
+      TableUpdated      { row : TableNode }
+      TableWriteFailed  { error : string, code : string }
+    }
+    listens {
+      SELECT_TABLE  { id : string! }
+      MOVE_TABLE    { id : string!, x : number!, y : number! }
+      SEAT          { id : string!, partySize : number, serverName : string }
+      CLEAR_TABLE   { id : string! }
+      TableLoaded       { data : [TableNode] }
+      TableLoadFailed   { error : string, code : string }
+      TableSelected     { id : string! }
+      TableUpdated      { row : TableNode }
+      TableWriteFailed  { error : string, code : string }
+    }
+  }
+  page "/tables/manage" as TableManagePage -> TableManage
+}

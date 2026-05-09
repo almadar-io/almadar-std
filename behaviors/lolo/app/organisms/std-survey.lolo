@@ -1,0 +1,377 @@
+app std-survey "1.0.0"
+"Survey: Typeform-style builder with dynamic questions, skip-logic, response collection, and analytics."
+
+orbital SurveyOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses Modal           from "std/behaviors/std-modal"
+  uses Confirmation    from "std/behaviors/std-confirmation"
+  uses QuestionBank    from "std/behaviors/std-question-bank"
+  uses Branching       from "std/behaviors/std-branching-logic"
+  uses FormAdvanced    from "std/behaviors/std-form-advanced"
+  uses Search          from "std/behaviors/std-search"
+  uses Browse          from "std/behaviors/std-browse"
+  uses Stats           from "std/behaviors/std-stats"
+  uses Graphs          from "std/behaviors/std-graphs"
+
+  entity Survey [persistent: surveys] {
+    id : string!
+    title : string!
+    description : string = ""
+    status : "draft" | "published" | "closed" = "draft"
+    createdAt : string = ""
+    pendingId : string = ""
+  }
+
+  trait SurveyAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.SurveyCatalog",
+      appName: "Surveys",
+      navItems: [{ label: "Surveys", href: "/surveys", icon: "list-checks" }, { label: "Responses", href: "/responses", icon: "inbox" }],
+      searchEvent: "SURVEY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SURVEY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SURVEY_SEARCH
+      NOTIFY_CLICK: SURVEY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait SurveyCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "list-checks" },
+              { type: "typography", content: "Surveys", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Survey", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.SurveySearch",
+          "@trait.SurveyStats",
+          "@trait.SurveyGraphs",
+          { type: "divider" },
+          "@trait.SurveyBrowseList",
+          { type: "divider" },
+          { type: "typography", content: "Question Bank", variant: "h3" },
+          "@trait.SurveyQuestionBank",
+          { type: "divider" },
+          { type: "typography", content: "Skip Logic", variant: "h3" },
+          "@trait.SurveyBranching",
+          { type: "divider" },
+          { type: "typography", content: "Survey Preview", variant: "h3" },
+          "@trait.SurveyPreviewForm"
+        ]})
+      SURVEY_SEARCH -> composing
+      SURVEY_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to surveys", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      SurveyAppLayout.SURVEY_SEARCH -> SURVEY_SEARCH
+      SurveyAppLayout.SURVEY_NOTIFICATIONS_OPEN -> SURVEY_NOTIFICATIONS_OPEN
+      SURVEY_SEARCH { value : string }
+      SURVEY_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait SurveySearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search surveys…",
+      event: "SURVEY_SEARCH"
+    }
+  }
+
+  trait SurveyStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Surveys",
+      metrics: [
+        { aggregation: "count", label: "Total",     icon: "list-checks", variant: "primary", format: "number" },
+        { aggregation: "count", label: "Draft",     icon: "edit",        variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "draft"]] },
+        { aggregation: "count", label: "Published", icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "published"]] }
+      ]
+    }
+    listens {
+      SurveyBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SurveyGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Surveys by Status",
+      subtitle: "Distribution across lifecycle states",
+      chartType: "bar",
+      categoryField: "status",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      SurveyBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SurveyBrowseList = Browse.traits.BrowseItemBrowse -> Survey {
+    config: {
+      fields: [
+        { name: "title",       variant: "h3",      icon: "list-checks" },
+        { name: "status",      variant: "badge" },
+        { name: "description", variant: "caption" },
+        { name: "createdAt",   variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      SurveySearch.SEARCH               -> REFETCH_QUERY
+      SurveyPersistor.SURVEY_CREATED    -> INIT
+      SurveyPersistor.SURVEY_UPDATED    -> INIT
+      SurveyPersistor.SURVEY_DELETED    -> INIT
+    }
+  }
+
+  trait SurveyQuestionBank = QuestionBank.traits.QuestionManage {
+    config: {
+      title: "Question Bank"
+    }
+  }
+
+  trait SurveyBranching = Branching.traits.BranchingRuleManage {
+    config: {
+      title: "Skip Logic Rules"
+    }
+  }
+
+  trait SurveyPreviewForm = FormAdvanced.traits.FormEntryFormAdvanced {
+  }
+
+  trait SurveyCreate = Modal.traits.ModalRecordModal -> Survey {
+    config: {
+      icon: "plus-circle",
+      title: "New Survey",
+      mode: "create",
+      fields: ["title", "description", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      SurveyCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Survey }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SurveyEdit = Modal.traits.ModalRecordModal -> Survey {
+    config: {
+      icon: "edit",
+      title: "Edit Survey",
+      mode: "edit",
+      fields: ["title", "description", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      SurveyBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Survey }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SurveyView = Modal.traits.ModalRecordModal -> Survey {
+    config: {
+      icon: "eye",
+      title: "View Survey",
+      mode: "edit",
+      fields: ["title", "description", "status"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      SurveyBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Survey }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SurveyDelete = Confirmation.traits.ConfirmActionConfirmation -> Survey {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Survey",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      SurveyBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Survey }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SurveyPersistor -> Survey [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Survey @payload.data { emit: { success: "SURVEY_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Survey @payload.data { emit: { success: "SURVEY_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Survey @payload.id { emit: { success: "SURVEY_DELETED" } })
+    }
+    emits {
+      SURVEY_CREATED -> external { id : string }
+      SURVEY_UPDATED -> external { id : string }
+      SURVEY_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      SurveyCreate.SAVE          -> DO_CREATE
+      SurveyEdit.SAVE            -> DO_UPDATE
+      SurveyDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/surveys" as SurveysPage -> SurveyAppLayout, SurveyCatalog, SurveySearch, SurveyStats, SurveyGraphs, SurveyBrowseList, SurveyQuestionBank, SurveyBranching, SurveyPreviewForm, SurveyCreate, SurveyEdit, SurveyView, SurveyDelete, SurveyPersistor
+}
+
+orbital ResponseOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Modal     from "std/behaviors/std-modal"
+  uses Collector from "std/behaviors/std-response-collector"
+  uses Browse    from "std/behaviors/std-browse"
+
+  entity Response [persistent: responses] {
+    id : string!
+    surveyId : string!
+    respondentId : string!
+    questionId : string!
+    answerJson : string = ""
+    submittedAt : string = ""
+    pendingId : string = ""
+  }
+
+  trait ResponseAppLayout = AppShell.traits.AppLayout -> Response {
+    config: {
+      contentTrait: "@trait.ResponseDashboard",
+      appName: "Surveys",
+      navItems: [{ label: "Surveys", href: "/surveys", icon: "list-checks" }, { label: "Responses", href: "/responses", icon: "inbox" }],
+      searchEvent: "RESPONSE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RESPONSE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RESPONSE_SEARCH
+      NOTIFY_CLICK: RESPONSE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ResponseDashboard [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "inbox" },
+            { type: "typography", variant: "h2", content: "Responses" }
+          ]},
+          { type: "divider" },
+          { type: "typography", content: "Submit a response", variant: "h3" },
+          "@trait.ResponseCollect",
+          { type: "divider" },
+          { type: "typography", content: "All responses", variant: "h3" },
+          "@trait.ResponseBrowseList"
+        ]})
+      RESPONSE_SEARCH -> composing
+      RESPONSE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to responses", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    listens {
+      ResponseAppLayout.RESPONSE_SEARCH -> RESPONSE_SEARCH
+      ResponseAppLayout.RESPONSE_NOTIFICATIONS_OPEN -> RESPONSE_NOTIFICATIONS_OPEN
+      RESPONSE_SEARCH { value : string }
+      RESPONSE_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait ResponseCollect = Collector.traits.ResponseCollect {
+    config: {
+      title: "Submit Response"
+    }
+  }
+
+  trait ResponseBrowseList = Browse.traits.BrowseItemBrowse -> Response {
+    config: {
+      pageSize: 100,
+      displayPageSize: 10,
+      fields: [
+        { name: "surveyId",     label: "Survey",     variant: "caption" },
+        { name: "respondentId", label: "Respondent", variant: "body" },
+        { name: "questionId",   label: "Question",   variant: "caption" },
+        { name: "answerJson",   label: "Answer",     variant: "body" },
+        { name: "submittedAt",  label: "Submitted",  variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View", event: "VIEW", variant: "ghost" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      ResponseCollect.ResponseSubmitted -> INIT
+    }
+  }
+
+  trait ResponseView = Modal.traits.ModalRecordModal -> Response {
+    config: {
+      icon: "eye",
+      title: "View Response",
+      mode: "edit",
+      fields: ["surveyId", "respondentId", "questionId", "answerJson", "submittedAt"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      ResponseBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Response }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  page "/responses" as ResponsesPage -> ResponseAppLayout, ResponseDashboard, ResponseCollect, ResponseBrowseList, ResponseView
+}

@@ -1,0 +1,95 @@
+app std-modifier-group "1.0.0"
+"std-modifier-group — restaurant menu item customization groups with required/optional/multi-select constraints. Owns a ModifierGroupRecord entity (constraint type, min/max selections, serialized options) and a single manage trait that loads groups, browses them in a data-grid with Create / Update / Delete actions, and persists each verdict back to the row."
+
+orbital ModifierGroupOrbital {
+  entity ModifierGroupRecord [persistent: modifiergroups] {
+    id             : string!
+    name           : string!
+    constraintType : "single" | "multi" = "single"
+    required       : boolean = false
+    minSelect      : number = 0
+    maxSelect      : number = 1
+    optionsJson    : string
+  }
+
+  type ModifierGroupLoaded      = Event { data : [ModifierGroupRecord] }      "Fired when the modifier-group collection finishes loading"
+  type ModifierGroupLoadFailed  = Event { error : string, code : string }     "Fired when the modifier-group collection fails to load"
+  type ModifierGroupCreated     = Event { row : ModifierGroupRecord }         "Fired after a new modifier-group persists successfully"
+  type ModifierGroupUpdated     = Event { row : ModifierGroupRecord }         "Fired after a modifier-group row updates successfully"
+  type ModifierGroupDeleted     = Event { row : ModifierGroupRecord }         "Fired after a modifier-group row is deleted"
+  type ModifierGroupWriteFailed = Event { error : string, code : string }     "Fired when a modifier-group create / update / delete fails to persist"
+
+  trait ModifierGroupManage -> ModifierGroupRecord [interaction, collection] {
+    config {
+      title : string = "Modifier Groups"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading modifier groups…" }] })
+      ModifierGroupLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Group", variant: "badge" }, { name: "constraintType", label: "Constraint", variant: "badge" }, { name: "required", label: "Required", variant: "badge" }, { name: "minSelect", label: "Min", variant: "caption" }, { name: "maxSelect", label: "Max", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Update", event: "UPDATE", variant: "secondary", icon: "edit" }, { label: "Delete", event: "DELETE", variant: "destructive", icon: "trash" }] }, { type: "button", label: "New Group", action: "CREATE", variant: "primary", icon: "plus" }] })
+      ModifierGroupLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      CREATE -> loading
+        (persist create ModifierGroupRecord @payload.data { emit: { success: "ModifierGroupCreated", failure: "ModifierGroupWriteFailed" } })
+      UPDATE -> loading
+        (set @entity.id @payload.groupId)
+        (set @entity.name @payload.row.name)
+        (set @entity.constraintType @payload.row.constraintType)
+        (set @entity.required @payload.row.required)
+        (set @entity.minSelect @payload.row.minSelect)
+        (set @entity.maxSelect @payload.row.maxSelect)
+        (set @entity.optionsJson @payload.row.optionsJson)
+        (persist update ModifierGroupRecord @entity { emit: { success: "ModifierGroupUpdated", failure: "ModifierGroupWriteFailed" } })
+      DELETE -> loading
+        (set @entity.id @payload.groupId)
+        (set @entity.name @payload.row.name)
+        (set @entity.constraintType @payload.row.constraintType)
+        (set @entity.required @payload.row.required)
+        (set @entity.minSelect @payload.row.minSelect)
+        (set @entity.maxSelect @payload.row.maxSelect)
+        (set @entity.optionsJson @payload.row.optionsJson)
+        (persist delete ModifierGroupRecord @entity { emit: { success: "ModifierGroupDeleted", failure: "ModifierGroupWriteFailed" } })
+      ModifierGroupCreated -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+      ModifierGroupUpdated -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+      ModifierGroupDeleted -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+      ModifierGroupWriteFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      CREATE { data : object! }
+      UPDATE { groupId : string!, row : ModifierGroupRecord, data : object! }
+      DELETE { groupId : string!, row : ModifierGroupRecord }
+      ModifierGroupLoaded      { data : [ModifierGroupRecord] }
+      ModifierGroupLoadFailed  { error : string, code : string }
+      ModifierGroupCreated     { row : ModifierGroupRecord }
+      ModifierGroupUpdated     { row : ModifierGroupRecord }
+      ModifierGroupDeleted     { row : ModifierGroupRecord }
+      ModifierGroupWriteFailed { error : string, code : string }
+    }
+    listens {
+      CREATE { data : object! }
+      UPDATE { groupId : string!, row : ModifierGroupRecord, data : object! }
+      DELETE { groupId : string!, row : ModifierGroupRecord }
+      ModifierGroupLoaded      { data : [ModifierGroupRecord] }
+      ModifierGroupLoadFailed  { error : string, code : string }
+      ModifierGroupCreated     { row : ModifierGroupRecord }
+      ModifierGroupUpdated     { row : ModifierGroupRecord }
+      ModifierGroupDeleted     { row : ModifierGroupRecord }
+      ModifierGroupWriteFailed { error : string, code : string }
+    }
+  }
+  page "/modifiergroups/manage" as ModifierGroupManagePage -> ModifierGroupManage
+}

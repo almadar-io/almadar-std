@@ -1,0 +1,119 @@
+app std-rich-editor "1.0.0"
+"std-rich-editor — wiki / CMS Notion-style block editor. Owns a Document entity (page / doc / post) with a serialized RichBlock[] payload, browses documents in a data-grid, opens the rich-block-editor on a selected row, and persists block edits + publish status back to the row."
+
+orbital DocumentOrbital {
+  entity Document [persistent: documents] {
+    id         : string!
+    title      : string!
+    blocksJson : [object]
+    authorId   : string
+    parentId   : string
+    kind       : "page" | "doc" | "post" = "page"
+    status     : "draft" | "published" | "archived" = "draft"
+    version    : number = 1
+    createdAt  : string
+    updatedAt  : string
+  }
+
+  type DocumentLoaded      = Event { data : [Document] }              "Fired when the documents collection finishes loading"
+  type DocumentLoadFailed  = Event { error : string, code : string }  "Fired when the documents collection fails to load"
+  type DocumentSaved       = Event { row : Document }                 "Fired after a document's block content persists successfully"
+  type DocumentPublished   = Event { row : Document }                 "Fired after a document's status flips to published"
+  type DocumentSaveFailed  = Event { error : string, code : string }  "Fired when persisting a document edit fails"
+
+  trait DocumentEdit -> Document [interaction, collection] {
+    config {
+      title : string = "Documents"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+      DocumentLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+      DocumentLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN -> editing
+        (set @entity.id @payload.documentId)
+        (set @entity.title @payload.row.title)
+        (set @entity.blocksJson @payload.row.blocksJson)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.parentId @payload.row.parentId)
+        (set @entity.kind @payload.row.kind)
+        (set @entity.status @payload.row.status)
+        (set @entity.version @payload.row.version)
+        (set @entity.createdAt @payload.row.createdAt)
+        (set @entity.updatedAt @payload.row.updatedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: @entity.title, variant: "h3" }, { type: "badge", label: @entity.status, variant: "secondary" }] }, { type: "divider" }, { type: "rich-block-editor", initialBlocks: @entity.blocksJson, onChange: "BLOCKS_CHANGE", placeholder: "Start writing…", showToolbar: true }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Save", action: "SAVE", variant: "primary", icon: "save" }, { type: "button", label: "Publish", action: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+      PUBLISH -> browsing
+        (set @entity.id @payload.documentId)
+        (set @entity.title @payload.row.title)
+        (set @entity.blocksJson @payload.row.blocksJson)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.parentId @payload.row.parentId)
+        (set @entity.kind @payload.row.kind)
+        (set @entity.status "published")
+        (set @entity.version @payload.row.version)
+        (set @entity.createdAt @payload.row.createdAt)
+        (set @entity.updatedAt @payload.row.updatedAt)
+        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
+    }
+    state editing {
+      BLOCKS_CHANGE -> editing
+        (set @entity.blocksJson @payload.blocks)
+      SAVE -> editing
+        (set @entity.id @payload.documentId)
+        (set @entity.blocksJson @payload.blocks)
+        (persist update Document @entity { emit: { success: "DocumentSaved", failure: "DocumentSaveFailed" } })
+      PUBLISH -> editing
+        (set @entity.id @payload.documentId)
+        (set @entity.title @payload.row.title)
+        (set @entity.blocksJson @payload.row.blocksJson)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.parentId @payload.row.parentId)
+        (set @entity.kind @payload.row.kind)
+        (set @entity.status "published")
+        (set @entity.version @payload.row.version)
+        (set @entity.createdAt @payload.row.createdAt)
+        (set @entity.updatedAt @payload.row.updatedAt)
+        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
+      DocumentSaved -> editing
+        (render-ui main { type: "alert", variant: "success", message: "Saved" })
+      DocumentPublished -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+      DocumentSaveFailed -> editing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN          { documentId : string!, row : Document }
+      BLOCKS_CHANGE { blocks : [object] }
+      SAVE          { documentId : string!, blocks : [object] }
+      PUBLISH       { documentId : string!, row : Document }
+      DocumentLoaded     { data : [Document] }
+      DocumentLoadFailed { error : string, code : string }
+      DocumentSaved      { row : Document }
+      DocumentPublished  { row : Document }
+      DocumentSaveFailed { error : string, code : string }
+    }
+    listens {
+      OPEN          { documentId : string!, row : Document }
+      BLOCKS_CHANGE { blocks : [object] }
+      SAVE          { documentId : string!, blocks : [object] }
+      PUBLISH       { documentId : string!, row : Document }
+      DocumentLoaded     { data : [Document] }
+      DocumentLoadFailed { error : string, code : string }
+      DocumentSaved      { row : Document }
+      DocumentPublished  { row : Document }
+      DocumentSaveFailed { error : string, code : string }
+    }
+  }
+  page "/documents/edit" as DocumentEditPage -> DocumentEdit
+}

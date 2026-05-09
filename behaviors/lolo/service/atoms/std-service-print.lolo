@@ -1,0 +1,130 @@
+app std-service-print "1.0.0"
+"std-service-print — Receipt / kitchen / label printer service (ESC/POS or web-print API). Bind via `uses Print from \"std/behaviors/std-service-print\"` and configure `defaultPrinter` at the call site. Pass `uiTrait: \"@trait.YourPrintForm\"` to inject your own form; leave unset to render the atom's default textarea + Print button standalone surface."
+
+orbital ServicePrintOrbital {
+  entity ServicePrint [runtime] {
+    id : string!
+    printerName : string = ""
+    content : string = ""
+    kind : "receipt" | "kitchen" | "label" = "receipt"
+    copies : number = 1
+    printJobId : string = ""
+    error : string = ""
+    status : "idle" | "printing" | "succeeded" | "error" = "idle"
+  }
+
+  type ServicePrintLoaded     = Event ServicePrint                  "Fired when ServicePrint finishes loading"
+  type ServicePrintLoadFailed = Event { message : string } "Fired when ServicePrint fails to load"
+  type ServicePrintPrintQueued = Event { jobId : string }
+  type ServicePrintPrintFailed = Event { error : string, code : string }
+  type ServicePrintPrintersListed = Event { printers : object }
+
+  ;; Default UI: a sibling trait pointing back at the standalone test form.
+  ;; Consumers override `uiTrait` to inject their own print form;
+  ;; the default value below keeps standalone usage working.
+  trait ServicePrintDefaultForm [interaction, instance] {
+    initial: ready
+    state ready {
+      INIT -> ready
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "printer" }, { type: "typography", content: "Print", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", placeholder: "Printer name" }, { type: "textarea", placeholder: "Content to print" }, { type: "select", options: [{ label: "Receipt", value: "receipt" }, { label: "Kitchen", value: "kitchen" }, { label: "Label", value: "label" }] }] }, { type: "button", label: "Print", action: "PRINT", variant: "primary", icon: "printer" }] })
+    }
+    emits {
+      PRINT          -> external { printerName : string, content : string, kind : string, copies : number }
+      CHECK_STATUS   -> external { jobId : string }
+      LIST_PRINTERS  -> external { source : string }
+    }
+  }
+
+  trait ServicePrintPrint -> ServicePrint [interaction, instance] {
+    initial: idle
+    config {
+      uiTrait        : trait  = "@trait.ServicePrintDefaultForm"
+      defaultPrinter : string = ""
+    }
+    state idle {
+      INIT -> idle
+        (set @entity.printerName @config.defaultPrinter)
+        (fetch ServicePrint { emit: { success: "ServicePrintLoaded", failure: "ServicePrintLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: ["@config.uiTrait"] })
+      PRINT -> printing
+        (set @entity.printerName @payload.printerName)
+        (set @entity.content @payload.content)
+        (set @entity.kind @payload.kind)
+        (set @entity.copies @payload.copies)
+        (render-ui main { type: "loading-state", title: "Printing...", message: "Sending job to printer." })
+        (call-service print "print" { printerName: "@entity.printerName", content: "@entity.content", kind: "@entity.kind", copies: "@entity.copies" } { emit: { success: "PRINT_QUEUED", failure: "FAILED" } })
+      LIST_PRINTERS -> idle
+        (call-service print "listPrinters" {} { emit: { success: "PRINTERS_LISTED", failure: "FAILED" } })
+      CHECK_STATUS -> idle
+        (call-service print "status" { jobId: "@payload.jobId" } { emit: { success: "PRINT_QUEUED", failure: "FAILED" } })
+      PRINTERS_LISTED -> idle
+        (emit ServicePrintPrintersListed { printers: @payload.printers })
+      ServicePrintLoaded -> idle
+      ServicePrintLoadFailed -> idle
+    }
+    state printing {
+      PRINT_QUEUED -> succeeded
+        (set @entity.printJobId @payload.jobId)
+        (set @entity.status "succeeded")
+        (emit ServicePrintPrintQueued { jobId: @entity.printJobId })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "alert", variant: "success", message: "Print job queued!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.printJobId" }, { type: "button", label: "New Print", action: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (set @entity.status "error")
+        (emit ServicePrintPrintFailed { error: @entity.error, code: "print_failed" })
+        (render-ui main { type: "error-state", title: "Print Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state succeeded {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "printer" }, { type: "typography", content: "Print", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", placeholder: "Printer name" }, { type: "textarea", placeholder: "Content to print" }, { type: "select", options: [{ label: "Receipt", value: "receipt" }, { label: "Kitchen", value: "kitchen" }, { label: "Label", value: "label" }] }] }, { type: "button", label: "Print", action: "PRINT", variant: "primary", icon: "printer" }] })
+      ;; Self-loop on the external emit so ORB_X_UNUSED_EMISSION sees an
+      ;; in-atom listener. The actual `succeeded` state is reached via
+      ;; PRINT_QUEUED above — this self-transition is just a
+      ;; validator-satisfaction hook for the externally-consumed emit.
+      ServicePrintPrintQueued -> succeeded
+      ServicePrintPrintersListed -> succeeded
+    }
+    state error {
+      ;; Mirrors the succeeded self-loop above: ServicePrintPrintFailed
+      ;; is emitted from the FAILED transition body in printing for
+      ;; downstream consumers, and listened to here so the validator
+      ;; doesn't flag the emission as unused.
+      ServicePrintPrintFailed -> error
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "printer" }, { type: "typography", content: "Print", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", placeholder: "Printer name" }, { type: "textarea", placeholder: "Content to print" }, { type: "select", options: [{ label: "Receipt", value: "receipt" }, { label: "Kitchen", value: "kitchen" }, { label: "Label", value: "label" }] }] }, { type: "button", label: "Print", action: "PRINT", variant: "primary", icon: "printer" }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "printer" }, { type: "typography", content: "Print", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", placeholder: "Printer name" }, { type: "textarea", placeholder: "Content to print" }, { type: "select", options: [{ label: "Receipt", value: "receipt" }, { label: "Kitchen", value: "kitchen" }, { label: "Label", value: "label" }] }] }, { type: "button", label: "Print", action: "PRINT", variant: "primary", icon: "printer" }] })
+    }
+emits {
+      ServicePrintLoaded            -> external { id : string }
+      ServicePrintLoadFailed        -> external { message : string }
+      ServicePrintPrintQueued       -> external { jobId : string }
+      ServicePrintPrintFailed       -> external { error : string, code : string }
+      ServicePrintPrintersListed    -> external { printers : object }
+      ;; Internal chain triggers fired as call-service emit.success / emit.failure values.
+      ;; print → PRINT_QUEUED, listPrinters → PRINTERS_LISTED, status → PRINT_QUEUED.
+      ;; Any call-service failure → FAILED → error state.
+      PRINT_QUEUED                  { jobId : string! }
+      PRINTERS_LISTED               { printers : object }
+      FAILED                        { error : string! }
+    }
+
+        listens {
+      ServicePrintDefaultForm.PRINT -> PRINT
+      ServicePrintDefaultForm.CHECK_STATUS -> CHECK_STATUS
+      ServicePrintDefaultForm.LIST_PRINTERS -> LIST_PRINTERS
+      PRINT { printerName : string, content : string, kind : string, copies : number }
+      CHECK_STATUS { jobId : string }
+      LIST_PRINTERS { source : string }
+      PRINT_QUEUED { jobId : string! }
+      PRINTERS_LISTED { printers : object }
+      FAILED { error : string! }
+      ServicePrintLoaded { id : string }
+      ServicePrintLoadFailed { message : string }
+      ServicePrintPrintQueued { jobId : string }
+      ServicePrintPrintFailed { error : string, code : string }
+      ServicePrintPrintersListed { printers : object }
+    }
+  }
+  page "/serviceprints" as ServicePrintPage -> ServicePrintPrint
+}

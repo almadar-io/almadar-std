@@ -1,0 +1,89 @@
+app std-thread "1.0.0"
+"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId."
+
+orbital ThreadPostOrbital {
+  entity ThreadPost [persistent: threadposts] {
+    id            : string!
+    parentId      : string
+    threadRootId  : string!
+    authorId      : string!
+    authorName    : string!
+    content       : string!
+    createdAt     : string
+    voteCount     : number = 0
+    replyCount    : number = 0
+  }
+
+  type ThreadPostLoaded        = Event { data : [ThreadPost] }              "Fired when the thread-post collection finishes loading"
+  type ThreadPostLoadFailed    = Event { error : string, code : string }    "Fired when the thread-post collection fails to load"
+  type ThreadPostCreated       = Event { row : ThreadPost }                 "Fired after a new thread-post persists successfully"
+  type ThreadPostCreateFailed  = Event { error : string, code : string }    "Fired when a new thread-post fails to persist"
+
+  trait ThreadPostBrowse -> ThreadPost [interaction, collection] {
+    config {
+      flat          : boolean = false
+      threadRootId  : string  = ""
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      ThreadPostLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+      ThreadPostLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      INIT -> loading
+        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      ThreadPostLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+      REPLY -> replying
+        (set @entity.parentId @payload.parentId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Write a reply" }, { type: "textarea", placeholder: "Your reply…", action: "EDIT_REPLY" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit", action: "SUBMIT_REPLY", variant: "primary", icon: "send" }, { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "secondary" }] }] })
+    }
+    state replying {
+      EDIT_REPLY -> replying
+        (set @entity.content @payload.value)
+      SUBMIT_REPLY -> browsing
+        (persist create ThreadPost @payload.data { emit: { success: "ThreadPostCreated", failure: "ThreadPostCreateFailed" } })
+      CANCEL_REPLY -> browsing
+        (set @entity.content "")
+        (set @entity.parentId "")
+      ThreadPostCreated -> browsing
+        (set @entity.content "")
+        (set @entity.parentId "")
+        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+      ThreadPostCreateFailed -> replying
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      REPLY                  { parentId : string!, content : string }
+      EDIT_REPLY             { value : string! }
+      SUBMIT_REPLY           { data : object! }
+      CANCEL_REPLY
+      ThreadPostLoaded       { data : [ThreadPost] }
+      ThreadPostLoadFailed   { error : string, code : string }
+      ThreadPostCreated      { row : ThreadPost }
+      ThreadPostCreateFailed { error : string, code : string }
+    }
+    listens {
+      REPLY                  { parentId : string!, content : string }
+      EDIT_REPLY             { value : string! }
+      SUBMIT_REPLY           { data : object! }
+      CANCEL_REPLY
+      ThreadPostLoaded       { data : [ThreadPost] }
+      ThreadPostLoadFailed   { error : string, code : string }
+      ThreadPostCreated      { row : ThreadPost }
+      ThreadPostCreateFailed { error : string, code : string }
+    }
+  }
+  page "/threadposts" as ThreadPostBrowsePage -> ThreadPostBrowse
+}

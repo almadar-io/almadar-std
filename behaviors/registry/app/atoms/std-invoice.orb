@@ -1,0 +1,1062 @@
+{
+  "name": "std-invoice",
+  "version": "1.0.0",
+  "description": "std-invoice — invoice generation atom. Owns an Invoice entity (line-items + tax + total + refund tiers via config). Browses invoices in a data-grid with Send / Mark-Paid / Void / Refund actions; viewing state renders the canonical invoice pattern detail.",
+  "orbitals": [
+    {
+      "name": "InvoiceOrbital",
+      "entity": {
+        "name": "InvoiceRecord",
+        "collection": "invoices",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "invoiceNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subscriptionId",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "sent",
+              "paid",
+              "overdue",
+              "void"
+            ]
+          },
+          {
+            "name": "currency",
+            "type": "string",
+            "default": "USD"
+          },
+          {
+            "name": "subtotal",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "tax",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "total",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "issuedAt",
+            "type": "string"
+          },
+          {
+            "name": "dueAt",
+            "type": "string"
+          },
+          {
+            "name": "paidAt",
+            "type": "string"
+          },
+          {
+            "name": "lineItemsJson",
+            "type": "string"
+          },
+          {
+            "name": "notes",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InvoiceManage",
+          "category": "interaction",
+          "linkedEntity": "InvoiceRecord",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "invoiceId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.invoiceNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subscriptionId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.subtotal",
+                  "type": "number"
+                },
+                {
+                  "name": "row.tax",
+                  "type": "number"
+                },
+                {
+                  "name": "row.total",
+                  "type": "number"
+                },
+                {
+                  "name": "row.issuedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lineItemsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SEND",
+              "payloadSchema": [
+                {
+                  "name": "invoiceId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "MARK_PAID",
+              "payloadSchema": [
+                {
+                  "name": "invoiceId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "VOID",
+              "payloadSchema": [
+                {
+                  "name": "invoiceId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "REFUND",
+              "payloadSchema": [
+                {
+                  "name": "invoiceId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "amount",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "InvoiceLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[InvoiceRecord]"
+                }
+              ]
+            },
+            {
+              "event": "InvoiceLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InvoiceUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.invoiceNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subscriptionId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.subtotal",
+                  "type": "number"
+                },
+                {
+                  "name": "row.tax",
+                  "type": "number"
+                },
+                {
+                  "name": "row.total",
+                  "type": "number"
+                },
+                {
+                  "name": "row.issuedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lineItemsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InvoiceUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InvoiceRefunded",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.invoiceNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subscriptionId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.subtotal",
+                  "type": "number"
+                },
+                {
+                  "name": "row.tax",
+                  "type": "number"
+                },
+                {
+                  "name": "row.total",
+                  "type": "number"
+                },
+                {
+                  "name": "row.issuedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lineItemsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InvoiceRefundFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "InvoiceLoaded",
+                "name": "Invoice loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[InvoiceRecord]"
+                  }
+                ]
+              },
+              {
+                "key": "InvoiceLoadFailed",
+                "name": "Invoice load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InvoiceRecord"
+                  }
+                ]
+              },
+              {
+                "key": "SEND",
+                "name": "Send",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_PAID",
+                "name": "Mark Paid",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "VOID",
+                "name": "Void",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REFUND",
+                "name": "Refund",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "InvoiceUpdated",
+                "name": "Invoice updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "InvoiceRecord"
+                  }
+                ]
+              },
+              {
+                "key": "InvoiceUpdateFailed",
+                "name": "Invoice update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "InvoiceRefunded",
+                "name": "Invoice refunded",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "InvoiceRecord"
+                  }
+                ]
+              },
+              {
+                "key": "InvoiceRefundFailed",
+                "name": "Invoice refund failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading invoices…"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "InvoiceLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "receipt"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW",
+                              "variant": "secondary",
+                              "icon": "eye"
+                            },
+                            {
+                              "label": "Send",
+                              "event": "SEND",
+                              "icon": "send",
+                              "variant": "primary"
+                            },
+                            {
+                              "icon": "check",
+                              "event": "MARK_PAID",
+                              "label": "Mark Paid",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "VOID",
+                              "icon": "x",
+                              "variant": "destructive",
+                              "label": "Void"
+                            },
+                            {
+                              "event": "REFUND",
+                              "label": "Refund",
+                              "variant": "destructive",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "fields": [
+                            {
+                              "name": "invoiceNumber",
+                              "variant": "caption",
+                              "label": "Invoice #"
+                            },
+                            {
+                              "name": "customerId",
+                              "variant": "caption",
+                              "label": "Customer"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "total",
+                              "label": "Total",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "currency",
+                              "label": "Currency"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "dueAt",
+                              "label": "Due"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "InvoiceLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "set",
+                    "@entity.invoiceNumber",
+                    "@payload.row.invoiceNumber"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.issuedAt",
+                    "@payload.row.issuedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.dueAt",
+                    "@payload.row.dueAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.customerId",
+                    "@payload.row.customerId"
+                  ],
+                  [
+                    "set",
+                    "@entity.currency",
+                    "@payload.row.currency"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "dueAt": "@entity.dueAt",
+                      "from": {
+                        "name": "Your Company"
+                      },
+                      "notes": "@entity.notes",
+                      "issuedAt": "@entity.issuedAt",
+                      "status": "@entity.status",
+                      "items": [],
+                      "currency": "@entity.currency",
+                      "invoiceNumber": "@entity.invoiceNumber",
+                      "to": {
+                        "id": "@entity.customerId"
+                      },
+                      "type": "invoice"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "SEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "sent"
+                  ],
+                  [
+                    "set",
+                    "@entity.issuedAt",
+                    "now"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InvoiceRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "InvoiceUpdated",
+                        "failure": "InvoiceUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "email",
+                    "send",
+                    {
+                      "invoiceId": "@payload.invoiceId"
+                    },
+                    {
+                      "emit": {
+                        "success": "InvoiceUpdated",
+                        "failure": "InvoiceUpdateFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MARK_PAID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "paid"
+                  ],
+                  [
+                    "set",
+                    "@entity.paidAt",
+                    "now"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InvoiceRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "InvoiceUpdateFailed",
+                        "success": "InvoiceUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "VOID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "void"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InvoiceRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "InvoiceUpdateFailed",
+                        "success": "InvoiceUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "REFUND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "call-service",
+                    "stripe",
+                    "refund",
+                    {
+                      "invoiceId": "@payload.invoiceId",
+                      "amount": "@payload.amount"
+                    },
+                    {
+                      "emit": {
+                        "failure": "InvoiceRefundFailed",
+                        "success": "InvoiceRefunded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "InvoiceUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "failure": "InvoiceLoadFailed",
+                        "success": "InvoiceLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "InvoiceUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "InvoiceRefunded",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "InvoiceRefundFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "InvoiceUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "failure": "InvoiceLoadFailed",
+                        "success": "InvoiceLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Invoices"
+            },
+            "refundTiersJson": {
+              "type": "string",
+              "default": "[]"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InvoiceManagePage",
+          "path": "/invoices/manage",
+          "traits": [
+            {
+              "ref": "InvoiceManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

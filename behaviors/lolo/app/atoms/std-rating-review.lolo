@@ -1,0 +1,77 @@
+app std-rating-review "1.0.0"
+"std-rating-review — capture a 1..N star rating with optional comment + photos. Owns a RatingReview entity; SUBMIT persists @payload.data (rating, comment, photos, targetId) and emits RatingReviewSubmitted so cross-trait listeners can react (e.g. recompute aggregate)."
+
+orbital RatingReviewOrbital {
+  entity RatingReview [persistent: ratingreviews] {
+    id        : string!
+    rating    : number!
+    comment   : string
+    photos    : [string]
+    authorId  : string
+    targetId  : string!
+    createdAt : string
+  }
+
+  type RatingReviewLoaded     = Event { data : [RatingReview] }                    "Fired when the rating-review collection finishes loading"
+  type RatingReviewLoadFailed = Event { error : string, code : string }            "Fired when the rating-review collection fails to load"
+  type RatingReviewSubmitted  = Event { row : RatingReview }                       "Fired after a new rating-review persists successfully"
+
+  trait RatingReviewSubmit -> RatingReview [interaction, instance] {
+    config {
+      maxStars     : number = 5
+      allowComment : boolean = true
+      allowPhotos  : boolean = false
+      title        : string = "Rate this"
+      submitEvent  : string = "SUBMIT_REVIEW"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch RatingReview { emit: { success: "RatingReviewLoaded", failure: "RatingReviewLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: @entity.rating, max: "@config.maxStars", action: "RATE" }, { type: "textarea", placeholder: "Tell us more (optional)", action: "EDIT_COMMENT" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] })
+      RATE -> idle
+        (set @entity.rating @payload.rating)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: @entity.rating, max: "@config.maxStars", action: "RATE" }, { type: "textarea", placeholder: "Tell us more (optional)", action: "EDIT_COMMENT" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] })
+      EDIT_COMMENT -> idle
+        (set @entity.comment @payload.value)
+      RatingReviewLoaded -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: @entity.rating, max: "@config.maxStars", action: "RATE" }, { type: "textarea", placeholder: "Tell us more (optional)", action: "EDIT_COMMENT" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] })
+      RatingReviewLoadFailed -> idle
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      SUBMIT -> submitting
+        (persist create RatingReview @payload.data { emit: { success: "RatingReviewSubmitted", failure: "RatingReviewSubmitFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting your review…" }] })
+    }
+    state submitting {
+      RatingReviewSubmitted -> submitted
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "check-circle", color: "success" }, { type: "typography", variant: "h3", content: "Thanks for your review!" }] })
+      RatingReviewSubmitFailed -> idle
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state submitted {
+      INIT -> idle
+        (set @entity.rating 0)
+        (set @entity.comment "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: @entity.rating, max: "@config.maxStars", action: "RATE" }, { type: "textarea", placeholder: "Tell us more (optional)", action: "EDIT_COMMENT" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] })
+    }
+    emits {
+      SUBMIT { data : object! }
+      RATE { rating : number! }
+      EDIT_COMMENT { value : string! }
+      RatingReviewLoaded { data : [RatingReview] }
+      RatingReviewLoadFailed { error : string, code : string }
+      RatingReviewSubmitted { row : RatingReview }
+      RatingReviewSubmitFailed { error : string, code : string }
+    }
+    listens {
+      RATE { rating : number! }
+      EDIT_COMMENT { value : string! }
+      SUBMIT { data : object! }
+      RatingReviewLoaded { data : [RatingReview] }
+      RatingReviewLoadFailed { error : string, code : string }
+      RatingReviewSubmitted { row : RatingReview }
+      RatingReviewSubmitFailed { error : string, code : string }
+    }
+  }
+  page "/ratingreviews/submit" as RatingReviewSubmitPage -> RatingReviewSubmit
+}

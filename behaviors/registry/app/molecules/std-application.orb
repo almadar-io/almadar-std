@@ -1,0 +1,1822 @@
+{
+  "name": "std-application",
+  "version": "1.0.0",
+  "description": "std-application — job-style application bundle: form + attachments + status flow (draft/submitted/under-review/accepted/rejected).",
+  "orbitals": [
+    {
+      "name": "ApplicationOrbital",
+      "entity": {
+        "name": "Application",
+        "collection": "applications",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantEmail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetType",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "coverLetter",
+            "type": "string"
+          },
+          {
+            "name": "attachmentsJson",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "submitted",
+              "under-review",
+              "accepted",
+              "rejected"
+            ]
+          },
+          {
+            "name": "submittedAt",
+            "type": "string"
+          },
+          {
+            "name": "reviewedAt",
+            "type": "string"
+          },
+          {
+            "name": "notes",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ApplicationManage",
+          "category": "interaction",
+          "linkedEntity": "Application",
+          "emits": [
+            {
+              "event": "CREATE"
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "applicationId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ACCEPT",
+              "payloadSchema": [
+                {
+                  "name": "applicationId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REJECT",
+              "payloadSchema": [
+                {
+                  "name": "applicationId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE_SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "data.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "data.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "data.status",
+                  "type": "string"
+                },
+                {
+                  "name": "data.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "data.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "data.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UPDATE_SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "data.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.applicantName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.applicantEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "data.coverLetter",
+                  "type": "string"
+                },
+                {
+                  "name": "data.attachmentsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "data.status",
+                  "type": "string"
+                },
+                {
+                  "name": "data.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "data.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "data.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_EDIT"
+            },
+            {
+              "event": "UPLOAD",
+              "payloadSchema": [
+                {
+                  "name": "files",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ApplicationLoaded",
+              "description": "Fired when the Application collection finishes loading; payload.data holds the list",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Application]"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationLoadFailed",
+              "description": "Fired when the Application collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationCreated",
+              "description": "Fired after a new application persists successfully",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationUpdated",
+              "description": "Fired after an application persists an update",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationSubmitted",
+              "description": "Fired after an application transitions to submitted",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationAccepted",
+              "description": "Fired after an application transitions to accepted",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApplicationRejected",
+              "description": "Fired after an application transitions to rejected",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "ITEM_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ApplicationPersistor"
+              }
+            },
+            {
+              "event": "ITEM_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ApplicationPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "editing"
+              },
+              {
+                "name": "submitting"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ApplicationLoaded",
+                "name": "Application loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Application]"
+                  }
+                ]
+              },
+              {
+                "key": "ApplicationLoadFailed",
+                "name": "Application load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Application"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "applicationId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Application"
+                  }
+                ]
+              },
+              {
+                "key": "ACCEPT",
+                "name": "Accept",
+                "payloadSchema": [
+                  {
+                    "name": "applicationId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Application"
+                  }
+                ]
+              },
+              {
+                "key": "REJECT",
+                "name": "Reject",
+                "payloadSchema": [
+                  {
+                    "name": "applicationId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Application"
+                  },
+                  {
+                    "name": "notes",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE_SUBMIT",
+                "name": "Create Submit",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UPDATE_SUBMIT",
+                "name": "Update Submit",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UPLOAD",
+                "name": "Upload",
+                "payloadSchema": [
+                  {
+                    "name": "files",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_EDIT",
+                "name": "Cancel Edit"
+              },
+              {
+                "key": "ApplicationCreated",
+                "name": "Application created",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApplicationUpdated",
+                "name": "Application updated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApplicationSubmitted",
+                "name": "Application submitted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApplicationAccepted",
+                "name": "Application accepted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApplicationRejected",
+                "name": "Application rejected",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading applications…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ApplicationLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-text"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Applications",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "action": "CREATE",
+                              "icon": "plus",
+                              "label": "New Application",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "label": "Applicant",
+                              "icon": "user",
+                              "name": "applicantName",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Email",
+                              "variant": "caption",
+                              "name": "applicantEmail"
+                            },
+                            {
+                              "name": "targetType",
+                              "variant": "caption",
+                              "label": "Target"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Submitted",
+                              "variant": "caption",
+                              "name": "submittedAt"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "variant": "ghost",
+                              "label": "Edit",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Submit",
+                              "variant": "primary",
+                              "event": "SUBMIT"
+                            },
+                            {
+                              "variant": "success",
+                              "label": "Accept",
+                              "event": "ACCEPT"
+                            },
+                            {
+                              "event": "REJECT",
+                              "label": "Reject",
+                              "variant": "danger"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ApplicationLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "color": "destructive",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "content": "Failed to load applications",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@payload.error",
+                          "color": "muted",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "button",
+                          "variant": "primary",
+                          "action": "INIT",
+                          "icon": "rotate-ccw",
+                          "label": "Retry"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantEmail",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.targetType",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.coverLetter",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.attachmentsJson",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "draft"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "New Application"
+                        },
+                        {
+                          "entity": "@entity",
+                          "cancelEvent": "CANCEL_EDIT",
+                          "fields": [
+                            "applicantName",
+                            "applicantEmail",
+                            "targetId",
+                            "targetType",
+                            "coverLetter"
+                          ],
+                          "mode": "create",
+                          "submitEvent": "CREATE_SUBMIT",
+                          "type": "form-section"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Attachments",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "upload-drop-zone",
+                          "action": "UPLOAD",
+                          "icon": "paperclip",
+                          "maxFiles": 10.0,
+                          "label": "Drop attachments here",
+                          "maxSize": 10485760.0,
+                          "accept": "*/*",
+                          "description": "Resume, portfolio, references"
+                        }
+                      ],
+                      "className": "max-w-3xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantName",
+                    "@payload.row.applicantName"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantEmail",
+                    "@payload.row.applicantEmail"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    "@payload.row.targetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetType",
+                    "@payload.row.targetType"
+                  ],
+                  [
+                    "set",
+                    "@entity.coverLetter",
+                    "@payload.row.coverLetter"
+                  ],
+                  [
+                    "set",
+                    "@entity.attachmentsJson",
+                    "@payload.row.attachmentsJson"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Edit Application",
+                          "variant": "h2"
+                        },
+                        {
+                          "fields": [
+                            "applicantName",
+                            "applicantEmail",
+                            "targetId",
+                            "targetType",
+                            "coverLetter"
+                          ],
+                          "submitEvent": "UPDATE_SUBMIT",
+                          "cancelEvent": "CANCEL_EDIT",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "entity": "@entity"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Attachments"
+                        },
+                        {
+                          "maxSize": 10485760.0,
+                          "maxFiles": 10.0,
+                          "action": "UPLOAD",
+                          "type": "upload-drop-zone",
+                          "icon": "paperclip",
+                          "label": "Drop attachments here",
+                          "accept": "*/*",
+                          "description": "Resume, portfolio, references"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "max-w-3xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "submitting",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "submitted"
+                  ],
+                  [
+                    "set",
+                    "@entity.submittedAt",
+                    "@payload.row.submittedAt"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Application",
+                    {
+                      "status": "submitted",
+                      "submittedAt": "@entity.submittedAt",
+                      "id": "@entity.id"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationSubmitted"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Submitting…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "submitting",
+                "event": "ACCEPT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "accepted"
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewedAt",
+                    "@payload.row.reviewedAt"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Application",
+                    {
+                      "id": "@entity.id",
+                      "status": "accepted",
+                      "reviewedAt": "@entity.reviewedAt"
+                    },
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationAccepted"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Accepting…"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "submitting",
+                "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "rejected"
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewedAt",
+                    "@payload.row.reviewedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.notes"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Application",
+                    {
+                      "status": "rejected",
+                      "id": "@entity.id",
+                      "reviewedAt": "@entity.reviewedAt",
+                      "notes": "@entity.notes"
+                    },
+                    {
+                      "emit": {
+                        "success": "ApplicationRejected",
+                        "failure": "ApplicationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Rejecting…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "submitting",
+                "event": "CREATE_SUBMIT",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Application",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationCreated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Saving…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "submitting",
+                "event": "UPDATE_SUBMIT",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Application",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Updating…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "editing",
+                "event": "UPLOAD",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-3xl mx-auto w-full",
+                      "children": [
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Application"
+                        },
+                        {
+                          "cancelEvent": "CANCEL_EDIT",
+                          "fields": [
+                            "applicantName",
+                            "applicantEmail",
+                            "targetId",
+                            "targetType",
+                            "coverLetter"
+                          ],
+                          "mode": "edit",
+                          "submitEvent": "UPDATE_SUBMIT",
+                          "type": "form-section",
+                          "entity": "@entity"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Attachments",
+                          "variant": "h3"
+                        },
+                        {
+                          "message": "Attachment uploaded.",
+                          "variant": "info",
+                          "type": "alert"
+                        },
+                        {
+                          "type": "upload-drop-zone",
+                          "maxFiles": 10.0,
+                          "label": "Drop more attachments",
+                          "accept": "*/*",
+                          "description": "Resume, portfolio, references",
+                          "maxSize": 10485760.0,
+                          "action": "UPLOAD",
+                          "icon": "paperclip"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "CANCEL_EDIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "loading",
+                "event": "ApplicationCreated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "success": "ApplicationLoaded",
+                        "failure": "ApplicationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "loading",
+                "event": "ApplicationUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "loading",
+                "event": "ApplicationSubmitted",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "success": "ApplicationLoaded",
+                        "failure": "ApplicationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "loading",
+                "event": "ApplicationAccepted",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "loading",
+                "event": "ApplicationRejected",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "success": "ApplicationLoaded",
+                        "failure": "ApplicationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "error",
+                "event": "ApplicationLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Application",
+                    {
+                      "emit": {
+                        "success": "ApplicationLoaded",
+                        "failure": "ApplicationLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "name": "ApplicationPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Application",
+          "emits": [
+            {
+              "event": "ITEM_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ITEM_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "CREATE_SUBMIT",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ApplicationManage"
+              }
+            },
+            {
+              "event": "UPDATE_SUBMIT",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ApplicationManage"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "Application",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "Application",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ITEM_CREATED",
+                "name": "Item Created"
+              },
+              {
+                "key": "ITEM_UPDATED",
+                "name": "Item Updated"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Application",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ITEM_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Application",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ITEM_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ApplicationPage",
+          "path": "/applications",
+          "traits": [
+            {
+              "ref": "ApplicationManage"
+            },
+            {
+              "ref": "ApplicationPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

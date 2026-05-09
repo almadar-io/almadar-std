@@ -1,0 +1,42 @@
+app std-geosearch "1.0.0"
+"std-geosearch — location-aware search variant: search-input + map-view + range-slider for radius. Owns a GeoSearchResult runtime entity; GEO_SEARCH persists @payload.searchTerm/lat/lng/radiusKm so cross-trait listeners can route them into geo-aware data atoms."
+
+orbital GeoSearchResultOrbital {
+  entity GeoSearchResult [runtime] {
+    id          : string!
+    searchTerm  : string
+    centerLat   : number
+    centerLng   : number
+    radiusKm    : number = 10
+    boundsNorth : number
+    boundsSouth : number
+    boundsEast  : number
+    boundsWest  : number
+  }
+
+  trait GeoSearchResultSearch -> GeoSearchResult [interaction, instance] {
+    initial: idle
+    config {
+      placeholder     : string = "Search nearby…"
+      defaultRadiusKm : number = 10
+      event           : string = "GEO_SEARCH"
+    }
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "map-view", markers: [], centerLat: @entity.centerLat, centerLng: @entity.centerLng, height: "240px", zoom: 12 }, { type: "range-slider", min: 1, max: 100, value: @entity.radiusKm, step: 1, showTooltip: true, action: "GEO_SEARCH" }] })
+      GEO_SEARCH -> idle
+        (set @entity.searchTerm @payload.searchTerm)
+        (set @entity.centerLat @payload.lat)
+        (set @entity.centerLng @payload.lng)
+        (set @entity.radiusKm @payload.radiusKm)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "search-input", placeholder: "@config.placeholder", event: "@config.event" }, { type: "map-view", markers: [], centerLat: @entity.centerLat, centerLng: @entity.centerLng, height: "240px", zoom: 12 }, { type: "range-slider", min: 1, max: 100, value: @entity.radiusKm, step: 1, showTooltip: true, action: "GEO_SEARCH" }] })
+    }
+    emits {
+      GEO_SEARCH { searchTerm : string!, lat : number!, lng : number!, radiusKm : number! }
+    }
+    listens {
+      GEO_SEARCH { searchTerm : string!, lat : number!, lng : number!, radiusKm : number! }
+    }
+  }
+  page "/geosearchresults/search" as GeoSearchResultSearchPage -> GeoSearchResultSearch
+}

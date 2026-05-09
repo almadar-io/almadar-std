@@ -1,0 +1,646 @@
+app std-event-ticketing "1.0.0"
+"Event ticketing: organizers create events with VIP / general / early-bird tiers, attendees buy tickets, gate staff scan QR at door, waitlist auto-promotes when tickets free up. Pick for Eventbrite-style apps."
+
+orbital EventOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Event        from "std/behaviors/std-event"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Calendar     from "std/behaviors/std-calendar"
+
+  entity EventRow [persistent: events] {
+    id              : string!
+    name            : string!
+    description     : string = ""
+    venue           : string = ""
+    startsAt        : string = ""
+    endsAt          : string = ""
+    capacity        : number = 0
+    status          : "draft" | "published" | "sold-out" | "cancelled" = "draft"
+    organizerId     : string = ""
+    pendingId       : string = ""
+  }
+
+  trait EventAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.EventCatalog",
+      appName: "EventTicketing",
+      navItems: [
+        { label: "Events",   href: "/events",   icon: "calendar" },
+        { label: "Tickets",  href: "/tickets",  icon: "ticket" },
+        { label: "Check-in", href: "/checkin",  icon: "qr-code" },
+        { label: "Waitlist", href: "/waitlist", icon: "users" }
+      ],
+      searchEvent: "EVENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "EVENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: EVENT_SEARCH
+      NOTIFY_CLICK: EVENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait. Owns the header (icon + Events + New Event button)
+  ;; + toolbar (search/filter) + stats + calendar view + browse list +
+  ;; embedded tier admin. AppLayout's `contentTrait` points here.
+  trait EventCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "calendar" },
+              { type: "typography", content: "Events", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Event", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.EventSearch",
+            "@trait.EventFilter"
+          ]},
+          "@trait.EventStats",
+          { type: "divider" },
+          "@trait.EventCalendarView",
+          { type: "divider" },
+          "@trait.EventBrowseList",
+          { type: "divider" },
+          { type: "typography", content: "Advanced Event Admin", variant: "h3" },
+          "@trait.EventAdvancedAdmin"
+        ]})
+      EVENT_SEARCH -> composing
+      EVENT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to events", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      EventAppLayout.EVENT_SEARCH -> EVENT_SEARCH
+      EventAppLayout.EVENT_NOTIFICATIONS_OPEN -> EVENT_NOTIFICATIONS_OPEN
+      EVENT_SEARCH { value : string }
+      EVENT_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait EventSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search events…",
+      event: "EVENT_SEARCH"
+    }
+  }
+
+  trait EventFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["draft", "published", "sold-out", "cancelled"] },
+        { field: "venue",  label: "Venue",  filterType: "text" }
+      ],
+      event: "EVENT_FILTER"
+    }
+  }
+
+  trait EventStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Events",
+      metrics: [
+        { aggregation: "count", label: "Total",     icon: "calendar",     variant: "primary", format: "number" },
+        { aggregation: "count", label: "Published", icon: "send",         variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "published"]] },
+        { aggregation: "count", label: "Sold Out",  icon: "check-circle", variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "sold-out"]] },
+        { aggregation: "sum",   label: "Capacity",  icon: "users",        variant: "info",    format: "number", field: "capacity" }
+      ]
+    }
+    listens {
+      EventBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait EventBrowseList = Browse.traits.BrowseItemBrowse -> EventRow {
+    config: {
+      fields: [
+        { name: "name",        variant: "h3",      icon: "calendar" },
+        { name: "venue",       variant: "body" },
+        { name: "startsAt",    variant: "caption", format: "date" },
+        { name: "endsAt",      variant: "caption", format: "date" },
+        { name: "capacity",    variant: "body",    format: "number" },
+        { name: "status",      variant: "badge" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      EventSearch.SEARCH                  -> REFETCH_QUERY
+      EventFilter.FILTER                  -> REFETCH_FILTER
+      EventPersistor.EVENT_CREATED        -> INIT
+      EventPersistor.EVENT_UPDATED        -> INIT
+      EventPersistor.EVENT_DELETED        -> INIT
+    }
+  }
+
+  ;; Calendar binding — primary calendar surface for the events collection.
+  trait EventCalendarView = Calendar.traits.CalendarEventCalendar -> EventRow {
+    config: {
+      title: "Event Calendar"
+    }
+    listens {
+      EventPersistor.EVENT_CREATED -> INIT
+      EventPersistor.EVENT_UPDATED -> INIT
+      EventPersistor.EVENT_DELETED -> INIT
+    }
+  }
+
+  ;; Advanced admin — std-event's EventManage trait, rebound to the local
+  ;; EventRow entity. Provides the lifecycle grid (publish / cancel) on top
+  ;; of the simpler Browse + Modal CRUD flow above.
+  trait EventAdvancedAdmin = Event.traits.EventManage -> EventRow {
+    config: {
+      title: "Lifecycle Admin"
+    }
+  }
+
+  ;; Modal bindings — Create / Edit / View. The persist side-effect lives in
+  ;; the EventPersistor coordinator that listens for SAVE / CONFIRM_DELETE.
+  trait EventCreate = Modal.traits.ModalRecordModal -> EventRow {
+    config: {
+      icon: "plus-circle",
+      title: "New Event",
+      mode: "create",
+      fields: ["name", "description", "venue", "startsAt", "endsAt", "capacity", "status", "organizerId"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      EventCatalog.CREATE -> CREATE
+      CREATE { id : string, row : EventRow }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EventEdit = Modal.traits.ModalRecordModal -> EventRow {
+    config: {
+      icon: "edit",
+      title: "Edit Event",
+      mode: "edit",
+      fields: ["name", "description", "venue", "startsAt", "endsAt", "capacity", "status", "organizerId"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      EventBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : EventRow }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EventView = Modal.traits.ModalRecordModal -> EventRow {
+    config: {
+      icon: "eye",
+      title: "View Event",
+      mode: "edit",
+      fields: ["name", "description", "venue", "startsAt", "endsAt", "capacity", "status", "organizerId"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      EventBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : EventRow }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EventDelete = Confirmation.traits.ConfirmActionConfirmation -> EventRow {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Event",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      EventBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : EventRow }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: owns the persist side-effects triggered by Modal/Confirm
+  ;; trait emits. Mirrors std-cart's CartItemPersistor.
+  trait EventPersistor -> EventRow [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create EventRow @payload.data { emit: { success: "EVENT_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update EventRow @payload.data { emit: { success: "EVENT_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete EventRow @payload.id { emit: { success: "EVENT_DELETED" } })
+    }
+    emits {
+      EVENT_CREATED -> external { id : string }
+      EVENT_UPDATED -> external { id : string }
+      EVENT_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      EventCreate.SAVE          -> DO_CREATE
+      EventEdit.SAVE            -> DO_UPDATE
+      EventDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/events" as EventsPage -> EventAppLayout, EventCatalog, EventSearch, EventFilter, EventStats, EventBrowseList, EventCalendarView, EventAdvancedAdmin, EventCreate, EventEdit, EventView, EventDelete, EventPersistor
+}
+
+orbital TicketOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses TierAtom     from "std/behaviors/std-ticket-tier"
+  uses Cart         from "std/behaviors/std-cart"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity Ticket [persistent: tickets] {
+    id          : string!
+    eventId     : string!
+    tierId      : string!
+    holderName  : string!
+    holderEmail : string!
+    qrCode      : string = ""
+    status      : "pending" | "paid" | "scanned" | "refunded" | "cancelled" = "pending"
+    purchasedAt : string = ""
+    pendingId   : string = ""
+  }
+
+  trait TicketAppLayout = AppShell.traits.AppLayout -> Ticket {
+    config: {
+      contentTrait: "@trait.TicketShop",
+      appName: "EventTicketing",
+      navItems: [
+        { label: "Events",   href: "/events",   icon: "calendar" },
+        { label: "Tickets",  href: "/tickets",  icon: "ticket" },
+        { label: "Check-in", href: "/checkin",  icon: "qr-code" },
+        { label: "Waitlist", href: "/waitlist", icon: "users" }
+      ],
+      searchEvent: "TICKET_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TICKET_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TICKET_SEARCH
+      NOTIFY_CLICK: TICKET_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page chrome — top header + tier picker (TierAtom's grid) + cart for the
+  ;; in-progress purchase + ticket history list.
+  trait TicketShop [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "ticket" },
+              { type: "typography", content: "Tickets", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Issue Ticket", action: "ISSUE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "typography", content: "Available Tiers", variant: "h3" },
+          "@trait.TicketTierShop",
+          { type: "divider" },
+          { type: "typography", content: "Your Cart", variant: "h3" },
+          "@trait.TicketCart",
+          { type: "divider" },
+          { type: "typography", content: "Tickets Issued", variant: "h3" },
+          "@trait.TicketBrowseList"
+        ]})
+      TICKET_SEARCH -> composing
+      TICKET_NOTIFICATIONS_OPEN -> composing
+    }
+    emits {
+      ISSUE -> external { source : string }
+    }
+    listens {
+      TicketAppLayout.TICKET_SEARCH -> TICKET_SEARCH
+      TicketAppLayout.TICKET_NOTIFICATIONS_OPEN -> TICKET_NOTIFICATIONS_OPEN
+      TICKET_SEARCH { value : string }
+      TICKET_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; Tier picker — TicketTierManage atom renders the available-tier grid with
+  ;; SELL action. The std-cart molecule below handles the purchase flow.
+  trait TicketTierShop = TierAtom.traits.TicketTierManage {
+    config: {
+      title: "Choose Your Tier"
+    }
+  }
+
+  ;; Purchase cart — std-cart molecule; one row per pending purchase.
+  trait TicketCart = Cart.traits.CartItemCartBrowse {
+  }
+
+  trait TicketCartAddItem    = Cart.traits.CartItemAddItem      { }
+  trait TicketCartRemoveItem = Cart.traits.CartItemRemoveConfirm { }
+  trait TicketCartPersistor  = Cart.traits.CartItemPersistor     { }
+
+  ;; History grid — already-issued tickets for the buyer.
+  trait TicketBrowseList = Browse.traits.BrowseItemBrowse -> Ticket {
+    config: {
+      fields: [
+        { name: "holderName",  variant: "h4",      icon: "ticket" },
+        { name: "holderEmail", variant: "caption" },
+        { name: "tierId",      variant: "badge" },
+        { name: "qrCode",      variant: "body" },
+        { name: "status",      variant: "badge" },
+        { name: "purchasedAt", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View", event: "VIEW", variant: "ghost" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      TicketPersistor.TICKET_ISSUED -> INIT
+    }
+  }
+
+  ;; Issue-ticket modal — captures buyer info + tier, fires SAVE which the
+  ;; persistor picks up.
+  trait TicketIssueModal = Modal.traits.ModalRecordModal -> Ticket {
+    config: {
+      icon: "plus-circle",
+      title: "Issue Ticket",
+      mode: "create",
+      fields: ["eventId", "tierId", "holderName", "holderEmail", "status"]
+    }
+    events {
+      OPEN: ISSUE
+    }
+    listens {
+      TicketShop.ISSUE -> ISSUE
+      ISSUE { id : string, row : Ticket }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait TicketPersistor -> Ticket [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_ISSUE -> idle
+        (persist create Ticket @payload.data { emit: { success: "TICKET_ISSUED" } })
+    }
+    emits {
+      TICKET_ISSUED -> external { id : string }
+    }
+    listens {
+      DO_ISSUE { data : object! }
+      TicketIssueModal.SAVE -> DO_ISSUE
+    }
+  }
+
+  page "/tickets" as TicketsPage -> TicketAppLayout, TicketShop, TicketTierShop, TicketCart, TicketCartAddItem, TicketCartRemoveItem, TicketCartPersistor, TicketBrowseList, TicketIssueModal, TicketPersistor
+}
+
+orbital CheckinOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses CheckinAtom from "std/behaviors/std-checkin"
+  uses ListMol   from "std/behaviors/std-list"
+
+  entity Attendee [persistent: attendees] {
+    id          : string!
+    name        : string!
+    description : string = ""
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string = ""
+    pendingId   : string = ""
+  }
+
+  trait CheckinAppLayout = AppShell.traits.AppLayout -> Attendee {
+    config: {
+      contentTrait: "@trait.CheckinDashboard",
+      appName: "EventTicketing",
+      navItems: [
+        { label: "Events",   href: "/events",   icon: "calendar" },
+        { label: "Tickets",  href: "/tickets",  icon: "ticket" },
+        { label: "Check-in", href: "/checkin",  icon: "qr-code" },
+        { label: "Waitlist", href: "/waitlist", icon: "users" }
+      ],
+      searchEvent: "CHECKIN_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CHECKIN_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CHECKIN_SEARCH
+      NOTIFY_CLICK: CHECKIN_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait CheckinDashboard [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "qr-code" },
+            { type: "typography", content: "Door Check-in", variant: "h2" }
+          ]},
+          { type: "divider" },
+          "@trait.GateScanner",
+          { type: "divider" },
+          { type: "typography", content: "Attendees", variant: "h3" },
+          "@trait.AttendeeListing"
+        ]})
+      CHECKIN_SEARCH -> composing
+      CHECKIN_NOTIFICATIONS_OPEN -> composing
+    }
+    listens {
+      CheckinAppLayout.CHECKIN_SEARCH -> CHECKIN_SEARCH
+      CheckinAppLayout.CHECKIN_NOTIFICATIONS_OPEN -> CHECKIN_NOTIFICATIONS_OPEN
+      CHECKIN_SEARCH { value : string }
+      CHECKIN_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; QR scanner bound from std-checkin in qr mode.
+  trait GateScanner = CheckinAtom.traits.CheckinScan {
+    config: {
+      mode: "qr",
+      title: "Scan Ticket QR"
+    }
+  }
+
+  ;; Attendee list — std-list molecule on the attendees collection (note:
+  ;; std-list's atom std-attendee-list was folded into std-list per memory).
+  trait AttendeeListing = ListMol.traits.ListItemBrowse -> Attendee {
+  }
+
+  page "/checkin" as CheckinPage -> CheckinAppLayout, CheckinDashboard, GateScanner, AttendeeListing
+}
+
+orbital WaitlistOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Modal         from "std/behaviors/std-modal"
+  uses WaitlistAtom  from "std/behaviors/std-waitlist"
+  uses Browse        from "std/behaviors/std-browse"
+
+  entity WaitlistRow [persistent: waitlistrows] {
+    id          : string!
+    targetId    : string!
+    userId      : string!
+    position    : number = 0
+    status      : "waiting" | "promoted" | "cancelled" | "expired" = "waiting"
+    joinedAt    : string = ""
+    pendingId   : string = ""
+  }
+
+  trait WaitlistAppLayout = AppShell.traits.AppLayout -> WaitlistRow {
+    config: {
+      contentTrait: "@trait.WaitlistDashboard",
+      appName: "EventTicketing",
+      navItems: [
+        { label: "Events",   href: "/events",   icon: "calendar" },
+        { label: "Tickets",  href: "/tickets",  icon: "ticket" },
+        { label: "Check-in", href: "/checkin",  icon: "qr-code" },
+        { label: "Waitlist", href: "/waitlist", icon: "users" }
+      ],
+      searchEvent: "WAITLIST_SEARCH",
+      notifications: [],
+      notificationClickEvent: "WAITLIST_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: WAITLIST_SEARCH
+      NOTIFY_CLICK: WAITLIST_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait WaitlistDashboard [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "users" },
+              { type: "typography", content: "Waitlist", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Join Waitlist", action: "JOIN", variant: "primary", icon: "user-plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.WaitlistManageView",
+          { type: "divider" },
+          { type: "typography", content: "All Entries", variant: "h3" },
+          "@trait.WaitlistBrowseList"
+        ]})
+      WAITLIST_SEARCH -> composing
+      WAITLIST_NOTIFICATIONS_OPEN -> composing
+    }
+    emits {
+      JOIN -> external { source : string }
+    }
+    listens {
+      WaitlistAppLayout.WAITLIST_SEARCH -> WAITLIST_SEARCH
+      WaitlistAppLayout.WAITLIST_NOTIFICATIONS_OPEN -> WAITLIST_NOTIFICATIONS_OPEN
+      WAITLIST_SEARCH { value : string }
+      WAITLIST_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait WaitlistManageView = WaitlistAtom.traits.WaitlistManage {
+    config: {
+      title: "Queue"
+    }
+  }
+
+  trait WaitlistBrowseList = Browse.traits.BrowseItemBrowse -> WaitlistRow {
+    config: {
+      fields: [
+        { name: "position",  variant: "badge" },
+        { name: "userId",    variant: "h4" },
+        { name: "targetId",  variant: "caption" },
+        { name: "status",    variant: "badge" },
+        { name: "joinedAt",  variant: "caption", format: "date" }
+      ],
+      itemActions: [],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      WaitlistJoinModal.SAVE -> INIT
+    }
+  }
+
+  trait WaitlistJoinModal = Modal.traits.ModalRecordModal -> WaitlistRow {
+    config: {
+      icon: "user-plus",
+      title: "Join Waitlist",
+      mode: "create",
+      fields: ["targetId", "userId", "status"]
+    }
+    events {
+      OPEN: JOIN
+    }
+    listens {
+      WaitlistDashboard.JOIN -> JOIN
+      JOIN { id : string, row : WaitlistRow }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait WaitlistPersistor -> WaitlistRow [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_JOIN -> idle
+        (persist create WaitlistRow @payload.data { emit: { success: "WAITLIST_JOINED" } })
+    }
+    emits {
+      WAITLIST_JOINED -> external { id : string }
+    }
+    listens {
+      DO_JOIN { data : object! }
+      WaitlistJoinModal.SAVE -> DO_JOIN
+    }
+  }
+
+  page "/waitlist" as WaitlistPage -> WaitlistAppLayout, WaitlistDashboard, WaitlistManageView, WaitlistBrowseList, WaitlistJoinModal, WaitlistPersistor
+}

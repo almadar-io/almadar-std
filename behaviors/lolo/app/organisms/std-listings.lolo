@@ -1,0 +1,389 @@
+app std-listings "1.0.0"
+"Listings: real-estate / jobs / classifieds. Post, browse with map + filters, save searches, and inquire via flat threads."
+
+orbital ListingOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses GeoSearch    from "std/behaviors/std-geosearch"
+  uses SavedSearch  from "std/behaviors/std-saved-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Images       from "std/behaviors/std-image-upload-multi"
+  uses Tags         from "std/behaviors/std-tag-taxonomy"
+  uses Thread       from "std/behaviors/std-thread"
+
+  entity Listing [persistent: listings] {
+    id          : string!
+    title       : string!
+    description : string  = ""
+    price       : number!
+    location    : string  = ""
+    lat         : number  = 0
+    lng         : number  = 0
+    images      : [string] = []
+    tags        : [string] = []
+    status      : "active" | "sold" | "expired" = "active"
+    createdAt   : string  = ""
+    pendingId   : string  = ""
+  }
+
+  trait ListingAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ListingCatalog",
+      appName: "Listings",
+      navItems: [{ label: "Browse", href: "/listings", icon: "list" }, { label: "Saved", href: "/saved", icon: "bookmark" }, { label: "Inquiries", href: "/inquiries", icon: "message-circle" }],
+      searchEvent: "LISTING_SEARCH",
+      notifications: [],
+      notificationClickEvent: "LISTING_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: LISTING_SEARCH
+      NOTIFY_CLICK: LISTING_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait. Owns the header (icon + Listings + New Listing button)
+  ;; + geo + filter + saved-search + tag tree + stats + browse list.
+  trait ListingCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "list" },
+              { type: "typography", content: "Listings", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Save Search", action: "SAVE_SEARCH", variant: "secondary", icon: "bookmark" },
+              { type: "button", label: "New Listing", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          "@trait.ListingGeoSearch",
+          { type: "stack", direction: "horizontal", gap: "md", align: "start", children: [
+            "@trait.ListingFilter",
+            "@trait.ListingTags"
+          ]},
+          "@trait.ListingStats",
+          { type: "divider" },
+          "@trait.ListingBrowse"
+        ]})
+      LISTING_SEARCH -> composing
+      LISTING_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to listings", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE       -> external { source : string }
+      SAVE_SEARCH  -> external { source : string }
+    }
+    listens {
+      ListingAppLayout.LISTING_SEARCH             -> LISTING_SEARCH
+      ListingAppLayout.LISTING_NOTIFICATIONS_OPEN -> LISTING_NOTIFICATIONS_OPEN
+      LISTING_SEARCH { value : string }
+      LISTING_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait ListingGeoSearch = GeoSearch.traits.GeoSearchResultSearch {
+    config: {
+      placeholder: "Search nearby listings…",
+      defaultRadiusKm: 25,
+      event: "LISTING_GEO_SEARCH"
+    }
+  }
+
+  trait ListingFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["active", "sold", "expired"] },
+        { field: "location", label: "Location", filterType: "text" }
+      ],
+      event: "LISTING_FILTER"
+    }
+  }
+
+  trait ListingTags = Tags.traits.TagBrowse {
+    config: {
+      title: "Categories",
+      allowEdit: false
+    }
+  }
+
+  trait ListingSavedSearch = SavedSearch.traits.SavedSearchManage {
+    config: {
+      title: "Saved Listing Searches"
+    }
+  }
+
+  trait ListingImages = Images.traits.UploadedImageUpload {
+    config: {
+      title: "Listing Photos",
+      maxImages: 10,
+      maxBytesPerImage: 10485760,
+      accept: "image/*"
+    }
+  }
+
+  trait ListingStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Listings",
+      metrics: [
+        { aggregation: "count", label: "Total",    icon: "list",         variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active",   icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "Sold",     icon: "tag",          variant: "info",    format: "number", filter: ["fn", "row", ["=", "@row.status", "sold"]] },
+        { aggregation: "avg",   label: "Avg Price", icon: "trending-up", variant: "warning", format: "number", field: "price" }
+      ]
+    }
+    listens {
+      ListingBrowse.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait ListingBrowse = Browse.traits.BrowseItemBrowse -> Listing {
+    config: {
+      fields: [
+        { name: "title",       variant: "h3",      icon: "list" },
+        { name: "price",       variant: "badge" },
+        { name: "status",      variant: "badge" },
+        { name: "location",    variant: "caption" },
+        { name: "description", variant: "caption" }
+      ],
+      itemActions: [
+        { label: "View",    event: "VIEW",    variant: "ghost" },
+        { label: "Edit",    event: "EDIT",    variant: "ghost" },
+        { label: "Inquire", event: "INQUIRE", variant: "secondary" },
+        { label: "Delete",  event: "DELETE",  variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      ListingGeoSearch.GEO_SEARCH         -> REFETCH_QUERY
+      ListingFilter.FILTER                -> REFETCH_FILTER
+      ListingPersistor.LISTING_CREATED    -> INIT
+      ListingPersistor.LISTING_UPDATED    -> INIT
+      ListingPersistor.LISTING_DELETED    -> INIT
+    }
+  }
+
+  trait ListingCreate = Modal.traits.ModalRecordModal -> Listing {
+    config: {
+      icon: "plus-circle",
+      title: "New Listing",
+      mode: "create",
+      fields: ["title", "description", "price", "location", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      ListingCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Listing }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ListingEdit = Modal.traits.ModalRecordModal -> Listing {
+    config: {
+      icon: "edit",
+      title: "Edit Listing",
+      mode: "edit",
+      fields: ["title", "description", "price", "location", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      ListingBrowse.EDIT -> EDIT
+      EDIT { id : string, row : Listing }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ListingView = Modal.traits.ModalRecordModal -> Listing {
+    config: {
+      icon: "eye",
+      title: "View Listing",
+      mode: "edit",
+      fields: ["title", "description", "price", "location", "status"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      ListingBrowse.VIEW -> VIEW
+      VIEW { id : string, row : Listing }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ListingDelete = Confirmation.traits.ConfirmActionConfirmation -> Listing {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Listing",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      ListingBrowse.DELETE -> DELETE
+      DELETE { id : string, row : Listing }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait ListingInquiryThread = Thread.traits.ThreadPostBrowse {
+    config: {
+      flat: true,
+      threadRootId: ""
+    }
+  }
+
+  ;; Coordinator: persists listing CRUD triggered by Modal/Confirm trait emits.
+  trait ListingPersistor -> Listing [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Listing @payload.data { emit: { success: "LISTING_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Listing @payload.data { emit: { success: "LISTING_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Listing @payload.id { emit: { success: "LISTING_DELETED" } })
+    }
+    emits {
+      LISTING_CREATED -> external { id : string }
+      LISTING_UPDATED -> external { id : string }
+      LISTING_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      ListingCreate.SAVE           -> DO_CREATE
+      ListingEdit.SAVE             -> DO_UPDATE
+      ListingDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/listings" as ListingsPage -> ListingAppLayout, ListingCatalog, ListingGeoSearch, ListingFilter, ListingTags, ListingSavedSearch, ListingImages, ListingStats, ListingBrowse, ListingCreate, ListingEdit, ListingView, ListingDelete, ListingInquiryThread, ListingPersistor
+}
+
+orbital InquiryOrbital {
+  uses Modal from "std/behaviors/std-modal"
+
+  entity Inquiry [persistent: inquiries] {
+    id         : string!
+    listingId  : string!
+    fromUserId : string!
+    toUserId   : string!
+    subject    : string = ""
+    message    : string = ""
+    status     : "open" | "replied" | "closed" = "open"
+    createdAt  : string = ""
+    pendingId  : string = ""
+  }
+
+  type InquiryLoaded     = Event { data : [Inquiry] }                   "Fired when the inquiry collection finishes loading"
+  type InquiryLoadFailed = Event { error : string, code : string }      "Fired when the inquiry collection fails to load"
+
+  trait InquiryBrowse -> Inquiry [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Inquiry { emit: { success: "InquiryLoaded", failure: "InquiryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading inquiries…" }] })
+      InquiryLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "message-circle" },
+              { type: "typography", content: "Inquiries", variant: "h2" }
+            ]},
+            { type: "button", label: "New Inquiry", action: "CREATE", variant: "primary", icon: "edit" }
+          ]},
+          { type: "divider" },
+          { type: "data-list", entity: @payload.data, fields: [
+            { name: "subject",   variant: "h4",      icon: "message-circle" },
+            { name: "message",   variant: "body" },
+            { name: "status",    variant: "badge" },
+            { name: "createdAt", variant: "caption", format: "date" }
+          ], itemActions: [
+            { label: "Open", event: "VIEW", variant: "ghost" }
+          ], variant: "card", gap: "sm" },
+        ]})
+      InquiryLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load inquiries" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state browsing {
+      INIT -> loading
+        (fetch Inquiry { emit: { success: "InquiryLoaded", failure: "InquiryLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Inquiry { emit: { success: "InquiryLoaded", failure: "InquiryLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    emits {
+      CREATE -> external { source : string }
+      VIEW   -> external { id : string!, row : Inquiry }
+      InquiryLoaded
+      InquiryLoadFailed
+    }
+    listens {
+      InquiryPersistor.INQUIRY_CREATED -> INIT
+      InquiryLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InquiryCreate = Modal.traits.ModalRecordModal -> Inquiry {
+    config: {
+      icon: "plus-circle",
+      title: "New Inquiry",
+      mode: "create",
+      fields: ["listingId", "subject", "message", "fromUserId", "toUserId"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      InquiryBrowse.CREATE -> CREATE
+      CREATE { id : string, row : Inquiry }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InquiryPersistor -> Inquiry [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Inquiry @payload.data { emit: { success: "INQUIRY_CREATED" } })
+    }
+    emits {
+      INQUIRY_CREATED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      InquiryCreate.SAVE -> DO_CREATE
+    }
+  }
+
+  page "/inquiries" as InquiriesPage -> InquiryBrowse, InquiryCreate, InquiryPersistor
+}

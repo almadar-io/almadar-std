@@ -1,0 +1,2178 @@
+{
+  "name": "std-event-ticketing",
+  "version": "1.0.0",
+  "description": "Event ticketing: organizers create events with VIP / general / early-bird tiers, attendees buy tickets, gate staff scan QR at door, waitlist auto-promotes when tickets free up. Pick for Eventbrite-style apps.",
+  "orbitals": [
+    {
+      "name": "EventOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-event",
+          "as": "Event"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-calendar",
+          "as": "Calendar"
+        }
+      ],
+      "entity": {
+        "name": "EventRow",
+        "collection": "events",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "venue",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "startsAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "endsAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "capacity",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "published",
+              "sold-out",
+              "cancelled"
+            ]
+          },
+          {
+            "name": "organizerId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "EventAppLayout",
+          "config": {
+            "notifications": [],
+            "navItems": [
+              {
+                "icon": "calendar",
+                "label": "Events",
+                "href": "/events"
+              },
+              {
+                "href": "/tickets",
+                "label": "Tickets",
+                "icon": "ticket"
+              },
+              {
+                "label": "Check-in",
+                "icon": "qr-code",
+                "href": "/checkin"
+              },
+              {
+                "icon": "users",
+                "label": "Waitlist",
+                "href": "/waitlist"
+              }
+            ],
+            "contentTrait": "@trait.EventCatalog",
+            "appName": "EventTicketing",
+            "searchEvent": "EVENT_SEARCH",
+            "notificationClickEvent": "EVENT_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "NOTIFY_CLICK": "EVENT_NOTIFICATIONS_OPEN",
+            "SEARCH": "EVENT_SEARCH"
+          }
+        },
+        {
+          "name": "EventCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "EVENT_SEARCH",
+              "triggers": "EVENT_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "EventAppLayout"
+              }
+            },
+            {
+              "event": "EVENT_NOTIFICATIONS_OPEN",
+              "triggers": "EVENT_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "EventAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EVENT_SEARCH",
+                "name": "Event Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EVENT_NOTIFICATIONS_OPEN",
+                "name": "Event Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "calendar"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Events",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "label": "New Event",
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "action": "CREATE",
+                                  "variant": "primary"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.EventSearch",
+                            "@trait.EventFilter"
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center"
+                        },
+                        "@trait.EventStats",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.EventCalendarView",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.EventBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Advanced Event Admin",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        "@trait.EventAdvancedAdmin"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "EVENT_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "EVENT_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "No notifications",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "ghost",
+                          "type": "button",
+                          "action": "INIT",
+                          "label": "Back to events"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "EventSearch",
+          "config": {
+            "placeholder": "Search events…",
+            "event": "EVENT_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "EventFilter",
+          "config": {
+            "filters": [
+              {
+                "filterType": "select",
+                "options": [
+                  "draft",
+                  "published",
+                  "sold-out",
+                  "cancelled"
+                ],
+                "field": "status",
+                "label": "Status"
+              },
+              {
+                "filterType": "text",
+                "field": "venue",
+                "label": "Venue"
+              }
+            ],
+            "event": "EVENT_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "EventStats",
+          "config": {
+            "title": "Events",
+            "metrics": [
+              {
+                "label": "Total",
+                "variant": "primary",
+                "format": "number",
+                "aggregation": "count",
+                "icon": "calendar"
+              },
+              {
+                "icon": "send",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "published"
+                  ]
+                ],
+                "variant": "success",
+                "label": "Published"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "sold-out"
+                  ]
+                ],
+                "icon": "check-circle",
+                "aggregation": "count",
+                "label": "Sold Out",
+                "variant": "warning",
+                "format": "number"
+              },
+              {
+                "variant": "info",
+                "format": "number",
+                "field": "capacity",
+                "aggregation": "sum",
+                "label": "Capacity",
+                "icon": "users"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "EventBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "EventBrowseList",
+          "linkedEntity": "EventRow",
+          "config": {
+            "cols": 1.0,
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "calendar",
+                "name": "name"
+              },
+              {
+                "name": "venue",
+                "variant": "body"
+              },
+              {
+                "name": "startsAt",
+                "variant": "caption",
+                "format": "date"
+              },
+              {
+                "format": "date",
+                "variant": "caption",
+                "name": "endsAt"
+              },
+              {
+                "name": "capacity",
+                "format": "number",
+                "variant": "body"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "variant": "danger",
+                "event": "DELETE"
+              }
+            ],
+            "gap": "sm"
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "EventSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "EventFilter"
+              }
+            },
+            {
+              "event": "EVENT_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            },
+            {
+              "event": "EVENT_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            },
+            {
+              "event": "EVENT_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Calendar.traits.CalendarEventCalendar",
+          "name": "EventCalendarView",
+          "linkedEntity": "EventRow",
+          "config": {
+            "title": "Event Calendar"
+          },
+          "listens": [
+            {
+              "event": "EVENT_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            },
+            {
+              "event": "EVENT_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            },
+            {
+              "event": "EVENT_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Event.traits.EventManage",
+          "name": "EventAdvancedAdmin",
+          "linkedEntity": "EventRow",
+          "config": {
+            "title": "Lifecycle Admin"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EventCreate",
+          "linkedEntity": "EventRow",
+          "config": {
+            "mode": "create",
+            "fields": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ],
+            "icon": "plus-circle",
+            "title": "New Event"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EventCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EventEdit",
+          "linkedEntity": "EventRow",
+          "config": {
+            "icon": "edit",
+            "title": "Edit Event",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EventBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EventView",
+          "linkedEntity": "EventRow",
+          "config": {
+            "mode": "edit",
+            "fields": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ],
+            "icon": "eye",
+            "title": "View Event"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "EventBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "EventDelete",
+          "linkedEntity": "EventRow",
+          "config": {
+            "title": "Delete Event",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "EventBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "EventPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "EventRow",
+          "emits": [
+            {
+              "event": "EVENT_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EVENT_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EVENT_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EventCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EventEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "EventDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EVENT_CREATED",
+                "name": "Event Created"
+              },
+              {
+                "key": "EVENT_UPDATED",
+                "name": "Event Updated"
+              },
+              {
+                "key": "EVENT_DELETED",
+                "name": "Event Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "EventRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "EVENT_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "EventRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "EVENT_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "EventRow",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "EVENT_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EventsPage",
+          "path": "/events",
+          "traits": [
+            {
+              "ref": "EventAppLayout"
+            },
+            {
+              "ref": "EventCatalog"
+            },
+            {
+              "ref": "EventSearch"
+            },
+            {
+              "ref": "EventFilter"
+            },
+            {
+              "ref": "EventStats"
+            },
+            {
+              "ref": "EventBrowseList"
+            },
+            {
+              "ref": "EventCalendarView"
+            },
+            {
+              "ref": "EventAdvancedAdmin"
+            },
+            {
+              "ref": "EventCreate"
+            },
+            {
+              "ref": "EventEdit"
+            },
+            {
+              "ref": "EventView"
+            },
+            {
+              "ref": "EventDelete"
+            },
+            {
+              "ref": "EventPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TicketOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-ticket-tier",
+          "as": "TierAtom"
+        },
+        {
+          "from": "std/behaviors/std-cart",
+          "as": "Cart"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "Ticket",
+        "collection": "tickets",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "eventId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "tierId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "holderName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "holderEmail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "qrCode",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "paid",
+              "scanned",
+              "refunded",
+              "cancelled"
+            ]
+          },
+          {
+            "name": "purchasedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "TicketAppLayout",
+          "linkedEntity": "Ticket",
+          "config": {
+            "notifications": [],
+            "contentTrait": "@trait.TicketShop",
+            "appName": "EventTicketing",
+            "searchEvent": "TICKET_SEARCH",
+            "navItems": [
+              {
+                "href": "/events",
+                "icon": "calendar",
+                "label": "Events"
+              },
+              {
+                "icon": "ticket",
+                "label": "Tickets",
+                "href": "/tickets"
+              },
+              {
+                "href": "/checkin",
+                "icon": "qr-code",
+                "label": "Check-in"
+              },
+              {
+                "label": "Waitlist",
+                "href": "/waitlist",
+                "icon": "users"
+              }
+            ],
+            "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "TICKET_SEARCH",
+            "NOTIFY_CLICK": "TICKET_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "TicketShop",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "ISSUE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "TICKET_SEARCH",
+              "triggers": "TICKET_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketAppLayout"
+              }
+            },
+            {
+              "event": "TICKET_NOTIFICATIONS_OPEN",
+              "triggers": "TICKET_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TICKET_SEARCH",
+                "name": "Ticket Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TICKET_NOTIFICATIONS_OPEN",
+                "name": "Ticket Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ISSUE",
+                "name": "Issue"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "ticket"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Tickets"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "action": "ISSUE",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "label": "Issue Ticket",
+                                  "type": "button"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Available Tiers"
+                        },
+                        "@trait.TicketTierShop",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Your Cart",
+                          "variant": "h3"
+                        },
+                        "@trait.TicketCart",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Tickets Issued",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.TicketBrowseList"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "TICKET_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "TICKET_NOTIFICATIONS_OPEN"
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "TierAtom.traits.TicketTierManage",
+          "name": "TicketTierShop",
+          "config": {
+            "title": "Choose Your Tier"
+          }
+        },
+        {
+          "ref": "Cart.traits.CartItemCartBrowse",
+          "name": "TicketCart"
+        },
+        {
+          "ref": "Cart.traits.CartItemAddItem",
+          "name": "TicketCartAddItem"
+        },
+        {
+          "ref": "Cart.traits.CartItemRemoveConfirm",
+          "name": "TicketCartRemoveItem"
+        },
+        {
+          "ref": "Cart.traits.CartItemPersistor",
+          "name": "TicketCartPersistor"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TicketBrowseList",
+          "linkedEntity": "Ticket",
+          "config": {
+            "cols": 1.0,
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h4",
+                "icon": "ticket",
+                "name": "holderName"
+              },
+              {
+                "name": "holderEmail",
+                "variant": "caption"
+              },
+              {
+                "variant": "badge",
+                "name": "tierId"
+              },
+              {
+                "variant": "body",
+                "name": "qrCode"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "caption",
+                "name": "purchasedAt",
+                "format": "date"
+              }
+            ],
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "TICKET_ISSUED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TicketIssueModal",
+          "linkedEntity": "Ticket",
+          "config": {
+            "icon": "plus-circle",
+            "title": "Issue Ticket",
+            "mode": "create",
+            "fields": [
+              "eventId",
+              "tierId",
+              "holderName",
+              "holderEmail",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "ISSUE"
+          },
+          "listens": [
+            {
+              "event": "ISSUE",
+              "triggers": "ISSUE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketShop"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TicketPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Ticket",
+          "emits": [
+            {
+              "event": "TICKET_ISSUED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_ISSUE",
+              "source": {
+                "kind": "trait",
+                "trait": "TicketIssueModal"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_ISSUE",
+                "name": "Do Issue",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TICKET_ISSUED",
+                "name": "Ticket Issued"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_ISSUE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Ticket",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "TICKET_ISSUED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TicketsPage",
+          "path": "/tickets",
+          "traits": [
+            {
+              "ref": "TicketAppLayout"
+            },
+            {
+              "ref": "TicketShop"
+            },
+            {
+              "ref": "TicketTierShop"
+            },
+            {
+              "ref": "TicketCart"
+            },
+            {
+              "ref": "TicketCartAddItem"
+            },
+            {
+              "ref": "TicketCartRemoveItem"
+            },
+            {
+              "ref": "TicketCartPersistor"
+            },
+            {
+              "ref": "TicketBrowseList"
+            },
+            {
+              "ref": "TicketIssueModal"
+            },
+            {
+              "ref": "TicketPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CheckinOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-checkin",
+          "as": "CheckinAtom"
+        },
+        {
+          "from": "std/behaviors/std-list",
+          "as": "ListMol"
+        }
+      ],
+      "entity": {
+        "name": "Attendee",
+        "collection": "attendees",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "CheckinAppLayout",
+          "linkedEntity": "Attendee",
+          "config": {
+            "notifications": [],
+            "notificationClickEvent": "CHECKIN_NOTIFICATIONS_OPEN",
+            "appName": "EventTicketing",
+            "navItems": [
+              {
+                "href": "/events",
+                "icon": "calendar",
+                "label": "Events"
+              },
+              {
+                "label": "Tickets",
+                "icon": "ticket",
+                "href": "/tickets"
+              },
+              {
+                "icon": "qr-code",
+                "label": "Check-in",
+                "href": "/checkin"
+              },
+              {
+                "href": "/waitlist",
+                "label": "Waitlist",
+                "icon": "users"
+              }
+            ],
+            "contentTrait": "@trait.CheckinDashboard",
+            "searchEvent": "CHECKIN_SEARCH"
+          },
+          "events": {
+            "SEARCH": "CHECKIN_SEARCH",
+            "NOTIFY_CLICK": "CHECKIN_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "CheckinDashboard",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "CHECKIN_SEARCH",
+              "triggers": "CHECKIN_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "CheckinAppLayout"
+              }
+            },
+            {
+              "event": "CHECKIN_NOTIFICATIONS_OPEN",
+              "triggers": "CHECKIN_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "CheckinAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHECKIN_SEARCH",
+                "name": "Checkin Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CHECKIN_NOTIFICATIONS_OPEN",
+                "name": "Checkin Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "qr-code"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Door Check-in"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.GateScanner",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Attendees"
+                        },
+                        "@trait.AttendeeListing"
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "CHECKIN_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "CHECKIN_NOTIFICATIONS_OPEN"
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "CheckinAtom.traits.CheckinScan",
+          "name": "GateScanner",
+          "config": {
+            "mode": "qr",
+            "title": "Scan Ticket QR"
+          }
+        },
+        {
+          "ref": "ListMol.traits.ListItemBrowse",
+          "name": "AttendeeListing",
+          "linkedEntity": "Attendee"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CheckinPage",
+          "path": "/checkin",
+          "traits": [
+            {
+              "ref": "CheckinAppLayout"
+            },
+            {
+              "ref": "CheckinDashboard"
+            },
+            {
+              "ref": "GateScanner"
+            },
+            {
+              "ref": "AttendeeListing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WaitlistOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-waitlist",
+          "as": "WaitlistAtom"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "WaitlistRow",
+        "collection": "waitlistrows",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "userId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "waiting",
+            "values": [
+              "waiting",
+              "promoted",
+              "cancelled",
+              "expired"
+            ]
+          },
+          {
+            "name": "joinedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "WaitlistAppLayout",
+          "linkedEntity": "WaitlistRow",
+          "config": {
+            "searchEvent": "WAITLIST_SEARCH",
+            "appName": "EventTicketing",
+            "contentTrait": "@trait.WaitlistDashboard",
+            "notificationClickEvent": "WAITLIST_NOTIFICATIONS_OPEN",
+            "navItems": [
+              {
+                "href": "/events",
+                "label": "Events",
+                "icon": "calendar"
+              },
+              {
+                "href": "/tickets",
+                "icon": "ticket",
+                "label": "Tickets"
+              },
+              {
+                "label": "Check-in",
+                "icon": "qr-code",
+                "href": "/checkin"
+              },
+              {
+                "icon": "users",
+                "label": "Waitlist",
+                "href": "/waitlist"
+              }
+            ],
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "WAITLIST_SEARCH",
+            "NOTIFY_CLICK": "WAITLIST_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "WaitlistDashboard",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "JOIN",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "WAITLIST_SEARCH",
+              "triggers": "WAITLIST_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "WaitlistAppLayout"
+              }
+            },
+            {
+              "event": "WAITLIST_NOTIFICATIONS_OPEN",
+              "triggers": "WAITLIST_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "WaitlistAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WAITLIST_SEARCH",
+                "name": "Waitlist Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WAITLIST_NOTIFICATIONS_OPEN",
+                "name": "Waitlist Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "JOIN",
+                "name": "Join"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "users"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Waitlist",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "Join Waitlist",
+                                  "action": "JOIN",
+                                  "icon": "user-plus"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.WaitlistManageView",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "All Entries",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        "@trait.WaitlistBrowseList"
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "WAITLIST_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "WAITLIST_NOTIFICATIONS_OPEN"
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "WaitlistAtom.traits.WaitlistManage",
+          "name": "WaitlistManageView",
+          "config": {
+            "title": "Queue"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "WaitlistBrowseList",
+          "linkedEntity": "WaitlistRow",
+          "config": {
+            "itemActions": [],
+            "gap": "sm",
+            "fields": [
+              {
+                "name": "position",
+                "variant": "badge"
+              },
+              {
+                "name": "userId",
+                "variant": "h4"
+              },
+              {
+                "variant": "caption",
+                "name": "targetId"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "format": "date",
+                "name": "joinedAt",
+                "variant": "caption"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "WaitlistJoinModal"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "WaitlistJoinModal",
+          "linkedEntity": "WaitlistRow",
+          "config": {
+            "title": "Join Waitlist",
+            "mode": "create",
+            "icon": "user-plus",
+            "fields": [
+              "targetId",
+              "userId",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "JOIN"
+          },
+          "listens": [
+            {
+              "event": "JOIN",
+              "triggers": "JOIN",
+              "source": {
+                "kind": "trait",
+                "trait": "WaitlistDashboard"
+              }
+            }
+          ]
+        },
+        {
+          "name": "WaitlistPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "WaitlistRow",
+          "emits": [
+            {
+              "event": "WAITLIST_JOINED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_JOIN",
+              "source": {
+                "kind": "trait",
+                "trait": "WaitlistJoinModal"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_JOIN",
+                "name": "Do Join",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "WAITLIST_JOINED",
+                "name": "Waitlist Joined"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_JOIN",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "WaitlistRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "WAITLIST_JOINED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WaitlistPage",
+          "path": "/waitlist",
+          "traits": [
+            {
+              "ref": "WaitlistAppLayout"
+            },
+            {
+              "ref": "WaitlistDashboard"
+            },
+            {
+              "ref": "WaitlistManageView"
+            },
+            {
+              "ref": "WaitlistBrowseList"
+            },
+            {
+              "ref": "WaitlistJoinModal"
+            },
+            {
+              "ref": "WaitlistPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

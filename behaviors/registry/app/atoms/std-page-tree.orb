@@ -1,0 +1,929 @@
+{
+  "name": "std-page-tree",
+  "version": "1.0.0",
+  "description": "std-page-tree — hierarchical wiki navigation with parent/child PageNode rows. PageNodeBrowse loads pages on INIT, renders a reorderable data-list with Open / Delete actions plus an Add Page button, and persists select / reorder / add / delete via SELECT_PAGE / REORDER / ADD_PAGE / DELETE_PAGE events.",
+  "orbitals": [
+    {
+      "name": "PageTreeOrbital",
+      "entity": {
+        "name": "PageNode",
+        "collection": "pagenodes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "parentId",
+            "type": "string"
+          },
+          {
+            "name": "slug",
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "documentId",
+            "type": "string"
+          },
+          {
+            "name": "iconName",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PageNodeBrowse",
+          "category": "interaction",
+          "linkedEntity": "PageNode",
+          "emits": [
+            {
+              "event": "SELECT_PAGE",
+              "payloadSchema": [
+                {
+                  "name": "pageId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.iconName",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REORDER",
+              "payloadSchema": [
+                {
+                  "name": "pageId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.iconName",
+                  "type": "string"
+                },
+                {
+                  "name": "newOrder",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "newParentId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ADD_PAGE",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DELETE_PAGE",
+              "payloadSchema": [
+                {
+                  "name": "pageId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.iconName",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PageNodeLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[PageNode]"
+                }
+              ]
+            },
+            {
+              "event": "PageNodeLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PageSelected",
+              "payloadSchema": [
+                {
+                  "name": "pageId",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "PageNodeUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.iconName",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PageNodeAdded",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.iconName",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PageNodeDeleted",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "editing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PageNodeLoaded",
+                "name": "PageNode loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[PageNode]"
+                  }
+                ]
+              },
+              {
+                "key": "PageNodeLoadFailed",
+                "name": "PageNode load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SELECT_PAGE",
+                "name": "Select Page",
+                "payloadSchema": [
+                  {
+                    "name": "pageId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "PageNode"
+                  }
+                ]
+              },
+              {
+                "key": "ADD_PAGE",
+                "name": "Add Page",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REORDER",
+                "name": "Reorder",
+                "payloadSchema": [
+                  {
+                    "name": "pageId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "PageNode"
+                  },
+                  {
+                    "name": "newOrder",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "newParentId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DELETE_PAGE",
+                "name": "Delete Page",
+                "payloadSchema": [
+                  {
+                    "name": "pageId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "PageNode"
+                  }
+                ]
+              },
+              {
+                "key": "PageSelected",
+                "name": "Page selected",
+                "payloadSchema": [
+                  {
+                    "name": "pageId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PageNodeAdded",
+                "name": "PageNode added",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "PageNode"
+                  }
+                ]
+              },
+              {
+                "key": "PageNodeUpdated",
+                "name": "PageNode updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "PageNode"
+                  }
+                ]
+              },
+              {
+                "key": "PageNodeDeleted",
+                "name": "PageNode deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading pages…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "PageNodeLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-tree"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@config.title",
+                                  "variant": "h3"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "icon": "plus",
+                              "action": "ADD_PAGE",
+                              "label": "Add Page",
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "icon": "chevron-right",
+                              "event": "SELECT_PAGE",
+                              "variant": "ghost",
+                              "label": "Open"
+                            },
+                            {
+                              "event": "DELETE_PAGE",
+                              "variant": "destructive",
+                              "label": "Delete",
+                              "icon": "trash"
+                            }
+                          ],
+                          "reorderEvent": "REORDER",
+                          "type": "data-list",
+                          "fields": [
+                            {
+                              "label": "Title",
+                              "name": "title",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Slug",
+                              "variant": "caption",
+                              "name": "slug"
+                            },
+                            {
+                              "name": "parentId",
+                              "label": "Parent",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Order",
+                              "variant": "badge",
+                              "name": "order"
+                            }
+                          ],
+                          "gap": "sm",
+                          "reorderable": true
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "PageNodeLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "SELECT_PAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.pageId"
+                  ],
+                  [
+                    "emit",
+                    "PageSelected",
+                    {
+                      "pageId": "@payload.pageId"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "ADD_PAGE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "PageNode",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PageNodeAdded",
+                        "failure": "PageNodeLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "REORDER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.pageId"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@payload.row.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.slug",
+                    "@payload.row.slug"
+                  ],
+                  [
+                    "set",
+                    "@entity.documentId",
+                    "@payload.row.documentId"
+                  ],
+                  [
+                    "set",
+                    "@entity.iconName",
+                    "@payload.row.iconName"
+                  ],
+                  [
+                    "set",
+                    "@entity.order",
+                    "@payload.newOrder"
+                  ],
+                  [
+                    "set",
+                    "@entity.parentId",
+                    "@payload.newParentId"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "PageNode",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "PageNodeUpdated",
+                        "failure": "PageNodeLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "editing",
+                "event": "DELETE_PAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.pageId"
+                  ],
+                  [
+                    "persist",
+                    "delete",
+                    "PageNode",
+                    "@entity.id",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeDeleted"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PageSelected",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.pageId"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PageNodeAdded",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PageNodeUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PageNodeDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "error",
+                "event": "PageNodeLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "browsing",
+                "event": "PageSelected",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.pageId"
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "PageNodeAdded",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "PageNodeUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "PageNodeDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "error",
+                "event": "PageNodeLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "PageNode",
+                    {
+                      "emit": {
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Pages"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PageNodeBrowsePage",
+          "path": "/pages/browse",
+          "traits": [
+            {
+              "ref": "PageNodeBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

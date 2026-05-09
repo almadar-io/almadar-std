@@ -1,0 +1,2005 @@
+{
+  "name": "std-subscription-billing",
+  "version": "1.0.0",
+  "description": "Subscription billing: plans browser with stats + graphs, embedded recurring-charge + trial managers, modal/confirm CRUD over plans, invoices browser, dunning queue.",
+  "orbitals": [
+    {
+      "name": "SubscriptionOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-recurring-charge",
+          "as": "Recurring"
+        },
+        {
+          "from": "std/behaviors/std-trial",
+          "as": "Trial"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        }
+      ],
+      "entity": {
+        "name": "Plan",
+        "collection": "plans",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "interval",
+            "type": "string",
+            "default": "monthly",
+            "values": [
+              "monthly",
+              "yearly"
+            ]
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "currency",
+            "type": "string",
+            "default": "USD"
+          },
+          {
+            "name": "trialDays",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "archived"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "PlanAppLayout",
+          "config": {
+            "searchEvent": "PLAN_SEARCH",
+            "navItems": [
+              {
+                "label": "Plans",
+                "href": "/plans",
+                "icon": "credit-card"
+              },
+              {
+                "label": "Invoices",
+                "href": "/invoices",
+                "icon": "receipt"
+              },
+              {
+                "icon": "alert-triangle",
+                "label": "Dunning",
+                "href": "/dunning"
+              }
+            ],
+            "appName": "Subscription Billing",
+            "notifications": [],
+            "notificationClickEvent": "PLAN_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.PlanCatalog"
+          },
+          "events": {
+            "SEARCH": "PLAN_SEARCH",
+            "NOTIFY_CLICK": "PLAN_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "PlanCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "PLAN_SEARCH",
+              "triggers": "PLAN_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanAppLayout"
+              }
+            },
+            {
+              "event": "PLAN_NOTIFICATIONS_OPEN",
+              "triggers": "PLAN_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAN_SEARCH",
+                "name": "Plan Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PLAN_NOTIFICATIONS_OPEN",
+                "name": "Plan Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "credit-card"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Plans",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "New Plan",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "action": "CREATE"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.PlanSearch",
+                            "@trait.PlanFilter"
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        "@trait.PlanStats",
+                        "@trait.PlanGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.PlanBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Active Subscriptions"
+                        },
+                        "@trait.PlanSubscriptionManage",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Trials"
+                        },
+                        "@trait.PlanTrialManage"
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PLAN_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PLAN_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-8",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "You're all caught up.",
+                          "color": "muted"
+                        },
+                        {
+                          "type": "button",
+                          "action": "INIT",
+                          "variant": "ghost",
+                          "label": "Back to plans"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "PlanSearch",
+          "config": {
+            "event": "PLAN_SEARCH",
+            "placeholder": "Search plans…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "PlanFilter",
+          "config": {
+            "event": "PLAN_FILTER",
+            "filters": [
+              {
+                "filterType": "select",
+                "field": "interval",
+                "label": "Interval",
+                "options": [
+                  "monthly",
+                  "yearly"
+                ]
+              },
+              {
+                "label": "Status",
+                "options": [
+                  "active",
+                  "archived"
+                ],
+                "field": "status",
+                "filterType": "select"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "PlanStats",
+          "config": {
+            "metrics": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "label": "Total",
+                "icon": "credit-card",
+                "variant": "primary"
+              },
+              {
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active",
+                "aggregation": "count",
+                "variant": "success",
+                "format": "number"
+              },
+              {
+                "variant": "warning",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "archived"
+                  ]
+                ],
+                "label": "Archived",
+                "icon": "archive"
+              }
+            ],
+            "title": "Plans"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "PlanGraphs",
+          "config": {
+            "categoryField": "interval",
+            "title": "Plans by Interval",
+            "height": 240.0,
+            "subtitle": "Monthly vs yearly distribution",
+            "chartType": "bar",
+            "aggregation": "count",
+            "showLegend": false
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "PlanBrowseList",
+          "linkedEntity": "Plan",
+          "config": {
+            "fields": [
+              {
+                "name": "name",
+                "icon": "credit-card",
+                "variant": "h3"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              },
+              {
+                "name": "interval",
+                "variant": "badge"
+              },
+              {
+                "variant": "body",
+                "name": "amount"
+              },
+              {
+                "name": "currency",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ],
+            "gap": "sm",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanFilter"
+              }
+            },
+            {
+              "event": "PLAN_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanPersistor"
+              }
+            },
+            {
+              "event": "PLAN_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanPersistor"
+              }
+            },
+            {
+              "event": "PLAN_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PlanCreate",
+          "linkedEntity": "Plan",
+          "config": {
+            "mode": "create",
+            "title": "New Plan",
+            "fields": [
+              "name",
+              "description",
+              "interval",
+              "amount",
+              "currency",
+              "trialDays",
+              "status"
+            ],
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PlanEdit",
+          "linkedEntity": "Plan",
+          "config": {
+            "icon": "edit",
+            "title": "Edit Plan",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "description",
+              "interval",
+              "amount",
+              "currency",
+              "trialDays",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PlanView",
+          "linkedEntity": "Plan",
+          "config": {
+            "mode": "edit",
+            "title": "View Plan",
+            "fields": [
+              "name",
+              "description",
+              "interval",
+              "amount",
+              "currency",
+              "trialDays",
+              "status"
+            ],
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "PlanDelete",
+          "linkedEntity": "Plan",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Plan",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Recurring.traits.SubscriptionManage",
+          "name": "PlanSubscriptionManage",
+          "config": {
+            "title": "Active Subscriptions",
+            "maxRetries": 4.0
+          }
+        },
+        {
+          "ref": "Trial.traits.TrialManage",
+          "name": "PlanTrialManage",
+          "config": {
+            "title": "Trials"
+          }
+        },
+        {
+          "name": "PlanPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Plan",
+          "emits": [
+            {
+              "event": "PLAN_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PLAN_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PLAN_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PlanDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PLAN_CREATED",
+                "name": "Plan Created"
+              },
+              {
+                "key": "PLAN_UPDATED",
+                "name": "Plan Updated"
+              },
+              {
+                "key": "PLAN_DELETED",
+                "name": "Plan Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Plan",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PLAN_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Plan",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PLAN_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Plan",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "PLAN_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PlansPage",
+          "path": "/plans",
+          "traits": [
+            {
+              "ref": "PlanAppLayout"
+            },
+            {
+              "ref": "PlanCatalog"
+            },
+            {
+              "ref": "PlanSearch"
+            },
+            {
+              "ref": "PlanFilter"
+            },
+            {
+              "ref": "PlanStats"
+            },
+            {
+              "ref": "PlanGraphs"
+            },
+            {
+              "ref": "PlanBrowseList"
+            },
+            {
+              "ref": "PlanCreate"
+            },
+            {
+              "ref": "PlanEdit"
+            },
+            {
+              "ref": "PlanView"
+            },
+            {
+              "ref": "PlanDelete"
+            },
+            {
+              "ref": "PlanSubscriptionManage"
+            },
+            {
+              "ref": "PlanTrialManage"
+            },
+            {
+              "ref": "PlanPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "InvoiceOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-invoice",
+          "as": "Inv"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "InvoiceNote",
+        "collection": "invoicenotes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "invoiceId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "InvoiceAppLayout",
+          "linkedEntity": "InvoiceNote",
+          "config": {
+            "contentTrait": "@trait.InvoiceCatalog",
+            "navItems": [
+              {
+                "icon": "credit-card",
+                "href": "/plans",
+                "label": "Plans"
+              },
+              {
+                "icon": "receipt",
+                "label": "Invoices",
+                "href": "/invoices"
+              },
+              {
+                "href": "/dunning",
+                "label": "Dunning",
+                "icon": "alert-triangle"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "INVOICE_NOTIFICATIONS_OPEN",
+            "appName": "Subscription Billing",
+            "searchEvent": "INVOICE_SEARCH"
+          },
+          "events": {
+            "NOTIFY_CLICK": "INVOICE_NOTIFICATIONS_OPEN",
+            "SEARCH": "INVOICE_SEARCH"
+          }
+        },
+        {
+          "name": "InvoiceCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "INVOICE_SEARCH",
+              "triggers": "INVOICE_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceAppLayout"
+              }
+            },
+            {
+              "event": "INVOICE_NOTIFICATIONS_OPEN",
+              "triggers": "INVOICE_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INVOICE_SEARCH",
+                "name": "Invoice Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "INVOICE_NOTIFICATIONS_OPEN",
+                "name": "Invoice Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "receipt"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoices",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "label": "Add Note",
+                                  "icon": "plus",
+                                  "action": "CREATE"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.InvoiceManageBlock",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Recent Notes",
+                          "variant": "h3"
+                        },
+                        "@trait.InvoiceNoteBrowseList"
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INVOICE_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INVOICE_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "No notifications",
+                          "variant": "h3"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "variant": "ghost",
+                          "label": "Back to invoices",
+                          "action": "INIT",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Inv.traits.InvoiceManage",
+          "name": "InvoiceManageBlock",
+          "config": {
+            "refundTiersJson": "[]",
+            "title": "Invoices"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "InvoiceNoteBrowseList",
+          "linkedEntity": "InvoiceNote",
+          "config": {
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "fields": [
+              {
+                "name": "invoiceId",
+                "variant": "h4",
+                "icon": "receipt"
+              },
+              {
+                "variant": "body",
+                "name": "body"
+              },
+              {
+                "name": "author",
+                "variant": "caption"
+              },
+              {
+                "name": "createdAt",
+                "variant": "caption"
+              }
+            ],
+            "gap": "sm"
+          },
+          "listens": [
+            {
+              "event": "NOTE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceNotePersistor"
+              }
+            },
+            {
+              "event": "NOTE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceNotePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "InvoiceNoteCreate",
+          "linkedEntity": "InvoiceNote",
+          "config": {
+            "icon": "plus-circle",
+            "title": "New Note",
+            "mode": "create",
+            "fields": [
+              "invoiceId",
+              "body",
+              "author"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "name": "InvoiceNotePersistor",
+          "category": "lifecycle",
+          "linkedEntity": "InvoiceNote",
+          "emits": [
+            {
+              "event": "NOTE_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NOTE_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceNoteCreate"
+              }
+            },
+            {
+              "event": "DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "InvoiceNoteBrowseList"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NOTE_CREATED",
+                "name": "Note Created"
+              },
+              {
+                "key": "NOTE_DELETED",
+                "name": "Note Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "InvoiceNote",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "NOTE_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "InvoiceNote",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "NOTE_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InvoicesPage",
+          "path": "/invoices",
+          "traits": [
+            {
+              "ref": "InvoiceAppLayout"
+            },
+            {
+              "ref": "InvoiceCatalog"
+            },
+            {
+              "ref": "InvoiceManageBlock"
+            },
+            {
+              "ref": "InvoiceNoteBrowseList"
+            },
+            {
+              "ref": "InvoiceNoteCreate"
+            },
+            {
+              "ref": "InvoiceNotePersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DunningOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-dunning",
+          "as": "Dunning"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "DunningNote",
+        "collection": "dunningnotes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "caseId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "DunningAppLayout",
+          "linkedEntity": "DunningNote",
+          "config": {
+            "navItems": [
+              {
+                "label": "Plans",
+                "href": "/plans",
+                "icon": "credit-card"
+              },
+              {
+                "label": "Invoices",
+                "href": "/invoices",
+                "icon": "receipt"
+              },
+              {
+                "label": "Dunning",
+                "href": "/dunning",
+                "icon": "alert-triangle"
+              }
+            ],
+            "notificationClickEvent": "DUNNING_NOTIFICATIONS_OPEN",
+            "appName": "Subscription Billing",
+            "contentTrait": "@trait.DunningCatalog",
+            "searchEvent": "DUNNING_SEARCH",
+            "notifications": []
+          },
+          "events": {
+            "NOTIFY_CLICK": "DUNNING_NOTIFICATIONS_OPEN",
+            "SEARCH": "DUNNING_SEARCH"
+          }
+        },
+        {
+          "name": "DunningCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "DUNNING_SEARCH",
+              "triggers": "DUNNING_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningAppLayout"
+              }
+            },
+            {
+              "event": "DUNNING_NOTIFICATIONS_OPEN",
+              "triggers": "DUNNING_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DUNNING_SEARCH",
+                "name": "Dunning Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DUNNING_NOTIFICATIONS_OPEN",
+                "name": "Dunning Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "alert-triangle"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Dunning",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Log Note",
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.DunningEscalateBlock",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Case Notes"
+                        },
+                        "@trait.DunningNoteBrowseList"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "DUNNING_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "DUNNING_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-8",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "label": "Back to dunning",
+                          "type": "button"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Dunning.traits.DunningEscalate",
+          "name": "DunningEscalateBlock",
+          "config": {
+            "title": "Open Cases"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "DunningNoteBrowseList",
+          "linkedEntity": "DunningNote",
+          "config": {
+            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0,
+            "fields": [
+              {
+                "variant": "h4",
+                "icon": "alert-triangle",
+                "name": "caseId"
+              },
+              {
+                "variant": "body",
+                "name": "body"
+              },
+              {
+                "name": "author",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "createdAt"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "NOTE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningNotePersistor"
+              }
+            },
+            {
+              "event": "NOTE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningNotePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "DunningNoteCreate",
+          "linkedEntity": "DunningNote",
+          "config": {
+            "icon": "plus-circle",
+            "title": "New Note",
+            "fields": [
+              "caseId",
+              "body",
+              "author"
+            ],
+            "mode": "create"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "name": "DunningNotePersistor",
+          "category": "lifecycle",
+          "linkedEntity": "DunningNote",
+          "emits": [
+            {
+              "event": "NOTE_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NOTE_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningNoteCreate"
+              }
+            },
+            {
+              "event": "DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "DunningNoteBrowseList"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NOTE_CREATED",
+                "name": "Note Created"
+              },
+              {
+                "key": "NOTE_DELETED",
+                "name": "Note Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "DunningNote",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "NOTE_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "DunningNote",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "NOTE_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DunningPage",
+          "path": "/dunning",
+          "traits": [
+            {
+              "ref": "DunningAppLayout"
+            },
+            {
+              "ref": "DunningCatalog"
+            },
+            {
+              "ref": "DunningEscalateBlock"
+            },
+            {
+              "ref": "DunningNoteBrowseList"
+            },
+            {
+              "ref": "DunningNoteCreate"
+            },
+            {
+              "ref": "DunningNotePersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

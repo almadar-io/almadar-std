@@ -1,0 +1,1540 @@
+{
+  "name": "std-listings",
+  "version": "1.0.0",
+  "description": "Listings: real-estate / jobs / classifieds. Post, browse with map + filters, save searches, and inquire via flat threads.",
+  "orbitals": [
+    {
+      "name": "ListingOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-geosearch",
+          "as": "GeoSearch"
+        },
+        {
+          "from": "std/behaviors/std-saved-search",
+          "as": "SavedSearch"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-image-upload-multi",
+          "as": "Images"
+        },
+        {
+          "from": "std/behaviors/std-tag-taxonomy",
+          "as": "Tags"
+        },
+        {
+          "from": "std/behaviors/std-thread",
+          "as": "Thread"
+        }
+      ],
+      "entity": {
+        "name": "Listing",
+        "collection": "listings",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "location",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lat",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lng",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "images",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "sold",
+              "expired"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ListingAppLayout",
+          "config": {
+            "searchEvent": "LISTING_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN",
+            "appName": "Listings",
+            "contentTrait": "@trait.ListingCatalog",
+            "navItems": [
+              {
+                "href": "/listings",
+                "icon": "list",
+                "label": "Browse"
+              },
+              {
+                "label": "Saved",
+                "icon": "bookmark",
+                "href": "/saved"
+              },
+              {
+                "href": "/inquiries",
+                "icon": "message-circle",
+                "label": "Inquiries"
+              }
+            ]
+          },
+          "events": {
+            "NOTIFY_CLICK": "LISTING_NOTIFICATIONS_OPEN",
+            "SEARCH": "LISTING_SEARCH"
+          }
+        },
+        {
+          "name": "ListingCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SAVE_SEARCH",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "LISTING_SEARCH",
+              "triggers": "LISTING_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingAppLayout"
+              }
+            },
+            {
+              "event": "LISTING_NOTIFICATIONS_OPEN",
+              "triggers": "LISTING_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LISTING_SEARCH",
+                "name": "Listing Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LISTING_NOTIFICATIONS_OPEN",
+                "name": "Listing Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "SAVE_SEARCH",
+                "name": "Save Search"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list"
+                                },
+                                {
+                                  "content": "Listings",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "secondary",
+                                  "label": "Save Search",
+                                  "type": "button",
+                                  "action": "SAVE_SEARCH",
+                                  "icon": "bookmark"
+                                },
+                                {
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "label": "New Listing",
+                                  "icon": "plus",
+                                  "action": "CREATE"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingGeoSearch",
+                        {
+                          "type": "stack",
+                          "children": [
+                            "@trait.ListingFilter",
+                            "@trait.ListingTags"
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "start"
+                        },
+                        "@trait.ListingStats",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingBrowse"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "LISTING_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "LISTING_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "button",
+                          "variant": "ghost",
+                          "label": "Back to listings",
+                          "action": "INIT"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "GeoSearch.traits.GeoSearchResultSearch",
+          "name": "ListingGeoSearch",
+          "config": {
+            "placeholder": "Search nearby listings…",
+            "defaultRadiusKm": 25.0,
+            "event": "LISTING_GEO_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "ListingFilter",
+          "config": {
+            "filters": [
+              {
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "sold",
+                  "expired"
+                ],
+                "field": "status"
+              },
+              {
+                "field": "location",
+                "label": "Location",
+                "filterType": "text"
+              }
+            ],
+            "event": "LISTING_FILTER"
+          }
+        },
+        {
+          "ref": "Tags.traits.TagBrowse",
+          "name": "ListingTags",
+          "config": {
+            "title": "Categories",
+            "allowEdit": false
+          }
+        },
+        {
+          "ref": "SavedSearch.traits.SavedSearchManage",
+          "name": "ListingSavedSearch",
+          "config": {
+            "title": "Saved Listing Searches"
+          }
+        },
+        {
+          "ref": "Images.traits.UploadedImageUpload",
+          "name": "ListingImages",
+          "config": {
+            "maxBytesPerImage": 10485760.0,
+            "title": "Listing Photos",
+            "maxImages": 10.0,
+            "accept": "image/*"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "ListingStats",
+          "config": {
+            "metrics": [
+              {
+                "format": "number",
+                "aggregation": "count",
+                "label": "Total",
+                "variant": "primary",
+                "icon": "list"
+              },
+              {
+                "variant": "success",
+                "icon": "check-circle",
+                "label": "Active",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "format": "number",
+                "aggregation": "count"
+              },
+              {
+                "variant": "info",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "sold"
+                  ]
+                ],
+                "icon": "tag",
+                "label": "Sold",
+                "format": "number"
+              },
+              {
+                "label": "Avg Price",
+                "aggregation": "avg",
+                "icon": "trending-up",
+                "variant": "warning",
+                "format": "number",
+                "field": "price"
+              }
+            ],
+            "title": "Listings"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "ListingBrowse",
+          "linkedEntity": "Listing",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "list",
+                "name": "title"
+              },
+              {
+                "variant": "badge",
+                "name": "price"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "location",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "description"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "INQUIRE",
+                "variant": "secondary",
+                "label": "Inquire"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "GEO_SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingGeoSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingFilter"
+              }
+            },
+            {
+              "event": "LISTING_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            },
+            {
+              "event": "LISTING_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            },
+            {
+              "event": "LISTING_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingCreate",
+          "linkedEntity": "Listing",
+          "config": {
+            "title": "New Listing",
+            "mode": "create",
+            "fields": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ],
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingEdit",
+          "linkedEntity": "Listing",
+          "config": {
+            "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Listing",
+            "fields": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingView",
+          "linkedEntity": "Listing",
+          "config": {
+            "title": "View Listing",
+            "fields": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ],
+            "mode": "edit",
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "ListingDelete",
+          "linkedEntity": "Listing",
+          "config": {
+            "title": "Delete Listing",
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Thread.traits.ThreadPostBrowse",
+          "name": "ListingInquiryThread",
+          "config": {
+            "flat": true,
+            "threadRootId": ""
+          }
+        },
+        {
+          "name": "ListingPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Listing",
+          "emits": [
+            {
+              "event": "LISTING_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LISTING_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LISTING_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LISTING_CREATED",
+                "name": "Listing Created"
+              },
+              {
+                "key": "LISTING_UPDATED",
+                "name": "Listing Updated"
+              },
+              {
+                "key": "LISTING_DELETED",
+                "name": "Listing Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Listing",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "LISTING_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Listing",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "LISTING_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Listing",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "LISTING_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ListingsPage",
+          "path": "/listings",
+          "traits": [
+            {
+              "ref": "ListingAppLayout"
+            },
+            {
+              "ref": "ListingCatalog"
+            },
+            {
+              "ref": "ListingGeoSearch"
+            },
+            {
+              "ref": "ListingFilter"
+            },
+            {
+              "ref": "ListingTags"
+            },
+            {
+              "ref": "ListingSavedSearch"
+            },
+            {
+              "ref": "ListingImages"
+            },
+            {
+              "ref": "ListingStats"
+            },
+            {
+              "ref": "ListingBrowse"
+            },
+            {
+              "ref": "ListingCreate"
+            },
+            {
+              "ref": "ListingEdit"
+            },
+            {
+              "ref": "ListingView"
+            },
+            {
+              "ref": "ListingDelete"
+            },
+            {
+              "ref": "ListingInquiryThread"
+            },
+            {
+              "ref": "ListingPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "InquiryOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        }
+      ],
+      "entity": {
+        "name": "Inquiry",
+        "collection": "inquiries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "listingId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "fromUserId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "toUserId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "replied",
+              "closed"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InquiryBrowse",
+          "category": "interaction",
+          "linkedEntity": "Inquiry",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "VIEW",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.listingId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.fromUserId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.toUserId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subject",
+                  "type": "string"
+                },
+                {
+                  "name": "row.message",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InquiryLoaded",
+              "description": "Fired when the inquiry collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Inquiry]"
+                }
+              ]
+            },
+            {
+              "event": "InquiryLoadFailed",
+              "description": "Fired when the inquiry collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "INQUIRY_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InquiryPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "InquiryLoaded",
+                "name": "Inquiry loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Inquiry]"
+                  }
+                ]
+              },
+              {
+                "key": "InquiryLoadFailed",
+                "name": "Inquiry load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "VIEW",
+                "name": "View"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Inquiry",
+                    {
+                      "emit": {
+                        "success": "InquiryLoaded",
+                        "failure": "InquiryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading inquiries…",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "InquiryLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle"
+                                },
+                                {
+                                  "content": "Inquiries",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Inquiry",
+                              "icon": "edit",
+                              "variant": "primary",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "justify": "between",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "type": "data-list",
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "name": "subject",
+                              "icon": "message-circle"
+                            },
+                            {
+                              "variant": "body",
+                              "name": "message"
+                            },
+                            {
+                              "name": "status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "createdAt",
+                              "variant": "caption",
+                              "format": "date"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "event": "VIEW",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "variant": "card",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "InquiryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "type": "icon",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Failed to load inquiries",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Inquiry",
+                    {
+                      "emit": {
+                        "failure": "InquiryLoadFailed",
+                        "success": "InquiryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Inquiry",
+                    {
+                      "emit": {
+                        "success": "InquiryLoaded",
+                        "failure": "InquiryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "InquiryCreate",
+          "linkedEntity": "Inquiry",
+          "config": {
+            "mode": "create",
+            "fields": [
+              "listingId",
+              "subject",
+              "message",
+              "fromUserId",
+              "toUserId"
+            ],
+            "icon": "plus-circle",
+            "title": "New Inquiry"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InquiryBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "InquiryPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Inquiry",
+          "emits": [
+            {
+              "event": "INQUIRY_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InquiryCreate"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "INQUIRY_CREATED",
+                "name": "Inquiry Created"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Inquiry",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "INQUIRY_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InquiriesPage",
+          "path": "/inquiries",
+          "traits": [
+            {
+              "ref": "InquiryBrowse"
+            },
+            {
+              "ref": "InquiryCreate"
+            },
+            {
+              "ref": "InquiryPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

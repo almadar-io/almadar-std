@@ -1,0 +1,98 @@
+app std-question-bank "1.0.0"
+"std-question-bank — typed question library for surveys. Owns a Question entity (label + kind + options + required + category + surveyId + order). QuestionManage loads questions on INIT, renders them in a data-grid with Edit / Delete actions plus a Create button, and persists add/update/delete via explicit ADD_QUESTION / UPDATE_QUESTION / DELETE_QUESTION events."
+
+orbital QuestionBankOrbital {
+  entity Question [persistent: questions] {
+    id          : string!
+    label       : string!
+    kind        : "single" | "multi" | "text" | "likert" | "matrix" | "number" | "date" = "text"
+    optionsJson : string
+    required    : boolean = false
+    category    : string
+    surveyId    : string
+    order       : number = 0
+  }
+
+  type QuestionLoaded     = Event { data : [Question] }              "Fired when the question collection finishes loading"
+  type QuestionLoadFailed = Event { error : string, code : string }  "Fired when the question collection fails to load"
+  type QuestionAdded      = Event { row : Question }                 "Fired after a question is created"
+  type QuestionUpdated    = Event { row : Question }                 "Fired after a question is updated"
+  type QuestionDeleted    = Event { id : string }                    "Fired after a question is deleted"
+
+  trait QuestionManage -> Question [interaction, collection] {
+    config {
+      title : string = "Question Bank"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading questions…" }] })
+      QuestionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "Add Question", action: "ADD_QUESTION", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "label", label: "Question", variant: "h4" }, { name: "kind", label: "Type", variant: "badge" }, { name: "category", label: "Category", variant: "caption" }, { name: "required", label: "Required", variant: "badge" }, { name: "order", label: "Order", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Edit", event: "UPDATE_QUESTION", variant: "ghost", icon: "edit" }, { label: "Delete", event: "DELETE_QUESTION", variant: "destructive", icon: "trash" }] }] })
+      QuestionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      ADD_QUESTION -> editing
+        (persist create Question @payload.data { emit: { success: "QuestionAdded", failure: "QuestionLoadFailed" } })
+      UPDATE_QUESTION -> editing
+        (set @entity.id @payload.questionId)
+        (set @entity.label @payload.row.label)
+        (set @entity.kind @payload.row.kind)
+        (set @entity.optionsJson @payload.row.optionsJson)
+        (set @entity.required @payload.row.required)
+        (set @entity.category @payload.row.category)
+        (set @entity.surveyId @payload.row.surveyId)
+        (set @entity.order @payload.row.order)
+        (persist update Question @entity { emit: { success: "QuestionUpdated", failure: "QuestionLoadFailed" } })
+      DELETE_QUESTION -> editing
+        (set @entity.id @payload.questionId)
+        (persist delete Question @entity.id { emit: { success: "QuestionDeleted", failure: "QuestionLoadFailed" } })
+      QuestionAdded -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionUpdated -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionDeleted -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state editing {
+      QuestionAdded -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionUpdated -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionDeleted -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+      QuestionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      ADD_QUESTION    { data : object! }
+      UPDATE_QUESTION { questionId : string!, row : Question, data : object! }
+      DELETE_QUESTION { questionId : string!, row : Question }
+      QuestionLoaded     { data : [Question] }
+      QuestionLoadFailed { error : string, code : string }
+      QuestionAdded      { row : Question }
+      QuestionUpdated    { row : Question }
+      QuestionDeleted    { id : string }
+    }
+    listens {
+      ADD_QUESTION    { data : object! }
+      UPDATE_QUESTION { questionId : string!, row : Question, data : object! }
+      DELETE_QUESTION { questionId : string!, row : Question }
+      QuestionLoaded     { data : [Question] }
+      QuestionLoadFailed { error : string, code : string }
+      QuestionAdded      { row : Question }
+      QuestionUpdated    { row : Question }
+      QuestionDeleted    { id : string }
+    }
+  }
+  page "/questions/manage" as QuestionManagePage -> QuestionManage
+}

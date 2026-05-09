@@ -1,0 +1,108 @@
+app std-page-tree "1.0.0"
+"std-page-tree — hierarchical wiki navigation with parent/child PageNode rows. PageNodeBrowse loads pages on INIT, renders a reorderable data-list with Open / Delete actions plus an Add Page button, and persists select / reorder / add / delete via SELECT_PAGE / REORDER / ADD_PAGE / DELETE_PAGE events."
+
+orbital PageTreeOrbital {
+  entity PageNode [persistent: pagenodes] {
+    id         : string!
+    title      : string!
+    parentId   : string
+    slug       : string
+    order      : number = 0
+    documentId : string
+    iconName   : string
+  }
+
+  type PageNodeLoaded     = Event { data : [PageNode] }              "Fired when the page collection finishes loading"
+  type PageNodeLoadFailed = Event { error : string, code : string }  "Fired when the page collection fails to load"
+  type PageSelected       = Event { pageId : string }                "Fired when a page row is selected"
+  type PageNodeUpdated    = Event { row : PageNode }                 "Fired after a page row's order or parent is persisted"
+  type PageNodeAdded      = Event { row : PageNode }                 "Fired after a new page row is created"
+  type PageNodeDeleted    = Event { id : string }                    "Fired after a page row is deleted"
+
+  trait PageNodeBrowse -> PageNode [interaction, collection] {
+    config {
+      title : string = "Pages"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading pages…" }] })
+      PageNodeLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-tree" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "Add Page", action: "ADD_PAGE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "h4" }, { name: "slug", label: "Slug", variant: "caption" }, { name: "parentId", label: "Parent", variant: "caption" }, { name: "order", label: "Order", variant: "badge" }], gap: "sm", reorderable: true, reorderEvent: "REORDER", itemActions: [{ label: "Open", event: "SELECT_PAGE", variant: "ghost", icon: "chevron-right" }, { label: "Delete", event: "DELETE_PAGE", variant: "destructive", icon: "trash" }] }] })
+      PageNodeLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      SELECT_PAGE -> editing
+        (set @entity.id @payload.pageId)
+        (emit PageSelected { pageId: "@payload.pageId" })
+      ADD_PAGE -> editing
+        (persist create PageNode @payload.data { emit: { success: "PageNodeAdded", failure: "PageNodeLoadFailed" } })
+      REORDER -> editing
+        (set @entity.id @payload.pageId)
+        (set @entity.title @payload.row.title)
+        (set @entity.slug @payload.row.slug)
+        (set @entity.documentId @payload.row.documentId)
+        (set @entity.iconName @payload.row.iconName)
+        (set @entity.order @payload.newOrder)
+        (set @entity.parentId @payload.newParentId)
+        (persist update PageNode @entity { emit: { success: "PageNodeUpdated", failure: "PageNodeLoadFailed" } })
+      DELETE_PAGE -> editing
+        (set @entity.id @payload.pageId)
+        (persist delete PageNode @entity.id { emit: { success: "PageNodeDeleted", failure: "PageNodeLoadFailed" } })
+      PageSelected -> browsing
+        (set @entity.id @payload.pageId)
+      PageNodeAdded -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeUpdated -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeDeleted -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state editing {
+      PageSelected -> browsing
+        (set @entity.id @payload.pageId)
+      PageNodeAdded -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeUpdated -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeDeleted -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+      PageNodeLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch PageNode { emit: { success: "PageNodeLoaded", failure: "PageNodeLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      SELECT_PAGE { pageId : string!, row : PageNode }
+      REORDER     { pageId : string!, row : PageNode, newOrder : number!, newParentId : string }
+      ADD_PAGE    { data : object! }
+      DELETE_PAGE { pageId : string!, row : PageNode }
+      PageNodeLoaded     { data : [PageNode] }
+      PageNodeLoadFailed { error : string, code : string }
+      PageSelected       { pageId : string! }
+      PageNodeUpdated    { row : PageNode }
+      PageNodeAdded      { row : PageNode }
+      PageNodeDeleted    { id : string }
+    }
+    listens {
+      SELECT_PAGE { pageId : string!, row : PageNode }
+      REORDER     { pageId : string!, row : PageNode, newOrder : number!, newParentId : string }
+      ADD_PAGE    { data : object! }
+      DELETE_PAGE { pageId : string!, row : PageNode }
+      PageNodeLoaded     { data : [PageNode] }
+      PageNodeLoadFailed { error : string, code : string }
+      PageSelected       { pageId : string! }
+      PageNodeUpdated    { row : PageNode }
+      PageNodeAdded      { row : PageNode }
+      PageNodeDeleted    { id : string }
+    }
+  }
+  page "/pages/browse" as PageNodeBrowsePage -> PageNodeBrowse
+}

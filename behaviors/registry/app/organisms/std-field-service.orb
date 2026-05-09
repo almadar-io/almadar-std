@@ -1,0 +1,1871 @@
+{
+  "name": "std-field-service",
+  "version": "1.0.0",
+  "description": "Field service: jobs in, assign technicians, optimize routes, check in on-site, and capture a signature on completion. Pick for plumbing/HVAC/dispatch apps.",
+  "orbitals": [
+    {
+      "name": "WorkOrderOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-work-order",
+          "as": "WO"
+        },
+        {
+          "from": "std/behaviors/std-technician-dispatch",
+          "as": "Dispatch"
+        },
+        {
+          "from": "std/behaviors/std-route-optimize",
+          "as": "RouteOpt"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        }
+      ],
+      "entity": {
+        "name": "WorkOrderRow",
+        "collection": "workorders",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "serviceType",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "normal",
+            "values": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "created",
+            "values": [
+              "created",
+              "assigned",
+              "en-route",
+              "on-site",
+              "completed",
+              "cancelled"
+            ]
+          },
+          {
+            "name": "assignedTo",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scheduledAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "etaMinutes",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "WorkOrderAppLayout",
+          "config": {
+            "navItems": [
+              {
+                "href": "/workorders",
+                "label": "Work Orders",
+                "icon": "clipboard-list"
+              },
+              {
+                "icon": "hard-hat",
+                "href": "/technicians",
+                "label": "Technicians"
+              },
+              {
+                "label": "Check In",
+                "icon": "map-pin",
+                "href": "/jobs/checkin"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "WORK_ORDER_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.WorkOrderCatalog",
+            "searchEvent": "WORK_ORDER_SEARCH",
+            "appName": "Field Service"
+          },
+          "events": {
+            "SEARCH": "WORK_ORDER_SEARCH",
+            "NOTIFY_CLICK": "WORK_ORDER_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "WorkOrderCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "WORK_ORDER_SEARCH",
+              "triggers": "WORK_ORDER_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderAppLayout"
+              }
+            },
+            {
+              "event": "WORK_ORDER_NOTIFICATIONS_OPEN",
+              "triggers": "WORK_ORDER_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WORK_ORDER_SEARCH",
+                "name": "Work Order Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WORK_ORDER_NOTIFICATIONS_OPEN",
+                "name": "Work Order Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "name": "clipboard-list",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Work Orders"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "New Work Order",
+                                  "action": "CREATE",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            "@trait.WorkOrderSearch",
+                            "@trait.WorkOrderFilter"
+                          ],
+                          "gap": "md"
+                        },
+                        "@trait.WorkOrderStats",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.WorkOrderBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Dispatch",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.WorkOrderDispatch",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Routes",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.WorkOrderRoutes"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "WORK_ORDER_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "WORK_ORDER_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "className": "py-8",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "label": "Back to work orders",
+                          "variant": "ghost",
+                          "type": "button",
+                          "action": "INIT"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "WorkOrderSearch",
+          "config": {
+            "placeholder": "Search work orders…",
+            "event": "WORK_ORDER_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "WorkOrderFilter",
+          "config": {
+            "event": "WORK_ORDER_FILTER",
+            "filters": [
+              {
+                "field": "priority",
+                "filterType": "select",
+                "label": "Priority",
+                "options": [
+                  "low",
+                  "normal",
+                  "high",
+                  "urgent"
+                ]
+              },
+              {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
+                "options": [
+                  "created",
+                  "assigned",
+                  "en-route",
+                  "on-site",
+                  "completed",
+                  "cancelled"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "WorkOrderStats",
+          "config": {
+            "title": "Work Orders",
+            "metrics": [
+              {
+                "variant": "primary",
+                "label": "Total",
+                "icon": "clipboard-list",
+                "format": "number",
+                "aggregation": "count"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "created"
+                  ]
+                ],
+                "icon": "circle",
+                "label": "Open",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "warning"
+              },
+              {
+                "aggregation": "count",
+                "icon": "map-pin",
+                "format": "number",
+                "variant": "info",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-site"
+                  ]
+                ],
+                "label": "On Site"
+              },
+              {
+                "icon": "check-circle",
+                "variant": "success",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "completed"
+                  ]
+                ],
+                "label": "Completed"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "WorkOrderBrowseList",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "fields": [
+              {
+                "name": "customerName",
+                "variant": "h4",
+                "icon": "user"
+              },
+              {
+                "name": "serviceType",
+                "variant": "body"
+              },
+              {
+                "variant": "caption",
+                "name": "address"
+              },
+              {
+                "name": "priority",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "assignedTo",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "etaMinutes"
+              }
+            ],
+            "gap": "sm"
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderFilter"
+              }
+            },
+            {
+              "event": "WORK_ORDER_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderPersistor"
+              }
+            },
+            {
+              "event": "WORK_ORDER_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderPersistor"
+              }
+            },
+            {
+              "event": "WORK_ORDER_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Dispatch.traits.TechnicianDispatch",
+          "name": "WorkOrderDispatch",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "title": "Available Technicians"
+          }
+        },
+        {
+          "ref": "RouteOpt.traits.RouteOptimize",
+          "name": "WorkOrderRoutes",
+          "config": {
+            "title": "Technician Routes"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "WorkOrderCreate",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "fields": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ],
+            "icon": "plus-circle",
+            "title": "New Work Order",
+            "mode": "create"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "WorkOrderEdit",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "title": "Edit Work Order",
+            "icon": "edit",
+            "mode": "edit",
+            "fields": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "WorkOrderView",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "title": "View Work Order",
+            "icon": "eye",
+            "mode": "edit",
+            "fields": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "WorkOrderDelete",
+          "linkedEntity": "WorkOrderRow",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Work Order",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "WorkOrderPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "WorkOrderRow",
+          "emits": [
+            {
+              "event": "WORK_ORDER_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WORK_ORDER_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WORK_ORDER_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "WorkOrderDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WORK_ORDER_CREATED",
+                "name": "Work Order Created"
+              },
+              {
+                "key": "WORK_ORDER_UPDATED",
+                "name": "Work Order Updated"
+              },
+              {
+                "key": "WORK_ORDER_DELETED",
+                "name": "Work Order Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "WorkOrderRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "WORK_ORDER_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrderRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "WORK_ORDER_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "WorkOrderRow",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "WORK_ORDER_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WorkOrdersPage",
+          "path": "/workorders",
+          "traits": [
+            {
+              "ref": "WorkOrderAppLayout"
+            },
+            {
+              "ref": "WorkOrderCatalog"
+            },
+            {
+              "ref": "WorkOrderSearch"
+            },
+            {
+              "ref": "WorkOrderFilter"
+            },
+            {
+              "ref": "WorkOrderStats"
+            },
+            {
+              "ref": "WorkOrderBrowseList"
+            },
+            {
+              "ref": "WorkOrderDispatch"
+            },
+            {
+              "ref": "WorkOrderRoutes"
+            },
+            {
+              "ref": "WorkOrderCreate"
+            },
+            {
+              "ref": "WorkOrderEdit"
+            },
+            {
+              "ref": "WorkOrderView"
+            },
+            {
+              "ref": "WorkOrderDelete"
+            },
+            {
+              "ref": "WorkOrderPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TechnicianOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-technician-dispatch",
+          "as": "Dispatch"
+        },
+        {
+          "from": "std/behaviors/std-checkin",
+          "as": "Checkin"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "TechnicianRow",
+        "collection": "technicians",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "skills",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "available",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "currentOrderId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lat",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lng",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lastSeenAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "TechnicianAppLayout",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "navItems": [
+              {
+                "icon": "clipboard-list",
+                "href": "/workorders",
+                "label": "Work Orders"
+              },
+              {
+                "icon": "hard-hat",
+                "label": "Technicians",
+                "href": "/technicians"
+              },
+              {
+                "icon": "map-pin",
+                "label": "Check In",
+                "href": "/jobs/checkin"
+              }
+            ],
+            "appName": "Field Service",
+            "searchEvent": "TECHNICIAN_SEARCH",
+            "contentTrait": "@trait.TechnicianCatalog",
+            "notificationClickEvent": "TECHNICIAN_NOTIFICATIONS_OPEN",
+            "notifications": []
+          },
+          "events": {
+            "NOTIFY_CLICK": "TECHNICIAN_NOTIFICATIONS_OPEN",
+            "SEARCH": "TECHNICIAN_SEARCH"
+          }
+        },
+        {
+          "name": "TechnicianCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "TECHNICIAN_SEARCH",
+              "triggers": "TECHNICIAN_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianAppLayout"
+              }
+            },
+            {
+              "event": "TECHNICIAN_NOTIFICATIONS_OPEN",
+              "triggers": "TECHNICIAN_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TECHNICIAN_SEARCH",
+                "name": "Technician Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TECHNICIAN_NOTIFICATIONS_OPEN",
+                "name": "Technician Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "hard-hat",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Technicians",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center"
+                            },
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "icon": "user-plus",
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "Add Technician"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TechnicianBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Dispatch Board"
+                        },
+                        "@trait.TechnicianDispatchBoard",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Field Check-In"
+                        },
+                        "@trait.TechnicianFieldCheckin"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "TECHNICIAN_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "TECHNICIAN_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "type": "button",
+                          "label": "Back to technicians"
+                        }
+                      ],
+                      "className": "py-8",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TechnicianBrowseList",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "fields": [
+              {
+                "variant": "h4",
+                "icon": "hard-hat",
+                "name": "name"
+              },
+              {
+                "name": "phone",
+                "variant": "caption"
+              },
+              {
+                "name": "skills",
+                "variant": "caption"
+              },
+              {
+                "name": "available",
+                "variant": "badge"
+              },
+              {
+                "name": "currentOrderId",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "lastSeenAt"
+              }
+            ],
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "TECHNICIAN_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianPersistor"
+              }
+            },
+            {
+              "event": "TECHNICIAN_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianPersistor"
+              }
+            },
+            {
+              "event": "TECHNICIAN_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Dispatch.traits.TechnicianDispatch",
+          "name": "TechnicianDispatchBoard",
+          "config": {
+            "title": "Dispatch Board"
+          }
+        },
+        {
+          "ref": "Checkin.traits.CheckinScan",
+          "name": "TechnicianFieldCheckin",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "mode": "geo",
+            "title": "Technician Check-In"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TechnicianCreate",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "title": "Add Technician",
+            "icon": "user-plus",
+            "mode": "create",
+            "fields": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TechnicianEdit",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "icon": "edit",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng"
+            ],
+            "title": "Edit Technician"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TechnicianView",
+          "linkedEntity": "TechnicianRow",
+          "config": {
+            "title": "View Technician",
+            "icon": "eye",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng",
+              "lastSeenAt"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TechnicianPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "TechnicianRow",
+          "emits": [
+            {
+              "event": "TECHNICIAN_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TECHNICIAN_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TECHNICIAN_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TechnicianEdit"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TECHNICIAN_CREATED",
+                "name": "Technician Created"
+              },
+              {
+                "key": "TECHNICIAN_UPDATED",
+                "name": "Technician Updated"
+              },
+              {
+                "key": "TECHNICIAN_DELETED",
+                "name": "Technician Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "TechnicianRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "TECHNICIAN_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "TechnicianRow",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "TECHNICIAN_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "TechnicianRow",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "TECHNICIAN_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TechniciansPage",
+          "path": "/technicians",
+          "traits": [
+            {
+              "ref": "TechnicianAppLayout"
+            },
+            {
+              "ref": "TechnicianCatalog"
+            },
+            {
+              "ref": "TechnicianBrowseList"
+            },
+            {
+              "ref": "TechnicianDispatchBoard"
+            },
+            {
+              "ref": "TechnicianFieldCheckin"
+            },
+            {
+              "ref": "TechnicianCreate"
+            },
+            {
+              "ref": "TechnicianEdit"
+            },
+            {
+              "ref": "TechnicianView"
+            },
+            {
+              "ref": "TechnicianPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "JobCheckinOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-checkin",
+          "as": "Checkin"
+        },
+        {
+          "from": "std/behaviors/std-signature-capture",
+          "as": "Signature"
+        }
+      ],
+      "entity": {
+        "name": "JobCheckinRow",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "JobCheckinAppLayout",
+          "linkedEntity": "JobCheckinRow",
+          "config": {
+            "notificationClickEvent": "JOB_CHECKIN_NOTIFICATIONS_OPEN",
+            "searchEvent": "JOB_CHECKIN_SEARCH",
+            "notifications": [],
+            "contentTrait": "@trait.JobCheckinComposer",
+            "appName": "Field Service",
+            "navItems": [
+              {
+                "label": "Work Orders",
+                "href": "/workorders",
+                "icon": "clipboard-list"
+              },
+              {
+                "icon": "hard-hat",
+                "label": "Technicians",
+                "href": "/technicians"
+              },
+              {
+                "label": "Check In",
+                "icon": "map-pin",
+                "href": "/jobs/checkin"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "JOB_CHECKIN_SEARCH",
+            "NOTIFY_CLICK": "JOB_CHECKIN_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "JobCheckinComposer",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-3xl mx-auto w-full",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "map-pin"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Job Check-In",
+                              "variant": "h2"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Verify your arrival, complete the job, and capture the customer's signature."
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "1. Arrival check-in",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.JobArrivalCheckin",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "2. Customer signature"
+                        },
+                        "@trait.JobCompletionSignature"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Checkin.traits.CheckinScan",
+          "name": "JobArrivalCheckin",
+          "config": {
+            "mode": "geo",
+            "title": "Confirm arrival on site"
+          }
+        },
+        {
+          "ref": "Signature.traits.SignatureCapture",
+          "name": "JobCompletionSignature",
+          "config": {
+            "title": "Customer signature",
+            "instructions": "Customer signs to confirm the job is complete."
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "JobCheckinPage",
+          "path": "/jobs/checkin",
+          "traits": [
+            {
+              "ref": "JobCheckinAppLayout"
+            },
+            {
+              "ref": "JobCheckinComposer"
+            },
+            {
+              "ref": "JobArrivalCheckin"
+            },
+            {
+              "ref": "JobCompletionSignature"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

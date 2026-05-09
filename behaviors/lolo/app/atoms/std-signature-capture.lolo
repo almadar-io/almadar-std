@@ -1,0 +1,80 @@
+app std-signature-capture "1.0.0"
+"std-signature-capture — proof-of-completion signature capture for field-service jobs and healthcare consent forms. Owns a Signature entity; CHANGE binds @entity.signatureDataUrl; SUBMIT persists @payload.data and emits SignatureSubmitted."
+
+orbital SignatureCaptureOrbital {
+  entity Signature [persistent: signatures] {
+    id               : string!
+    targetId         : string!
+    targetType       : string!
+    signerName       : string!
+    signatureDataUrl : string!
+    signedAt         : string
+    ipAddress        : string
+  }
+
+  type SignatureLoaded         = Event { data : [Signature] }                "Fired when the signature collection finishes loading"
+  type SignatureLoadFailed     = Event { error : string, code : string }     "Fired when the signature collection fails to load"
+  type SignatureSubmitted      = Event { row : Signature }                   "Fired after a new signature persists successfully"
+  type SignatureSubmitFailed   = Event { error : string, code : string }     "Fired when persisting a new signature fails"
+
+  trait SignatureCapture -> Signature [interaction, instance] {
+    config {
+      title        : string = "Sign here"
+      instructions : string = "Use your finger or stylus to sign below"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Signature { emit: { success: "SignatureLoaded", failure: "SignatureLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
+      SignatureLoaded -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
+      SignatureLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state idle {
+      CHANGE -> idle
+        (set @entity.signatureDataUrl @payload.dataUrl)
+      CLEAR -> idle
+        (set @entity.signatureDataUrl "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
+      SUBMIT -> submitting
+        (persist create Signature @payload.data { emit: { success: "SignatureSubmitted", failure: "SignatureSubmitFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting your signature…" }] })
+    }
+    state submitting {
+      SignatureSubmitted -> submitted
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "check-circle", color: "success" }, { type: "typography", variant: "h3", content: "Signature recorded. Thank you." }] })
+      SignatureSubmitFailed -> idle
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state submitted {
+      INIT -> idle
+        (set @entity.signatureDataUrl "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
+    }
+    state error {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "typography", content: "@config.instructions", variant: "caption", color: "muted" }, { type: "signature-pad", value: @entity.signatureDataUrl, onChange: "CHANGE" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Clear", action: "CLEAR", variant: "secondary", icon: "trash" }, { type: "button", label: "Submit", action: "SUBMIT", variant: "primary", icon: "send" }] }] })
+    }
+    emits {
+      CHANGE { dataUrl : string! }
+      SUBMIT { data : object! }
+      CLEAR
+      SignatureLoaded { data : [Signature] }
+      SignatureLoadFailed { error : string, code : string }
+      SignatureSubmitted { row : Signature }
+      SignatureSubmitFailed { error : string, code : string }
+    }
+    listens {
+      CHANGE { dataUrl : string! }
+      SUBMIT { data : object! }
+      CLEAR
+      SignatureLoaded { data : [Signature] }
+      SignatureLoadFailed { error : string, code : string }
+      SignatureSubmitted { row : Signature }
+      SignatureSubmitFailed { error : string, code : string }
+    }
+  }
+  page "/signatures/capture" as SignatureCapturePage -> SignatureCapture
+}

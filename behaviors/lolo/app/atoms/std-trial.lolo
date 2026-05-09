@@ -1,0 +1,103 @@
+app std-trial "1.0.0"
+"std-trial — subscription trial countdown with auto-convert at expiry. Owns a Trial entity; CONVERT flips status to converted and stamps convertedAt, EXPIRE flips to expired, CANCEL flips to cancelled. Persists results back to the row and emits TrialUpdated / TrialConverted for downstream listeners."
+
+orbital TrialOrbital {
+  entity Trial [persistent: trials] {
+    id             : string!
+    subscriptionId : string!
+    customerId     : string!
+    planId         : string!
+    startedAt      : string
+    expiresAt      : string!
+    status         : "active" | "converted" | "expired" | "cancelled" = "active"
+    convertedAt    : string
+    notifiedAt     : string
+  }
+
+  type TrialLoaded     = Event { data : [Trial] }                  "Fired when the trial collection finishes loading"
+  type TrialLoadFailed = Event { error : string, code : string }   "Fired when the trial collection fails to load"
+  type TrialUpdated    = Event { row : Trial }                     "Fired after a trial row persists (expire / cancel)"
+  type TrialConverted  = Event { row : Trial }                     "Fired after a trial converts to a paid subscription"
+
+  trait TrialManage -> Trial [interaction, collection] {
+    config {
+      title : string = "Trials"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Trial { emit: { success: "TrialLoaded", failure: "TrialLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading trials…" }] })
+      TrialLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerId", label: "Customer", variant: "caption" }, { name: "planId", label: "Plan", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "startedAt", label: "Started", variant: "caption" }, { name: "expiresAt", label: "Expires", variant: "caption" }, { name: "convertedAt", label: "Converted", variant: "caption" }, { name: "notifiedAt", label: "Notified", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Convert", event: "CONVERT", variant: "primary", icon: "check" }, { label: "Expire", event: "EXPIRE", variant: "secondary", icon: "clock" }, { label: "Cancel", event: "CANCEL", variant: "destructive", icon: "x" }] }] })
+      TrialLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      CONVERT -> converting
+        (set @entity.id @payload.trialId)
+        (set @entity.subscriptionId @payload.row.subscriptionId)
+        (set @entity.customerId @payload.row.customerId)
+        (set @entity.planId @payload.row.planId)
+        (set @entity.startedAt @payload.row.startedAt)
+        (set @entity.expiresAt @payload.row.expiresAt)
+        (set @entity.status "converted")
+        (set @entity.convertedAt @payload.convertedAt)
+        (set @entity.notifiedAt @payload.row.notifiedAt)
+        (persist update Trial @entity { emit: { success: "TrialConverted", failure: "TrialLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Converting trial…" }] })
+      EXPIRE -> browsing
+        (set @entity.id @payload.trialId)
+        (set @entity.subscriptionId @payload.row.subscriptionId)
+        (set @entity.customerId @payload.row.customerId)
+        (set @entity.planId @payload.row.planId)
+        (set @entity.startedAt @payload.row.startedAt)
+        (set @entity.expiresAt @payload.row.expiresAt)
+        (set @entity.status "expired")
+        (set @entity.convertedAt @payload.row.convertedAt)
+        (set @entity.notifiedAt @payload.row.notifiedAt)
+        (persist update Trial @entity { emit: { success: "TrialUpdated", failure: "TrialLoadFailed" } })
+      CANCEL -> browsing
+        (set @entity.id @payload.trialId)
+        (set @entity.subscriptionId @payload.row.subscriptionId)
+        (set @entity.customerId @payload.row.customerId)
+        (set @entity.planId @payload.row.planId)
+        (set @entity.startedAt @payload.row.startedAt)
+        (set @entity.expiresAt @payload.row.expiresAt)
+        (set @entity.status "cancelled")
+        (set @entity.convertedAt @payload.row.convertedAt)
+        (set @entity.notifiedAt @payload.row.notifiedAt)
+        (persist update Trial @entity { emit: { success: "TrialUpdated", failure: "TrialLoadFailed" } })
+      TrialUpdated -> loading
+        (fetch Trial { emit: { success: "TrialLoaded", failure: "TrialLoadFailed" } })
+    }
+    state converting {
+      TrialConverted -> loading
+        (fetch Trial { emit: { success: "TrialLoaded", failure: "TrialLoadFailed" } })
+    }
+    state error {
+      INIT -> loading
+        (fetch Trial { emit: { success: "TrialLoaded", failure: "TrialLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      CONVERT { trialId : string!, convertedAt : string!, row : Trial }
+      EXPIRE  { trialId : string!, row : Trial }
+      CANCEL  { trialId : string!, row : Trial }
+      TrialLoaded     { data : [Trial] }
+      TrialLoadFailed { error : string, code : string }
+      TrialUpdated    { row : Trial }
+      TrialConverted  { row : Trial }
+    }
+    listens {
+      CONVERT { trialId : string!, convertedAt : string!, row : Trial }
+      EXPIRE  { trialId : string!, row : Trial }
+      CANCEL  { trialId : string!, row : Trial }
+      TrialLoaded     { data : [Trial] }
+      TrialLoadFailed { error : string, code : string }
+      TrialUpdated    { row : Trial }
+      TrialConverted  { row : Trial }
+    }
+  }
+  page "/trials/manage" as TrialManagePage -> TrialManage
+}

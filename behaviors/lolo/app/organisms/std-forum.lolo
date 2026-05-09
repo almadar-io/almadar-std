@@ -1,0 +1,443 @@
+app std-forum "1.0.0"
+"Forum: community Q&A with threaded replies, voting, flagging, tags, and a moderator queue. Pick for Stack Overflow / Reddit / Discourse style sites."
+
+orbital QuestionOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Thread       from "std/behaviors/std-thread"
+  uses Vote         from "std/behaviors/std-vote"
+  uses Tags         from "std/behaviors/std-tag-taxonomy"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Stats        from "std/behaviors/std-stats"
+
+  entity Question [persistent: questions] {
+    id : string!
+    title : string!
+    body : string = ""
+    authorId : string = ""
+    authorName : string = ""
+    tag : string = ""
+    status : "open" | "answered" | "closed" = "open"
+    voteCount : number = 0
+    replyCount : number = 0
+    createdAt : string = ""
+    pendingId : string = ""
+  }
+
+  trait QuestionAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.QuestionCatalog",
+      appName: "Forum",
+      navItems: [{ label: "Questions", href: "/questions", icon: "help-circle" }, { label: "Categories", href: "/questions", icon: "tag" }, { label: "Moderation", href: "/moderation", icon: "shield-alert" }],
+      searchEvent: "QUESTION_SEARCH",
+      notifications: [],
+      notificationClickEvent: "QUESTION_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: QUESTION_SEARCH
+      NOTIFY_CLICK: QUESTION_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait. Header (help-circle + Questions + Ask button) + toolbar
+  ;; (search/filter) + stats row + categories + question list. AppLayout's
+  ;; contentTrait points here.
+  trait QuestionCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "help-circle" },
+              { type: "typography", content: "Questions", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "Ask Question", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.QuestionSearch",
+            "@trait.QuestionFilter"
+          ]},
+          "@trait.QuestionStats",
+          { type: "divider" },
+          "@trait.QuestionTagTree",
+          { type: "divider" },
+          "@trait.QuestionBrowseList"
+        ]})
+      QUESTION_SEARCH -> composing
+      QUESTION_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to questions", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      QuestionAppLayout.QUESTION_SEARCH -> QUESTION_SEARCH
+      QuestionAppLayout.QUESTION_NOTIFICATIONS_OPEN -> QUESTION_NOTIFICATIONS_OPEN
+      QUESTION_SEARCH { value : string }
+      QUESTION_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; Search + filter atoms — re-fetch the question list on input.
+  trait QuestionSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search questions…",
+      event: "QUESTION_SEARCH"
+    }
+  }
+
+  trait QuestionFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["open", "answered", "closed"] },
+        { field: "tag",    label: "Tag",    filterType: "select", options: [] }
+      ],
+      event: "QUESTION_FILTER"
+    }
+  }
+
+  ;; Aggregations on the Question collection — totals + open vs answered.
+  trait QuestionStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Questions",
+      metrics: [
+        { aggregation: "count", label: "Total",     icon: "help-circle", variant: "primary", format: "number" },
+        { aggregation: "count", label: "Open",      icon: "circle",      variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "open"]] },
+        { aggregation: "count", label: "Answered",  icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "answered"]] },
+        { aggregation: "mode",  label: "Top Tag",   icon: "hash",        variant: "info",    format: "text",   field: "tag" }
+      ]
+    }
+    listens {
+      QuestionBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  ;; Hierarchical tag taxonomy — drill into category trees. Embedded inside
+  ;; the page-chrome trait so authors see a category tree alongside the list.
+  trait QuestionTagTree = Tags.traits.TagBrowse {
+    config: {
+      title: "Categories",
+      allowEdit: false
+    }
+  }
+
+  ;; Card-variant question list. Re-fetches on persist events from
+  ;; QuestionPersistor and on search/filter input.
+  trait QuestionBrowseList = Browse.traits.BrowseItemBrowse -> Question {
+    config: {
+      fields: [
+        { name: "title",       variant: "h3",      icon: "help-circle" },
+        { name: "authorName",  variant: "body" },
+        { name: "tag",         variant: "badge" },
+        { name: "status",      variant: "badge" },
+        { name: "voteCount",   variant: "caption", format: "number" },
+        { name: "replyCount",  variant: "caption", format: "number" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm",
+      variant: "card"
+    }
+    listens {
+      QuestionSearch.SEARCH                  -> REFETCH_QUERY
+      QuestionFilter.FILTER                  -> REFETCH_FILTER
+      QuestionPersistor.QUESTION_CREATED     -> INIT
+      QuestionPersistor.QUESTION_UPDATED     -> INIT
+      QuestionPersistor.QUESTION_DELETED     -> INIT
+    }
+  }
+
+  ;; Threaded replies — nested forum mode (flat:false). Imported from
+  ;; std-thread; renders the reply tree below the question list.
+  trait QuestionThread = Thread.traits.ThreadPostBrowse {
+    config: {
+      flat: false,
+      threadRootId: ""
+    }
+  }
+
+  ;; Vote atom — up/down arrows next to each question.
+  trait QuestionVote = Vote.traits.VoteCast {
+    config: {
+      allowDown: true
+    }
+  }
+
+  ;; Modal bindings — Ask / Edit / View. Atoms render the modal slot only;
+  ;; persist side-effects live in QuestionPersistor.
+  trait QuestionCreate = Modal.traits.ModalRecordModal -> Question {
+    config: {
+      icon: "plus-circle",
+      title: "Ask Question",
+      mode: "create",
+      fields: ["title", "body", "authorName", "tag", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      QuestionCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Question }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait QuestionEdit = Modal.traits.ModalRecordModal -> Question {
+    config: {
+      icon: "edit",
+      title: "Edit Question",
+      mode: "edit",
+      fields: ["title", "body", "authorName", "tag", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      QuestionBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Question }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait QuestionView = Modal.traits.ModalRecordModal -> Question {
+    config: {
+      icon: "eye",
+      title: "View Question",
+      mode: "edit",
+      fields: ["title", "body", "authorName", "tag", "status", "voteCount", "replyCount"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      QuestionBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Question }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Confirmation binding for delete. CONFIRM is renamed to CONFIRM_DELETE so
+  ;; the persistor can route it cleanly.
+  trait QuestionDeleteConfirm = Confirmation.traits.ConfirmActionConfirmation -> Question {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Question",
+      alertMessage: "This action cannot be undone. The question and all its replies will be removed.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      QuestionBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Question }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: owns persist side-effects from Modal/Confirm trait emits.
+  trait QuestionPersistor -> Question [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Question @payload.data { emit: { success: "QUESTION_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Question @payload.data { emit: { success: "QUESTION_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Question @payload.id { emit: { success: "QUESTION_DELETED" } })
+    }
+    emits {
+      QUESTION_CREATED -> external { id : string }
+      QUESTION_UPDATED -> external { id : string }
+      QUESTION_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      QuestionCreate.SAVE                  -> DO_CREATE
+      QuestionEdit.SAVE                    -> DO_UPDATE
+      QuestionDeleteConfirm.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/questions" as QuestionsPage -> QuestionAppLayout, QuestionCatalog, QuestionSearch, QuestionFilter, QuestionStats, QuestionTagTree, QuestionBrowseList, QuestionThread, QuestionVote, QuestionCreate, QuestionEdit, QuestionView, QuestionDeleteConfirm, QuestionPersistor
+}
+
+orbital ModQueueOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses ModQueue     from "std/behaviors/std-mod-queue"
+  uses Flag         from "std/behaviors/std-flag"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity ModerationDecision [persistent: moderationdecisions] {
+    id : string!
+    targetId : string!
+    targetType : string!
+    verdict : "approved" | "rejected" | "escalated" = "approved"
+    reviewerId : string = ""
+    notes : string = ""
+    createdAt : string = ""
+    pendingId : string = ""
+  }
+
+  trait ModerationAppLayout = AppShell.traits.AppLayout -> ModerationDecision {
+    config: {
+      contentTrait: "@trait.ModerationDisplay",
+      appName: "Forum",
+      navItems: [{ label: "Questions", href: "/questions", icon: "help-circle" }, { label: "Categories", href: "/questions", icon: "tag" }, { label: "Moderation", href: "/moderation", icon: "shield-alert" }],
+      searchEvent: "MODERATION_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MODERATION_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MODERATION_SEARCH
+      NOTIFY_CLICK: MODERATION_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait for /moderation — header + queue + flag history +
+  ;; recorded decisions list.
+  trait ModerationDisplay [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "shield-alert" },
+            { type: "typography", variant: "h2", content: "Moderation Queue" }
+          ]},
+          { type: "divider" },
+          "@trait.ModerationQueue",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recent Flags" },
+          "@trait.ModerationFlagBrowse",
+          { type: "divider" },
+          { type: "typography", variant: "h3", content: "Recorded Decisions" },
+          "@trait.ModerationDecisionBrowse"
+        ]})
+      MODERATION_SEARCH -> composing
+      MODERATION_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to moderation", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    listens {
+      ModerationAppLayout.MODERATION_SEARCH -> MODERATION_SEARCH
+      ModerationAppLayout.MODERATION_NOTIFICATIONS_OPEN -> MODERATION_NOTIFICATIONS_OPEN
+      MODERATION_SEARCH { value : string }
+      MODERATION_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  ;; Mod queue atom — primary review surface (Approve / Reject / Escalate).
+  trait ModerationQueue = ModQueue.traits.ModQueueItemReview {
+    config: {
+      title: "Pending Reports",
+      autoEscalateThreshold: 5
+    }
+  }
+
+  ;; Flag atom in read-only context — surfaces incoming reports as a list of
+  ;; recent submissions reviewers can scan before opening the queue row.
+  trait ModerationFlagBrowse = Flag.traits.FlagReport {
+    config: {
+      title: "Latest reports",
+      reasons: ["spam", "abuse", "off-topic", "misinformation", "nsfw", "other"]
+    }
+  }
+
+  ;; Audit log of recorded decisions (one row per Approve/Reject/Escalate).
+  ;; Delete is the canonical "undo" via Browse's built-in DELETE action wired
+  ;; to ModerationRevertConfirm.
+  trait ModerationDecisionBrowse = Browse.traits.BrowseItemBrowse -> ModerationDecision {
+    config: {
+      fields: [
+        { name: "targetType", label: "Target",   variant: "badge" },
+        { name: "verdict",    label: "Verdict",  variant: "badge" },
+        { name: "reviewerId", label: "Reviewer", variant: "caption" },
+        { name: "notes",      label: "Notes",    variant: "body" },
+        { name: "createdAt",  label: "When",     variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "Revert", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      ModerationPersistor.DECISION_RECORDED -> INIT
+      ModerationPersistor.DECISION_REVERTED -> INIT
+    }
+  }
+
+  ;; Confirmation for revert — undo a recorded mod decision. CONFIRM is
+  ;; renamed to CONFIRM_REVERT so the persistor routes it cleanly.
+  trait ModerationRevertConfirm = Confirmation.traits.ConfirmActionConfirmation -> ModerationDecision {
+    config: {
+      icon: "rotate-ccw",
+      title: "Revert Decision",
+      alertMessage: "This will undo the recorded moderation verdict.",
+      confirmLabel: "Revert"
+    }
+    events {
+      REQUEST: REVERT
+      CONFIRM: CONFIRM_REVERT
+    }
+    listens {
+      ModerationDecisionBrowse.DELETE -> REVERT
+      REVERT { id : string, row : ModerationDecision }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Coordinator: records audit-log decisions when the queue closes a row,
+  ;; and clears them when the revert confirmation fires.
+  trait ModerationPersistor -> ModerationDecision [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_RECORD -> idle
+        (persist create ModerationDecision @payload.data { emit: { success: "DECISION_RECORDED" } })
+      DO_REVERT -> idle
+        (persist delete ModerationDecision @payload.id { emit: { success: "DECISION_REVERTED" } })
+    }
+    emits {
+      DECISION_RECORDED -> external { id : string }
+      DECISION_REVERTED -> external { id : string }
+    }
+    listens {
+      DO_RECORD { data : object! }
+      DO_REVERT { id : string }
+      ModerationQueue.ModQueueItemReviewed   -> DO_RECORD
+      ModerationRevertConfirm.CONFIRM_REVERT -> DO_REVERT
+    }
+  }
+
+  page "/moderation" as ModerationPage -> ModerationAppLayout, ModerationDisplay, ModerationQueue, ModerationFlagBrowse, ModerationDecisionBrowse, ModerationRevertConfirm, ModerationPersistor
+}

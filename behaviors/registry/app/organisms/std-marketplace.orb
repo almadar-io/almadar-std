@@ -1,0 +1,2448 @@
+{
+  "name": "std-marketplace",
+  "version": "1.0.0",
+  "description": "Marketplace: vendors list products, buyers leave star ratings, admin reviews flagged listings.",
+  "orbitals": [
+    {
+      "name": "VendorOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-payout-ledger",
+          "as": "Payout"
+        }
+      ],
+      "entity": {
+        "name": "Vendor",
+        "collection": "vendors",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "businessName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "active",
+              "pending",
+              "suspended",
+              "closed"
+            ]
+          },
+          {
+            "name": "totalSales",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "rating",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "VendorAppLayout",
+          "config": {
+            "contentTrait": "@trait.VendorCatalog",
+            "notifications": [],
+            "searchEvent": "VENDOR_SEARCH",
+            "notificationClickEvent": "VENDOR_NOTIFICATIONS_OPEN",
+            "appName": "Marketplace",
+            "navItems": [
+              {
+                "label": "Vendors",
+                "href": "/vendors",
+                "icon": "store"
+              },
+              {
+                "label": "Listings",
+                "href": "/listings",
+                "icon": "package"
+              },
+              {
+                "label": "Orders",
+                "href": "/orders",
+                "icon": "shopping-cart"
+              }
+            ]
+          },
+          "events": {
+            "NOTIFY_CLICK": "VENDOR_NOTIFICATIONS_OPEN",
+            "SEARCH": "VENDOR_SEARCH"
+          }
+        },
+        {
+          "name": "VendorCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "VENDOR_SEARCH",
+              "triggers": "VENDOR_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorAppLayout"
+              }
+            },
+            {
+              "event": "VENDOR_NOTIFICATIONS_OPEN",
+              "triggers": "VENDOR_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VENDOR_SEARCH",
+                "name": "Vendor Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VENDOR_NOTIFICATIONS_OPEN",
+                "name": "Vendor Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "store"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Vendors",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "label": "New Vendor",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.VendorBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.VendorPayoutLedger"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "VENDOR_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "VENDOR_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-8",
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "label": "Back to vendors",
+                          "action": "INIT",
+                          "variant": "ghost",
+                          "type": "button"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "VendorBrowseList",
+          "linkedEntity": "Vendor",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h3",
+                "name": "name",
+                "icon": "store"
+              },
+              {
+                "variant": "body",
+                "name": "businessName"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "format": "currency",
+                "name": "totalSales"
+              },
+              {
+                "name": "rating",
+                "variant": "caption"
+              }
+            ],
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "VENDOR_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorPersistor"
+              }
+            },
+            {
+              "event": "VENDOR_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorPersistor"
+              }
+            },
+            {
+              "event": "VENDOR_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Payout.traits.PayoutLedger",
+          "name": "VendorPayoutLedger",
+          "config": {
+            "title": "Vendor Payouts",
+            "minimumWithdrawal": 50.0
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "VendorCreate",
+          "linkedEntity": "Vendor",
+          "config": {
+            "icon": "plus-circle",
+            "mode": "create",
+            "title": "New Vendor",
+            "fields": [
+              "name",
+              "businessName",
+              "status",
+              "totalSales",
+              "rating"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "VendorEdit",
+          "linkedEntity": "Vendor",
+          "config": {
+            "mode": "edit",
+            "fields": [
+              "name",
+              "businessName",
+              "status",
+              "totalSales",
+              "rating"
+            ],
+            "icon": "edit",
+            "title": "Edit Vendor"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "VendorView",
+          "linkedEntity": "Vendor",
+          "config": {
+            "fields": [
+              "name",
+              "businessName",
+              "status",
+              "totalSales",
+              "rating"
+            ],
+            "title": "View Vendor",
+            "mode": "edit",
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "VendorDelete",
+          "linkedEntity": "Vendor",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Vendor",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "VendorPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Vendor",
+          "emits": [
+            {
+              "event": "VENDOR_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "VENDOR_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "VENDOR_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VENDOR_CREATED",
+                "name": "Vendor Created"
+              },
+              {
+                "key": "VENDOR_UPDATED",
+                "name": "Vendor Updated"
+              },
+              {
+                "key": "VENDOR_DELETED",
+                "name": "Vendor Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Vendor",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "VENDOR_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Vendor",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "VENDOR_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Vendor",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "VENDOR_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "VendorsPage",
+          "path": "/vendors",
+          "traits": [
+            {
+              "ref": "VendorAppLayout"
+            },
+            {
+              "ref": "VendorCatalog"
+            },
+            {
+              "ref": "VendorBrowseList"
+            },
+            {
+              "ref": "VendorPayoutLedger"
+            },
+            {
+              "ref": "VendorCreate"
+            },
+            {
+              "ref": "VendorEdit"
+            },
+            {
+              "ref": "VendorView"
+            },
+            {
+              "ref": "VendorDelete"
+            },
+            {
+              "ref": "VendorPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ListingOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-image-upload-multi",
+          "as": "ImageUpload"
+        },
+        {
+          "from": "std/behaviors/std-rating-review",
+          "as": "RatingReview"
+        },
+        {
+          "from": "std/behaviors/std-mod-queue",
+          "as": "ModQueue"
+        },
+        {
+          "from": "std/behaviors/std-flag",
+          "as": "Flag"
+        },
+        {
+          "from": "std/behaviors/std-tag-taxonomy",
+          "as": "TagTaxonomy"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "Listing",
+        "collection": "listings",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "vendorId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "currency",
+            "type": "string",
+            "default": "USD"
+          },
+          {
+            "name": "images",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "active",
+              "sold",
+              "removed"
+            ]
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ratingAverage",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reviewCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ListingAppLayout",
+          "linkedEntity": "Listing",
+          "config": {
+            "notifications": [],
+            "contentTrait": "@trait.ListingCatalog",
+            "appName": "Marketplace",
+            "navItems": [
+              {
+                "label": "Vendors",
+                "href": "/vendors",
+                "icon": "store"
+              },
+              {
+                "label": "Listings",
+                "href": "/listings",
+                "icon": "package"
+              },
+              {
+                "label": "Orders",
+                "icon": "shopping-cart",
+                "href": "/orders"
+              }
+            ],
+            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN",
+            "searchEvent": "LISTING_SEARCH"
+          },
+          "events": {
+            "NOTIFY_CLICK": "LISTING_NOTIFICATIONS_OPEN",
+            "SEARCH": "LISTING_SEARCH"
+          }
+        },
+        {
+          "name": "ListingCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "LISTING_SEARCH",
+              "triggers": "LISTING_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingAppLayout"
+              }
+            },
+            {
+              "event": "LISTING_NOTIFICATIONS_OPEN",
+              "triggers": "LISTING_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LISTING_SEARCH",
+                "name": "Listing Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LISTING_NOTIFICATIONS_OPEN",
+                "name": "Listing Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "package",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Listings"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "action": "CREATE",
+                                  "type": "button",
+                                  "label": "New Listing"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            "@trait.ListingSearch",
+                            "@trait.ListingFilter"
+                          ]
+                        },
+                        "@trait.ListingStats",
+                        "@trait.ListingTags",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingImages",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingRating",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingFlag",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ListingModQueue"
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "LISTING_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "LISTING_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "No notifications",
+                          "variant": "h3"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        },
+                        {
+                          "label": "Back to listings",
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "INIT"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-8",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "ListingSearch",
+          "config": {
+            "event": "LISTING_SEARCH",
+            "placeholder": "Search listings…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "ListingFilter",
+          "config": {
+            "filters": [
+              {
+                "label": "Status",
+                "filterType": "select",
+                "field": "status",
+                "options": [
+                  "draft",
+                  "active",
+                  "sold",
+                  "removed"
+                ]
+              },
+              {
+                "filterType": "select",
+                "field": "currency",
+                "options": [
+                  "USD",
+                  "EUR",
+                  "GBP"
+                ],
+                "label": "Currency"
+              }
+            ],
+            "event": "LISTING_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "ListingStats",
+          "config": {
+            "title": "Listings",
+            "metrics": [
+              {
+                "label": "Total",
+                "icon": "package",
+                "variant": "primary",
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "icon": "check-circle",
+                "label": "Active",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "success"
+              },
+              {
+                "icon": "edit",
+                "label": "Draft",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ],
+                "aggregation": "count",
+                "format": "number"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "TagTaxonomy.traits.TagBrowse",
+          "name": "ListingTags",
+          "config": {
+            "title": "Categories",
+            "allowEdit": false
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "ListingBrowseList",
+          "linkedEntity": "Listing",
+          "config": {
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ],
+            "cols": 1.0,
+            "gap": "sm",
+            "fields": [
+              {
+                "icon": "package",
+                "name": "title",
+                "variant": "h3"
+              },
+              {
+                "format": "currency",
+                "name": "price",
+                "variant": "h4"
+              },
+              {
+                "name": "currency",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "ratingAverage"
+              },
+              {
+                "variant": "caption",
+                "name": "reviewCount"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingFilter"
+              }
+            },
+            {
+              "event": "LISTING_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            },
+            {
+              "event": "LISTING_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            },
+            {
+              "event": "LISTING_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ImageUpload.traits.UploadedImageUpload",
+          "name": "ListingImages",
+          "config": {
+            "maxImages": 10.0,
+            "maxBytesPerImage": 10485760.0,
+            "title": "Listing Images",
+            "accept": "image/*"
+          }
+        },
+        {
+          "ref": "RatingReview.traits.RatingReviewSubmit",
+          "name": "ListingRating",
+          "config": {
+            "allowComment": true,
+            "allowPhotos": false,
+            "maxStars": 5.0,
+            "title": "Rate this listing",
+            "submitEvent": "SUBMIT_REVIEW"
+          }
+        },
+        {
+          "ref": "Flag.traits.FlagReport",
+          "name": "ListingFlag",
+          "config": {
+            "title": "Report listing",
+            "reasons": [
+              "spam",
+              "abuse",
+              "off-topic",
+              "misinformation",
+              "nsfw",
+              "other"
+            ]
+          }
+        },
+        {
+          "ref": "ModQueue.traits.ModQueueItemReview",
+          "name": "ListingModQueue",
+          "config": {
+            "autoEscalateThreshold": 5.0,
+            "title": "Listing Moderation Queue"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingCreate",
+          "linkedEntity": "Listing",
+          "config": {
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "vendorId",
+              "title",
+              "description",
+              "price",
+              "currency",
+              "status"
+            ],
+            "title": "New Listing"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingEdit",
+          "linkedEntity": "Listing",
+          "config": {
+            "title": "Edit Listing",
+            "mode": "edit",
+            "icon": "edit",
+            "fields": [
+              "vendorId",
+              "title",
+              "description",
+              "price",
+              "currency",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ListingView",
+          "linkedEntity": "Listing",
+          "config": {
+            "title": "View Listing",
+            "icon": "eye",
+            "mode": "edit",
+            "fields": [
+              "vendorId",
+              "title",
+              "description",
+              "price",
+              "currency",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "ListingDelete",
+          "linkedEntity": "Listing",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Listing",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ListingPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Listing",
+          "emits": [
+            {
+              "event": "LISTING_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LISTING_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LISTING_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListingDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LISTING_CREATED",
+                "name": "Listing Created"
+              },
+              {
+                "key": "LISTING_UPDATED",
+                "name": "Listing Updated"
+              },
+              {
+                "key": "LISTING_DELETED",
+                "name": "Listing Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Listing",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "LISTING_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Listing",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "LISTING_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Listing",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "LISTING_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ListingsPage",
+          "path": "/listings",
+          "traits": [
+            {
+              "ref": "ListingAppLayout"
+            },
+            {
+              "ref": "ListingCatalog"
+            },
+            {
+              "ref": "ListingSearch"
+            },
+            {
+              "ref": "ListingFilter"
+            },
+            {
+              "ref": "ListingStats"
+            },
+            {
+              "ref": "ListingTags"
+            },
+            {
+              "ref": "ListingBrowseList"
+            },
+            {
+              "ref": "ListingImages"
+            },
+            {
+              "ref": "ListingRating"
+            },
+            {
+              "ref": "ListingFlag"
+            },
+            {
+              "ref": "ListingModQueue"
+            },
+            {
+              "ref": "ListingCreate"
+            },
+            {
+              "ref": "ListingEdit"
+            },
+            {
+              "ref": "ListingView"
+            },
+            {
+              "ref": "ListingDelete"
+            },
+            {
+              "ref": "ListingPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OrderOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-cart",
+          "as": "Cart"
+        }
+      ],
+      "entity": {
+        "name": "Order",
+        "collection": "orders",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "buyerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "listingId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "default": 1.0
+          },
+          {
+            "name": "totalAmount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "paid",
+              "shipped",
+              "delivered",
+              "refunded"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "OrderAppLayout",
+          "linkedEntity": "Order",
+          "config": {
+            "contentTrait": "@trait.OrderCatalog",
+            "navItems": [
+              {
+                "label": "Vendors",
+                "icon": "store",
+                "href": "/vendors"
+              },
+              {
+                "href": "/listings",
+                "label": "Listings",
+                "icon": "package"
+              },
+              {
+                "href": "/orders",
+                "icon": "shopping-cart",
+                "label": "Orders"
+              }
+            ],
+            "searchEvent": "ORDER_SEARCH",
+            "appName": "Marketplace",
+            "notificationClickEvent": "ORDER_NOTIFICATIONS_OPEN",
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "ORDER_SEARCH",
+            "NOTIFY_CLICK": "ORDER_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "OrderCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "ORDER_SEARCH",
+              "triggers": "ORDER_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderAppLayout"
+              }
+            },
+            {
+              "event": "ORDER_NOTIFICATIONS_OPEN",
+              "triggers": "ORDER_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ORDER_SEARCH",
+                "name": "Order Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ORDER_NOTIFICATIONS_OPEN",
+                "name": "Order Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "shopping-cart"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Orders"
+                                }
+                              ],
+                              "align": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "action": "CREATE",
+                                  "icon": "plus",
+                                  "label": "New Order"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "align": "center",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.OrderBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.OrderCart"
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "ORDER_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "ORDER_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Back to orders",
+                          "action": "INIT",
+                          "variant": "ghost"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "OrderBrowseList",
+          "linkedEntity": "Order",
+          "config": {
+            "fields": [
+              {
+                "name": "buyerId",
+                "variant": "caption"
+              },
+              {
+                "name": "listingId",
+                "variant": "caption"
+              },
+              {
+                "name": "quantity",
+                "variant": "caption"
+              },
+              {
+                "name": "totalAmount",
+                "format": "currency",
+                "variant": "h4"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              }
+            ],
+            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "ORDER_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderPersistor"
+              }
+            },
+            {
+              "event": "ORDER_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderPersistor"
+              }
+            },
+            {
+              "event": "ORDER_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Cart.traits.CartItemCartBrowse",
+          "name": "OrderCart"
+        },
+        {
+          "ref": "Cart.traits.CartItemAddItem",
+          "name": "OrderCartAdd"
+        },
+        {
+          "ref": "Cart.traits.CartItemRemoveConfirm",
+          "name": "OrderCartRemove"
+        },
+        {
+          "ref": "Cart.traits.CartItemPersistor",
+          "name": "OrderCartPersistor"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "OrderCreate",
+          "linkedEntity": "Order",
+          "config": {
+            "fields": [
+              "buyerId",
+              "listingId",
+              "quantity",
+              "totalAmount",
+              "status"
+            ],
+            "title": "New Order",
+            "mode": "create",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "OrderEdit",
+          "linkedEntity": "Order",
+          "config": {
+            "fields": [
+              "buyerId",
+              "listingId",
+              "quantity",
+              "totalAmount",
+              "status"
+            ],
+            "title": "Edit Order",
+            "icon": "edit",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "OrderView",
+          "linkedEntity": "Order",
+          "config": {
+            "fields": [
+              "buyerId",
+              "listingId",
+              "quantity",
+              "totalAmount",
+              "status"
+            ],
+            "title": "View Order",
+            "icon": "eye",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "OrderDelete",
+          "linkedEntity": "Order",
+          "config": {
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
+            "title": "Delete Order",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "OrderPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Order",
+          "emits": [
+            {
+              "event": "ORDER_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ORDER_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ORDER_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "OrderDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ORDER_CREATED",
+                "name": "Order Created"
+              },
+              {
+                "key": "ORDER_UPDATED",
+                "name": "Order Updated"
+              },
+              {
+                "key": "ORDER_DELETED",
+                "name": "Order Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Order",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ORDER_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Order",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ORDER_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Order",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "ORDER_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OrdersPage",
+          "path": "/orders",
+          "traits": [
+            {
+              "ref": "OrderAppLayout"
+            },
+            {
+              "ref": "OrderCatalog"
+            },
+            {
+              "ref": "OrderBrowseList"
+            },
+            {
+              "ref": "OrderCart"
+            },
+            {
+              "ref": "OrderCartAdd"
+            },
+            {
+              "ref": "OrderCartRemove"
+            },
+            {
+              "ref": "OrderCartPersistor"
+            },
+            {
+              "ref": "OrderCreate"
+            },
+            {
+              "ref": "OrderEdit"
+            },
+            {
+              "ref": "OrderView"
+            },
+            {
+              "ref": "OrderDelete"
+            },
+            {
+              "ref": "OrderPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

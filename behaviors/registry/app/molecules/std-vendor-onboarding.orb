@@ -1,0 +1,1630 @@
+{
+  "name": "std-vendor-onboarding",
+  "version": "1.0.0",
+  "description": "std-vendor-onboarding — marketplace vendor multi-step KYC + bank-link wizard with identity-doc upload",
+  "orbitals": [
+    {
+      "name": "VendorOnboardingOrbital",
+      "entity": {
+        "name": "Vendor",
+        "collection": "vendors",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "businessName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "legalName",
+            "type": "string"
+          },
+          {
+            "name": "ein",
+            "type": "string"
+          },
+          {
+            "name": "bankRoutingMasked",
+            "type": "string"
+          },
+          {
+            "name": "bankAcctMasked",
+            "type": "string"
+          },
+          {
+            "name": "identityDocUrl",
+            "type": "string"
+          },
+          {
+            "name": "currentStep",
+            "type": "string",
+            "default": "business-info",
+            "values": [
+              "business-info",
+              "tax-id",
+              "bank-link",
+              "identity-verify",
+              "review",
+              "submitted"
+            ]
+          },
+          {
+            "name": "submittedAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "VendorOnboard",
+          "category": "interaction",
+          "linkedEntity": "Vendor",
+          "emits": [
+            {
+              "event": "NEXT_STEP",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "BACK_STEP"
+            },
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "submittedAt",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UPLOAD_IDENTITY",
+              "payloadSchema": [
+                {
+                  "name": "url",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "VendorLoaded",
+              "description": "Fired when the vendor record finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Vendor]"
+                }
+              ]
+            },
+            {
+              "event": "VendorLoadFailed",
+              "description": "Fired when the vendor record fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "VendorUpdated",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorPersistor"
+              }
+            },
+            {
+              "event": "VendorSubmitted",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "business-info"
+              },
+              {
+                "name": "tax-id"
+              },
+              {
+                "name": "bank-link"
+              },
+              {
+                "name": "identity-verify"
+              },
+              {
+                "name": "review"
+              },
+              {
+                "name": "submitted"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VendorLoaded",
+                "name": "Vendor loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Vendor]"
+                  }
+                ]
+              },
+              {
+                "key": "VendorLoadFailed",
+                "name": "Vendor load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NEXT_STEP",
+                "name": "Next Step",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT_BUSINESS",
+                "name": "Edit Business"
+              },
+              {
+                "key": "BACK_STEP",
+                "name": "Back Step"
+              },
+              {
+                "key": "EDIT_TAX",
+                "name": "Edit Tax"
+              },
+              {
+                "key": "EDIT_BANK",
+                "name": "Edit Bank"
+              },
+              {
+                "key": "UPLOAD_IDENTITY",
+                "name": "Upload Identity",
+                "payloadSchema": [
+                  {
+                    "name": "url",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "submittedAt",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vendor",
+                    {
+                      "emit": {
+                        "failure": "VendorLoadFailed",
+                        "success": "VendorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading vendor application…"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "business-info",
+                "event": "VendorLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "variant": "h2",
+                          "content": "Vendor Onboarding",
+                          "type": "typography"
+                        },
+                        {
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 0.0,
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Business Info"
+                        },
+                        {
+                          "type": "form-section",
+                          "mode": "create",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "businessName",
+                            "legalName"
+                          ],
+                          "submitEvent": "NEXT_STEP"
+                        },
+                        {
+                          "currentStep": 0.0,
+                          "totalSteps": 5.0,
+                          "type": "wizard-navigation",
+                          "onNext": "NEXT_STEP",
+                          "showNext": true,
+                          "showComplete": false,
+                          "showBack": false
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "VendorLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "business-info",
+                "to": "tax-id",
+                "event": "NEXT_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.businessName",
+                    "@payload.data.businessName"
+                  ],
+                  [
+                    "set",
+                    "@entity.legalName",
+                    "@payload.data.legalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "tax-id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Vendor Onboarding",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 1.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Tax ID",
+                          "type": "typography"
+                        },
+                        {
+                          "mode": "edit",
+                          "type": "form-section",
+                          "entity": "@entity",
+                          "submitEvent": "NEXT_STEP",
+                          "cancelEvent": "BACK_STEP",
+                          "fields": [
+                            "ein"
+                          ]
+                        },
+                        {
+                          "type": "wizard-navigation",
+                          "onBack": "BACK_STEP",
+                          "showNext": true,
+                          "showBack": true,
+                          "currentStep": 1.0,
+                          "showComplete": false,
+                          "totalSteps": 5.0,
+                          "onNext": "NEXT_STEP"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "business-info",
+                "to": "business-info",
+                "event": "EDIT_BUSINESS",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 0.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Business Info"
+                        },
+                        {
+                          "fields": [
+                            "businessName",
+                            "legalName"
+                          ],
+                          "submitEvent": "NEXT_STEP",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "entity": "@entity",
+                          "cancelEvent": "INIT"
+                        },
+                        {
+                          "showComplete": false,
+                          "totalSteps": 5.0,
+                          "onNext": "NEXT_STEP",
+                          "currentStep": 0.0,
+                          "showBack": false,
+                          "type": "wizard-navigation",
+                          "showNext": true
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "tax-id",
+                "to": "bank-link",
+                "event": "NEXT_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.ein",
+                    "@payload.data.ein"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "bank-link"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 2.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Bank Link",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "fields": [
+                            "bankRoutingMasked",
+                            "bankAcctMasked"
+                          ],
+                          "entity": "@entity",
+                          "submitEvent": "NEXT_STEP",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "cancelEvent": "BACK_STEP"
+                        },
+                        {
+                          "currentStep": 2.0,
+                          "showBack": true,
+                          "showComplete": false,
+                          "totalSteps": 5.0,
+                          "showNext": true,
+                          "onNext": "NEXT_STEP",
+                          "type": "wizard-navigation",
+                          "onBack": "BACK_STEP"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "tax-id",
+                "to": "business-info",
+                "event": "BACK_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "business-info"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-2xl mx-auto w-full",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 0.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Business Info"
+                        },
+                        {
+                          "type": "form-section",
+                          "mode": "edit",
+                          "submitEvent": "NEXT_STEP",
+                          "cancelEvent": "INIT",
+                          "entity": "@entity",
+                          "fields": [
+                            "businessName",
+                            "legalName"
+                          ]
+                        },
+                        {
+                          "onNext": "NEXT_STEP",
+                          "currentStep": 0.0,
+                          "totalSteps": 5.0,
+                          "showBack": false,
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "showNext": true
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "tax-id",
+                "to": "tax-id",
+                "event": "EDIT_TAX",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "content": "Vendor Onboarding",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 1.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Tax ID",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "submitEvent": "NEXT_STEP",
+                          "cancelEvent": "BACK_STEP",
+                          "entity": "@entity",
+                          "fields": [
+                            "ein"
+                          ],
+                          "mode": "edit",
+                          "type": "form-section"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "totalSteps": 5.0,
+                          "showNext": true,
+                          "onBack": "BACK_STEP",
+                          "type": "wizard-navigation",
+                          "showBack": true,
+                          "showComplete": false,
+                          "onNext": "NEXT_STEP"
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "bank-link",
+                "to": "identity-verify",
+                "event": "NEXT_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bankRoutingMasked",
+                    "@payload.data.bankRoutingMasked"
+                  ],
+                  [
+                    "set",
+                    "@entity.bankAcctMasked",
+                    "@payload.data.bankAcctMasked"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "identity-verify"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 3.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Identity Verification",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Upload a government-issued ID to verify your identity.",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "type": "upload-drop-zone",
+                          "label": "Drop ID document here",
+                          "icon": "credit-card",
+                          "action": "UPLOAD_IDENTITY",
+                          "accept": "image/*",
+                          "maxSize": 10485760.0,
+                          "description": "or click to browse",
+                          "maxFiles": 2.0
+                        },
+                        {
+                          "currentStep": 3.0,
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "onBack": "BACK_STEP",
+                          "onNext": "NEXT_STEP",
+                          "showNext": true,
+                          "showBack": true,
+                          "totalSteps": 5.0
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "bank-link",
+                "to": "tax-id",
+                "event": "BACK_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "tax-id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "content": "Vendor Onboarding",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "currentStep": 1.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Tax ID",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "submitEvent": "NEXT_STEP",
+                          "cancelEvent": "BACK_STEP",
+                          "fields": [
+                            "ein"
+                          ],
+                          "entity": "@entity",
+                          "mode": "edit"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "onBack": "BACK_STEP",
+                          "type": "wizard-navigation",
+                          "totalSteps": 5.0,
+                          "showComplete": false,
+                          "showBack": true,
+                          "onNext": "NEXT_STEP",
+                          "showNext": true
+                        }
+                      ],
+                      "className": "max-w-2xl mx-auto w-full",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "bank-link",
+                "to": "bank-link",
+                "event": "EDIT_BANK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "content": "Vendor Onboarding",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 2.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Bank Link",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "entity": "@entity",
+                          "submitEvent": "NEXT_STEP",
+                          "cancelEvent": "BACK_STEP",
+                          "fields": [
+                            "bankRoutingMasked",
+                            "bankAcctMasked"
+                          ],
+                          "mode": "edit",
+                          "type": "form-section"
+                        },
+                        {
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "showBack": true,
+                          "showNext": true,
+                          "onBack": "BACK_STEP",
+                          "onNext": "NEXT_STEP",
+                          "totalSteps": 5.0,
+                          "currentStep": 2.0
+                        }
+                      ],
+                      "gap": "lg",
+                      "className": "max-w-2xl mx-auto w-full"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "identity-verify",
+                "to": "identity-verify",
+                "event": "UPLOAD_IDENTITY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.identityDocUrl",
+                    "@payload.url"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-2xl mx-auto w-full",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Vendor Onboarding",
+                          "variant": "h2"
+                        },
+                        {
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 3.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Identity Verification",
+                          "type": "typography"
+                        },
+                        {
+                          "message": "Identity document uploaded.",
+                          "type": "alert",
+                          "variant": "success"
+                        },
+                        {
+                          "onBack": "BACK_STEP",
+                          "showComplete": false,
+                          "currentStep": 3.0,
+                          "showNext": true,
+                          "totalSteps": 5.0,
+                          "showBack": true,
+                          "onNext": "NEXT_STEP",
+                          "type": "wizard-navigation"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "identity-verify",
+                "to": "review",
+                "event": "NEXT_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "review"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "currentStep": 4.0,
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ],
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Review",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Business Name"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.businessName",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "justify": "between",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Legal Name"
+                                },
+                                {
+                                  "content": "@entity.legalName",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "content": "EIN",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.ein",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Bank Routing"
+                                },
+                                {
+                                  "content": "@entity.bankRoutingMasked",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Bank Account"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.bankAcctMasked"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "justify": "between"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Identity Doc"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.identityDocUrl",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical"
+                        },
+                        {
+                          "showBack": true,
+                          "onComplete": "SUBMIT",
+                          "showComplete": true,
+                          "type": "wizard-navigation",
+                          "onBack": "BACK_STEP",
+                          "totalSteps": 5.0,
+                          "showNext": false,
+                          "currentStep": 4.0
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "identity-verify",
+                "to": "bank-link",
+                "event": "BACK_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "bank-link"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "children": [
+                        {
+                          "content": "Vendor Onboarding",
+                          "type": "typography",
+                          "variant": "h2"
+                        },
+                        {
+                          "currentStep": 2.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Bank Link",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "fields": [
+                            "bankRoutingMasked",
+                            "bankAcctMasked"
+                          ],
+                          "mode": "edit",
+                          "cancelEvent": "BACK_STEP",
+                          "type": "form-section",
+                          "submitEvent": "NEXT_STEP",
+                          "entity": "@entity"
+                        },
+                        {
+                          "showBack": true,
+                          "type": "wizard-navigation",
+                          "showComplete": false,
+                          "totalSteps": 5.0,
+                          "showNext": true,
+                          "onNext": "NEXT_STEP",
+                          "currentStep": 2.0,
+                          "onBack": "BACK_STEP"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "submitted",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "submitted"
+                  ],
+                  [
+                    "set",
+                    "@entity.submittedAt",
+                    "@payload.submittedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-2xl mx-auto w-full py-12",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "color": "success"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Application Submitted"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "Thanks. We will review your vendor application and email you within 2 business days."
+                        }
+                      ],
+                      "align": "center",
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "identity-verify",
+                "event": "BACK_STEP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "identity-verify"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-2xl mx-auto w-full",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "h2",
+                          "content": "Vendor Onboarding"
+                        },
+                        {
+                          "currentStep": 3.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Business",
+                            "Tax ID",
+                            "Bank",
+                            "Identity",
+                            "Review"
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Identity Verification",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "action": "UPLOAD_IDENTITY",
+                          "maxSize": 10485760.0,
+                          "label": "Drop ID document here",
+                          "accept": "image/*",
+                          "type": "upload-drop-zone",
+                          "maxFiles": 2.0,
+                          "description": "or click to browse",
+                          "icon": "credit-card"
+                        },
+                        {
+                          "type": "wizard-navigation",
+                          "showNext": true,
+                          "onNext": "NEXT_STEP",
+                          "showBack": true,
+                          "showComplete": false,
+                          "currentStep": 3.0,
+                          "totalSteps": 5.0,
+                          "onBack": "BACK_STEP"
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitted",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vendor",
+                    {
+                      "emit": {
+                        "failure": "VendorLoadFailed",
+                        "success": "VendorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vendor",
+                    {
+                      "emit": {
+                        "failure": "VendorLoadFailed",
+                        "success": "VendorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "name": "VendorPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Vendor",
+          "emits": [
+            {
+              "event": "VendorUpdated",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "VendorUpdateFailed",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "VendorSubmitted",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "VendorSubmitFailed",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "NEXT_STEP",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorOnboard"
+              }
+            },
+            {
+              "event": "SUBMIT",
+              "triggers": "DO_SUBMIT",
+              "source": {
+                "kind": "trait",
+                "trait": "VendorOnboard"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "Vendor",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_SUBMIT",
+                "name": "Do Submit",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "Vendor",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "VendorUpdated",
+                "name": "Vendor updated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VendorUpdateFailed",
+                "name": "Vendor update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VendorSubmitted",
+                "name": "Vendor submitted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VendorSubmitFailed",
+                "name": "Vendor submit failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Vendor",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "VendorUpdateFailed",
+                        "success": "VendorUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_SUBMIT",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Vendor",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "VendorSubmitted",
+                        "failure": "VendorSubmitFailed"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "VendorOnboardingPage",
+          "path": "/vendor-onboarding",
+          "traits": [
+            {
+              "ref": "VendorOnboard"
+            },
+            {
+              "ref": "VendorPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

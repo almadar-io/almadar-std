@@ -1,0 +1,1057 @@
+{
+  "name": "std-work-order",
+  "version": "1.0.0",
+  "description": "std-work-order — field-service work order lifecycle (created → assigned → en-route → on-site → completed). Owns a WorkOrder entity and a single dispatch trait that loads the queue, renders it in a data-grid, and persists status transitions back to the row.",
+  "orbitals": [
+    {
+      "name": "WorkOrderOrbital",
+      "entity": {
+        "name": "WorkOrder",
+        "collection": "workorders",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "serviceType",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "normal",
+            "values": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "created",
+            "values": [
+              "created",
+              "assigned",
+              "en-route",
+              "on-site",
+              "completed",
+              "cancelled"
+            ]
+          },
+          {
+            "name": "assignedTo",
+            "type": "string"
+          },
+          {
+            "name": "scheduledAt",
+            "type": "string"
+          },
+          {
+            "name": "etaMinutes",
+            "type": "number"
+          },
+          {
+            "name": "notes",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WorkOrderManage",
+          "category": "interaction",
+          "linkedEntity": "WorkOrder",
+          "emits": [
+            {
+              "event": "ASSIGN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "assignedTo",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "START_TRAVEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "etaMinutes",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ARRIVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WorkOrderLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[WorkOrder]"
+                }
+              ]
+            },
+            {
+              "event": "WorkOrderLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WorkOrderUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.address",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.etaMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WorkOrderUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WorkOrderLoaded",
+                "name": "WorkOrder loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[WorkOrder]"
+                  }
+                ]
+              },
+              {
+                "key": "WorkOrderLoadFailed",
+                "name": "WorkOrder load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ASSIGN",
+                "name": "Assign",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "assignedTo",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "START_TRAVEL",
+                "name": "Start Travel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "etaMinutes",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "ARRIVE",
+                "name": "Arrive",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notes",
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notes",
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "WorkOrderUpdated",
+                "name": "WorkOrder updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "WorkOrder"
+                  }
+                ]
+              },
+              {
+                "key": "WorkOrderUpdateFailed",
+                "name": "WorkOrder update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorkOrder",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderLoadFailed",
+                        "success": "WorkOrderLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading work orders…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "WorkOrderLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "clipboard-list",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "icon": "user-plus",
+                              "label": "Assign",
+                              "event": "ASSIGN",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "START_TRAVEL",
+                              "variant": "secondary",
+                              "icon": "navigation",
+                              "label": "Start Travel"
+                            },
+                            {
+                              "icon": "map-pin",
+                              "event": "ARRIVE",
+                              "label": "Arrive",
+                              "variant": "secondary"
+                            },
+                            {
+                              "icon": "check",
+                              "label": "Complete",
+                              "event": "COMPLETE",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "CANCEL",
+                              "icon": "x",
+                              "variant": "destructive",
+                              "label": "Cancel"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "label": "Customer",
+                              "variant": "label",
+                              "name": "customerName"
+                            },
+                            {
+                              "name": "serviceType",
+                              "label": "Service",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "address",
+                              "label": "Address",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Priority",
+                              "name": "priority"
+                            },
+                            {
+                              "name": "status",
+                              "variant": "badge",
+                              "label": "Status"
+                            },
+                            {
+                              "label": "Assigned",
+                              "name": "assignedTo",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "etaMinutes",
+                              "variant": "caption",
+                              "label": "ETA (min)"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "WorkOrderLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ASSIGN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.assignedTo",
+                    "@payload.assignedTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "assigned"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderUpdateFailed",
+                        "success": "WorkOrderUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "START_TRAVEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.etaMinutes",
+                    "@payload.etaMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "en-route"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderUpdateFailed",
+                        "success": "WorkOrderUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ARRIVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "on-site"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "WorkOrderUpdated",
+                        "failure": "WorkOrderUpdateFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.notes"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderUpdateFailed",
+                        "success": "WorkOrderUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.notes"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "cancelled"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderUpdateFailed",
+                        "success": "WorkOrderUpdated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "WorkOrderUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorkOrder",
+                    {
+                      "emit": {
+                        "success": "WorkOrderLoaded",
+                        "failure": "WorkOrderLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "WorkOrderUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WorkOrder",
+                    {
+                      "emit": {
+                        "success": "WorkOrderLoaded",
+                        "failure": "WorkOrderLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Work Orders"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WorkOrderManagePage",
+          "path": "/workorders/manage",
+          "traits": [
+            {
+              "ref": "WorkOrderManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

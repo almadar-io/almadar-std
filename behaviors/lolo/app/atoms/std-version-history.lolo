@@ -1,0 +1,117 @@
+app std-version-history "1.0.0"
+"std-version-history — wiki/CMS revision history with diff + rollback. Owns a Revision entity (one row per saved version of a document); browses revisions in a data-grid, opens a side-by-side version-diff for any two picks, and persists a rollback by re-saving the chosen revision's content as a new update on the source document."
+
+orbital RevisionOrbital {
+  entity Revision [persistent: revisions] {
+    id            : string!
+    documentId    : string!
+    documentType  : string!
+    versionNumber : number!
+    authorId      : string
+    authorName    : string
+    content       : string
+    summary       : string
+    createdAt     : string
+  }
+
+  type RevisionLoaded         = Event { data : [Revision] }              "Fired when the revision collection finishes loading"
+  type RevisionLoadFailed     = Event { error : string, code : string }  "Fired when the revision collection fails to load"
+  type RevisionRolledBack     = Event { row : Revision }                 "Fired after a rollback persists successfully on the source document"
+  type RevisionRollbackFailed = Event { error : string, code : string }  "Fired when a rollback fails to persist"
+
+  trait RevisionManage -> Revision [interaction, collection] {
+    config {
+      title : string = "Version History"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
+      RevisionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "versionNumber", label: "Version", variant: "badge" }, { name: "authorName", label: "Author", variant: "caption" }, { name: "summary", label: "Summary", variant: "caption" }, { name: "createdAt", label: "Saved", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary", icon: "eye" }, { label: "Compare", event: "COMPARE", variant: "secondary", icon: "git-compare" }, { label: "Rollback", event: "ROLLBACK", variant: "primary", icon: "rotate-ccw" }] }] })
+      RevisionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      VIEW -> browsing
+        (set @entity.id @payload.row.id)
+        (set @entity.documentId @payload.row.documentId)
+        (set @entity.documentType @payload.row.documentType)
+        (set @entity.versionNumber @payload.row.versionNumber)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.authorName @payload.row.authorName)
+        (set @entity.content @payload.row.content)
+        (set @entity.summary @payload.row.summary)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@entity.summary", variant: "h3" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", content: "@entity.authorName", variant: "caption", color: "muted" }, { type: "typography", content: "@entity.createdAt", variant: "caption", color: "muted" }] }, { type: "divider" }, { type: "typography", content: "@entity.content", variant: "body" }, { type: "button", label: "Back", action: "INIT", variant: "secondary", icon: "arrow-left" }] })
+      COMPARE -> comparing
+        (set @entity.id @payload.afterRow.id)
+        (set @entity.documentId @payload.afterRow.documentId)
+        (set @entity.documentType @payload.afterRow.documentType)
+        (set @entity.versionNumber @payload.afterRow.versionNumber)
+        (set @entity.authorId @payload.afterRow.authorId)
+        (set @entity.authorName @payload.afterRow.authorName)
+        (set @entity.content @payload.afterRow.content)
+        (set @entity.summary @payload.afterRow.summary)
+        (set @entity.createdAt @payload.afterRow.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "git-compare" }, { type: "typography", content: "Compare versions", variant: "h3" }] }, { type: "divider" }, { type: "version-diff", revisions: "@payload.revisions", beforeId: "@payload.beforeId", afterId: "@payload.afterId", view: "side-by-side", onRevert: "ROLLBACK" }, { type: "button", label: "Back", action: "INIT", variant: "secondary", icon: "arrow-left" }] })
+      ROLLBACK -> browsing
+        (set @entity.id @payload.row.documentId)
+        (set @entity.documentId @payload.row.documentId)
+        (set @entity.documentType @payload.row.documentType)
+        (set @entity.versionNumber @payload.row.versionNumber)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.authorName @payload.row.authorName)
+        (set @entity.content @payload.row.content)
+        (set @entity.summary @payload.row.summary)
+        (set @entity.createdAt @payload.row.createdAt)
+        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
+      RevisionRolledBack -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+      RevisionRollbackFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state comparing {
+      ROLLBACK -> browsing
+        (set @entity.id @payload.row.documentId)
+        (set @entity.documentId @payload.row.documentId)
+        (set @entity.documentType @payload.row.documentType)
+        (set @entity.versionNumber @payload.row.versionNumber)
+        (set @entity.authorId @payload.row.authorId)
+        (set @entity.authorName @payload.row.authorName)
+        (set @entity.content @payload.row.content)
+        (set @entity.summary @payload.row.summary)
+        (set @entity.createdAt @payload.row.createdAt)
+        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
+      RevisionRolledBack -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+      RevisionRollbackFailed -> comparing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW     { revisionId : string!, row : Revision }
+      COMPARE  { beforeId : string!, afterId : string!, beforeRow : Revision, afterRow : Revision, revisions : [Revision] }
+      ROLLBACK { id : string!, revisionId : string!, row : Revision }
+      RevisionLoaded         { data : [Revision] }
+      RevisionLoadFailed     { error : string, code : string }
+      RevisionRolledBack     { row : Revision }
+      RevisionRollbackFailed { error : string, code : string }
+    }
+    listens {
+      VIEW     { revisionId : string!, row : Revision }
+      COMPARE  { beforeId : string!, afterId : string!, beforeRow : Revision, afterRow : Revision, revisions : [Revision] }
+      ROLLBACK { id : string!, revisionId : string!, row : Revision }
+      RevisionLoaded         { data : [Revision] }
+      RevisionLoadFailed     { error : string, code : string }
+      RevisionRolledBack     { row : Revision }
+      RevisionRollbackFailed { error : string, code : string }
+    }
+  }
+  page "/revisions/manage" as RevisionManagePage -> RevisionManage
+}

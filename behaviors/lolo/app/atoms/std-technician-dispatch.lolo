@@ -1,0 +1,94 @@
+app std-technician-dispatch "1.0.0"
+"std-technician-dispatch — dispatch board for field technicians. Owns a Technician entity (id, skills, availability, current assignment, last-known location) and a single trait that loads the roster, renders an Assign / SetUnavailable data-grid, and tracks accept / reject responses so a parent molecule can wire them to its WorkOrder."
+
+orbital TechnicianDispatchOrbital {
+  entity Technician [persistent: technicians] {
+    id             : string!
+    name           : string!
+    phone          : string
+    skills         : [string]
+    available      : boolean = true
+    currentOrderId : string
+    lat            : number
+    lng            : number
+    lastSeenAt     : string
+  }
+
+  type TechnicianLoaded         = Event { data : [Technician] }              "Fired when the technician roster finishes loading"
+  type TechnicianLoadFailed     = Event { error : string, code : string }    "Fired when the technician roster fails to load"
+  type TechnicianUpdated        = Event { row : Technician }                 "Fired after a technician row persists (assign / availability / reject)"
+  type TechnicianUpdateFailed   = Event { error : string, code : string }    "Fired when a technician row update fails to persist"
+  type AssignmentAccepted       = Event { technicianId : string }            "Fired when a technician accepts an assignment; parent molecule wires this to WorkOrder ASSIGN"
+  type AssignmentRejected       = Event { technicianId : string }            "Fired when a technician rejects an assignment so the parent can pick another"
+
+  trait TechnicianDispatch -> Technician [interaction, collection] {
+    config {
+      title : string = "Dispatch Board"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading technicians…" }] })
+      TechnicianLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "hard-hat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Technician", variant: "body" }, { name: "skills", label: "Skills", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }, { name: "currentOrderId", label: "Current Order", variant: "caption" }, { name: "lastSeenAt", label: "Last Seen", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Assign", event: "ASSIGN", variant: "primary", icon: "user-plus" }, { label: "Set Unavailable", event: "TOGGLE_AVAILABLE", variant: "secondary", icon: "user-minus" }] }] })
+      TechnicianLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      ASSIGN -> browsing
+        (set @entity.id @payload.technicianId)
+        (set @entity.currentOrderId @payload.orderId)
+        (set @entity.available false)
+        (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
+      ACCEPT -> browsing
+        (emit AssignmentAccepted { technicianId: @payload.technicianId })
+      REJECT -> browsing
+        (set @entity.id @payload.technicianId)
+        (set @entity.currentOrderId "")
+        (set @entity.available true)
+        (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
+        (emit AssignmentRejected { technicianId: @payload.technicianId })
+      TOGGLE_AVAILABLE -> browsing
+        (set @entity.id @payload.technicianId)
+        (set @entity.available @payload.available)
+        (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
+      TechnicianUpdated -> loading
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+      TechnicianUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      AssignmentAccepted -> browsing
+      AssignmentRejected -> browsing
+    }
+    state error {
+      INIT -> loading
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      ASSIGN           { technicianId : string!, orderId : string! }
+      ACCEPT           { technicianId : string! }
+      REJECT           { technicianId : string! }
+      TOGGLE_AVAILABLE { technicianId : string!, available : boolean! }
+      TechnicianLoaded       { data : [Technician] }
+      TechnicianLoadFailed   { error : string, code : string }
+      TechnicianUpdated      { row : Technician }
+      TechnicianUpdateFailed { error : string, code : string }
+      AssignmentAccepted     { technicianId : string! }
+      AssignmentRejected     { technicianId : string! }
+    }
+    listens {
+      ASSIGN           { technicianId : string!, orderId : string! }
+      ACCEPT           { technicianId : string! }
+      REJECT           { technicianId : string! }
+      TOGGLE_AVAILABLE { technicianId : string!, available : boolean! }
+      TechnicianLoaded       { data : [Technician] }
+      TechnicianLoadFailed   { error : string, code : string }
+      TechnicianUpdated      { row : Technician }
+      TechnicianUpdateFailed { error : string, code : string }
+      AssignmentAccepted     { technicianId : string! }
+      AssignmentRejected     { technicianId : string! }
+    }
+  }
+  page "/technicians/dispatch" as TechnicianDispatchPage -> TechnicianDispatch
+}

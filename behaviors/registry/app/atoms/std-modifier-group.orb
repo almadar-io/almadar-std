@@ -1,0 +1,818 @@
+{
+  "name": "std-modifier-group",
+  "version": "1.0.0",
+  "description": "std-modifier-group — restaurant menu item customization groups with required/optional/multi-select constraints. Owns a ModifierGroupRecord entity (constraint type, min/max selections, serialized options) and a single manage trait that loads groups, browses them in a data-grid with Create / Update / Delete actions, and persists each verdict back to the row.",
+  "orbitals": [
+    {
+      "name": "ModifierGroupOrbital",
+      "entity": {
+        "name": "ModifierGroupRecord",
+        "collection": "modifiergroups",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "constraintType",
+            "type": "string",
+            "default": "single",
+            "values": [
+              "single",
+              "multi"
+            ]
+          },
+          {
+            "name": "required",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "minSelect",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "maxSelect",
+            "type": "number",
+            "default": 1.0
+          },
+          {
+            "name": "optionsJson",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ModifierGroupManage",
+          "category": "interaction",
+          "linkedEntity": "ModifierGroupRecord",
+          "emits": [
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UPDATE",
+              "payloadSchema": [
+                {
+                  "name": "groupId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.constraintType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.required",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.minSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.optionsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "data",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DELETE",
+              "payloadSchema": [
+                {
+                  "name": "groupId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.constraintType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.required",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.minSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.optionsJson",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ModifierGroupRecord]"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupCreated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.constraintType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.required",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.minSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.optionsJson",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.constraintType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.required",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.minSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.optionsJson",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupDeleted",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.constraintType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.required",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.minSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxSelect",
+                  "type": "number"
+                },
+                {
+                  "name": "row.optionsJson",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModifierGroupWriteFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ModifierGroupLoaded",
+                "name": "Modifier group loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ModifierGroupRecord]"
+                  }
+                ]
+              },
+              {
+                "key": "ModifierGroupLoadFailed",
+                "name": "Modifier group load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "groupId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ModifierGroupRecord"
+                  },
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "groupId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ModifierGroupRecord"
+                  }
+                ]
+              },
+              {
+                "key": "ModifierGroupCreated",
+                "name": "Modifier group created",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ModifierGroupRecord"
+                  }
+                ]
+              },
+              {
+                "key": "ModifierGroupUpdated",
+                "name": "Modifier group updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ModifierGroupRecord"
+                  }
+                ]
+              },
+              {
+                "key": "ModifierGroupDeleted",
+                "name": "Modifier group deleted",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ModifierGroupRecord"
+                  }
+                ]
+              },
+              {
+                "key": "ModifierGroupWriteFailed",
+                "name": "Modifier group write failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModifierGroupRecord",
+                    {
+                      "emit": {
+                        "failure": "ModifierGroupLoadFailed",
+                        "success": "ModifierGroupLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading modifier groups…"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ModifierGroupLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-checks"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "Update",
+                              "icon": "edit",
+                              "event": "UPDATE",
+                              "variant": "secondary"
+                            },
+                            {
+                              "label": "Delete",
+                              "variant": "destructive",
+                              "icon": "trash",
+                              "event": "DELETE"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "name": "name",
+                              "label": "Group",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Constraint",
+                              "name": "constraintType",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "required",
+                              "variant": "badge",
+                              "label": "Required"
+                            },
+                            {
+                              "name": "minSelect",
+                              "label": "Min",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "maxSelect",
+                              "variant": "caption",
+                              "label": "Max"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "icon": "plus",
+                          "label": "New Group",
+                          "action": "CREATE",
+                          "variant": "primary"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ModifierGroupLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ModifierGroupRecord",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "ModifierGroupWriteFailed",
+                        "success": "ModifierGroupCreated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "UPDATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.groupId"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.constraintType",
+                    "@payload.row.constraintType"
+                  ],
+                  [
+                    "set",
+                    "@entity.required",
+                    "@payload.row.required"
+                  ],
+                  [
+                    "set",
+                    "@entity.minSelect",
+                    "@payload.row.minSelect"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxSelect",
+                    "@payload.row.maxSelect"
+                  ],
+                  [
+                    "set",
+                    "@entity.optionsJson",
+                    "@payload.row.optionsJson"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "ModifierGroupRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "ModifierGroupUpdated",
+                        "failure": "ModifierGroupWriteFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.groupId"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.constraintType",
+                    "@payload.row.constraintType"
+                  ],
+                  [
+                    "set",
+                    "@entity.required",
+                    "@payload.row.required"
+                  ],
+                  [
+                    "set",
+                    "@entity.minSelect",
+                    "@payload.row.minSelect"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxSelect",
+                    "@payload.row.maxSelect"
+                  ],
+                  [
+                    "set",
+                    "@entity.optionsJson",
+                    "@payload.row.optionsJson"
+                  ],
+                  [
+                    "persist",
+                    "delete",
+                    "ModifierGroupRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "ModifierGroupWriteFailed",
+                        "success": "ModifierGroupDeleted"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ModifierGroupCreated",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModifierGroupRecord",
+                    {
+                      "emit": {
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ModifierGroupUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModifierGroupRecord",
+                    {
+                      "emit": {
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ModifierGroupDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModifierGroupRecord",
+                    {
+                      "emit": {
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ModifierGroupWriteFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ModifierGroupRecord",
+                    {
+                      "emit": {
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Modifier Groups"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ModifierGroupManagePage",
+          "path": "/modifiergroups/manage",
+          "traits": [
+            {
+              "ref": "ModifierGroupManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

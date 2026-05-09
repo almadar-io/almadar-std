@@ -1,0 +1,80 @@
+app std-mod-queue "1.0.0"
+"std-mod-queue — moderation queue for content review. Owns a ModQueueItem entity (one row per flagged target) and a single review trait that loads pending items, renders them in a data-grid with Approve / Reject / Escalate actions, and persists the reviewer's verdict back to the row."
+
+orbital ModQueueItemOrbital {
+  entity ModQueueItem [persistent: modqueueitems] {
+    id         : string!
+    targetId   : string!
+    targetType : string!
+    reason     : "spam" | "abuse" | "off-topic" | "misinformation" | "nsfw" | "other"
+    flagCount  : number
+    status     : "pending" | "approved" | "rejected" | "escalated" = "pending"
+    reviewedBy : string
+    reviewedAt : string
+    notes      : string
+  }
+
+  type ModQueueItemLoaded     = Event { data : [ModQueueItem] }              "Fired when the moderation queue collection finishes loading"
+  type ModQueueItemLoadFailed = Event { error : string, code : string }      "Fired when the moderation queue collection fails to load"
+  type ModQueueItemReviewed   = Event { row : ModQueueItem }                 "Fired after a queue row's status persists (approve / reject / escalate)"
+  type ModQueueItemReviewFailed = Event { error : string, code : string }    "Fired when a queue row's status update fails to persist"
+
+  trait ModQueueItemReview -> ModQueueItem [interaction, collection] {
+    config {
+      title                 : string = "Moderation Queue"
+      autoEscalateThreshold : number = 5
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading moderation queue…" }] })
+      ModQueueItemLoaded -> reviewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "shield-alert" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "reason", label: "Reason", variant: "caption" }, { name: "flagCount", label: "Flags", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Reject", event: "REJECT", variant: "destructive", icon: "x" }, { label: "Escalate", event: "ESCALATE", variant: "secondary", icon: "alert-triangle" }] }] })
+      ModQueueItemLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state reviewing {
+      APPROVE -> reviewing
+        (set @entity.id @payload.id)
+        (set @entity.status "approved")
+        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+      REJECT -> reviewing
+        (set @entity.id @payload.id)
+        (set @entity.status "rejected")
+        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+      ESCALATE -> reviewing
+        (set @entity.id @payload.id)
+        (set @entity.status "escalated")
+        (persist update ModQueueItem @entity { emit: { success: "ModQueueItemReviewed", failure: "ModQueueItemReviewFailed" } })
+      ModQueueItemReviewed -> loading
+        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+      ModQueueItemReviewFailed -> reviewing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ModQueueItem { emit: { success: "ModQueueItemLoaded", failure: "ModQueueItemLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      APPROVE  { id : string!, row : ModQueueItem }
+      REJECT   { id : string!, row : ModQueueItem }
+      ESCALATE { id : string!, row : ModQueueItem }
+      ModQueueItemLoaded       { data : [ModQueueItem] }
+      ModQueueItemLoadFailed   { error : string, code : string }
+      ModQueueItemReviewed     { row : ModQueueItem }
+      ModQueueItemReviewFailed { error : string, code : string }
+    }
+    listens {
+      APPROVE  { id : string!, row : ModQueueItem }
+      REJECT   { id : string!, row : ModQueueItem }
+      ESCALATE { id : string!, row : ModQueueItem }
+      ModQueueItemLoaded       { data : [ModQueueItem] }
+      ModQueueItemLoadFailed   { error : string, code : string }
+      ModQueueItemReviewed     { row : ModQueueItem }
+      ModQueueItemReviewFailed { error : string, code : string }
+    }
+  }
+  page "/modqueueitems/review" as ModQueueItemReviewPage -> ModQueueItemReview
+}

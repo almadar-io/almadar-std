@@ -1,0 +1,120 @@
+app std-event "1.0.0"
+"std-event — event-ticketing event entity. Owns an EventRecord (date, venue, capacity, RFC5545 recurrenceRule, status). Browses events in a data-grid with Edit / Publish / Cancel actions; CREATE/UPDATE/PUBLISH/CANCEL persist a draft and re-fetch."
+
+orbital EventOrbital {
+  entity EventRecord [persistent: events] {
+    id              : string!
+    name            : string!
+    description     : string
+    venue           : string
+    lat             : number
+    lng             : number
+    startsAt        : string!
+    endsAt          : string!
+    recurrenceRule  : string
+    capacity        : number
+    status          : "draft" | "published" | "sold-out" | "cancelled" = "draft"
+    organizerId     : string
+    createdAt       : string
+  }
+
+  type EventLoaded       = Event { data : [EventRecord] }              "Fired when the event collection finishes loading"
+  type EventLoadFailed   = Event { error : string, code : string }     "Fired when the event collection fails to load"
+  type EventCreated      = Event { row : EventRecord }                 "Fired after a new event row persists successfully"
+  type EventUpdated      = Event { row : EventRecord }                 "Fired after an event row's edit persists successfully"
+  type EventPublished    = Event { row : EventRecord }                 "Fired after an event row's status flips to published"
+  type EventCancelled    = Event { row : EventRecord }                 "Fired after an event row's status flips to cancelled"
+
+  trait EventManage -> EventRecord [interaction, collection] {
+    config {
+      title : string = "Events"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading events…" }] })
+      EventLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "New Event", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "venue", label: "Venue", variant: "caption" }, { name: "startsAt", label: "Starts", variant: "caption" }, { name: "endsAt", label: "Ends", variant: "caption" }, { name: "capacity", label: "Capacity", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Edit", event: "UPDATE", variant: "secondary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "primary", icon: "send" }, { label: "Cancel", event: "CANCEL", variant: "destructive", icon: "x" }] }] })
+      EventLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      CREATE -> loading
+        (persist create EventRecord @payload.data { emit: { success: "EventCreated", failure: "EventLoadFailed" } })
+      UPDATE -> editing
+        (set @entity.id @payload.eventId)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.venue @payload.row.venue)
+        (set @entity.lat @payload.row.lat)
+        (set @entity.lng @payload.row.lng)
+        (set @entity.startsAt @payload.row.startsAt)
+        (set @entity.endsAt @payload.row.endsAt)
+        (set @entity.recurrenceRule @payload.row.recurrenceRule)
+        (set @entity.capacity @payload.row.capacity)
+        (set @entity.status @payload.row.status)
+        (set @entity.organizerId @payload.row.organizerId)
+        (set @entity.createdAt @payload.row.createdAt)
+        (persist update EventRecord @payload.data { emit: { success: "EventUpdated", failure: "EventLoadFailed" } })
+      PUBLISH -> loading
+        (set @entity.id @payload.eventId)
+        (set @entity.name @payload.row.name)
+        (set @entity.startsAt @payload.row.startsAt)
+        (set @entity.endsAt @payload.row.endsAt)
+        (set @entity.status "published")
+        (persist update EventRecord @entity { emit: { success: "EventPublished", failure: "EventLoadFailed" } })
+      CANCEL -> loading
+        (set @entity.id @payload.eventId)
+        (set @entity.name @payload.row.name)
+        (set @entity.startsAt @payload.row.startsAt)
+        (set @entity.endsAt @payload.row.endsAt)
+        (set @entity.status "cancelled")
+        (persist update EventRecord @entity { emit: { success: "EventCancelled", failure: "EventLoadFailed" } })
+      EventCreated -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+      EventUpdated -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+      EventPublished -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+      EventCancelled -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+    }
+    state editing {
+      EventUpdated -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+      EventLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      CREATE   { data : object! }
+      UPDATE   { eventId : string!, row : EventRecord, data : object! }
+      PUBLISH  { eventId : string!, row : EventRecord }
+      CANCEL   { eventId : string!, row : EventRecord }
+      EventLoaded     { data : [EventRecord] }
+      EventLoadFailed { error : string, code : string }
+      EventCreated    { row : EventRecord }
+      EventUpdated    { row : EventRecord }
+      EventPublished  { row : EventRecord }
+      EventCancelled  { row : EventRecord }
+    }
+    listens {
+      CREATE   { data : object! }
+      UPDATE   { eventId : string!, row : EventRecord, data : object! }
+      PUBLISH  { eventId : string!, row : EventRecord }
+      CANCEL   { eventId : string!, row : EventRecord }
+      EventLoaded     { data : [EventRecord] }
+      EventLoadFailed { error : string, code : string }
+      EventCreated    { row : EventRecord }
+      EventUpdated    { row : EventRecord }
+      EventPublished  { row : EventRecord }
+      EventCancelled  { row : EventRecord }
+    }
+  }
+  page "/events/manage" as EventManagePage -> EventManage
+}

@@ -1,0 +1,625 @@
+{
+  "name": "std-image-upload-multi",
+  "version": "1.0.0",
+  "description": "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress. Owns an UploadedImage entity scoped by parentId/parentType so listings, marketplaces, restaurant menus, and vendor onboarding can all reuse the same upload contract.",
+  "orbitals": [
+    {
+      "name": "UploadedImageOrbital",
+      "entity": {
+        "name": "UploadedImage",
+        "collection": "uploadedimages",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "url",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number"
+          },
+          {
+            "name": "mimeType",
+            "type": "string"
+          },
+          {
+            "name": "width",
+            "type": "number"
+          },
+          {
+            "name": "height",
+            "type": "number"
+          },
+          {
+            "name": "parentId",
+            "type": "string"
+          },
+          {
+            "name": "parentType",
+            "type": "string"
+          },
+          {
+            "name": "uploadedAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "UploadedImageUpload",
+          "category": "interaction",
+          "linkedEntity": "UploadedImage",
+          "emits": [
+            {
+              "event": "UPLOAD",
+              "payloadSchema": [
+                {
+                  "name": "files",
+                  "type": "object",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[UploadedImage]"
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageCreated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.url",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sizeBytes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.width",
+                  "type": "number"
+                },
+                {
+                  "name": "row.height",
+                  "type": "number"
+                },
+                {
+                  "name": "row.parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.parentType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.uploadedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageUploadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageDeleted",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "UploadedImageDeleteFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "uploading"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UploadedImageLoaded",
+                "name": "UploadedImage loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[UploadedImage]"
+                  }
+                ]
+              },
+              {
+                "key": "UploadedImageLoadFailed",
+                "name": "UploadedImage load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "UPLOAD",
+                "name": "Upload",
+                "payloadSchema": [
+                  {
+                    "name": "files",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UploadedImageDeleted",
+                "name": "UploadedImage deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UploadedImageDeleteFailed",
+                "name": "UploadedImage delete failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "UploadedImageCreated",
+                "name": "UploadedImage created",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "UploadedImage"
+                  }
+                ]
+              },
+              {
+                "key": "UploadedImageUploadFailed",
+                "name": "UploadedImage upload failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "UploadedImage",
+                    {
+                      "emit": {
+                        "failure": "UploadedImageLoadFailed",
+                        "success": "UploadedImageLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading images…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "UploadedImageLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "icon": "image-plus",
+                          "label": "Drop images here",
+                          "maxFiles": "@config.maxImages",
+                          "action": "UPLOAD",
+                          "type": "upload-drop-zone",
+                          "accept": "@config.accept",
+                          "maxSize": "@config.maxBytesPerImage",
+                          "description": "or click to browse"
+                        },
+                        {
+                          "data": "@payload.data",
+                          "type": "media-gallery",
+                          "entity": "UploadedImage"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "UploadedImageLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "uploading",
+                "event": "UPLOAD",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "UploadedImage",
+                    "@payload.files",
+                    {
+                      "emit": {
+                        "success": "UploadedImageCreated",
+                        "failure": "UploadedImageUploadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Uploading images…"
+                        },
+                        {
+                          "value": 0.0,
+                          "type": "progress-bar",
+                          "progressType": "linear",
+                          "max": 100.0
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "UploadedImage",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "UploadedImageDeleted",
+                        "failure": "UploadedImageDeleteFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "UploadedImageDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "UploadedImage",
+                    {
+                      "emit": {
+                        "success": "UploadedImageLoaded",
+                        "failure": "UploadedImageLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "error",
+                "event": "UploadedImageDeleteFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "uploading",
+                "to": "loading",
+                "event": "UploadedImageCreated",
+                "effects": [
+                  [
+                    "fetch",
+                    "UploadedImage",
+                    {
+                      "emit": {
+                        "failure": "UploadedImageLoadFailed",
+                        "success": "UploadedImageLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "color": "success"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Upload complete"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "uploading",
+                "to": "error",
+                "event": "UploadedImageUploadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "browsing",
+                "event": "UploadedImageLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "@config.title",
+                          "variant": "h3"
+                        },
+                        {
+                          "label": "Drop images here",
+                          "icon": "image-plus",
+                          "maxFiles": "@config.maxImages",
+                          "description": "or click to browse",
+                          "type": "upload-drop-zone",
+                          "maxSize": "@config.maxBytesPerImage",
+                          "accept": "@config.accept",
+                          "action": "UPLOAD"
+                        },
+                        {
+                          "entity": "UploadedImage",
+                          "data": "@payload.data",
+                          "type": "media-gallery"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "maxBytesPerImage": {
+              "type": "number",
+              "default": 10485760.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Upload Images"
+            },
+            "maxImages": {
+              "type": "number",
+              "default": 10.0
+            },
+            "accept": {
+              "type": "string",
+              "default": "image/*"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "UploadedImageUploadPage",
+          "path": "/uploadedimages/upload",
+          "traits": [
+            {
+              "ref": "UploadedImageUpload"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

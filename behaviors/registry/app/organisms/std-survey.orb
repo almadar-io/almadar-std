@@ -1,0 +1,1236 @@
+{
+  "name": "std-survey",
+  "version": "1.0.0",
+  "description": "Survey: Typeform-style builder with dynamic questions, skip-logic, response collection, and analytics.",
+  "orbitals": [
+    {
+      "name": "SurveyOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-question-bank",
+          "as": "QuestionBank"
+        },
+        {
+          "from": "std/behaviors/std-branching-logic",
+          "as": "Branching"
+        },
+        {
+          "from": "std/behaviors/std-form-advanced",
+          "as": "FormAdvanced"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        }
+      ],
+      "entity": {
+        "name": "Survey",
+        "collection": "surveys",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "published",
+              "closed"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "SurveyAppLayout",
+          "config": {
+            "contentTrait": "@trait.SurveyCatalog",
+            "navItems": [
+              {
+                "label": "Surveys",
+                "icon": "list-checks",
+                "href": "/surveys"
+              },
+              {
+                "icon": "inbox",
+                "label": "Responses",
+                "href": "/responses"
+              }
+            ],
+            "appName": "Surveys",
+            "notificationClickEvent": "SURVEY_NOTIFICATIONS_OPEN",
+            "searchEvent": "SURVEY_SEARCH",
+            "notifications": []
+          },
+          "events": {
+            "NOTIFY_CLICK": "SURVEY_NOTIFICATIONS_OPEN",
+            "SEARCH": "SURVEY_SEARCH"
+          }
+        },
+        {
+          "name": "SurveyCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SURVEY_SEARCH",
+              "triggers": "SURVEY_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyAppLayout"
+              }
+            },
+            {
+              "event": "SURVEY_NOTIFICATIONS_OPEN",
+              "triggers": "SURVEY_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SURVEY_SEARCH",
+                "name": "Survey Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SURVEY_NOTIFICATIONS_OPEN",
+                "name": "Survey Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "name": "list-checks",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Surveys",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "CREATE",
+                                  "label": "New Survey",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.SurveySearch",
+                        "@trait.SurveyStats",
+                        "@trait.SurveyGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.SurveyBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Question Bank"
+                        },
+                        "@trait.SurveyQuestionBank",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Skip Logic",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.SurveyBranching",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Survey Preview"
+                        },
+                        "@trait.SurveyPreviewForm"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "SURVEY_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "SURVEY_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-8",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "label": "Back to surveys",
+                          "action": "INIT",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "SurveySearch",
+          "config": {
+            "placeholder": "Search surveys…",
+            "event": "SURVEY_SEARCH"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "SurveyStats",
+          "config": {
+            "title": "Surveys",
+            "metrics": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "variant": "primary",
+                "label": "Total",
+                "icon": "list-checks"
+              },
+              {
+                "format": "number",
+                "icon": "edit",
+                "aggregation": "count",
+                "label": "Draft",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ],
+                "variant": "warning"
+              },
+              {
+                "icon": "check-circle",
+                "variant": "success",
+                "label": "Published",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "published"
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "SurveyGraphs",
+          "config": {
+            "height": 240.0,
+            "chartType": "bar",
+            "categoryField": "status",
+            "aggregation": "count",
+            "subtitle": "Distribution across lifecycle states",
+            "showLegend": false,
+            "title": "Surveys by Status"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "SurveyBrowseList",
+          "linkedEntity": "Survey",
+          "config": {
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ],
+            "gap": "sm",
+            "cols": 1.0,
+            "fields": [
+              {
+                "name": "title",
+                "variant": "h3",
+                "icon": "list-checks"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "description"
+              },
+              {
+                "variant": "caption",
+                "format": "date",
+                "name": "createdAt"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveySearch"
+              }
+            },
+            {
+              "event": "SURVEY_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyPersistor"
+              }
+            },
+            {
+              "event": "SURVEY_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyPersistor"
+              }
+            },
+            {
+              "event": "SURVEY_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "QuestionBank.traits.QuestionManage",
+          "name": "SurveyQuestionBank",
+          "config": {
+            "title": "Question Bank"
+          }
+        },
+        {
+          "ref": "Branching.traits.BranchingRuleManage",
+          "name": "SurveyBranching",
+          "config": {
+            "title": "Skip Logic Rules"
+          }
+        },
+        {
+          "ref": "FormAdvanced.traits.FormEntryFormAdvanced",
+          "name": "SurveyPreviewForm"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "SurveyCreate",
+          "linkedEntity": "Survey",
+          "config": {
+            "title": "New Survey",
+            "icon": "plus-circle",
+            "fields": [
+              "title",
+              "description",
+              "status"
+            ],
+            "mode": "create"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "SurveyEdit",
+          "linkedEntity": "Survey",
+          "config": {
+            "icon": "edit",
+            "fields": [
+              "title",
+              "description",
+              "status"
+            ],
+            "title": "Edit Survey",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "SurveyView",
+          "linkedEntity": "Survey",
+          "config": {
+            "title": "View Survey",
+            "fields": [
+              "title",
+              "description",
+              "status"
+            ],
+            "mode": "edit",
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "SurveyDelete",
+          "linkedEntity": "Survey",
+          "config": {
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
+            "title": "Delete Survey",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "SurveyPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Survey",
+          "emits": [
+            {
+              "event": "SURVEY_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SURVEY_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SURVEY_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "SurveyDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SURVEY_CREATED",
+                "name": "Survey Created"
+              },
+              {
+                "key": "SURVEY_UPDATED",
+                "name": "Survey Updated"
+              },
+              {
+                "key": "SURVEY_DELETED",
+                "name": "Survey Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Survey",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "SURVEY_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Survey",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "SURVEY_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Survey",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "SURVEY_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SurveysPage",
+          "path": "/surveys",
+          "traits": [
+            {
+              "ref": "SurveyAppLayout"
+            },
+            {
+              "ref": "SurveyCatalog"
+            },
+            {
+              "ref": "SurveySearch"
+            },
+            {
+              "ref": "SurveyStats"
+            },
+            {
+              "ref": "SurveyGraphs"
+            },
+            {
+              "ref": "SurveyBrowseList"
+            },
+            {
+              "ref": "SurveyQuestionBank"
+            },
+            {
+              "ref": "SurveyBranching"
+            },
+            {
+              "ref": "SurveyPreviewForm"
+            },
+            {
+              "ref": "SurveyCreate"
+            },
+            {
+              "ref": "SurveyEdit"
+            },
+            {
+              "ref": "SurveyView"
+            },
+            {
+              "ref": "SurveyDelete"
+            },
+            {
+              "ref": "SurveyPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ResponseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-response-collector",
+          "as": "Collector"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "Response",
+        "collection": "responses",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "surveyId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "respondentId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "questionId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "answerJson",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "submittedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ResponseAppLayout",
+          "linkedEntity": "Response",
+          "config": {
+            "notificationClickEvent": "RESPONSE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.ResponseDashboard",
+            "notifications": [],
+            "appName": "Surveys",
+            "searchEvent": "RESPONSE_SEARCH",
+            "navItems": [
+              {
+                "icon": "list-checks",
+                "label": "Surveys",
+                "href": "/surveys"
+              },
+              {
+                "icon": "inbox",
+                "label": "Responses",
+                "href": "/responses"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "RESPONSE_SEARCH",
+            "NOTIFY_CLICK": "RESPONSE_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "ResponseDashboard",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "RESPONSE_SEARCH",
+              "triggers": "RESPONSE_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "ResponseAppLayout"
+              }
+            },
+            {
+              "event": "RESPONSE_NOTIFICATIONS_OPEN",
+              "triggers": "RESPONSE_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "ResponseAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RESPONSE_SEARCH",
+                "name": "Response Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESPONSE_NOTIFICATIONS_OPEN",
+                "name": "Response Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "inbox",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Responses"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Submit a response"
+                        },
+                        "@trait.ResponseCollect",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "All responses"
+                        },
+                        "@trait.ResponseBrowseList"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "RESPONSE_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "RESPONSE_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "button",
+                          "action": "INIT",
+                          "label": "Back to responses",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Collector.traits.ResponseCollect",
+          "name": "ResponseCollect",
+          "config": {
+            "title": "Submit Response"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "ResponseBrowseList",
+          "linkedEntity": "Response",
+          "config": {
+            "pageSize": 100.0,
+            "fields": [
+              {
+                "name": "surveyId",
+                "label": "Survey",
+                "variant": "caption"
+              },
+              {
+                "variant": "body",
+                "label": "Respondent",
+                "name": "respondentId"
+              },
+              {
+                "name": "questionId",
+                "label": "Question",
+                "variant": "caption"
+              },
+              {
+                "variant": "body",
+                "label": "Answer",
+                "name": "answerJson"
+              },
+              {
+                "variant": "caption",
+                "label": "Submitted",
+                "format": "date",
+                "name": "submittedAt"
+              }
+            ],
+            "gap": "sm",
+            "displayPageSize": 10.0,
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "ResponseSubmitted",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ResponseCollect"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ResponseView",
+          "linkedEntity": "Response",
+          "config": {
+            "title": "View Response",
+            "mode": "edit",
+            "fields": [
+              "surveyId",
+              "respondentId",
+              "questionId",
+              "answerJson",
+              "submittedAt"
+            ],
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "ResponseBrowseList"
+              }
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "ResponsesPage",
+          "path": "/responses",
+          "traits": [
+            {
+              "ref": "ResponseAppLayout"
+            },
+            {
+              "ref": "ResponseDashboard"
+            },
+            {
+              "ref": "ResponseCollect"
+            },
+            {
+              "ref": "ResponseBrowseList"
+            },
+            {
+              "ref": "ResponseView"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

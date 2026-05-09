@@ -1,0 +1,256 @@
+{
+  "name": "std-geosearch",
+  "version": "1.0.0",
+  "description": "std-geosearch — location-aware search variant: search-input + map-view + range-slider for radius. Owns a GeoSearchResult runtime entity; GEO_SEARCH persists @payload.searchTerm/lat/lng/radiusKm so cross-trait listeners can route them into geo-aware data atoms.",
+  "orbitals": [
+    {
+      "name": "GeoSearchResultOrbital",
+      "entity": {
+        "name": "GeoSearchResult",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "searchTerm",
+            "type": "string"
+          },
+          {
+            "name": "centerLat",
+            "type": "number"
+          },
+          {
+            "name": "centerLng",
+            "type": "number"
+          },
+          {
+            "name": "radiusKm",
+            "type": "number",
+            "default": 10.0
+          },
+          {
+            "name": "boundsNorth",
+            "type": "number"
+          },
+          {
+            "name": "boundsSouth",
+            "type": "number"
+          },
+          {
+            "name": "boundsEast",
+            "type": "number"
+          },
+          {
+            "name": "boundsWest",
+            "type": "number"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GeoSearchResultSearch",
+          "category": "interaction",
+          "linkedEntity": "GeoSearchResult",
+          "emits": [
+            {
+              "event": "GEO_SEARCH",
+              "payloadSchema": [
+                {
+                  "name": "searchTerm",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "lat",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "lng",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "radiusKm",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GEO_SEARCH",
+                "name": "Geo Search",
+                "payloadSchema": [
+                  {
+                    "name": "searchTerm",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "lat",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "lng",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "radiusKm",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "placeholder": "@config.placeholder",
+                          "event": "@config.event",
+                          "type": "search-input"
+                        },
+                        {
+                          "height": "240px",
+                          "zoom": 12.0,
+                          "markers": [],
+                          "centerLat": "@entity.centerLat",
+                          "type": "map-view",
+                          "centerLng": "@entity.centerLng"
+                        },
+                        {
+                          "action": "GEO_SEARCH",
+                          "max": 100.0,
+                          "min": 1.0,
+                          "value": "@entity.radiusKm",
+                          "showTooltip": true,
+                          "type": "range-slider",
+                          "step": 1.0
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "GEO_SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.searchTerm",
+                    "@payload.searchTerm"
+                  ],
+                  [
+                    "set",
+                    "@entity.centerLat",
+                    "@payload.lat"
+                  ],
+                  [
+                    "set",
+                    "@entity.centerLng",
+                    "@payload.lng"
+                  ],
+                  [
+                    "set",
+                    "@entity.radiusKm",
+                    "@payload.radiusKm"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "placeholder": "@config.placeholder",
+                          "type": "search-input",
+                          "event": "@config.event"
+                        },
+                        {
+                          "height": "240px",
+                          "zoom": 12.0,
+                          "centerLat": "@entity.centerLat",
+                          "type": "map-view",
+                          "markers": [],
+                          "centerLng": "@entity.centerLng"
+                        },
+                        {
+                          "max": 100.0,
+                          "showTooltip": true,
+                          "action": "GEO_SEARCH",
+                          "value": "@entity.radiusKm",
+                          "type": "range-slider",
+                          "min": 1.0,
+                          "step": 1.0
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "event": {
+              "type": "string",
+              "default": "GEO_SEARCH"
+            },
+            "placeholder": {
+              "type": "string",
+              "default": "Search nearby…"
+            },
+            "defaultRadiusKm": {
+              "type": "number",
+              "default": 10.0
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GeoSearchResultSearchPage",
+          "path": "/geosearchresults/search",
+          "traits": [
+            {
+              "ref": "GeoSearchResultSearch"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

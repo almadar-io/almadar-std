@@ -1,0 +1,1668 @@
+{
+  "name": "std-restaurant-pos",
+  "version": "1.0.0",
+  "description": "Restaurant POS: floor plan with tables, order at table, kitchen display, tip split at close. Pick for table-service restaurants.",
+  "orbitals": [
+    {
+      "name": "MenuOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-menu",
+          "as": "MenuAtom"
+        },
+        {
+          "from": "std/behaviors/std-modifier-group",
+          "as": "ModifierAtom"
+        },
+        {
+          "from": "std/behaviors/std-image-upload-multi",
+          "as": "ImageUpload"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-tag-taxonomy",
+          "as": "TagTaxonomy"
+        }
+      ],
+      "entity": {
+        "name": "MenuRecord",
+        "collection": "menurecords",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "available",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "MenuAppLayout",
+          "config": {
+            "notifications": [],
+            "contentTrait": "@trait.MenuCatalog",
+            "appName": "Restaurant POS",
+            "navItems": [
+              {
+                "label": "Menu",
+                "icon": "utensils",
+                "href": "/menu"
+              },
+              {
+                "href": "/floor",
+                "icon": "layout-grid",
+                "label": "Floor"
+              },
+              {
+                "icon": "receipt",
+                "href": "/orders",
+                "label": "Orders"
+              },
+              {
+                "icon": "chef-hat",
+                "href": "/kitchen",
+                "label": "Kitchen"
+              }
+            ],
+            "searchEvent": "MENU_SEARCH",
+            "notificationClickEvent": "MENU_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "NOTIFY_CLICK": "MENU_NOTIFICATIONS_OPEN",
+            "SEARCH": "MENU_SEARCH"
+          }
+        },
+        {
+          "name": "MenuCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "MENU_SEARCH",
+              "triggers": "MENU_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuAppLayout"
+              }
+            },
+            {
+              "event": "MENU_NOTIFICATIONS_OPEN",
+              "triggers": "MENU_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MENU_SEARCH",
+                "name": "Menu Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MENU_NOTIFICATIONS_OPEN",
+                "name": "Menu Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "utensils"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Menu",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "New Item",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.MenuSearch",
+                            "@trait.MenuFilter"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        "@trait.MenuCategoryTree",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.MenuBrowseList",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Modifier groups",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        "@trait.MenuModifierGroups",
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Item images"
+                        },
+                        "@trait.MenuImageUpload"
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "MENU_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "MENU_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-8",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "ghost",
+                          "label": "Back to menu",
+                          "type": "button",
+                          "action": "INIT"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "MenuSearch",
+          "config": {
+            "placeholder": "Search menu…",
+            "event": "MENU_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "MenuFilter",
+          "config": {
+            "filters": [
+              {
+                "filterType": "select",
+                "options": [
+                  "appetizer",
+                  "entree",
+                  "dessert",
+                  "drink"
+                ],
+                "field": "category",
+                "label": "Category"
+              },
+              {
+                "options": [
+                  "true",
+                  "false"
+                ],
+                "field": "available",
+                "label": "Available",
+                "filterType": "select"
+              }
+            ],
+            "event": "MENU_FILTER"
+          }
+        },
+        {
+          "ref": "TagTaxonomy.traits.TagBrowse",
+          "name": "MenuCategoryTree",
+          "config": {
+            "allowEdit": false,
+            "title": "Categories"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "MenuBrowseList",
+          "linkedEntity": "MenuRecord",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "icon": "utensils",
+                "name": "name",
+                "variant": "h4"
+              },
+              {
+                "name": "category",
+                "variant": "badge"
+              },
+              {
+                "name": "price",
+                "variant": "caption"
+              },
+              {
+                "name": "available",
+                "variant": "badge"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              }
+            ],
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuFilter"
+              }
+            },
+            {
+              "event": "MENU_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuPersistor"
+              }
+            },
+            {
+              "event": "MENU_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuPersistor"
+              }
+            },
+            {
+              "event": "MENU_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ModifierAtom.traits.ModifierGroupManage",
+          "name": "MenuModifierGroups",
+          "config": {
+            "title": "Modifier Groups"
+          }
+        },
+        {
+          "ref": "ImageUpload.traits.UploadedImageUpload",
+          "name": "MenuImageUpload",
+          "config": {
+            "title": "Item Images",
+            "maxBytesPerImage": 5242880.0,
+            "maxImages": 12.0,
+            "accept": "image/*"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "MenuCreate",
+          "linkedEntity": "MenuRecord",
+          "config": {
+            "title": "New Menu Item",
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "name",
+              "description",
+              "price",
+              "category",
+              "available"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "MenuEdit",
+          "linkedEntity": "MenuRecord",
+          "config": {
+            "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Menu Item",
+            "fields": [
+              "name",
+              "description",
+              "price",
+              "category",
+              "available"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "MenuDelete",
+          "linkedEntity": "MenuRecord",
+          "config": {
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete",
+            "title": "Delete Menu Item",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "MenuPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "MenuRecord",
+          "emits": [
+            {
+              "event": "MENU_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MENU_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MENU_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "MenuDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MENU_CREATED",
+                "name": "Menu Created"
+              },
+              {
+                "key": "MENU_UPDATED",
+                "name": "Menu Updated"
+              },
+              {
+                "key": "MENU_DELETED",
+                "name": "Menu Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "MenuRecord",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "MENU_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "MenuRecord",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "MENU_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "MenuRecord",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "MENU_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MenuPage",
+          "path": "/menu",
+          "traits": [
+            {
+              "ref": "MenuAppLayout"
+            },
+            {
+              "ref": "MenuCatalog"
+            },
+            {
+              "ref": "MenuSearch"
+            },
+            {
+              "ref": "MenuFilter"
+            },
+            {
+              "ref": "MenuCategoryTree"
+            },
+            {
+              "ref": "MenuBrowseList"
+            },
+            {
+              "ref": "MenuModifierGroups"
+            },
+            {
+              "ref": "MenuImageUpload"
+            },
+            {
+              "ref": "MenuCreate"
+            },
+            {
+              "ref": "MenuEdit"
+            },
+            {
+              "ref": "MenuDelete"
+            },
+            {
+              "ref": "MenuPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TableOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-table-map",
+          "as": "TableMap"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "TableRecord",
+        "collection": "tablerecords",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "capacity",
+            "type": "number",
+            "default": 4.0
+          },
+          {
+            "name": "section",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "TableMap.traits.TableManage",
+          "name": "TableFloorPlan",
+          "config": {
+            "title": "Floor Plan",
+            "canvasHeight": 640.0,
+            "canvasWidth": 960.0
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TableRoster",
+          "linkedEntity": "TableRecord",
+          "config": {
+            "cols": 1.0,
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h4",
+                "name": "label",
+                "icon": "layout-grid"
+              },
+              {
+                "variant": "badge",
+                "name": "capacity"
+              },
+              {
+                "name": "section",
+                "variant": "caption"
+              }
+            ],
+            "itemActions": [
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "TABLE_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TablePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "TableEdit",
+          "linkedEntity": "TableRecord",
+          "config": {
+            "title": "Edit Table",
+            "icon": "edit",
+            "mode": "edit",
+            "fields": [
+              "label",
+              "capacity",
+              "section"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "TableRoster"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TablePersistor",
+          "category": "lifecycle",
+          "linkedEntity": "TableRecord",
+          "emits": [
+            {
+              "event": "TABLE_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "TableEdit"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TABLE_UPDATED",
+                "name": "Table Updated"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "TableRecord",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "TABLE_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FloorPage",
+          "path": "/floor",
+          "traits": [
+            {
+              "ref": "TableFloorPlan"
+            },
+            {
+              "ref": "TableRoster"
+            },
+            {
+              "ref": "TableEdit"
+            },
+            {
+              "ref": "TablePersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OrderOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-cart",
+          "as": "Cart"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "OrderTicket",
+        "collection": "orderTickets",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "tableId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "serverName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "subtotal",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "taxAmount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "tipAmount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "total",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "submitted",
+              "closed"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Cart.traits.CartItemCartBrowse",
+          "name": "OrderCart",
+          "config": {
+            "keyedOn": "tableId"
+          }
+        },
+        {
+          "ref": "Cart.traits.CartItemAddItem",
+          "name": "OrderCartAddItem",
+          "config": {
+            "fields": [
+              "name",
+              "description",
+              "status"
+            ],
+            "mode": "create",
+            "openButtonLabel": "Add Item",
+            "icon": "plus-circle",
+            "title": "Add to Order"
+          }
+        },
+        {
+          "ref": "Cart.traits.CartItemRemoveConfirm",
+          "name": "OrderCartRemoveConfirm",
+          "config": {
+            "title": "Remove From Order",
+            "confirmLabel": "Remove",
+            "alertMessage": "Remove this item from the order?",
+            "icon": "alert-triangle"
+          }
+        },
+        {
+          "ref": "Cart.traits.CartItemPersistor",
+          "name": "OrderCartPersistor"
+        },
+        {
+          "name": "OrderClose",
+          "category": "interaction",
+          "linkedEntity": "OrderTicket",
+          "emits": [
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_TICKET",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "tipAmount",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "total",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ORDER_SUBMITTED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ORDER_CLOSED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "OrderTicketLoaded",
+              "description": "Fired when the order ticket collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[OrderTicket]"
+                }
+              ]
+            },
+            {
+              "event": "OrderTicketLoadFailed",
+              "description": "Fired when the order ticket collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "ready"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "OrderTicketLoaded",
+                "name": "OrderTicket loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[OrderTicket]"
+                  }
+                ]
+              },
+              {
+                "key": "OrderTicketLoadFailed",
+                "name": "OrderTicket load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_TICKET",
+                "name": "Close Ticket",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "tipAmount",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "total",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ORDER_SUBMITTED",
+                "name": "Order Submitted"
+              },
+              {
+                "key": "ORDER_CLOSED",
+                "name": "Order Closed"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "OrderTicket",
+                    {
+                      "emit": {
+                        "success": "OrderTicketLoaded",
+                        "failure": "OrderTicketLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading order…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "ready",
+                "event": "OrderTicketLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "receipt",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "Close & Tip Split",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "fields": [
+                            {
+                              "name": "tableId",
+                              "variant": "label"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "subtotal"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "taxAmount"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "tipAmount"
+                            },
+                            {
+                              "name": "total",
+                              "variant": "h4"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "send",
+                              "variant": "secondary",
+                              "label": "Submit to Kitchen",
+                              "action": "SUBMIT"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "Close & Split Tip",
+                              "action": "CLOSE_TICKET",
+                              "icon": "split",
+                              "type": "button"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "ready",
+                "event": "OrderTicketLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "OrderTicket",
+                    {
+                      "emit": {
+                        "success": "OrderTicketLoaded",
+                        "failure": "OrderTicketLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "submitted"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "OrderTicket",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "ORDER_SUBMITTED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "CLOSE_TICKET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.tipAmount",
+                    "@payload.tipAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    "@payload.total"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "closed"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "OrderTicket",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "ORDER_CLOSED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OrderPage",
+          "path": "/orders",
+          "traits": [
+            {
+              "ref": "OrderCart"
+            },
+            {
+              "ref": "OrderCartAddItem"
+            },
+            {
+              "ref": "OrderCartRemoveConfirm"
+            },
+            {
+              "ref": "OrderCartPersistor"
+            },
+            {
+              "ref": "OrderClose"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "KitchenOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-kitchen-display",
+          "as": "Kitchen"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "KitchenLog",
+        "collection": "kitchenlogs",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "orderId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "note",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Kitchen.traits.KitchenTicketManage",
+          "name": "KitchenBoard",
+          "config": {
+            "overdueMinutes": 18.0,
+            "title": "Kitchen Display"
+          }
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "KitchenLogList",
+          "linkedEntity": "KitchenLog",
+          "config": {
+            "fields": [
+              {
+                "name": "orderId",
+                "variant": "label"
+              },
+              {
+                "name": "note",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "createdAt"
+              }
+            ],
+            "cols": 1.0,
+            "gap": "sm"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "KitchenPage",
+          "path": "/kitchen",
+          "traits": [
+            {
+              "ref": "KitchenBoard"
+            },
+            {
+              "ref": "KitchenLogList"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
